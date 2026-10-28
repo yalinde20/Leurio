@@ -19,4 +19,5 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 
 - Work on a branch, never on `main`. One pull request per user story; a human merges it.
 - Acceptance tests are written from the criteria of the user story before the implementation.
+- Une user story qui modifie la vue commence par une maquette HTML, validée par le propriétaire avant tout test ou code (`.claude/rules/maquettes.md`).
 - Toute user story cite les sections de `docs/PLAN.md` qu'elle met en œuvre ; une story qui contredit le plan est signalée au propriétaire, pas développée telle quelle.

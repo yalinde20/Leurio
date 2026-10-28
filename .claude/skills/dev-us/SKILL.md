@@ -37,17 +37,28 @@ The answer gives the run: its `id`, the branch to work on (`branchName`), its ba
 
 Check out the branch: `git fetch origin`, then `git checkout <branchName>` when origin has it, otherwise `git checkout -b <branchName> origin/<baseBranch>`. All the work happens on this branch.
 
+## 3 bis. Mockup, validated before any development
+
+If the story changes a view (a screen, a displayed component, a text, a style, a visible state), follow `.claude/rules/maquettes.md`; when in doubt, it does. Otherwise skip to step 4.
+
+1. Write the HTML mockup at `docs/maquettes/us-<issue-number>-<slug>.html`, commit it (`docs: maquette …`) and push the branch.
+2. Make it viewable from a phone: publish it with the Artifact tool when this session has it and give its link; otherwise give the GitHub link of the file on the branch and say it is to be downloaded and opened in a browser.
+3. Call `ask_user` with the link, the states the mockup shows, and the question: validate it, or say what to change. Wait with `get_answer`.
+4. If changes are asked, revise the mockup, commit, push, republish and ask again. Repeat until it is validated.
+
+**No acceptance test and no production code before the owner validates the mockup.** Once validated, it is the reference of the story: give it to the test-writer, the developer and the reviewer with the rest.
+
 ## 4. Tests first: test-writer
 
-Give the story, its criteria and the conventions of the project (`CLAUDE.md`, `.claude/rules/`) to the **test-writer** subagent. It writes the acceptance tests, at least one per criterion, **before any implementation**. Run them: every new test must fail, and fail because the feature is missing. Commit the tests.
+Give the story, its criteria, the validated mockup if there is one and the conventions of the project (`CLAUDE.md`, `.claude/rules/`) to the **test-writer** subagent. It writes the acceptance tests, at least one per criterion, **before any implementation**. Run them: every new test must fail, and fail because the feature is missing. Commit the tests.
 
 ## 5. Implementation: developer
 
-Give the story, the criteria and the failing tests to the **developer** subagent. It implements until the acceptance tests pass, adds unit tests where logic is not covered, and never weakens an acceptance test. Commit.
+Give the story, the criteria, the validated mockup if there is one and the failing tests to the **developer** subagent. It implements until the acceptance tests pass, adds unit tests where logic is not covered, and never weakens an acceptance test. Commit.
 
 ## 6. Review: reviewer
 
-Give the story, the criteria and the base branch to the **reviewer** subagent, in a fresh context: it did not write the code. It reviews the diff of the branch against its base, the criteria and `CLAUDE.md`.
+Give the story, the criteria, the validated mockup if there is one and the base branch to the **reviewer** subagent, in a fresh context: it did not write the code. It reviews the diff of the branch against its base, the criteria, the mockup and `CLAUDE.md`.
 
 If it reports findings that must be fixed, give them to the developer subagent, then have the reviewer look again. After three rounds without a clean review, do not loop: ask the owner with `ask_user`, or close the run as `needs_check` with the open findings in the summary.
 
@@ -58,7 +69,7 @@ Run the full test, lint and type-check commands of the project (see `CLAUDE.md`)
 ## 8. Pull request
 
 1. Push the branch: `git push -u origin <branchName>`.
-2. Open the pull request against `baseBranch`. Title: the title of the story. Body: a line `Closes #<issue-number>`, the link to the user story in Cockpit (its `url`), a summary of what was built and of the tests that were run. In a local session, `gh pr create`. In a cloud session `gh pr` is rejected: use the GitHub tools of the session, or `gh api repos/<owner>/<repo>/pulls` with `title`, `head`, `base` and `body`. If the branch already has an open pull request (the run is a relaunch), push to it and keep its number.
+2. Open the pull request against `baseBranch`. Title: the title of the story. Body: a line `Closes #<issue-number>`, the link to the user story in Cockpit (its `url`), the link to the validated mockup if there is one, a summary of what was built and of the tests that were run. In a local session, `gh pr create`. In a cloud session `gh pr` is rejected: use the GitHub tools of the session, or `gh api repos/<owner>/<repo>/pulls` with `title`, `head`, `base` and `body`. If the branch already has an open pull request (the run is a relaunch), push to it and keep its number.
 3. Call `link_pull_request` with the number of the pull request.
 4. Call `finish_run`: `succeeded` when every criterion passed; `needs_check` when the work is done but something needs the owner's eye (a criterion you could not prove, a choice you made for them). The summary says what was built, which tests were run with their result, and what is left or uncertain.
 
@@ -70,7 +81,7 @@ If the answer of `finish_run` has `next`, the queue chains its next story in thi
 
 ## Throughout the run
 
-- **Report every step.** Call `report_step` when a step starts (`running`) and when it ends (`succeeded` or `failed`, with a short summary): steps 4 to 8, with the agent that does it (`test-writer`, `developer`, `reviewer`, or `main` for yourself) and a title in the language of the story. Keep the same agent and title to update a step.
+- **Report every step.** Call `report_step` when a step starts (`running`) and when it ends (`succeeded` or `failed`, with a short summary): steps 3 bis (when there is a mockup) to 8, with the agent that does it (`test-writer`, `developer`, `reviewer`, or `main` for yourself) and a title in the language of the story. Keep the same agent and title to update a step.
 - **Obey a stop request.** Read the answer of each `report_step`: when it carries `stopRequested`, stop at once. Do not start another step, do not push, do not open a pull request. Call `finish_run` with `stopped` and say where things stand: what is committed, what is not. The owner asked for the stop, or the run reached its budget cap: the answer says which, and so does your summary.
 - **Ask rather than guess.** When a decision belongs to the owner (an ambiguity in the story, a choice the criteria do not settle), call `ask_user` with one clear question and the options you see, then `get_answer` about once a minute until it is answered. Meanwhile, go on with what does not depend on the answer.
 - **Never leave a run open.** If you cannot finish, call `finish_run` with `failed` and say why.
