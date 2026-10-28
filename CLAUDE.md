@@ -1,16 +1,22 @@
-# Project name
+# Leurio
 
-<!-- What this project is, in one or two sentences. -->
+PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et intermédiaires, en eau douce en France, quel leurre et quelle animation utiliser maintenant, ici. Backend Firebase.
+
+**Le plan du projet est `docs/PLAN.md` : il fait foi.** Les règles qui en découlent sont dans `.claude/rules/plan.md` et s'appliquent à chaque user story.
 
 ## Commands
 
-<!-- How to install, run, test and lint the project. Claude runs these before it says a change is done. -->
+À compléter par la story du socle technique (installation, lint, type check, tests, validation du contenu, build).
 
 ## Conventions
 
-<!-- What a contributor must know: structure of the code, naming, what not to touch. -->
+- Architecture, arborescence et modèle de données : `docs/PLAN.md` §4, §5 et §7.
+- Moteur (`core/engine`) et réglementation (`core/regulation`) en TypeScript pur, sans Angular.
+- Contenu (espèces, leurres, animations) en JSON validés par JSON Schema, jamais en dur dans le code.
+- Langue : code et identifiants comme dans le plan (`tempEau`, `tackleBox`…), interface en français.
 
 ## Workflow
 
 - Work on a branch, never on `main`. One pull request per user story; a human merges it.
 - Acceptance tests are written from the criteria of the user story before the implementation.
+- Toute user story cite les sections de `docs/PLAN.md` qu'elle met en œuvre ; une story qui contredit le plan est signalée au propriétaire, pas développée telle quelle.
