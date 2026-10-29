@@ -1,5 +1,5 @@
 # Build debug Android (US 30, critère 2) : build de production, synchronisation
-# Capacitor, puis le test d'acceptation qui lance ./gradlew assembleDebug.
+# Capacitor, puis le test Android (npm run test:android) qui lance ./gradlew assembleDebug.
 # Fichier séparé de ci.yml : les tests d'acceptation du CI simulent toutes les
 # étapes de ci.yml en local, où le SDK Android n'existe pas.
 # Le build iOS demande macOS et Xcode : il n'est pas vérifié ici.
@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      - uses: gradle/actions/wrapper-validation@v4
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
@@ -39,7 +40,7 @@ jobs:
       - name: Synchronisation des projets natifs
         run: npm run cap:sync
       - name: Build debug Android (critère 2)
-        run: node --test tests/acceptance/android-build.test.mjs
+        run: npm run test:android
       - name: APK debug
         uses: actions/upload-artifact@v4
         with:
