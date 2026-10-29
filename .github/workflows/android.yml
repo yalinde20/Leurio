@@ -1,0 +1,48 @@
+# Build debug Android (US 30, critère 2) : build de production, synchronisation
+# Capacitor, puis le test d'acceptation qui lance ./gradlew assembleDebug.
+# Fichier séparé de ci.yml : les tests d'acceptation du CI simulent toutes les
+# étapes de ci.yml en local, où le SDK Android n'existe pas.
+# Le build iOS demande macOS et Xcode : il n'est pas vérifié ici.
+name: Android
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Installation
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Synchronisation des projets natifs
+        run: npm run cap:sync
+      - name: Build debug Android (critère 2)
+        run: node --test tests/acceptance/android-build.test.mjs
+      - name: APK debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: leurio-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
