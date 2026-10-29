@@ -6,7 +6,15 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 
 ## Commands
 
-À compléter par la story du socle technique (installation, lint, type check, tests, validation du contenu, build).
+- Installation : `npm ci`
+- Lint : `npm run lint`
+- Type check : `npm run typecheck`
+- Tests unitaires et de composants (Vitest) : `npm test`
+- Tests d'acceptation : `npm run test:acceptance`
+- Tests de bout en bout (Playwright) : `npm run test:e2e`
+- Serveur de développement : `npm start`
+- Build : `npm run build`
+- Node 24 requis (`.nvmrc`).
 
 ## Conventions
 
