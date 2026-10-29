@@ -42,7 +42,7 @@ module.exports = defineConfig([
         {
           patterns: [
             {
-              group: ['@angular/*', '@ionic/*', '@capacitor/*', 'firebase', 'firebase/*', '@angular/fire', '@angular/fire/*'],
+              group: ['@angular/*', '@ionic/*', '@capacitor/*', '@capacitor-community/*', 'firebase', 'firebase/*', '@firebase/*'],
               message:
                 'core/engine et core/regulation sont du TypeScript pur (PLAN §4, §5) : aucune dépendance Angular, Ionic, Capacitor ni Firebase.',
             },
