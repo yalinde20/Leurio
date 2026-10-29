@@ -1,5 +1,7 @@
-# Starting point written by Cockpit from what this repository holds.
-# Edit it freely: it is yours. A pull request must not be mergeable when it fails.
+# CI du projet (PLAN §10) : installation, lint, type check, tests et build,
+# avec les commandes de la section « ## Commands » de CLAUDE.md.
+# Une pull request en échec ne doit pas pouvoir être fusionnée : rendre le check
+# « CI / check » obligatoire dans la protection de la branche main.
 name: CI
 
 on:
@@ -20,7 +22,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      # Cockpit could not tell how this project is built. Replace this step with its commands:
-      # install, lint, type check, tests.
-      - name: Checks
-        run: echo "No check is configured yet. Edit .github/workflows/ci.yml."
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Installation
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
