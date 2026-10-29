@@ -1,5 +1,7 @@
 # CI du projet (PLAN §10) : installation, lint, type check, tests et build,
 # avec les commandes de la section « ## Commands » de CLAUDE.md.
+# Les tests d'acceptation et de bout en bout n'y sont pas encore : ils viendront
+# avec leurs propres stories.
 # Une pull request en échec ne doit pas pouvoir être fusionnée : rendre le check
 # « CI / check » obligatoire dans la protection de la branche main.
 name: CI
