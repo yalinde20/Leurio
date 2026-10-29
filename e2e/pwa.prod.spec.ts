@@ -1,4 +1,4 @@
-import { test, expect, type APIResponse } from '@playwright/test';
+import { test, expect, type APIResponse, type Page } from '@playwright/test';
 
 function taillePng(octets: Buffer): { largeur: number; hauteur: number } {
   const signature = octets.subarray(0, 8).toString('hex');
@@ -9,6 +9,24 @@ function taillePng(octets: Buffer): { largeur: number; hauteur: number } {
 async function pngDe(reponse: APIResponse) {
   expect(reponse.ok()).toBe(true);
   return taillePng(await reponse.body());
+}
+
+// Attend (dans la page) que le service worker soit prêt ET à l'état « activated » ; null après 25 s.
+async function etatServiceWorker(page: Page): Promise<{ nombre: number; actif: string | null } | null> {
+  return page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return null;
+    const prete = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((r) => setTimeout(() => r(null), 25_000)),
+    ]);
+    if (!prete) return null;
+    const fin = Date.now() + 25_000;
+    while (prete.active && prete.active.state !== 'activated' && Date.now() < fin) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const regs = await navigator.serviceWorker.getRegistrations();
+    return { nombre: regs.length, actif: prete.active?.state ?? null };
+  });
 }
 
 test('critère 0 : given le build de production servi en local, when on charge la page, then elle référence un manifeste web « Leurio », fr, standalone, avec des icônes 192 et 512 px', async ({ page, request }) => {
@@ -52,24 +70,19 @@ test('critère 0 : given le build de production servi en local, when on charge l
 
   await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'Leurio');
 
-  await expect(page.locator('meta[name="theme-color"][media="(prefers-color-scheme: light)"]')).toHaveCount(1);
-  await expect(page.locator('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]')).toHaveCount(1);
+  const claire = page.locator('meta[name="theme-color"][media="(prefers-color-scheme: light)"]');
+  const sombre = page.locator('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]');
+  await expect(claire).toHaveCount(1);
+  await expect(sombre).toHaveCount(1);
+  await expect(claire).toHaveAttribute('content', '#f8f8f8');
+  await expect(sombre).toHaveAttribute('content', '#1f1f1f');
 });
 
 test('critère 1 : given le build de production servi en local, when on charge la page puis on attend la fin du chargement, then un service worker est enregistré et actif', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
 
-  const etat = await page.evaluate(async () => {
-    if (!('serviceWorker' in navigator)) return null;
-    const prete = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<null>((r) => setTimeout(() => r(null), 25_000)),
-    ]);
-    if (!prete) return null;
-    const regs = await navigator.serviceWorker.getRegistrations();
-    return { nombre: regs.length, actif: prete.active?.state ?? null };
-  });
+  const etat = await etatServiceWorker(page);
   expect(etat).not.toBeNull();
   expect(etat?.nombre).toBeGreaterThan(0);
   expect(etat?.actif).toBe('activated');
@@ -78,14 +91,24 @@ test('critère 1 : given le build de production servi en local, when on charge l
 test('critère 2 : given le build de production chargé une première fois, when on recharge la page sans réseau, then l\'app s\'affiche quand même', async ({ page, context }) => {
   await page.goto('/');
   await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
-  await page.evaluate(async () => {
-    if (!('serviceWorker' in navigator)) return;
-    await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(r, 25_000))]);
-  });
+  await etatServiceWorker(page);
   // Un rechargement en ligne pour que le service worker contrôle la page et remplisse son cache.
   await page.reload();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker?.controller), { timeout: 30_000 }).toBe(true);
-  await page.waitForTimeout(3000);
+  // Le shell est prêt hors ligne quand le cache d'Angular contient index.html.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          for (const nom of await caches.keys()) {
+            const requetes = await (await caches.open(nom)).keys();
+            if (requetes.some((r) => new URL(r.url).pathname === '/index.html')) return true;
+          }
+          return false;
+        }),
+      { timeout: 30_000 },
+    )
+    .toBe(true);
 
   await context.setOffline(true);
   await page.reload();
@@ -98,14 +121,7 @@ test('critère 3 : given le build de production, when on lance l\'audit d\'insta
   await page.goto('/');
   await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
 
-  const sw = await page.evaluate(async () => {
-    if (!('serviceWorker' in navigator)) return null;
-    const prete = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<null>((r) => setTimeout(() => r(null), 25_000)),
-    ]);
-    return prete ? (prete.active?.state ?? null) : null;
-  });
+  const sw = (await etatServiceWorker(page))?.actif ?? null;
   expect(sw).toBe('activated');
 
   // Chrome applique ici les mêmes critères d'installabilité que l'audit Lighthouse.

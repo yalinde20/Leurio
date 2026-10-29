@@ -12,14 +12,14 @@ export default defineConfig({
       // Build de production servi en local (service worker et manifeste n'existent qu'ici).
       command: 'npm run build && node e2e/serve-dist.mjs dist/leurio/browser 4300',
       url: 'http://localhost:4300',
-      reuseExistingServer: !process.env['CI'],
+      reuseExistingServer: false,
       timeout: 300_000,
     },
   ],
   projects: [
     {
       name: 'dev',
-      testMatch: /.*\.dev\.spec\.ts|app\.spec\.ts/,
+      testIgnore: /\.prod\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4200' },
     },
     {

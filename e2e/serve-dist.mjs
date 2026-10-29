@@ -28,16 +28,21 @@ async function fichier(chemin) {
 }
 
 createServer(async (req, res) => {
-  const { pathname } = new URL(req.url ?? '/', 'http://localhost');
-  const demande = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, '');
-  let chemin = await fichier(join(racine, demande));
-  // Repli SPA : toute route sans extension renvoie index.html ; un fichier absent reste un 404.
-  if (!chemin && !extname(demande)) chemin = await fichier(join(racine, 'index.html'));
-  if (!chemin) {
-    res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
-    return;
+  try {
+    const { pathname } = new URL(req.url ?? '/', 'http://localhost');
+    const demande = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, '');
+    let chemin = await fichier(join(racine, demande));
+    // Repli SPA : toute route sans extension renvoie index.html ; un fichier absent reste un 404.
+    if (!chemin && !extname(demande)) chemin = await fichier(join(racine, 'index.html'));
+    if (!chemin) {
+      res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
+      return;
+    }
+    res
+      .writeHead(200, { 'content-type': types[extname(chemin)] ?? 'application/octet-stream', 'cache-control': 'no-cache' })
+      .end(await readFile(chemin));
+  } catch (e) {
+    const mauvaiseUri = e instanceof URIError;
+    res.writeHead(mauvaiseUri ? 400 : 500, { 'content-type': 'text/plain' }).end(mauvaiseUri ? 'Bad request' : 'Server error');
   }
-  res
-    .writeHead(200, { 'content-type': types[extname(chemin)] ?? 'application/octet-stream', 'cache-control': 'no-cache' })
-    .end(await readFile(chemin));
 }).listen(port, () => console.log(`dist servi sur http://localhost:${port}`));

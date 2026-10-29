@@ -18,7 +18,7 @@ try {
   for (const [nom, taille] of sorties) {
     await page.setViewportSize({ width: taille, height: taille });
     await page.setContent(
-      `<style>html,body{margin:0;background:#0054e9}svg{display:block;width:${taille}px;height:${taille}px}</style>${svg}`,
+      `<style>html,body{margin:0}svg{display:block;width:${taille}px;height:${taille}px}</style>${svg}`,
     );
     const png = await page.screenshot({ type: 'png', omitBackground: false });
     await writeFile(new URL(`../public/icons/${nom}`, import.meta.url), png);

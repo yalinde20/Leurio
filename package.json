@@ -10,7 +10,8 @@
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
     "test:acceptance": "node --test --test-concurrency=1 \"tests/acceptance/*.test.mjs\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",
