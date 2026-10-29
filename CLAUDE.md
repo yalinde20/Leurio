@@ -14,6 +14,7 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 - Tests de bout en bout (Playwright) : `npm run test:e2e`
 - Serveur de développement : `npm start`
 - Build : `npm run build`
+- Synchronisation des projets natifs Android et iOS (après un build) : `npm run cap:sync`
 - Node 24 requis (`.nvmrc`).
 
 ## Conventions

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Leurio</string>
+    <string name="title_activity_main">Leurio</string>
+    <string name="package_name">app.leurio</string>
+    <string name="custom_url_scheme">app.leurio</string>
+</resources>
