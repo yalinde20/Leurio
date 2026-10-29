@@ -24,6 +24,7 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 - Moteur (`core/engine`) et réglementation (`core/regulation`) en TypeScript pur, sans Angular.
 - Contenu (espèces, leurres, animations) en JSON validés par JSON Schema, jamais en dur dans le code.
 - Langue : code et identifiants comme dans le plan (`tempEau`, `tackleBox`…), interface en français.
+- Plateforme : l'app vise d'abord iOS (iPhone, Safari puis Capacitor iOS) ; elle doit rester pleinement fonctionnelle sur Android. Les choix d'interface, de PWA et de natif se font d'abord pour iOS, puis on vérifie Android (demande du propriétaire, US 29).
 
 ## Workflow
 
