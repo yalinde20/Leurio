@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 29 : app installable (PWA)</title>
+<style>
+  /* Tokens : couleurs par défaut d'Ionic 8, comme l'US 27 (les thèmes Leurio viennent avec le ticket 2).
+     Couleurs du manifeste provisoires : theme_color = primaire Ionic, background_color = fond du thème clair. */
+  :root {
+    --page-bg: #e9e9ee;
+    --page-text: #222428;
+    --manifest-theme: #0054e9;
+    --manifest-background: #ffffff;
+    --icon-bg: #0054e9;
+    --icon-fg: #ffffff;
+  }
+  .theme-clair {
+    --ion-background-color: #ffffff;
+    --ion-text-color: #000000;
+    --ion-toolbar-background: #f8f8f8;
+    --ion-toolbar-border: #c1c4cd;
+    --home-bg: #dfe6f0;
+    --home-text: #1b1b1f;
+    --browser-bar: #f1f3f4;
+    --browser-text: #3c4043;
+    --sheet-bg: #ffffff;
+    --muted: #5f6368;
+  }
+  .theme-sombre {
+    --ion-background-color: #000000;
+    --ion-text-color: #ffffff;
+    --ion-toolbar-background: #1f1f1f;
+    --ion-toolbar-border: #333333;
+    --home-bg: #1b1d22;
+    --home-text: #f1f1f1;
+    --browser-bar: #202124;
+    --browser-text: #e8eaed;
+    --sheet-bg: #2d2e31;
+    --muted: #9aa0a6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--page-text);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch {
+    display: inline-flex;
+    margin-bottom: 8px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .switch label {
+    min-width: 96px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #fff;
+    color: #222;
+    font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 700px;
+    border: 1px solid #888;
+    border-radius: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: var(--ion-background-color);
+    color: var(--ion-text-color);
+  }
+  .statusbar {
+    height: 24px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .statusbar.manifest { background: var(--manifest-theme); color: #fff; }
+  .statusbar.browser { background: var(--browser-bar); color: var(--browser-text); }
+  .statusbar.home { background: transparent; color: var(--home-text); }
+
+  /* Barre d'adresse du navigateur (état 1 seulement) */
+  .urlbar {
+    background: var(--browser-bar);
+    color: var(--browser-text);
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .urlbar span {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: var(--sheet-bg);
+  }
+
+  .toolbar {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ion-toolbar-background);
+    border-bottom: 1px solid var(--ion-toolbar-border);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; }
+
+  /* Proposition d'installation du navigateur */
+  .sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: var(--sheet-bg);
+    color: var(--browser-text);
+    border-radius: 16px 16px 0 0;
+    padding: 16px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,.25);
+  }
+  .sheet .row { display: flex; gap: 12px; align-items: center; }
+  .sheet .name { font-weight: 600; font-size: 16px; }
+  .sheet .url { font-size: 13px; color: var(--muted); }
+  .sheet .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .sheet .btn {
+    min-height: 48px; min-width: 96px; padding: 0 16px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 24px; font-size: 15px;
+  }
+  .sheet .btn.primary { background: var(--manifest-theme); color: #fff; }
+  .caption { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  /* Icône */
+  .icon {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--icon-bg);
+    display: flex; align-items: center; justify-content: center;
+    flex: none;
+  }
+  .icon svg { width: 70%; height: 70%; }
+  .icon.big { width: 128px; height: 128px; border-radius: 32px; }
+
+  /* Écran d'accueil */
+  .home { background: var(--home-bg); color: var(--home-text); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px 8px;
+    padding: 32px 16px;
+  }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
+  .placeholder { width: 56px; height: 56px; border-radius: 14px; background: rgba(127,127,127,.35); }
+
+  /* Écran de lancement */
+  .splash {
+    flex: 1;
+    background: var(--manifest-background);
+    color: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+    font-size: 20px; font-weight: 600;
+  }
+
+  /* Hors ligne */
+  .offline-tag {
+    position: absolute; top: 2px; right: 56px;
+    font-size: 11px;
+  }
+
+  .phone.theme-sombre { display: none; }
+  #t-sombre:checked ~ .states .phone.theme-clair { display: none; }
+  #t-sombre:checked ~ .states .phone.theme-sombre { display: flex; }
+
+  .legend {
+    width: 390px; max-width: 100%;
+    font-size: 13px; margin: 8px 0 0;
+  }
+  .states { display: block; }
+  .state { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <h1>US 29 — Leurio installable en PWA</h1>
+  <p class="note">Ce que la story rend visible : l'icône et le nom « Leurio » proposés à l'installation, l'icône sur l'écran d'accueil, l'écran de lancement, puis l'app ouverte en plein écran (sans barre d'adresse), y compris sans réseau. Le contenu de l'app ne change pas (écran vide de l'US 27).</p>
+  <p class="note"><strong>Provisoire</strong> (à remplacer par le logo et les tokens du ticket 2) : icône bleue avec un leurre stylisé blanc ; couleur de thème du manifeste = bleu primaire d'Ionic <code>#0054e9</code> (barre d'état du téléphone) ; couleur de fond du manifeste = blanc <code>#ffffff</code> (écran de lancement), la même dans les deux thèmes car le manifeste n'a qu'une valeur.</p>
+
+  <input type="radio" name="theme" id="t-clair" class="radio" checked>
+  <input type="radio" name="theme" id="t-sombre" class="radio">
+  <div class="switch">
+    <label for="t-clair">Clair</label>
+    <label for="t-sombre">Sombre</label>
+  </div>
+
+  <div class="states">
+
+    <!-- Icône commune, définie une fois pour être réutilisée -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <symbol id="lure" viewBox="0 0 64 64">
+          <!-- corps du leurre -->
+          <path d="M10 32 C 18 18, 40 16, 50 32 C 40 48, 18 46, 10 32 Z" fill="#ffffff"/>
+          <!-- queue -->
+          <path d="M50 32 L 60 22 L 58 32 L 60 42 Z" fill="#ffffff"/>
+          <!-- oeil -->
+          <circle cx="20" cy="30" r="3" fill="#0054e9"/>
+          <!-- hameçon -->
+          <path d="M32 44 v 8 a 4 4 0 0 0 8 0" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <h2>1. Dans le navigateur : proposition d'installation</h2>
+    <p class="note">Fenêtre du navigateur (Chrome Android). Le texte et les boutons appartiennent au navigateur ; Leurio fournit le nom et l'icône. Sur iPhone : Partager → « Sur l'écran d'accueil ».</p>
+    <div class="phone theme-clair">
+      <div class="statusbar browser"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="urlbar"><span>leurio.app</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="sheet">
+        <div class="row">
+          <div class="icon"><svg><use href="#lure"/></svg></div>
+          <div><div class="name">Leurio</div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="actions">
+          <div class="btn">Annuler</div>
+          <div class="btn primary">Installer</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar browser"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="urlbar"><span>leurio.app</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="sheet">
+        <div class="row">
+          <div class="icon"><svg><use href="#lure"/></svg></div>
+          <div><div class="name">Leurio</div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="actions">
+          <div class="btn">Annuler</div>
+          <div class="btn primary">Installer</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>2. Sur l'écran d'accueil</h2>
+    <p class="note">L'icône (192 px et 512 px dans le manifeste, découpe ronde ou carrée selon le téléphone) et le nom « Leurio ».</p>
+    <div class="phone home theme-clair">
+      <div class="statusbar home"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="grid">
+        <div class="app"><div class="placeholder"></div>Photos</div>
+        <div class="app"><div class="placeholder"></div>Météo</div>
+        <div class="app"><div class="placeholder"></div>Cartes</div>
+        <div class="app"><div class="icon"><svg><use href="#lure"/></svg></div>Leurio</div>
+      </div>
+    </div>
+    <div class="phone home theme-sombre">
+      <div class="statusbar home"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="grid">
+        <div class="app"><div class="placeholder"></div>Photos</div>
+        <div class="app"><div class="placeholder"></div>Météo</div>
+        <div class="app"><div class="placeholder"></div>Cartes</div>
+        <div class="app"><div class="icon"><svg><use href="#lure"/></svg></div>Leurio</div>
+      </div>
+    </div>
+
+    <h2>3. Écran de lancement</h2>
+    <p class="note">Généré par Android à partir du manifeste : fond blanc, icône, nom. Une fraction de seconde au démarrage.</p>
+    <div class="phone theme-clair">
+      <div class="statusbar manifest"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="splash"><div class="icon big"><svg><use href="#lure"/></svg></div>Leurio</div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar manifest"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="splash"><div class="icon big"><svg><use href="#lure"/></svg></div>Leurio</div>
+    </div>
+
+    <h2>4. App ouverte en plein écran</h2>
+    <p class="note">Affichage « standalone » : pas de barre d'adresse ; la barre d'état prend la couleur de thème du manifeste.</p>
+    <div class="phone theme-clair">
+      <div class="statusbar manifest"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar manifest"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+
+    <h2>5. Rechargée sans réseau</h2>
+    <p class="note">Mode avion, après un premier chargement : l'app s'affiche à l'identique, servie par le service worker. Aucun message hors ligne dans cette story (rien ne dépend encore du réseau).</p>
+    <div class="phone theme-clair">
+      <div class="statusbar manifest"><span>9:41</span><span>✈ Mode avion</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar manifest"><span>9:41</span><span>✈ Mode avion</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+
+    <p class="legend">Serveur de développement (<code>npm start</code>) : aucun changement visible, et pas de service worker.</p>
+  </div>
+</body>
+</html>
