@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 29 : app installable (PWA)</title>
+<style>
+  /* Tokens : couleurs par défaut d'Ionic 8, comme l'US 27 (les thèmes Leurio viennent avec le ticket 2).
+     Barre d'état = couleur de la barre de titre Ionic de chaque thème (provisoire). */
+  :root {
+    --page-bg: #e9e9ee;
+    --page-text: #222428;
+    --icon-bg: #0054e9;
+    --icon-fg: #ffffff;
+    --ios-blue: #007aff;
+  }
+  .theme-clair {
+    --ion-background-color: #ffffff;
+    --ion-text-color: #000000;
+    --ion-toolbar-background: #f8f8f8;
+    --ion-toolbar-border: #c1c4cd;
+    --home-bg: linear-gradient(160deg, #a9c7e8, #e6d7c3);
+    --home-text: #ffffff;
+    --chrome-bg: #f2f2f7;
+    --chrome-text: #000000;
+    --sheet-bg: #ffffff;
+    --sheet-row: #f2f2f7;
+    --muted: #8a8a8e;
+    --separator: #c6c6c8;
+  }
+  .theme-sombre {
+    --ion-background-color: #000000;
+    --ion-text-color: #ffffff;
+    --ion-toolbar-background: #1f1f1f;
+    --ion-toolbar-border: #333333;
+    --home-bg: linear-gradient(160deg, #1c2a3d, #3a2f25);
+    --home-text: #ffffff;
+    --chrome-bg: #1c1c1e;
+    --chrome-text: #ffffff;
+    --sheet-bg: #1c1c1e;
+    --sheet-row: #2c2c2e;
+    --muted: #8d8d93;
+    --separator: #38383a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: var(--page-bg);
+    color: var(--page-text);
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  h2.platform { font-size: 17px; margin-top: 32px; border-top: 1px solid #aaa; padding-top: 16px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch {
+    display: inline-flex;
+    margin-bottom: 8px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .switch label {
+    min-width: 96px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: #fff;
+    color: #222;
+    font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px;
+    max-width: 100%;
+    height: 760px;
+    border: 1px solid #888;
+    border-radius: 44px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: var(--ion-background-color);
+    color: var(--ion-text-color);
+  }
+  .phone.android { border-radius: 24px; height: 640px; }
+  .phone.theme-sombre { display: none; }
+  #t-sombre:checked ~ .states .phone.theme-clair { display: none; }
+  #t-sombre:checked ~ .states .phone.theme-sombre { display: flex; }
+
+  /* Barre d'état iPhone (encoche) */
+  .statusbar {
+    height: 50px;
+    padding: 14px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 600;
+    flex: none;
+  }
+  .statusbar.inapp { background: var(--ion-toolbar-background); color: var(--ion-text-color); }
+  .statusbar.chrome { background: var(--chrome-bg); color: var(--chrome-text); }
+  .statusbar.home { color: var(--home-text); }
+  .statusbar.blank { background: var(--ion-background-color); color: var(--ion-text-color); }
+  .statusbar.android { height: 24px; padding: 0 16px; font-size: 12px; font-weight: 400; align-items: center; }
+
+  .toolbar {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ion-toolbar-background);
+    border-bottom: 1px solid var(--ion-toolbar-border);
+    flex: none;
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; }
+
+  /* Safari iOS : barre d'adresse et barre d'outils en bas */
+  .safari-bottom {
+    flex: none;
+    background: var(--chrome-bg);
+    color: var(--chrome-text);
+    border-top: 1px solid var(--separator);
+    padding: 8px 12px 28px;
+  }
+  .safari-bottom .address {
+    background: var(--sheet-row);
+    border-radius: 12px;
+    min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .safari-bottom .tools {
+    display: flex; justify-content: space-around;
+    color: var(--ios-blue);
+    font-size: 22px;
+    margin-top: 8px;
+  }
+  .safari-bottom .tools span { min-width: 48px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+  .safari-bottom .tools .share { outline: 2px solid var(--ios-blue); border-radius: 10px; }
+
+  /* Feuille de partage iOS */
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--chrome-bg);
+    color: var(--chrome-text);
+    border-radius: 14px 14px 0 0;
+    padding: 16px 16px 32px;
+  }
+  .sheet .head { display: flex; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--separator); }
+  .sheet .name { font-weight: 600; font-size: 16px; }
+  .sheet .url { font-size: 13px; color: var(--muted); }
+  .sheet .list { margin-top: 12px; background: var(--sheet-row); border-radius: 12px; overflow: hidden; }
+  .sheet .item {
+    min-height: 48px; padding: 0 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 16px;
+    border-bottom: 1px solid var(--separator);
+  }
+  .sheet .item:last-child { border-bottom: 0; }
+  .sheet .item.hl { outline: 2px solid var(--ios-blue); outline-offset: -2px; }
+  .sheet .item .glyph { color: var(--chrome-text); font-size: 18px; }
+
+  /* Écran « Ajouter à l'écran d'accueil » */
+  .navbar {
+    flex: none;
+    display: flex; justify-content: space-between; align-items: center;
+    min-height: 48px; padding: 0 16px;
+    background: var(--chrome-bg); color: var(--chrome-text);
+    font-size: 17px;
+  }
+  .navbar .action { color: var(--ios-blue); min-height: 48px; display: flex; align-items: center; }
+  .navbar .action.bold { font-weight: 600; }
+  .navbar .ttl { font-weight: 600; }
+  .addform { flex: 1; background: var(--chrome-bg); color: var(--chrome-text); padding: 16px; }
+  .addform .card { background: var(--sheet-row); border-radius: 12px; display: flex; gap: 12px; padding: 12px; align-items: center; }
+  .addform .fields { flex: 1; }
+  .addform .field { min-height: 44px; display: flex; align-items: center; border-bottom: 1px solid var(--separator); font-size: 17px; }
+  .addform .field.url { border: 0; color: var(--muted); font-size: 15px; }
+  .addform .hint { font-size: 13px; color: var(--muted); margin: 8px 12px; }
+
+  /* Icône */
+  .icon {
+    width: 60px; height: 60px; border-radius: 14px;
+    background: var(--icon-bg);
+    display: flex; align-items: center; justify-content: center;
+    flex: none;
+  }
+  .icon svg { width: 70%; height: 70%; }
+  .icon.small { width: 44px; height: 44px; border-radius: 10px; }
+  .icon.round { border-radius: 50%; width: 52px; height: 52px; }
+
+  /* Écran d'accueil */
+  .phone.home { background: var(--home-bg); color: var(--home-text); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px 8px;
+    padding: 24px 20px;
+  }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
+  .placeholder { width: 60px; height: 60px; border-radius: 14px; background: rgba(255,255,255,.35); }
+  .android .placeholder { width: 52px; height: 52px; border-radius: 50%; }
+
+  /* Android : invite d'installation de Chrome */
+  .urlbar { background: var(--chrome-bg); color: var(--chrome-text); padding: 8px 12px; font-size: 14px; flex: none; }
+  .urlbar span { display: block; padding: 8px 12px; border-radius: 20px; background: var(--sheet-row); }
+  .asheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--sheet-bg); color: var(--chrome-text);
+    border-radius: 16px 16px 0 0; padding: 16px;
+    box-shadow: 0 -2px 12px rgba(0,0,0,.25);
+  }
+  .asheet .row { display: flex; gap: 12px; align-items: center; }
+  .asheet .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .asheet .btn { min-height: 48px; min-width: 96px; padding: 0 16px; display: flex; align-items: center; justify-content: center; border-radius: 24px; font-size: 15px; }
+  .asheet .btn.primary { background: var(--icon-bg); color: #fff; }
+
+  .legend { width: 390px; max-width: 100%; font-size: 13px; margin: 16px 0 0; }
+</style>
+</head>
+<body>
+  <h1>US 29 — Leurio installable en PWA</h1>
+  <p class="note"><strong>iPhone d'abord</strong>, Android ensuite. Ce que la story rend visible : l'ajout à l'écran d'accueil depuis Safari, l'icône « Leurio », puis l'app ouverte en plein écran (sans barres de Safari), y compris sans réseau. Le contenu de l'app ne change pas (écran vide de l'US 27).</p>
+  <p class="note"><strong>Provisoire</strong> (logo et tokens du ticket 2 à venir) : icône bleue avec un leurre stylisé blanc ; barre d'état de la même couleur que la barre de titre, claire ou sombre selon le thème du téléphone ; fond de démarrage = fond de l'app.</p>
+
+  <input type="radio" name="theme" id="t-clair" class="radio" checked>
+  <input type="radio" name="theme" id="t-sombre" class="radio">
+  <div class="switch">
+    <label for="t-clair">Clair</label>
+    <label for="t-sombre">Sombre</label>
+  </div>
+
+  <div class="states">
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <symbol id="lure" viewBox="0 0 64 64">
+          <path d="M10 32 C 18 18, 40 16, 50 32 C 40 48, 18 46, 10 32 Z" fill="#ffffff"/>
+          <path d="M50 32 L 60 22 L 58 32 L 60 42 Z" fill="#ffffff"/>
+          <circle cx="20" cy="30" r="3" fill="#0054e9"/>
+          <path d="M32 44 v 8 a 4 4 0 0 0 8 0" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        </symbol>
+      </defs>
+    </svg>
+
+    <h2 class="platform">iPhone (Safari)</h2>
+
+    <h2>1. Dans Safari : bouton Partager</h2>
+    <p class="note">iOS n'affiche pas d'invite d'installation : on passe par Partager (encadré). L'app tient dans la page avec les barres de Safari.</p>
+    <div class="phone theme-clair">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="safari-bottom">
+        <div class="address">leurio.app</div>
+        <div class="tools"><span>‹</span><span>›</span><span class="share">⬆︎</span><span>📖</span><span>⧉</span></div>
+      </div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="safari-bottom">
+        <div class="address">leurio.app</div>
+        <div class="tools"><span>‹</span><span>›</span><span class="share">⬆︎</span><span>📖</span><span>⧉</span></div>
+      </div>
+    </div>
+
+    <h2>2. Feuille de partage : « Sur l'écran d'accueil »</h2>
+    <p class="note">Feuille d'iOS ; Leurio fournit le titre et l'icône.</p>
+    <div class="phone theme-clair">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="head">
+          <div class="icon small"><svg><use href="#lure"/></svg></div>
+          <div><div class="name">Leurio</div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="list">
+          <div class="item">Copier <span class="glyph">⧉</span></div>
+          <div class="item">Ajouter aux favoris <span class="glyph">☆</span></div>
+          <div class="item hl">Sur l'écran d'accueil <span class="glyph">⊞</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="dim"></div>
+      <div class="sheet">
+        <div class="head">
+          <div class="icon small"><svg><use href="#lure"/></svg></div>
+          <div><div class="name">Leurio</div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="list">
+          <div class="item">Copier <span class="glyph">⧉</span></div>
+          <div class="item">Ajouter aux favoris <span class="glyph">☆</span></div>
+          <div class="item hl">Sur l'écran d'accueil <span class="glyph">⊞</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h2>3. Ajouter à l'écran d'accueil</h2>
+    <p class="note">Icône iOS (180 px, sans transparence) et nom proposé « Leurio ». Écran d'iOS.</p>
+    <div class="phone theme-clair">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="navbar"><span class="action">Annuler</span><span class="ttl">Sur l'écran d'accueil</span><span class="action bold">Ajouter</span></div>
+      <div class="addform">
+        <div class="card">
+          <div class="icon"><svg><use href="#lure"/></svg></div>
+          <div class="fields"><div class="field">Leurio</div><div class="field url">https://leurio.app/</div></div>
+        </div>
+        <p class="hint">Une icône sera ajoutée à votre écran d'accueil pour vous permettre d'accéder rapidement à ce site web.</p>
+      </div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar chrome"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="navbar"><span class="action">Annuler</span><span class="ttl">Sur l'écran d'accueil</span><span class="action bold">Ajouter</span></div>
+      <div class="addform">
+        <div class="card">
+          <div class="icon"><svg><use href="#lure"/></svg></div>
+          <div class="fields"><div class="field">Leurio</div><div class="field url">https://leurio.app/</div></div>
+        </div>
+        <p class="hint">Une icône sera ajoutée à votre écran d'accueil pour vous permettre d'accéder rapidement à ce site web.</p>
+      </div>
+    </div>
+
+    <h2>4. Sur l'écran d'accueil</h2>
+    <div class="phone home theme-clair">
+      <div class="statusbar home"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="grid">
+        <div class="app"><div class="placeholder"></div>Photos</div>
+        <div class="app"><div class="placeholder"></div>Météo</div>
+        <div class="app"><div class="placeholder"></div>Plans</div>
+        <div class="app"><div class="icon"><svg><use href="#lure"/></svg></div>Leurio</div>
+      </div>
+    </div>
+    <div class="phone home theme-sombre">
+      <div class="statusbar home"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="grid">
+        <div class="app"><div class="placeholder"></div>Photos</div>
+        <div class="app"><div class="placeholder"></div>Météo</div>
+        <div class="app"><div class="placeholder"></div>Plans</div>
+        <div class="app"><div class="icon"><svg><use href="#lure"/></svg></div>Leurio</div>
+      </div>
+    </div>
+
+    <h2>5. App ouverte en plein écran</h2>
+    <p class="note">Mode « standalone » : plus de barre d'adresse ni de barre d'outils de Safari. La barre d'état prend la couleur de la barre de titre. Au démarrage, iOS montre un instant le fond de l'app (pas d'écran de lancement dessiné dans cette story).</p>
+    <div class="phone theme-clair">
+      <div class="statusbar inapp"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar inapp"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+
+    <h2>6. Rouverte sans réseau</h2>
+    <p class="note">Mode avion, après un premier chargement : l'app s'affiche à l'identique, servie par le service worker. Aucun message hors ligne dans cette story (rien ne dépend encore du réseau).</p>
+    <div class="phone theme-clair">
+      <div class="statusbar inapp"><span>9:41</span><span>✈</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+    <div class="phone theme-sombre">
+      <div class="statusbar inapp"><span>9:41</span><span>✈</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+    </div>
+
+    <h2 class="platform">Android (Chrome) — doit fonctionner aussi</h2>
+
+    <h2>7. Invite d'installation et icône</h2>
+    <p class="note">Chrome propose « Installer » à partir du manifeste (icônes 192 et 512 px, découpe ronde). Ensuite, mêmes états 5 et 6 qu'iPhone.</p>
+    <div class="phone android theme-clair">
+      <div class="statusbar chrome android"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="urlbar"><span>leurio.app</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="asheet">
+        <div class="row">
+          <div class="icon round"><svg><use href="#lure"/></svg></div>
+          <div><div class="name"><strong>Leurio</strong></div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="actions"><div class="btn">Annuler</div><div class="btn primary">Installer</div></div>
+      </div>
+    </div>
+    <div class="phone android theme-sombre">
+      <div class="statusbar chrome android"><span>9:41</span><span>4G ▮▮▮</span></div>
+      <div class="urlbar"><span>leurio.app</span></div>
+      <div class="toolbar"><span class="title">Leurio</span></div>
+      <div class="content"></div>
+      <div class="asheet">
+        <div class="row">
+          <div class="icon round"><svg><use href="#lure"/></svg></div>
+          <div><div class="name"><strong>Leurio</strong></div><div class="url">leurio.app</div></div>
+        </div>
+        <div class="actions"><div class="btn">Annuler</div><div class="btn primary">Installer</div></div>
+      </div>
+    </div>
+
+    <p class="legend">Serveur de développement (<code>npm start</code>) : aucun changement visible, et pas de service worker.</p>
+  </div>
+</body>
+</html>
