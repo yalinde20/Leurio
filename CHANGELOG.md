@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/yalinde20/Leurio/compare/v1.3.0...v1.3.1) (2026-10-30)
+
+
+### Bug Fixes
+
+* couleurs d'origine de la barre d'état quand index.html a déjà forcé le thème (US 32) ([eb5bab7](https://github.com/yalinde20/Leurio/commit/eb5bab7bc69d9978e400c63d4b4228aeafde67f0))
+
 ## [1.3.0](https://github.com/yalinde20/Leurio/compare/v1.2.0...v1.3.0) (2026-10-30)
 
 
