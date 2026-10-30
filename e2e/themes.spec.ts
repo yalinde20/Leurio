@@ -16,9 +16,15 @@ function fonds(): { clair: string; sombre: string } {
   return { clair: fond(css.slice(0, i)), sombre: fond(css.slice(i)) };
 }
 
-// Ionic peint le body (et le fond de ion-content) avec --ion-background-color : le fond de l'écran est celui du body.
-const fondDe = (page: import('@playwright/test').Page) =>
+// Ionic peint le body avec --ion-background-color ; on vérifie aussi le fond que voit l'utilisateur : celui de ion-content.
+const fondBody = (page: import('@playwright/test').Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+const fondContenu = (page: import('@playwright/test').Page) =>
+  page.locator('ion-content #background-content').evaluate((el) => getComputedStyle(el).backgroundColor);
+const fondDe = async (page: import('@playwright/test').Page) => {
+  const [body, contenu] = [await fondBody(page), await fondContenu(page)];
+  return body === contenu ? body : `body ${body} ≠ ion-content ${contenu}`;
+};
 
 test('critère 0 : given un téléphone réglé en mode sombre, when on ouvre l\'app, then le thème sombre est appliqué : le fond a la valeur du token de fond sombre', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });

@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "lint": "ng lint && stylelint \"src/**/*.scss\"",
+    "lint": "ng lint && stylelint \"src/**/*.{css,scss}\"",
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
     "test:acceptance": "node --test --test-concurrency=1 \"tests/acceptance/*.test.mjs\"",
