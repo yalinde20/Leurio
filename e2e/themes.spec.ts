@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const css = readFileSync('src/theme/tokens.scss', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-
 function fond(bloc: string): string {
   const m = /--lr-fond\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(bloc);
   if (!m) throw new Error('--lr-fond introuvable dans src/theme/tokens.scss');
@@ -11,6 +9,8 @@ function fond(bloc: string): string {
 }
 
 function fonds(): { clair: string; sombre: string } {
+  // Lu dans chaque test : un fichier absent fait échouer le test, pas la collecte.
+  const css = readFileSync('src/theme/tokens.scss', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   const i = css.search(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/);
   if (i < 0) throw new Error('bloc @media (prefers-color-scheme: dark) introuvable');
   return { clair: fond(css.slice(0, i)), sombre: fond(css.slice(i)) };
