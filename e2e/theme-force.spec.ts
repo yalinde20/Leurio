@@ -1,21 +1,17 @@
 import { test, expect, type Page } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { lireThemes } from './tokens';
 
 const CLE = 'leurio.theme';
 
-function blocs() {
-  const css = readFileSync('src/theme/tokens.scss', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-  const i = css.search(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/);
-  if (i < 0) throw new Error('bloc @media (prefers-color-scheme: dark) introuvable');
-  return { clair: css.slice(0, i), sombre: css.slice(i) };
+function fonds(): { clair: { rgb: string; hex: string }; sombre: { rgb: string; hex: string } } {
+  const themes = lireThemes();
+  const fond = (hex: string | undefined) => {
+    if (!hex) throw new Error('--lr-fond introuvable dans src/theme/tokens.scss');
+    const n = parseInt(hex.slice(1), 16);
+    return { hex, rgb: `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})` };
+  };
+  return { clair: fond(themes.clair['--lr-fond']), sombre: fond(themes.sombre['--lr-fond']) };
 }
-function fond(bloc: string): { rgb: string; hex: string } {
-  const m = /--lr-fond\s*:\s*(#[0-9a-fA-F]{6})\s*;/.exec(bloc);
-  if (!m) throw new Error('--lr-fond introuvable dans src/theme/tokens.scss');
-  const n = parseInt(m[1].slice(1), 16);
-  return { hex: m[1].toLowerCase(), rgb: `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})` };
-}
-const fonds = () => ({ clair: fond(blocs().clair), sombre: fond(blocs().sombre) });
 
 const fondDe = async (page: Page) => {
   const body = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -26,19 +22,19 @@ const fondDe = async (page: Page) => {
 const enregistrer = (page: Page, valeur: string) =>
   page.addInitScript(([k, v]) => localStorage.setItem(k, v), [CLE, valeur]);
 
-/** Relève la valeur du token --lr-fond au premier affichage, avant que l'application Angular ne démarre. */
-const relevePremierAffichage = (page: Page) =>
-  page.addInitScript(() => {
-    const w = window as unknown as Record<string, unknown>;
-    const releve = () => {
-      if (w['__premier']) return;
-      const v = getComputedStyle(document.documentElement).getPropertyValue('--lr-fond').trim().toLowerCase();
-      if (v) w['__premier'] = v;
-    };
-    document.addEventListener('readystatechange', releve);
-    document.addEventListener('DOMContentLoaded', releve);
-  });
-const premier = (page: Page) => page.evaluate(() => (window as unknown as Record<string, string>)['__premier']);
+/**
+ * Bloque le bundle Angular : seul le script inline d'index.html peut alors avoir posé le thème.
+ * Le bundle principal s'appelle main.js (dev) ou main-<hash>.js (build).
+ */
+const sansAngular = (page: Page) => page.route(/\/main[^/]*\.js(\?.*)?$/, (route) => route.abort());
+
+const premierAffichage = (page: Page) =>
+  page.evaluate(() => ({
+    theme: document.documentElement.getAttribute('data-theme'),
+    token: getComputedStyle(document.documentElement).getPropertyValue('--lr-fond').trim().toLowerCase(),
+    fond: getComputedStyle(document.body).backgroundColor,
+    angular: document.querySelector('app-root')?.childElementCount ?? 0,
+  }));
 
 test('critère 0 : given un premier lancement de l\'app sur un téléphone en mode sombre, when on ouvre l\'app, then le thème suit le téléphone (sombre)', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -103,22 +99,26 @@ test('critère 4 : given le thème forcé en sombre, when on revient au choix «
 test('critère 5 : given le thème forcé en sombre, when on relance l\'app sur un téléphone en mode clair, then le thème sombre est appliqué dès le premier affichage', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await enregistrer(page, 'sombre');
-  await relevePremierAffichage(page);
-  await page.goto('/');
-  // Valeur relevée avant le démarrage d'Angular : pas de flash de thème clair.
-  expect(await premier(page)).toBe(fonds().sombre.hex);
-  await expect(page.locator('ion-content')).toBeVisible();
-  expect(await fondDe(page)).toBe(fonds().sombre.rgb);
+  await sansAngular(page);
+  await page.goto('/', { waitUntil: 'load' });
+  // Angular n'a pas démarré : seul le script inline a pu poser le thème.
+  const r = await premierAffichage(page);
+  expect(r.angular).toBe(0);
+  expect(r.theme).toBe('sombre');
+  expect(r.token).toBe(fonds().sombre.hex);
+  expect(r.fond).toBe(fonds().sombre.rgb);
 });
 
 test('critère 5 (clair) : given le thème forcé en clair, when on relance l\'app sur un téléphone en mode sombre, then le thème clair est appliqué dès le premier affichage', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await enregistrer(page, 'clair');
-  await relevePremierAffichage(page);
-  await page.goto('/');
-  expect(await premier(page)).toBe(fonds().clair.hex);
-  await expect(page.locator('ion-content')).toBeVisible();
-  expect(await fondDe(page)).toBe(fonds().clair.rgb);
+  await sansAngular(page);
+  await page.goto('/', { waitUntil: 'load' });
+  const r = await premierAffichage(page);
+  expect(r.angular).toBe(0);
+  expect(r.theme).toBe('clair');
+  expect(r.token).toBe(fonds().clair.hex);
+  expect(r.fond).toBe(fonds().clair.rgb);
 });
 
 for (const illisible of ['violet', '', '{"theme":"clair"}']) {

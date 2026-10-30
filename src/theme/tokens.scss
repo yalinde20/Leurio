@@ -30,7 +30,6 @@ html[data-theme='clair'] {
   @include clair;
 }
 
-// @media (prefers-color-scheme: dark) : début des valeurs du thème sombre (ce repère est lu par les tests).
 @mixin sombre {
   color-scheme: dark;
 

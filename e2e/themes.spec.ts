@@ -1,19 +1,16 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { lireThemes } from './tokens';
 
-function fond(bloc: string): string {
-  const m = /--lr-fond\s*:\s*#([0-9a-fA-F]{6})\s*;/.exec(bloc);
-  if (!m) throw new Error('--lr-fond introuvable dans src/theme/tokens.scss');
-  const n = parseInt(m[1], 16);
+function rgb(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
 }
 
 function fonds(): { clair: string; sombre: string } {
   // Lu dans chaque test : un fichier absent fait échouer le test, pas la collecte.
-  const css = readFileSync('src/theme/tokens.scss', 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-  const i = css.search(/@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/);
-  if (i < 0) throw new Error('bloc @media (prefers-color-scheme: dark) introuvable');
-  return { clair: fond(css.slice(0, i)), sombre: fond(css.slice(i)) };
+  const { clair, sombre } = lireThemes();
+  if (!clair['--lr-fond'] || !sombre['--lr-fond']) throw new Error('--lr-fond introuvable dans src/theme/tokens.scss');
+  return { clair: rgb(clair['--lr-fond']), sombre: rgb(sombre['--lr-fond']) };
 }
 
 // Ionic peint le body avec --ion-background-color ; on vérifie aussi le fond que voit l'utilisateur : celui de ion-content.

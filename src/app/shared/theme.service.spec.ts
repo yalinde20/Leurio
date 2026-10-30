@@ -40,11 +40,14 @@ describe('ThemeService', () => {
   beforeEach(() => {
     localStorage.clear();
     document.documentElement.removeAttribute('data-theme');
+    document.head.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     localStorage.clear();
     document.documentElement.removeAttribute('data-theme');
+    document.head.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
   });
 
   it('critère 0 : given un premier lancement de l\'app, when on lit le choix de thème, then il vaut « système » et le thème suit le téléphone', () => {
@@ -127,5 +130,60 @@ describe('ThemeService', () => {
     const service = lancer();
     expect(service.choix()).toBe('systeme');
     expect(themeApplique()).toBeNull();
+  });
+
+  it('given un stockage local qui refuse l\'écriture, when on choisit un thème, then il s\'applique quand même pour la session', () => {
+    telephone(false);
+    const service = lancer();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    expect(() => service.choisir('sombre')).not.toThrow();
+    expect(service.choix()).toBe('sombre');
+    expect(themeApplique()).toBe('sombre');
+  });
+
+  describe('couleur de la barre d\'état (theme-color)', () => {
+    const CLAIR = '#f8f8f8';
+    const SOMBRE = '#1f1f1f';
+    const barres = () => ({
+      clair: document.querySelector('meta[name="theme-color"][media*="light"]')!.getAttribute('content'),
+      sombre: document.querySelector('meta[name="theme-color"][media*="dark"]')!.getAttribute('content'),
+    });
+    beforeEach(() => {
+      document.head.insertAdjacentHTML(
+        'beforeend',
+        `<meta name="theme-color" media="(prefers-color-scheme: light)" content="${CLAIR}">` +
+          `<meta name="theme-color" media="(prefers-color-scheme: dark)" content="${SOMBRE}">`,
+      );
+    });
+
+    it('given un thème forcé, when on le choisit, then les deux balises prennent la couleur de ce thème', () => {
+      telephone(false);
+      const service = lancer();
+      service.choisir('sombre');
+      expect(barres()).toEqual({ clair: SOMBRE, sombre: SOMBRE });
+      service.choisir('clair');
+      expect(barres()).toEqual({ clair: CLAIR, sombre: CLAIR });
+    });
+
+    it('given un thème forcé, when on revient à « système », then les couleurs d\'origine sont restaurées', () => {
+      telephone(false);
+      const service = lancer();
+      service.choisir('sombre');
+      service.choisir('systeme');
+      expect(barres()).toEqual({ clair: CLAIR, sombre: SOMBRE });
+    });
+
+    it('given des balises déjà forcées par le script de index.html, when le service démarre puis revient à « système », then les couleurs d\'origine sont restaurées', () => {
+      telephone(false);
+      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+        m.setAttribute('data-origine', m.getAttribute('content')!);
+        m.setAttribute('content', SOMBRE);
+      });
+      localStorage.setItem(CLE, 'sombre');
+      const service = lancer();
+      expect(barres()).toEqual({ clair: SOMBRE, sombre: SOMBRE });
+      service.choisir('systeme');
+      expect(barres()).toEqual({ clair: CLAIR, sombre: SOMBRE });
+    });
   });
 });

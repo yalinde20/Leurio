@@ -14,11 +14,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8f8f8" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1f1f1f" />
-    <!-- Applique le thème choisi (clé leurio.theme) avant le démarrage d'Angular : pas de flash. À garder aligné avec ThemeService. -->
+    <!-- Applique le thème choisi (clé leurio.theme) avant le démarrage d'Angular : pas de flash. À garder aligné avec ThemeService
+         (data-theme et couleur de la barre d'état ; data-origine garde la valeur d'origine des balises theme-color). -->
     <script>
       try {
         var t = localStorage.getItem('leurio.theme');
-        if (t === 'clair' || t === 'sombre') document.documentElement.setAttribute('data-theme', t);
+        if (t === 'clair' || t === 'sombre') {
+          document.documentElement.setAttribute('data-theme', t);
+          var metas = document.querySelectorAll('meta[name="theme-color"]');
+          var valeur = function (media) {
+            for (var i = 0; i < metas.length; i++) {
+              if ((metas[i].getAttribute('media') || '').indexOf(media) >= 0) return metas[i].getAttribute('content') || '';
+            }
+            return '';
+          };
+          var couleur = valeur(t === 'clair' ? 'light' : 'dark');
+          for (var j = 0; j < metas.length; j++) {
+            metas[j].setAttribute('data-origine', metas[j].getAttribute('content') || '');
+            metas[j].setAttribute('content', couleur);
+          }
+        }
       } catch (e) {}
     </script>
   </head>

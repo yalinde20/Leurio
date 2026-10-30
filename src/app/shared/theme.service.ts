@@ -50,7 +50,8 @@ export class ThemeService {
       metas.find((m) => (m.getAttribute('media') ?? '').includes(cherche))?.getAttribute('content') ?? '';
     const [clair, sombre] = [valeur('light'), valeur('dark')];
     return metas.map((meta) => {
-      meta.dataset['origine'] = meta.getAttribute('content') ?? '';
+      // Le script d'index.html a pu forcer la couleur avant nous : il a alors déjà gardé l'origine.
+      meta.dataset['origine'] ??= meta.getAttribute('content') ?? '';
       return { meta, clair, sombre };
     });
   }
