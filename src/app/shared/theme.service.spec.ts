@@ -185,5 +185,17 @@ describe('ThemeService', () => {
       service.choisir('systeme');
       expect(barres()).toEqual({ clair: CLAIR, sombre: SOMBRE });
     });
+
+    it('given des balises déjà forcées en sombre par le script de index.html, when on choisit le thème clair, then les deux balises prennent la couleur claire d\'origine', () => {
+      telephone(false);
+      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+        m.setAttribute('data-origine', m.getAttribute('content')!);
+        m.setAttribute('content', SOMBRE);
+      });
+      localStorage.setItem(CLE, 'sombre');
+      const service = lancer();
+      service.choisir('clair');
+      expect(barres()).toEqual({ clair: CLAIR, sombre: CLAIR });
+    });
   });
 });

@@ -46,8 +46,11 @@ export class ThemeService {
 
   private lireBarres() {
     const metas = Array.from(this.document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'));
-    const valeur = (cherche: string) =>
-      metas.find((m) => (m.getAttribute('media') ?? '').includes(cherche))?.getAttribute('content') ?? '';
+    // Couleur d'origine de chaque thème, même si le script d'index.html a déjà forcé les balises.
+    const valeur = (cherche: string) => {
+      const meta = metas.find((m) => (m.getAttribute('media') ?? '').includes(cherche));
+      return meta?.dataset['origine'] ?? meta?.getAttribute('content') ?? '';
+    };
     const [clair, sombre] = [valeur('light'), valeur('dark')];
     return metas.map((meta) => {
       // Le script d'index.html a pu forcer la couleur avant nous : il a alors déjà gardé l'origine.
