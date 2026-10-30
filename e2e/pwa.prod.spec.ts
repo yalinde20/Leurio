@@ -80,7 +80,7 @@ test('critère 0 : given le build de production servi en local, when on charge l
 
 test('critère 1 : given le build de production servi en local, when on charge la page puis on attend la fin du chargement, then un service worker est enregistré et actif', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
 
   const etat = await etatServiceWorker(page);
   expect(etat).not.toBeNull();
@@ -90,7 +90,7 @@ test('critère 1 : given le build de production servi en local, when on charge l
 
 test('critère 2 : given le build de production chargé une première fois, when on recharge la page sans réseau, then l\'app s\'affiche quand même', async ({ page, context }) => {
   await page.goto('/');
-  await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
   await etatServiceWorker(page);
   // Un rechargement en ligne pour que le service worker contrôle la page et remplisse son cache.
   await page.reload();
@@ -113,13 +113,13 @@ test('critère 2 : given le build de production chargé une première fois, when
   await context.setOffline(true);
   await page.reload();
 
-  await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
   await expect(page.locator('ion-content')).toBeVisible();
 });
 
 test('critère 3 : given le build de production, when on lance l\'audit d\'installabilité (celui de Lighthouse, via Chrome), then il indique une app installable avec un service worker actif', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
 
   const sw = (await etatServiceWorker(page))?.actif ?? null;
   expect(sw).toBe('activated');
