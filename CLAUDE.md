@@ -16,6 +16,7 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 - Build : `npm run build`
 - Synchronisation des projets natifs Android et iOS (après la compilation de production) : `npm run cap:sync`
 - Build debug Android (SDK Android requis ; vérifié en CI par `.github/workflows/android.yml`) : `npm run test:android`
+- Tests des règles Firestore (émulateur, Java requis) : `npm run test:rules`
 - Node 24 requis (`.nvmrc`).
 
 ## Conventions

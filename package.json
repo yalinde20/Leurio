@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "icons": "node scripts/generate-icons.mjs",
     "cap:sync": "cap sync",
-    "test:android": "node --test tests/android/*.test.mjs"
+    "test:android": "node --test tests/android/*.test.mjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-leurio \"node scripts/run-rules-tests.mjs\""
   },
   "private": true,
   "packageManager": "npm@11.19.1",
@@ -39,9 +40,12 @@
     "@angular/compiler-cli": "^22.2.0",
     "@capacitor/cli": "^8.6.0",
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "1.63.0",
     "angular-eslint": "22.6.0",
     "eslint": "^10.12.0",
+    "firebase": "^13.1.0",
+    "firebase-tools": "^15.34.2",
     "jsdom": "^30.0.0",
     "postcss-scss": "4.0.9",
     "prettier": "^3.8.1",
