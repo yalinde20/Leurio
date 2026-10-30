@@ -3,6 +3,8 @@
 # Un test en échec fait échouer le CI. L'émulateur demande Java.
 # Fichier séparé de ci.yml : les tests d'acceptation du CI simulent toutes les
 # étapes de ci.yml en local, où Java et l'émulateur ne sont pas garantis.
+# Pour qu'un échec bloque la fusion : rendre le check « Règles Firestore » obligatoire
+# dans la protection de la branche main.
 name: Règles Firestore
 
 on:
