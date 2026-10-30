@@ -6,7 +6,7 @@ const CLE = 'leurio.theme';
 
 const onglet = (page: Page, nom: string) => page.getByRole('tab', { name: nom, exact: true });
 const titreVisible = (page: Page) => page.locator('ion-toolbar ion-title:visible');
-// Ionic garde les pages précédentes dans le DOM, cachées : on ne regarde que la page visible.
+// Seule la page affichée compte : le filtre :visible écarte une page qui serait encore dans le DOM.
 const ecranAffiche = async (page: Page, nom: string) => {
   await expect(titreVisible(page)).toHaveText(nom);
   await expect(onglet(page, nom)).toHaveAttribute('aria-selected', 'true');

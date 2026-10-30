@@ -14,7 +14,6 @@ ion-tab-bar {
   --background: var(--lr-surface);
   --border: 1px solid var(--lr-bordure);
   min-height: 56px;
-  border-top: 1px solid var(--lr-bordure);
 }
 
 .onglet {
@@ -29,12 +28,14 @@ ion-tab-bar {
   color: var(--lr-texte-secondaire);
   text-decoration: none;
   font-size: 0.6875rem;
+  font-weight: 500;
 
   ion-icon {
-    font-size: 24px;
+    font-size: 26px;
   }
 }
 
 .onglet-selectionne {
   color: var(--lr-primaire);
+  font-weight: 600;
 }

@@ -4,7 +4,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./shell/onglets.component').then((m) => m.OngletsComponent),
+    loadComponent: () => import('./shared/onglets/onglets.component').then((m) => m.OngletsComponent),
     children: [
       { path: 'conseil', loadComponent: () => import('./features/conseil/conseil.page').then((m) => m.ConseilPage) },
       { path: 'boite', loadComponent: () => import('./features/boite/boite.page').then((m) => m.BoitePage) },
