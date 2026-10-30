@@ -1,0 +1,47 @@
+/* Tokens de couleur de Leurio (PLAN §3). Seul fichier où les couleurs sont écrites en dur.
+   Thème clair par défaut ; thème sombre quand le téléphone est réglé en mode sombre. */
+:root {
+  color-scheme: light;
+
+  --lr-fond: #f7f3ea;
+  --lr-surface: #fffdf8;
+  --lr-texte: #10241f;
+  --lr-texte-secondaire: #46554f;
+  --lr-bordure: #d9d0be;
+  --lr-primaire: #0e6b5c;
+  --lr-sur-primaire: #f7f3ea;
+  --lr-sable: #e9dcc0;
+  --lr-accent: #e8590c;
+  --lr-sur-accent: #1a1206;
+  --lr-danger: #b42318;
+  --lr-carte-eau: #9cc9d6;
+  --lr-carte-terre: #e9e2cf;
+  --lr-carte-marqueur: #e8590c;
+  --lr-graphique-1: #0e6b5c;
+  --lr-graphique-2: #e8590c;
+  --lr-graphique-grille: #d9d0be;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-sur-primaire: #0e1714;
+    --lr-sable: #3a3326;
+    --lr-accent: #ff8a3d;
+    --lr-sur-accent: #1a1206;
+    --lr-danger: #f97066;
+    --lr-carte-eau: #123a44;
+    --lr-carte-terre: #1b2622;
+    --lr-carte-marqueur: #ff8a3d;
+    --lr-graphique-1: #5cc8b0;
+    --lr-graphique-2: #ff8a3d;
+    --lr-graphique-grille: #2b3b36;
+  }
+}
