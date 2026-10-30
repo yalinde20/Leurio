@@ -1,6 +1,9 @@
 /* Tokens de couleur de Leurio (PLAN §3). Seul fichier où les couleurs sont écrites en dur.
-   Thème clair par défaut ; thème sombre quand le téléphone est réglé en mode sombre. */
-:root {
+   Thème clair par défaut ; thème sombre quand le téléphone est réglé en mode sombre.
+   Le choix de l'utilisateur (ThemeService) pose data-theme="clair" ou "sombre" sur <html> et l'emporte
+   sur le téléphone ; sans attribut (choix « système »), le thème suit prefers-color-scheme.
+   Chaque série de valeurs n'est écrite qu'une fois, dans un mixin. */
+@mixin clair {
   color-scheme: light;
 
   --lr-fond: #f7f3ea;
@@ -22,26 +25,40 @@
   --lr-graphique-grille: #d9d0be;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root,
+html[data-theme='clair'] {
+  @include clair;
+}
 
-    --lr-fond: #0e1714;
-    --lr-surface: #16231f;
-    --lr-texte: #e6e1d6;
-    --lr-texte-secondaire: #9fb0aa;
-    --lr-bordure: #2b3b36;
-    --lr-primaire: #5cc8b0;
-    --lr-sur-primaire: #0e1714;
-    --lr-sable: #3a3326;
-    --lr-accent: #ff8a3d;
-    --lr-sur-accent: #1a1206;
-    --lr-danger: #f97066;
-    --lr-carte-eau: #123a44;
-    --lr-carte-terre: #1b2622;
-    --lr-carte-marqueur: #ff8a3d;
-    --lr-graphique-1: #5cc8b0;
-    --lr-graphique-2: #ff8a3d;
-    --lr-graphique-grille: #2b3b36;
+// @media (prefers-color-scheme: dark) : début des valeurs du thème sombre (ce repère est lu par les tests).
+@mixin sombre {
+  color-scheme: dark;
+
+  --lr-fond: #0e1714;
+  --lr-surface: #16231f;
+  --lr-texte: #e6e1d6;
+  --lr-texte-secondaire: #9fb0aa;
+  --lr-bordure: #2b3b36;
+  --lr-primaire: #5cc8b0;
+  --lr-sur-primaire: #0e1714;
+  --lr-sable: #3a3326;
+  --lr-accent: #ff8a3d;
+  --lr-sur-accent: #1a1206;
+  --lr-danger: #f97066;
+  --lr-carte-eau: #123a44;
+  --lr-carte-terre: #1b2622;
+  --lr-carte-marqueur: #ff8a3d;
+  --lr-graphique-1: #5cc8b0;
+  --lr-graphique-2: #ff8a3d;
+  --lr-graphique-grille: #2b3b36;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    @include sombre;
   }
+}
+
+html[data-theme='sombre'] {
+  @include sombre;
 }
