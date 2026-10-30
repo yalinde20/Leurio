@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/yalinde20/Leurio/compare/v1.2.0...v1.3.0) (2026-10-30)
+
+
+### Features
+
+* thèmes clair et sombre en tokens, suivant le réglage du téléphone (US 31) ([4f2bb97](https://github.com/yalinde20/Leurio/commit/4f2bb97ffd283f185cc463234d256604e2fc7503))
+
+
+### Bug Fixes
+
+* palette Ionic complète dans les deux thèmes, lint des CSS, imports Sass (US 31) ([ca5af7c](https://github.com/yalinde20/Leurio/commit/ca5af7c3e31e5a159c043af66416fa3cf8b0e3f1))
+
 ## [1.2.0](https://github.com/yalinde20/Leurio/compare/v1.1.0...v1.2.0) (2026-10-29)
 
 
