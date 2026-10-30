@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/yalinde20/Leurio/compare/v1.3.1...v1.4.0) (2026-10-30)
+
+
+### Features
+
+* barre d'onglets Conseil · Boîte · Spots · Compte (US 33) ([19209ee](https://github.com/yalinde20/Leurio/commit/19209ee85ab48c5259bdb63ac76c216a97f1b8ae))
+* règles d'accès Firestore testées sur l'émulateur (US 34) ([d3b052f](https://github.com/yalinde20/Leurio/commit/d3b052ffc100b8bf3a6d4653848a6c88c894b15c))
+
+
+### Bug Fixes
+
+* revue de l'US 33 (barre dans shared/, graisse et icônes de la maquette, test prod des adresses d'onglet) ([b940a9d](https://github.com/yalinde20/Leurio/commit/b940a9d47227abe76dca7062899c927144d564c4))
+* revue de l'US 34 (check obligatoire signalé, lanceur des tests de règles sans fichier) ([700e178](https://github.com/yalinde20/Leurio/commit/700e178f46bd617467a7aaf77932774f9a6dd60d))
+
 ## [1.3.1](https://github.com/yalinde20/Leurio/compare/v1.3.0...v1.3.1) (2026-10-30)
 
 
