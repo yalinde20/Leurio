@@ -1,14 +1,15 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { compile } from 'sass';
 import { ROOT } from './run.mjs';
 
 export const TOKENS_FILE = 'src/theme/tokens.scss';
 
-/** Lit les tokens --lr-* du thème clair (:root) et du thème sombre (@media prefers-color-scheme: dark). */
+/** Lit les tokens --lr-* dans le CSS compilé : thème clair = avant le @media, thème sombre = à partir du @media prefers-color-scheme: dark. */
 export function lireThemes() {
   const p = join(ROOT, TOKENS_FILE);
   if (!existsSync(p)) throw new Error(`${TOKENS_FILE} est absent : les tokens de thème n'existent pas encore`);
-  const css = readFileSync(p, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = compile(p).css.replace(/\/\*[\s\S]*?\*\//g, '');
   const m = /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/.exec(css);
   if (!m) throw new Error(`${TOKENS_FILE} n'a pas de bloc @media (prefers-color-scheme: dark)`);
   const lire = (txt) => Object.fromEntries([...txt.matchAll(/(--lr-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;/g)].map((x) => [x[1], x[2].toLowerCase()]));

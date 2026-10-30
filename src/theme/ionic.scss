@@ -82,62 +82,71 @@
   --ion-color-dark-tint: #283a35;
 }
 
+@mixin ion-sombre {
+  --ion-background-color-rgb: 14, 23, 20;
+  --ion-text-color-rgb: 230, 225, 214;
+
+  --ion-color-primary-rgb: 92, 200, 176;
+  --ion-color-primary-contrast-rgb: 14, 23, 20;
+  --ion-color-primary-shade: #51b09b;
+  --ion-color-primary-tint: #6cceb8;
+
+  --ion-color-secondary-rgb: 255, 138, 61;
+  --ion-color-secondary-shade: #e07936;
+  --ion-color-secondary-tint: #ff9650;
+
+  --ion-color-danger-rgb: 249, 112, 102;
+  --ion-color-danger-contrast-rgb: 14, 23, 20;
+  --ion-color-danger-shade: #db635a;
+  --ion-color-danger-tint: #fa7e75;
+
+  --ion-color-tertiary: #a99bf0;
+  --ion-color-tertiary-rgb: 169, 155, 240;
+  --ion-color-tertiary-contrast: #0e1714;
+  --ion-color-tertiary-contrast-rgb: 14, 23, 20;
+  --ion-color-tertiary-shade: #9588d3;
+  --ion-color-tertiary-tint: #b2a5f2;
+  --ion-color-success: #5fd68a;
+  --ion-color-success-rgb: 95, 214, 138;
+  --ion-color-success-contrast: #0e1714;
+  --ion-color-success-contrast-rgb: 14, 23, 20;
+  --ion-color-success-shade: #54bc79;
+  --ion-color-success-tint: #6fda96;
+  --ion-color-warning: #ffce31;
+  --ion-color-warning-rgb: 255, 206, 49;
+  --ion-color-warning-contrast: #1a1206;
+  --ion-color-warning-contrast-rgb: 26, 18, 6;
+  --ion-color-warning-shade: #e0b52b;
+  --ion-color-warning-tint: #ffd346;
+  --ion-color-light: #3a3326;
+  --ion-color-light-rgb: 58, 51, 38;
+  --ion-color-light-contrast: #e6e1d6;
+  --ion-color-light-contrast-rgb: 230, 225, 214;
+  --ion-color-light-shade: #332d21;
+  --ion-color-light-tint: #4e473c;
+  --ion-color-medium: #9fb0aa;
+  --ion-color-medium-rgb: 159, 176, 170;
+  --ion-color-medium-contrast: #0e1714;
+  --ion-color-medium-contrast-rgb: 14, 23, 20;
+  --ion-color-medium-shade: #8c9b96;
+  --ion-color-medium-tint: #a9b8b3;
+  --ion-color-dark: #e6e1d6;
+  --ion-color-dark-rgb: 230, 225, 214;
+  --ion-color-dark-contrast: #0e1714;
+  --ion-color-dark-contrast-rgb: 14, 23, 20;
+  --ion-color-dark-shade: #cac6bc;
+  --ion-color-dark-tint: #e9e4da;
+}
+
+// Thème sombre : réglage du téléphone (choix « système ») ou thème forcé par ThemeService.
 @media (prefers-color-scheme: dark) {
-  :root {
-    --ion-background-color-rgb: 14, 23, 20;
-    --ion-text-color-rgb: 230, 225, 214;
-
-    --ion-color-primary-rgb: 92, 200, 176;
-    --ion-color-primary-contrast-rgb: 14, 23, 20;
-    --ion-color-primary-shade: #51b09b;
-    --ion-color-primary-tint: #6cceb8;
-
-    --ion-color-secondary-rgb: 255, 138, 61;
-    --ion-color-secondary-shade: #e07936;
-    --ion-color-secondary-tint: #ff9650;
-
-    --ion-color-danger-rgb: 249, 112, 102;
-    --ion-color-danger-contrast-rgb: 14, 23, 20;
-    --ion-color-danger-shade: #db635a;
-    --ion-color-danger-tint: #fa7e75;
-
-    --ion-color-tertiary: #a99bf0;
-    --ion-color-tertiary-rgb: 169, 155, 240;
-    --ion-color-tertiary-contrast: #0e1714;
-    --ion-color-tertiary-contrast-rgb: 14, 23, 20;
-    --ion-color-tertiary-shade: #9588d3;
-    --ion-color-tertiary-tint: #b2a5f2;
-    --ion-color-success: #5fd68a;
-    --ion-color-success-rgb: 95, 214, 138;
-    --ion-color-success-contrast: #0e1714;
-    --ion-color-success-contrast-rgb: 14, 23, 20;
-    --ion-color-success-shade: #54bc79;
-    --ion-color-success-tint: #6fda96;
-    --ion-color-warning: #ffce31;
-    --ion-color-warning-rgb: 255, 206, 49;
-    --ion-color-warning-contrast: #1a1206;
-    --ion-color-warning-contrast-rgb: 26, 18, 6;
-    --ion-color-warning-shade: #e0b52b;
-    --ion-color-warning-tint: #ffd346;
-    --ion-color-light: #3a3326;
-    --ion-color-light-rgb: 58, 51, 38;
-    --ion-color-light-contrast: #e6e1d6;
-    --ion-color-light-contrast-rgb: 230, 225, 214;
-    --ion-color-light-shade: #332d21;
-    --ion-color-light-tint: #4e473c;
-    --ion-color-medium: #9fb0aa;
-    --ion-color-medium-rgb: 159, 176, 170;
-    --ion-color-medium-contrast: #0e1714;
-    --ion-color-medium-contrast-rgb: 14, 23, 20;
-    --ion-color-medium-shade: #8c9b96;
-    --ion-color-medium-tint: #a9b8b3;
-    --ion-color-dark: #e6e1d6;
-    --ion-color-dark-rgb: 230, 225, 214;
-    --ion-color-dark-contrast: #0e1714;
-    --ion-color-dark-contrast-rgb: 14, 23, 20;
-    --ion-color-dark-shade: #cac6bc;
-    --ion-color-dark-tint: #e9e4da;
+  :root:not([data-theme]) {
+    @include ion-sombre;
   }
+}
+
+html[data-theme='sombre'] {
+  @include ion-sombre;
 }
 
 /* Paliers de gris d'Ionic (50 à 950) : le fond mêlé au texte, et l'inverse, selon les tokens.
