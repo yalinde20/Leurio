@@ -1,0 +1,41 @@
+# Règles d'accès Firestore (US 34, critère 12) : les tests des règles tournent sur
+# l'émulateur Firebase (projet demo-leurio, aucun appel au vrai projet).
+# Un test en échec fait échouer le CI. L'émulateur demande Java.
+# Fichier séparé de ci.yml : les tests d'acceptation du CI simulent toutes les
+# étapes de ci.yml en local, où Java et l'émulateur ne sont pas garantis.
+name: Règles Firestore
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Installation
+        run: npm ci
+      - name: Tests des règles Firestore
+        run: npm run test:rules
