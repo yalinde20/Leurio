@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 31 : thèmes clair et sombre</title>
+<style>
+  /* Tokens Leurio proposés (PLAN §1 : vert eau, sable, accent fire-tiger ; §3 : deux thèmes complets).
+     Valeurs provisoires. Dans l'app, ils alimentent les couleurs Ionic (--ion-background-color, --ion-color-primary…). */
+  .theme-clair {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-sur-primaire: #f7f3ea;
+    --lr-sable: #e9dcc0;
+    --lr-accent: #e8590c;
+    --lr-sur-accent: #1a1206;
+    --lr-danger: #b42318;
+    --lr-carte-eau: #9cc9d6;
+    --lr-carte-terre: #e9e2cf;
+    --lr-carte-marqueur: #e8590c;
+    --lr-graphique-1: #0e6b5c;
+    --lr-graphique-2: #e8590c;
+    --lr-graphique-grille: #d9d0be;
+  }
+  .theme-sombre {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-sur-primaire: #0e1714;
+    --lr-sable: #3a3326;
+    --lr-accent: #ff8a3d;
+    --lr-sur-accent: #1a1206;
+    --lr-danger: #f97066;
+    --lr-carte-eau: #123a44;
+    --lr-carte-terre: #1b2622;
+    --lr-carte-marqueur: #ff8a3d;
+    --lr-graphique-1: #5cc8b0;
+    --lr-graphique-2: #ff8a3d;
+    --lr-graphique-grille: #2b3b36;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee;
+    color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .theme-sombre { display: none; }
+  #t-sombre:checked ~ .states .theme-clair { display: none; }
+  #t-sombre:checked ~ .states .theme-sombre { display: block; }
+  #t-sombre:checked ~ .states .phone.theme-sombre { display: flex; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .phone.theme-clair { display: flex; }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface); color: var(--lr-texte);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; }
+
+  /* Planche des tokens : hors de l'app, pour la validation */
+  .sheet {
+    width: 390px; max-width: 100%; margin-top: 12px; padding: 16px;
+    border: 1px solid #888; border-radius: 16px;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .sheet h3 { font-size: 15px; margin: 0 0 8px; }
+  .sheet h3 + p { font-size: 13px; color: var(--lr-texte-secondaire); margin: 0 0 12px; }
+  .row { display: flex; align-items: center; gap: 10px; font-size: 13px; min-height: 32px; }
+  .sw { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--lr-bordure); flex: none; }
+  .row code { flex: 1; }
+  .row .val { color: var(--lr-texte-secondaire); font-family: ui-monospace, monospace; }
+  .group { margin: 12px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--lr-texte-secondaire); }
+  .btn {
+    min-height: 48px; border: 0; border-radius: 12px; padding: 0 20px; font-size: 17px; font-weight: 600;
+    background: var(--lr-accent); color: var(--lr-sur-accent); width: 100%; margin: 6px 0;
+  }
+  .btn.primaire { background: var(--lr-primaire); color: var(--lr-sur-primaire); }
+  .card { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 12px; padding: 12px; margin: 6px 0; }
+  .card .sec { color: var(--lr-texte-secondaire); font-size: 14px; }
+  .map { height: 90px; border-radius: 12px; background: var(--lr-carte-terre); position: relative; overflow: hidden; margin: 6px 0; border: 1px solid var(--lr-bordure); }
+  .map .eau { position: absolute; left: -10%; top: 35%; width: 120%; height: 30px; background: var(--lr-carte-eau); transform: rotate(-8deg); }
+  .map .pin { position: absolute; left: 55%; top: 30%; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--lr-carte-marqueur); }
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 70px; padding: 6px; border-bottom: 1px solid var(--lr-graphique-grille); border-top: 1px dashed var(--lr-graphique-grille); margin: 6px 0; }
+  .chart i { flex: 1; background: var(--lr-graphique-1); border-radius: 3px 3px 0 0; }
+  .chart i:nth-child(even) { background: var(--lr-graphique-2); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 4px 0; border-bottom: 1px solid var(--lr-bordure); }
+  td:last-child { text-align: right; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>US 31 — Thèmes clair et sombre en tokens</h1>
+<p class="note">L'app suit le réglage du téléphone (iPhone : Réglages › Luminosité et affichage). Le passage clair ↔ sombre se fait en direct, sans recharger. Rien d'autre ne change à l'écran : seules les couleurs. Interrupteur ci-dessous pour voir chaque thème.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+  <h2>1. L'écran actuel de l'app (iPhone, app installée)</h2>
+  <p class="note">Seul écran existant aujourd'hui : barre de titre et fond. Fond sable très clair en clair, vert très sombre en sombre (pas de blanc pur, pas de noir pur).</p>
+  <div class="phone theme-clair">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Leurio</span></div>
+    <div class="content"></div>
+  </div>
+  <div class="phone theme-sombre">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Leurio</span></div>
+    <div class="content"></div>
+  </div>
+
+  <h2>2. Planche des tokens (référence, hors de l'app)</h2>
+  <p class="note">Chaque token existe dans les deux thèmes, carte et graphiques compris. Les exemples (bouton, carte, plan, graphique) montrent les tokens en usage ; ils ne sont pas ajoutés à l'app par cette story.</p>
+
+  <div class="sheet theme-clair">
+    <h3>Thème clair — plein soleil</h3>
+    <p>Très contrasté.</p>
+    <div class="group">Base</div>
+    <div class="row"><span class="sw" style="background:#f7f3ea"></span><code>--lr-fond</code><span class="val">#f7f3ea</span></div>
+    <div class="row"><span class="sw" style="background:#fffdf8"></span><code>--lr-surface</code><span class="val">#fffdf8</span></div>
+    <div class="row"><span class="sw" style="background:#10241f"></span><code>--lr-texte</code><span class="val">#10241f</span></div>
+    <div class="row"><span class="sw" style="background:#46554f"></span><code>--lr-texte-secondaire</code><span class="val">#46554f</span></div>
+    <div class="row"><span class="sw" style="background:#d9d0be"></span><code>--lr-bordure</code><span class="val">#d9d0be</span></div>
+    <div class="row"><span class="sw" style="background:#0e6b5c"></span><code>--lr-primaire</code> (vert eau)<span class="val">#0e6b5c</span></div>
+    <div class="row"><span class="sw" style="background:#f7f3ea"></span><code>--lr-sur-primaire</code><span class="val">#f7f3ea</span></div>
+    <div class="row"><span class="sw" style="background:#e9dcc0"></span><code>--lr-sable</code><span class="val">#e9dcc0</span></div>
+    <div class="row"><span class="sw" style="background:#e8590c"></span><code>--lr-accent</code> (fire-tiger)<span class="val">#e8590c</span></div>
+    <div class="row"><span class="sw" style="background:#1a1206"></span><code>--lr-sur-accent</code><span class="val">#1a1206</span></div>
+    <div class="row"><span class="sw" style="background:#b42318"></span><code>--lr-danger</code><span class="val">#b42318</span></div>
+    <div class="group">Carte</div>
+    <div class="row"><span class="sw" style="background:#9cc9d6"></span><code>--lr-carte-eau</code><span class="val">#9cc9d6</span></div>
+    <div class="row"><span class="sw" style="background:#e9e2cf"></span><code>--lr-carte-terre</code><span class="val">#e9e2cf</span></div>
+    <div class="row"><span class="sw" style="background:#e8590c"></span><code>--lr-carte-marqueur</code><span class="val">#e8590c</span></div>
+    <div class="group">Graphiques</div>
+    <div class="row"><span class="sw" style="background:#0e6b5c"></span><code>--lr-graphique-1</code><span class="val">#0e6b5c</span></div>
+    <div class="row"><span class="sw" style="background:#e8590c"></span><code>--lr-graphique-2</code><span class="val">#e8590c</span></div>
+    <div class="row"><span class="sw" style="background:#d9d0be"></span><code>--lr-graphique-grille</code><span class="val">#d9d0be</span></div>
+    <div class="group">En usage</div>
+    <button class="btn" type="button">Préparer ma sortie</button>
+    <button class="btn primaire" type="button">Voir l'animation</button>
+    <div class="card"><strong>Texte principal</strong><div class="sec">Texte secondaire sur une surface</div></div>
+    <div class="map"><span class="eau"></span><span class="pin"></span></div>
+    <div class="chart"><i style="height:40%"></i><i style="height:70%"></i><i style="height:55%"></i><i style="height:90%"></i><i style="height:30%"></i><i style="height:60%"></i></div>
+    <div class="group">Contrastes</div>
+    <table>
+      <tr><td>Texte principal sur fond (exigé ≥ 7:1)</td><td>14,7:1</td></tr>
+      <tr><td>Texte du bouton sur l'accent (exigé ≥ 4,5:1)</td><td>5,2:1</td></tr>
+      <tr><td>Texte secondaire sur fond</td><td>7,1:1</td></tr>
+    </table>
+  </div>
+
+  <div class="sheet theme-sombre">
+    <h3>Thème sombre — aube, crépuscule, nuit</h3>
+    <p>Sans éblouir : aucun blanc pur sur de grandes surfaces.</p>
+    <div class="group">Base</div>
+    <div class="row"><span class="sw" style="background:#0e1714"></span><code>--lr-fond</code><span class="val">#0e1714</span></div>
+    <div class="row"><span class="sw" style="background:#16231f"></span><code>--lr-surface</code><span class="val">#16231f</span></div>
+    <div class="row"><span class="sw" style="background:#e6e1d6"></span><code>--lr-texte</code><span class="val">#e6e1d6</span></div>
+    <div class="row"><span class="sw" style="background:#9fb0aa"></span><code>--lr-texte-secondaire</code><span class="val">#9fb0aa</span></div>
+    <div class="row"><span class="sw" style="background:#2b3b36"></span><code>--lr-bordure</code><span class="val">#2b3b36</span></div>
+    <div class="row"><span class="sw" style="background:#5cc8b0"></span><code>--lr-primaire</code> (vert eau)<span class="val">#5cc8b0</span></div>
+    <div class="row"><span class="sw" style="background:#0e1714"></span><code>--lr-sur-primaire</code><span class="val">#0e1714</span></div>
+    <div class="row"><span class="sw" style="background:#3a3326"></span><code>--lr-sable</code><span class="val">#3a3326</span></div>
+    <div class="row"><span class="sw" style="background:#ff8a3d"></span><code>--lr-accent</code> (fire-tiger)<span class="val">#ff8a3d</span></div>
+    <div class="row"><span class="sw" style="background:#1a1206"></span><code>--lr-sur-accent</code><span class="val">#1a1206</span></div>
+    <div class="row"><span class="sw" style="background:#f97066"></span><code>--lr-danger</code><span class="val">#f97066</span></div>
+    <div class="group">Carte</div>
+    <div class="row"><span class="sw" style="background:#123a44"></span><code>--lr-carte-eau</code><span class="val">#123a44</span></div>
+    <div class="row"><span class="sw" style="background:#1b2622"></span><code>--lr-carte-terre</code><span class="val">#1b2622</span></div>
+    <div class="row"><span class="sw" style="background:#ff8a3d"></span><code>--lr-carte-marqueur</code><span class="val">#ff8a3d</span></div>
+    <div class="group">Graphiques</div>
+    <div class="row"><span class="sw" style="background:#5cc8b0"></span><code>--lr-graphique-1</code><span class="val">#5cc8b0</span></div>
+    <div class="row"><span class="sw" style="background:#ff8a3d"></span><code>--lr-graphique-2</code><span class="val">#ff8a3d</span></div>
+    <div class="row"><span class="sw" style="background:#2b3b36"></span><code>--lr-graphique-grille</code><span class="val">#2b3b36</span></div>
+    <div class="group">En usage</div>
+    <button class="btn" type="button">Préparer ma sortie</button>
+    <button class="btn primaire" type="button">Voir l'animation</button>
+    <div class="card"><strong>Texte principal</strong><div class="sec">Texte secondaire sur une surface</div></div>
+    <div class="map"><span class="eau"></span><span class="pin"></span></div>
+    <div class="chart"><i style="height:40%"></i><i style="height:70%"></i><i style="height:55%"></i><i style="height:90%"></i><i style="height:30%"></i><i style="height:60%"></i></div>
+    <div class="group">Contrastes</div>
+    <table>
+      <tr><td>Texte principal sur fond (exigé ≥ 4,5:1, fond plus sombre)</td><td>14,0:1</td></tr>
+      <tr><td>Texte du bouton sur l'accent (exigé ≥ 4,5:1)</td><td>7,9:1</td></tr>
+      <tr><td>Texte secondaire sur fond</td><td>8,1:1</td></tr>
+    </table>
+  </div>
+
+  <h2>3. Ce qui reste hors de cette story</h2>
+  <p class="note">L'interrupteur « forcer clair ou sombre » de l'écran Compte (PLAN §3) et la barre d'onglets viendront avec leurs propres stories. Android : même rendu, aucune différence d'affichage.</p>
+</div>
+</body>
+</html>

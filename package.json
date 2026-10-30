@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "lint": "ng lint",
+    "lint": "ng lint && stylelint \"src/**/*.{css,scss}\"",
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
     "test:acceptance": "node --test --test-concurrency=1 \"tests/acceptance/*.test.mjs\"",
@@ -43,7 +43,9 @@
     "angular-eslint": "22.6.0",
     "eslint": "^10.12.0",
     "jsdom": "^30.0.0",
+    "postcss-scss": "4.0.9",
     "prettier": "^3.8.1",
+    "stylelint": "17.16.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.71.0",
     "vitest": "^5.0.0"
