@@ -14,7 +14,7 @@ test('critère 4 : given le serveur de développement, when on ouvre l\'app, the
   });
 
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('ion-toolbar ion-title')).toHaveText('Leurio');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
 
   const { appels, enregistrements } = await page.evaluate(async () => {
     const appels = (window as unknown as { __registerAppels: number }).__registerAppels;

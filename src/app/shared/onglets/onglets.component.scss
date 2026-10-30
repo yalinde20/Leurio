@@ -1,0 +1,41 @@
+// L'écran affiché est seul dans le DOM (pas de pile de pages cachées) ; la barre reste en bas.
+:host {
+  display: flex;
+  flex-direction: column;
+}
+
+.contenu {
+  position: relative;
+  flex: 1;
+}
+
+// Barre d'onglets façon iOS (maquette US 33) : couleurs via les tokens, cibles tactiles d'au moins 48 px.
+ion-tab-bar {
+  --background: var(--lr-surface);
+  --border: 1px solid var(--lr-bordure);
+  min-height: 56px;
+}
+
+.onglet {
+  flex: 1;
+  min-width: 48px;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--lr-texte-secondaire);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+
+  ion-icon {
+    font-size: 26px;
+  }
+}
+
+.onglet-selectionne {
+  color: var(--lr-primaire);
+  font-weight: 600;
+}
