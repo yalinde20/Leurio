@@ -14,7 +14,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "cap:sync": "cap sync",
     "test:android": "node --test tests/android/*.test.mjs",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-leurio \"node scripts/run-rules-tests.mjs\""
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-leurio \"node scripts/run-rules-tests.mjs\""
   },
   "private": true,
   "packageManager": "npm@11.19.1",
