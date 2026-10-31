@@ -1,4 +1,4 @@
-# Règles d'accès Firestore (US 34, critère 12) : les tests des règles tournent sur
+# Règles d'accès Firestore (US 34, critère 12) et Storage (US 35, critère 5) : les tests tournent sur
 # l'émulateur Firebase (projet demo-leurio, aucun appel au vrai projet).
 # Un test en échec fait échouer le CI. L'émulateur demande Java.
 # Fichier séparé de ci.yml : les tests d'acceptation du CI simulent toutes les
@@ -39,5 +39,5 @@ jobs:
           key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Installation
         run: npm ci
-      - name: Tests des règles Firestore
+      - name: Tests des règles Firestore et Storage
         run: npm run test:rules

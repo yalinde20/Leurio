@@ -1,4 +1,4 @@
-// Lance les tests des règles Firestore (tests/rules). Appelé par npm run test:rules,
+// Lance les tests des règles Firestore et Storage (tests/rules). Appelé par npm run test:rules,
 // dans l'émulateur démarré par firebase emulators:exec.
 // NODE_TEST_CONTEXT est retiré : lancé depuis un autre node --test (test d'acceptation
 // du CI), le lanceur de tests imbriqué renverrait toujours le code 0, même en cas d'échec.
