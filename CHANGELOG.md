@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://github.com/yalinde20/Leurio/compare/v1.4.0...v1.5.0) (2026-10-31)
+
+
+### Features
+
+* règles d'accès Storage pour les photos de leurres, testées sur l'émulateur (US 35) ([ef80676](https://github.com/yalinde20/Leurio/commit/ef806765cd0ac65d0ec38c734e9be632d2847daa))
+
+
+### Bug Fixes
+
+* revue de l'US 35 (commentaire de l'emplacement, sous-dossier refusé, tests CI resserrés) ([c10f604](https://github.com/yalinde20/Leurio/commit/c10f6043c32f5fd397cb93568ad2ed553d49c0bc))
+
 ## [1.4.0](https://github.com/yalinde20/Leurio/compare/v1.3.1...v1.4.0) (2026-10-30)
 
 
