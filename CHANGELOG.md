@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/yalinde20/Leurio/compare/v1.5.0...v1.6.0) (2026-10-31)
+
+
+### Features
+
+* initialisation de Firebase (Auth, Firestore hors ligne, Storage, App Check) sans secret commité (US 36) ([5638c54](https://github.com/yalinde20/Leurio/commit/5638c54bea7201d1dc6e58c05b393e8a1e11617e))
+
+
+### Bug Fixes
+
+* décisions du propriétaire pour l'US 36 (App Check local sans drapeau de débogage, test Capacitor sur build:emulateurs) ([9e5fd9a](https://github.com/yalinde20/Leurio/commit/9e5fd9a7918fd9b2cc48413fcebef1c90695dbea))
+* revue de l'US 36 (démarrage non bloqué par Firebase, build Android en mode émulateurs, fichiers de config natifs ignorés) ([c6ba994](https://github.com/yalinde20/Leurio/commit/c6ba994a60f4e96a42b0de91b4847ac20ab59e78))
+
 ## [1.5.0](https://github.com/yalinde20/Leurio/compare/v1.4.0...v1.5.0) (2026-10-31)
 
 
