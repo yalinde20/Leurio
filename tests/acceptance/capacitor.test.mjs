@@ -20,9 +20,11 @@ test('critère 0 : given le dépôt, when on lit capacitor.config.ts, then il do
 });
 
 test('critère 1 : given un build de production, when on synchronise les projets natifs avec Capacitor, then la commande réussit et les projets android et ios contiennent les fichiers du build', () => {
-  requireScript('build');
+  // US 36 (décision du propriétaire, option 1a) : le build de production en configuration
+  // émulateurs, qui n'exige aucune variable FIREBASE_*, comme le CI et les e2e.
+  requireScript('build:emulateurs');
   requireScript(SYNC_SCRIPT);
-  const build = run('npm', ['run', 'build'], 900_000);
+  const build = run('npm', ['run', 'build:emulateurs'], 900_000);
   assert.equal(build.status, 0, `le build a échoué : ${build.output}`);
   // Supprime les copies existantes : une copie périmée ne doit pas faire passer le test.
   const copies = ['android/app/src/main/assets/public', 'ios/App/App/public'];
