@@ -47,17 +47,15 @@ export class FirebaseService {
 
   private initialiserAppCheck(): AppCheck {
     if (emulateurs) {
-      // Le fournisseur local rend un jeton factice : aucun appel au service App Check réel.
-      const appCheck = initializeAppCheck(this.app, {
+      // Mode débogage de l'environnement de test (décision du propriétaire, US 36) : un fournisseur
+      // local rend un jeton factice, sans FIREBASE_APPCHECK_DEBUG_TOKEN, car le vrai jeton de débogage
+      // s'échange avec googleapis.com. Il servira contre le vrai projet (phase 5, application stricte).
+      return initializeAppCheck(this.app, {
         provider: new CustomProvider({
           getToken: async () => ({ token: 'jeton-app-check-local', expireTimeMillis: Date.now() + 60 * 60 * 1000 }),
         }),
         isTokenAutoRefreshEnabled: false,
       });
-      // Marqueur du mode débogage (PLAN §4), posé après l'initialisation : le SDK lit ce drapeau à
-      // l'initialisation et, s'il le trouvait, échangerait un jeton de débogage avec googleapis.com.
-      (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-      return appCheck;
     }
     // L'application stricte (enforcement) viendra plus tard : ici App Check est seulement initialisé.
     return initializeAppCheck(this.app, {

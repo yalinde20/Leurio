@@ -30,9 +30,8 @@ test('critère 4 : given le build de production en configuration émulateurs, wh
   const r = await page.evaluate(async () => {
     const f = (window as any).leurioFirebase;
     const res = f.appCheck ? await f.sdk.appCheck.getToken(f.appCheck) : null;
-    return { debug: !!(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN, actif: !!f.appCheck, token: res?.token ?? '', erreur: res?.error ? String(res.error) : null };
+    return { actif: !!f.appCheck, token: res?.token ?? '', erreur: res?.error ? String(res.error) : null };
   });
-  expect(r.debug).toBe(true);
   expect(r.actif).toBe(true);
   expect(r.erreur).toBeNull();
   expect(r.token.length).toBeGreaterThan(0);

@@ -11,7 +11,8 @@
 //       appCheck: { getToken },                     // firebase/app-check
 //     },
 //   };
-//   window.FIREBASE_APPCHECK_DEBUG_TOKEN est défini (mode débogage d'App Check).
+//   App Check y tourne en « mode débogage » au sens de la décision du propriétaire (option 2a) :
+//   un fournisseur local rend un jeton, sans aucune requête vers le service App Check réel.
 import { test, expect } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, enregistrerRequetes, exigerAucuneRequeteExterne, lireSurEmulateur, profil, requetesVers } from './firebase-helpers';
 
@@ -119,11 +120,9 @@ test('critère 4 : given l\'environnement de test, when l\'app démarre, then Ap
 
   const appCheck = await page.evaluate(async () => {
     const f = (window as any).leurioFirebase;
-    const debug = (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN;
     const resultat = f.appCheck ? await f.sdk.appCheck.getToken(f.appCheck) : null;
-    return { debug: !!debug, actif: !!f.appCheck, token: resultat?.token ?? '', erreur: resultat?.error ? String(resultat.error) : null };
+    return { actif: !!f.appCheck, token: resultat?.token ?? '', erreur: resultat?.error ? String(resultat.error) : null };
   });
-  expect(appCheck.debug, 'FIREBASE_APPCHECK_DEBUG_TOKEN doit être défini (mode débogage)').toBe(true);
   expect(appCheck.actif, 'App Check doit être initialisé').toBe(true);
   expect(appCheck.erreur).toBeNull();
   expect(appCheck.token.length).toBeGreaterThan(0);
