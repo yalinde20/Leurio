@@ -36,7 +36,7 @@ jobs:
       - name: Installation
         run: npm ci
       - name: Build
-        run: npm run build
+        run: npm run build:emulateurs
       - name: Synchronisation des projets natifs
         run: npm run cap:sync
       - name: Build debug Android (critère 2)

@@ -58,4 +58,6 @@ firestore-debug.log
 service-account*.json
 *-firebase-adminsdk-*.json
 serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
 src/app/core/firebase/config.reelle.ts

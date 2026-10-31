@@ -14,11 +14,14 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(ThemeService);
     }),
-    // Connecte Firebase (Auth, Firestore hors ligne, Storage, App Check) dès le démarrage (PLAN §4).
+    // Connecte Firebase (Auth, Firestore hors ligne, Storage, App Check) en tâche de fond (PLAN §4) :
+    // l'app démarre toujours, même si Firebase ne se charge pas (dégradation sans bloquer le démarrage).
     // Chargé à la demande pour garder le bundle initial léger.
     provideAppInitializer(() => {
       const injector = inject(Injector);
-      return import('./core/firebase/firebase.service').then((m) => injector.get(m.FirebaseService).exposerPourLesTests());
+      import('./core/firebase/firebase.service')
+        .then((m) => injector.get(m.FirebaseService).exposerPourLesTests())
+        .catch((erreur) => console.error("Firebase n'a pas pu démarrer : l'app continue sans.", erreur));
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

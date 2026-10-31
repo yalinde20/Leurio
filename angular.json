@@ -87,7 +87,7 @@
               "sourceMap": true
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "emulateurs"
         },
         "serve": {
           "builder": "@angular/build:dev-server",

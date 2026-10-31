@@ -85,4 +85,6 @@ test('critère 6 : given .gitignore, when on le lit, then les fichiers .env et l
   assert.ok(lignes.length > 0);
   for (const chemin of ['.env', '.env.local', '.env.production', 'service-account.json', 'leurio-firebase-adminsdk-abc12.json', 'serviceAccountKey.json'])
     assert.ok(ignore(chemin), `${chemin} devrait être ignoré par Git`);
+  for (const chemin of ['src/app/core/firebase/config.reelle.ts', 'google-services.json', 'GoogleService-Info.plist'])
+    assert.ok(ignore(chemin), `${chemin} devrait être ignoré par Git`);
 });
