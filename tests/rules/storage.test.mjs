@@ -32,7 +32,8 @@ const photoDeA = `users/${A}/lures/shad.jpg`;
 const horsDossier = {
   'users/A/autre.jpg': `users/${A}/autre.jpg`,
   'users/A/spots/x.jpg': `users/${A}/spots/x.jpg`,
-  'users/A/lures (sans sous-dossier de fichier) : users/A/luresx/x.jpg': `users/${A}/luresx/x.jpg`,
+  'le dossier voisin users/A/luresx/x.jpg': `users/${A}/luresx/x.jpg`,
+  'un sous-dossier users/A/lures/sous/x.jpg': `users/${A}/lures/sous/x.jpg`,
   'fichier à la racine': 'racine.jpg',
   'autre dossier de premier niveau': 'public/x.jpg',
   'users/x.jpg': 'users/x.jpg',

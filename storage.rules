@@ -4,7 +4,8 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // PLAN §7 : les photos de leurres vivent dans users/{uid}/lures/{fichier}.
+    // Photos de leurres (PLAN §4) dans users/{uid}/lures/{fichier} : emplacement choisi
+    // par le propriétaire (US 35), le plan ne le fixe pas.
     // Lecture et envoi réservés au propriétaire connecté ; pas de limite de taille
     // ni de type exigée par la story.
     match /users/{uid}/lures/{fichier} {

@@ -34,7 +34,7 @@ test('critère 5 : given le script test:rules, when on le lit, then il démarre 
   const s = scriptRegles();
   assert.match(s, /emulators:exec/);
   assert.match(s, /--only\s+[\w,]*\bstorage\b/, 'l\'émulateur storage n\'est pas dans --only');
-  assert.match(s, /--only\s+firestore\b/);
+  assert.match(s, /--only\s+[\w,]*\bfirestore\b/, 'l\'émulateur firestore doit rester dans --only');
   assert.match(s, /--project\s+demo-[\w-]+/);
   assert.doesNotMatch(s, /--token|GOOGLE_APPLICATION_CREDENTIALS/);
 });
@@ -67,6 +67,7 @@ test('critère 5 : given une règle Storage trop permissive, when on lance npm r
     writeFileSync(p, "rules_version = '2';\nservice firebase.storage {\n  match /b/{bucket}/o {\n    match /{allPaths=**} {\n      allow read, write: if true;\n    }\n  }\n}\n");
     const r = run('npm', ['run', 'test:rules'], 600_000);
     assert.notEqual(r.status, 0, 'des règles permissives auraient dû faire échouer les tests');
+    assert.match(r.output, /not ok .*critère 2 : given un utilisateur connecté d'uid B/, 'l\'échec ne vient pas des tests Storage');
   } finally {
     writeFileSync(p, ancien);
   }
