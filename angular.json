@@ -43,7 +43,7 @@
             ]
           },
           "configurations": {
-            "production": {
+            "emulateurs": {
               "budgets": [
                 {
                   "type": "initial",
@@ -58,6 +58,28 @@
               ],
               "outputHashing": "all",
               "serviceWorker": "ngsw-config.json"
+            },
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "src/app/core/firebase/config.ts",
+                  "with": "src/app/core/firebase/config.reelle.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,

@@ -13,7 +13,8 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 - Tests d'acceptation : `npm run test:acceptance`
 - Tests de bout en bout (Playwright) : `npm run test:e2e`
 - Serveur de développement : `npm start`
-- Build : `npm run build`
+- Build : `npm run build:emulateurs` (production, configuration émulateurs Firebase, sans variable ; utilisé par la CI et les tests e2e)
+- Build de production réel : `npm run build` (exige les variables FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID et FIREBASE_APPCHECK_SITE_KEY)
 - Synchronisation des projets natifs Android et iOS (après la compilation de production) : `npm run cap:sync`
 - Build debug Android (SDK Android requis ; vérifié en CI par `.github/workflows/android.yml`) : `npm run test:android`
 - Tests des règles Firestore (émulateur, Java requis) : `npm run test:rules`

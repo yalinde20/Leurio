@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// Règles d'accès Storage (PLAN §4, §7), testées sur l'émulateur : npm run test:rules.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Photos de leurres (PLAN §4) dans users/{uid}/lures/{fichier} : emplacement choisi
+    // par le propriétaire (US 35), le plan ne le fixe pas.
+    // Lecture et envoi réservés au propriétaire connecté ; pas de limite de taille
+    // ni de type exigée par la story.
+    match /users/{uid}/lures/{fichier} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Tout le reste est refusé (refus par défaut), même pour le propriétaire.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

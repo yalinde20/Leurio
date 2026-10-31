@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "node scripts/build-reel.mjs",
+    "build:emulateurs": "ng build --configuration emulateurs",
     "watch": "ng build --watch --configuration development",
     "lint": "ng lint && stylelint \"src/**/*.{css,scss}\"",
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
@@ -30,6 +31,7 @@
     "@capacitor/core": "^8.6.0",
     "@capacitor/ios": "^8.6.0",
     "@ionic/angular": "^9.0.10",
+    "firebase": "^13.1.0",
     "ionicons": "^8.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -44,7 +46,6 @@
     "@playwright/test": "1.63.0",
     "angular-eslint": "22.6.0",
     "eslint": "^10.12.0",
-    "firebase": "^13.1.0",
     "firebase-tools": "^15.34.2",
     "jsdom": "^30.0.0",
     "postcss-scss": "4.0.9",
