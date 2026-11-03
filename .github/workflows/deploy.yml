@@ -1,0 +1,69 @@
+# Déploiement sur Firebase Hosting (PLAN §10) : chaque fusion sur main déploie l'app
+# (build de production réel) si les trois vérifications CI ont réussi. Jamais sur une pull request.
+# Workflow séparé de ci.yml : les tests de ci.yml simulent chacune de ses étapes `run:`.
+# Il attend la fin de tous les workflows de vérification (CI, Android, Règles Firestore) ;
+# scripts/verifier-ci.mjs décide, et le dernier à finir déclenche le déploiement.
+# Secrets à créer dans le dépôt :
+# - FIREBASE_SERVICE_ACCOUNT : JSON d'un compte de service avec le rôle « Firebase Hosting Admin » ;
+# - FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET,
+#   FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_APPCHECK_SITE_KEY : configuration du build.
+# Le domaine leurio.app se relie à Hosting dans la console Firebase, par le propriétaire.
+# Seul Hosting est déployé : les règles Firestore et Storage ne le sont pas.
+name: Déploiement
+
+on:
+  workflow_run:
+    workflows: [CI, Android, Règles Firestore]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: deploiement-hosting
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Vérifier les workflows requis
+        id: verification
+        run: node scripts/verifier-ci.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          EVENT: ${{ github.event.workflow_run.event }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+      - uses: actions/setup-node@v5
+        if: steps.verification.outputs.deployer == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Installer les dépendances
+        if: steps.verification.outputs.deployer == 'true'
+        run: npm ci
+      - name: Build de production
+        if: steps.verification.outputs.deployer == 'true'
+        run: npm run build
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APPCHECK_SITE_KEY: ${{ secrets.FIREBASE_APPCHECK_SITE_KEY }}
+      - name: Déployer sur Firebase Hosting
+        if: steps.verification.outputs.deployer == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+          channelId: live
