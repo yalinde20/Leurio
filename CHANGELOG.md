@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/yalinde20/Leurio/compare/v1.8.0...v1.9.0) (2026-11-03)
+
+
+### Features
+
+* CatalogService, contenu embarqué servi à l'app (US 40) ([860a0dc](https://github.com/yalinde20/Leurio/commit/860a0dcdf24fa8f6923b36a8e693c94e50568785))
+
+
+### Bug Fixes
+
+* revue de l'US 40 (fédération indisponible sans erreur, réessai testé, contenu préchargé hors ligne testé) ([7742eff](https://github.com/yalinde20/Leurio/commit/7742eff8458ad009f06073ecb01692dcaaf5f449))
+
 ## [1.8.0](https://github.com/yalinde20/Leurio/compare/v1.7.0...v1.8.0) (2026-11-03)
 
 
