@@ -1,4 +1,4 @@
-# CI du projet (PLAN §10) : installation, lint, type check, tests et build,
+# CI du projet (PLAN §10) : installation, validation du contenu, lint, type check, tests et build,
 # avec les commandes de la section « ## Commands » de CLAUDE.md.
 # Les tests d'acceptation et de bout en bout n'y sont pas encore : ils viendront
 # avec leurs propres stories.
@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - name: Installation
         run: npm ci
+      - name: Validation du contenu
+        run: npm run validate-data
       - name: Lint
         run: npm run lint
       - name: Type check

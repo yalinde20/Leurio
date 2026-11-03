@@ -1,0 +1,23 @@
+[
+  {
+    "id": "tiree-relachee",
+    "nom": "Tirée-relâchée",
+    "geste": "Un coup de canne vers le haut, puis on laisse le leurre redescendre en reprenant le mou.",
+    "vitesse": "lente",
+    "erreurAEviter": "Ne pas laisser le leurre redescendre : il faut garder le fil légèrement tendu.",
+    "difficulte": 1,
+    "videos": [
+      {
+        "provider": "self",
+        "fichier": "videos/tiree-relachee.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "Contenu provisoire de l'US 38, repris de docs/PLAN.md §9 bis et §11 ; à vérifier et compléter par le ticket 5"
+    ],
+    "dateVerif": "2026-11-03"
+  }
+]

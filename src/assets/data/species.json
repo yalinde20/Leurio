@@ -1,0 +1,36 @@
+[
+  {
+    "code": "SAN",
+    "nom": "Sandre",
+    "tempEauC": {
+      "active": [
+        12,
+        24
+      ],
+      "ralentie": [
+        6,
+        12
+      ],
+      "quasiNulle": [
+        0,
+        5
+      ]
+    },
+    "postes": [
+      "cassures",
+      "fond",
+      "piles de pont"
+    ],
+    "proies": [
+      "gardon",
+      "ablette"
+    ],
+    "tailleMinCm": 50,
+    "fermetureAvecBrochet": true,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Contenu provisoire de l'US 38, repris de docs/PLAN.md §7 ; à vérifier et compléter par le ticket 5"
+    ],
+    "dateVerif": "2026-11-03"
+  }
+]
