@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/yalinde20/Leurio/compare/v1.6.0...v1.7.0) (2026-11-03)
+
+
+### Features
+
+* déploiement de l'app sur Firebase Hosting depuis main (US 37) ([95ade08](https://github.com/yalinde20/Leurio/commit/95ade08bd56452167359c4aedbcd3a55ee7c131e))
+
+
+### Bug Fixes
+
+* revue de l'US 37 (tête de main, runs push, cache de la racine, durcissement) ([b07ab91](https://github.com/yalinde20/Leurio/commit/b07ab9115e0e70db1fd7eb684c8cd67a72f5c1fa))
+
 ## [1.6.0](https://github.com/yalinde20/Leurio/compare/v1.5.0...v1.6.0) (2026-10-31)
 
 
