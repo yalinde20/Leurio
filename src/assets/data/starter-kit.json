@@ -2,7 +2,9 @@
   {
     "typeId": "shad",
     "raison": "Un leurre souple polyvalent, efficace sur le sandre comme sur la perche.",
-    "sources": ["https://www.federationpeche.fr"],
+    "sources": [
+      "Contenu provisoire de l'US 38 (exemple de structure) ; à vérifier et compléter par le ticket 5"
+    ],
     "dateVerif": "2026-11-03"
   }
 ]

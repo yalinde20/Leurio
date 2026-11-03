@@ -9,13 +9,13 @@ import { Ajv } from 'ajv';
 import addFormats from 'ajv-formats';
 import type { ErrorObject } from 'ajv';
 
-type Fichier = {
+interface Fichier {
   nom: string;
   /** Nom de l'élément d'une liste dans les messages (« espèce », « animation »…). */
   element?: string;
   /** Champs qui identifient un élément, par ordre de préférence. */
   identifiants?: string[];
-};
+}
 
 const FICHIERS: Fichier[] = [
   { nom: 'species', element: 'espèce', identifiants: ['code', 'nom'] },

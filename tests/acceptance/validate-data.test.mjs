@@ -115,7 +115,7 @@ test('critère 0 : given le dossier schemas, when on le liste, then il y a un sc
 for (const champ of ['code', 'nom', 'tempEauC', 'postes', 'proies', 'tailleMinCm', 'fermetureAvecBrochet', 'sources', 'dateVerif']) {
   test(`critère 1 : given une espèce sans ${champ}, when on valide, then l'échec nomme species.json, l'espèce et ${champ}`, () => {
     // sans code, l'espèce est identifiée par son nom ou sa position
-    refuse((d) => sans(d['species.json'][0], champ), [champ, champ === 'code' ? /Sandre|\b0\b|\b1\b|\[0\]/ : 'SAN'], { fichier: 'species.json' });
+    refuse((d) => sans(d['species.json'][0], champ), [champ, champ === 'code' ? /espèce (Sandre|n° 1)/ : 'SAN'], { fichier: 'species.json' });
   });
 }
 

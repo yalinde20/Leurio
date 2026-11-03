@@ -7,9 +7,17 @@
     "erreurAEviter": "Ne pas laisser le leurre redescendre : il faut garder le fil légèrement tendu.",
     "difficulte": 1,
     "videos": [
-      { "provider": "self", "fichier": "videos/tiree-relachee.mp4", "boucle": true, "horsLigne": true, "licence": "propre" }
+      {
+        "provider": "self",
+        "fichier": "videos/tiree-relachee.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
     ],
-    "sources": ["https://www.federationpeche.fr"],
+    "sources": [
+      "Contenu provisoire de l'US 38, repris de docs/PLAN.md §9 bis et §11 ; à vérifier et compléter par le ticket 5"
+    ],
     "dateVerif": "2026-11-03"
   }
 ]
