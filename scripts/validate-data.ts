@@ -77,7 +77,58 @@ function valider(fichier: Fichier): string[] {
   return [...new Set(messages)];
 }
 
+type Entrees = Record<string, unknown>[];
+
+/** Doublons d'un champ : « species.json : doublon « SAN » (code présent 2 fois) ». */
+function doublons(nomFichier: string, entrees: Entrees, champ: string): string[] {
+  const compte = new Map<string, number>();
+  for (const e of entrees) {
+    const valeur = e[champ];
+    if (typeof valeur === 'string') compte.set(valeur, (compte.get(valeur) ?? 0) + 1);
+  }
+  return [...compte]
+    .filter(([, n]) => n > 1)
+    .map(([valeur, n]) => `${nomFichier} : doublon « ${valeur} » (${champ} présent ${n} fois)`);
+}
+
+/** Références croisées et doublons ; les entrées doivent déjà être conformes aux schémas. */
+function verifierReferences(contenu: Record<string, Entrees>): string[] {
+  const codes = (nom: string, champ: string): Set<unknown> => new Set((contenu[nom] ?? []).map((e) => e[champ]));
+  const especes = codes('species', 'code');
+  const animations = codes('techniques', 'id');
+  const types = codes('lure-types', 'id');
+  const messages = [
+    ...doublons('species.json', contenu['species'] ?? [], 'code'),
+    ...doublons('lure-types.json', contenu['lure-types'] ?? [], 'id'),
+    ...doublons('techniques.json', contenu['techniques'] ?? [], 'id'),
+  ];
+  for (const t of contenu['lure-types'] ?? []) {
+    const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
+    for (const code of (t['especes'] as string[]) ?? [])
+      if (!especes.has(code)) messages.push(`${lieu} : espèce inconnue « ${code} » (absente de species.json)`);
+    for (const id of (t['techniques'] as string[] | undefined) ?? [])
+      if (!animations.has(id)) messages.push(`${lieu} : animation inconnue « ${id} » (absente de techniques.json)`);
+  }
+  for (const k of contenu['starter-kit'] ?? []) {
+    const id = String(k['typeId']);
+    if (!types.has(id))
+      messages.push(`starter-kit.json, kit de départ ${id} : type de leurre inconnu « ${id} » (absent de lure-types.json)`);
+  }
+  return messages;
+}
+
 const erreurs = FICHIERS.flatMap(valider);
+if (erreurs.length === 0) {
+  const lire = (nom: string): Entrees => JSON.parse(readFileSync(join(dossier, `${nom}.json`), 'utf8')) as Entrees;
+  erreurs.push(
+    ...verifierReferences({
+      species: lire('species'),
+      'lure-types': lire('lure-types'),
+      techniques: lire('techniques'),
+      'starter-kit': lire('starter-kit'),
+    }),
+  );
+}
 if (erreurs.length > 0) {
   console.error(`Contenu invalide (${erreurs.length} erreur${erreurs.length > 1 ? 's' : ''}) :`);
   for (const message of erreurs) console.error(`- ${message}`);
