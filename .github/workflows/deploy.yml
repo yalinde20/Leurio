@@ -28,11 +28,13 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
       - name: Vérifier les workflows requis
         id: verification
         run: node scripts/verifier-ci.mjs

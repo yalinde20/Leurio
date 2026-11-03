@@ -54,13 +54,14 @@ async function gate() {
 }
 
 const run_ = (id, name, conclusion = 'success', status = 'completed', event = 'push') => ({ id, name, status, conclusion, event });
+const SHA = 'a'.repeat(40);
 const tousSucces = (requis) => requis.map((n, i) => run_(100 + i, n));
 
 // ---------- Critère 1 ----------
 
 test('critère 1 : given un push sur main dont les trois vérifications CI ont réussi, when la passerelle décide, then elle autorise le déploiement', async () => {
   const { decider, REQUIS } = await gate();
-  const r = decider({ evenement: 'push', branche: 'main', runs: tousSucces(REQUIS), requis: REQUIS });
+  const r = decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'main', runs: tousSucces(REQUIS), requis: REQUIS });
   assert.equal(r.deployer, true, r.raison);
   assert.equal(typeof r.raison, 'string');
 });
@@ -68,9 +69,9 @@ test('critère 1 : given un push sur main dont les trois vérifications CI ont r
 test('critère 1 : given un re-run d\'une vérification, when la passerelle décide, then seul le dernier run (id le plus élevé) de chaque workflow compte', async () => {
   const { decider, REQUIS } = await gate();
   const runs = [...tousSucces(REQUIS), run_(1, REQUIS[0], 'failure')];
-  assert.equal(decider({ evenement: 'push', branche: 'main', runs, requis: REQUIS }).deployer, true);
+  assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'main', runs, requis: REQUIS }).deployer, true);
   const runs2 = [...tousSucces(REQUIS), run_(999, REQUIS[0], 'failure')];
-  assert.equal(decider({ evenement: 'push', branche: 'main', runs: runs2, requis: REQUIS }).deployer, false);
+  assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'main', runs: runs2, requis: REQUIS }).deployer, false);
 });
 
 test('critère 1 : given les workflows du dépôt, when on lit REQUIS, then ce sont exactement les noms de tous les workflows qui tournent sur pull_request', async () => {
@@ -109,13 +110,29 @@ test('critère 1 : given deploy.yml, when on lit ses étapes, then le build de p
   assert.equal(steps[iGate].id, 'verification');
 });
 
+test('critère 1 : given un commit qui n\'est plus la tête de main, when la passerelle décide, then aucun déploiement', async () => {
+  const { decider, REQUIS } = await gate();
+  const r = decider({ evenement: 'push', branche: 'main', sha: SHA, teteMain: 'b'.repeat(40), runs: tousSucces(REQUIS), requis: REQUIS });
+  assert.equal(r.deployer, false);
+  assert.match(r.raison, /main/);
+});
+
 // ---------- Critère 2 ----------
+
+test('critère 2 : given un run pull_request réussi et un run push en échec ou absent, when la passerelle décide, then aucun déploiement', async () => {
+  const { decider, REQUIS } = await gate();
+  const pr = tousSucces(REQUIS).map((r) => ({ ...r, id: r.id + 1000, event: 'pull_request' }));
+  const echec = tousSucces(REQUIS).map((r, j) => (j === 0 ? { ...r, conclusion: 'failure' } : r));
+  const absent = tousSucces(REQUIS).slice(1);
+  for (const push of [echec, absent])
+    assert.equal(decider({ evenement: 'push', branche: 'main', sha: SHA, teteMain: SHA, runs: [...push, ...pr], requis: REQUIS }).deployer, false);
+});
 
 test('critère 2 : given un push sur main dont une vérification a échoué, when la passerelle décide, then aucun déploiement et la raison nomme le workflow en échec', async () => {
   const { decider, REQUIS } = await gate();
   for (const i of REQUIS.keys()) {
     const runs = tousSucces(REQUIS).map((r, j) => (j === i ? { ...r, conclusion: 'failure' } : r));
-    const r = decider({ evenement: 'push', branche: 'main', runs, requis: REQUIS });
+    const r = decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'main', runs, requis: REQUIS });
     assert.equal(r.deployer, false);
     assert.ok(r.raison.includes(REQUIS[i]), `la raison doit nommer ${REQUIS[i]} : ${r.raison}`);
   }
@@ -131,7 +148,7 @@ test('critère 2 : given une vérification annulée, manquante ou pas terminée,
     'aucun run': [],
   };
   for (const [nom, runs] of Object.entries(cas))
-    assert.equal(decider({ evenement: 'push', branche: 'main', runs, requis: REQUIS }).deployer, false, nom);
+    assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'main', runs, requis: REQUIS }).deployer, false, nom);
 });
 
 test('critère 2 : given deploy.yml, when on lit la condition du job, then il ne tourne que si le workflow déclencheur a réussi', () => {
@@ -144,13 +161,13 @@ test('critère 2 : given deploy.yml, when on lit la condition du job, then il ne
 test('critère 3 : given une pull request dont toutes les vérifications passent, when la passerelle décide, then aucun déploiement', async () => {
   const { decider, REQUIS } = await gate();
   const runs = tousSucces(REQUIS).map((r) => ({ ...r, event: 'pull_request' }));
-  assert.equal(decider({ evenement: 'pull_request', branche: 'main', runs, requis: REQUIS }).deployer, false);
-  assert.equal(decider({ evenement: 'pull_request', branche: 'une-branche', runs, requis: REQUIS }).deployer, false);
+  assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'pull_request', branche: 'main', runs, requis: REQUIS }).deployer, false);
+  assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'pull_request', branche: 'une-branche', runs, requis: REQUIS }).deployer, false);
 });
 
 test('critère 3 : given un push sur une autre branche que main, when la passerelle décide, then aucun déploiement', async () => {
   const { decider, REQUIS } = await gate();
-  assert.equal(decider({ evenement: 'push', branche: 'us/37-autre', runs: tousSucces(REQUIS), requis: REQUIS }).deployer, false);
+  assert.equal(decider({ sha: SHA, teteMain: SHA, evenement: 'push', branche: 'us/37-autre', runs: tousSucces(REQUIS), requis: REQUIS }).deployer, false);
 });
 
 test('critère 3 : given deploy.yml, when on lit ses déclencheurs et sa condition, then il n\'a ni push ni pull_request et exige un événement push', () => {
@@ -218,7 +235,11 @@ test('critère 5 : given firebase.json, when on lit la section hosting, then ell
   const cfg = JSON.parse(lire('firebase.json'));
   assert.ok(cfg.hosting, 'firebase.json n\'a pas de section hosting');
   assert.equal(cfg.hosting.public, SORTIE);
-  assert.equal(JSON.parse(lire('angular.json')) && readFileSync(join(ROOT, 'capacitor.config.ts'), 'utf8').includes(SORTIE), true);
+  const ng = JSON.parse(lire('angular.json'));
+  assert.ok(ng.projects.leurio, 'le projet Angular s\'appelle leurio');
+  const sortie = ng.projects.leurio.architect.build.options.outputPath;
+  assert.ok(sortie === undefined || sortie === 'dist/leurio' || sortie.base === 'dist/leurio', 'dossier de sortie Angular par défaut : dist/leurio');
+  assert.ok(readFileSync(join(ROOT, 'capacitor.config.ts'), 'utf8').includes(SORTIE));
 });
 
 test('critère 5 : given le build servi par Hosting, when on ouvre la racine, then l\'app s\'affiche (200 et <app-root>)', { timeout: 1_500_000 }, () => {
@@ -227,7 +248,9 @@ test('critère 5 : given le build servi par Hosting, when on ouvre la racine, th
   assert.match(r.corps, /<app-root/);
 });
 
-test('critère 5 : given Hosting, when on demande le service worker, then il est servi sans cache long (no-cache ou max-age=0), comme index.html', () => {
+test('critère 5 : given Hosting, when on demande le service worker, la racine ou une route interne, then ils sont servis sans cache long (no-cache)', { timeout: 1_500_000 }, () => {
+  for (const c of ['/', '/conseil'])
+    assert.match(servir()[c].cacheControl ?? '', /no-cache/, c);
   const sw = servir()['/ngsw-worker.js'];
   assert.equal(sw.status, 200);
   assert.match(sw.cacheControl ?? '', /no-cache|max-age=0/);
