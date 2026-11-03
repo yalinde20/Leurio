@@ -96,4 +96,21 @@ describe('CatalogService', () => {
     expect(await service.especes()).toEqual(species);
     http.expectNone('assets/data/species.json');
   });
+
+  it('given federations.json qui ne se charge pas, when on demande l\'URL d\'un département, then il rend undefined sans erreur', async () => {
+    const { service, http } = mise_en_place();
+    const resultat = service.urlFederation('49');
+    http.expectOne('assets/data/federations.json').flush(null, { status: 404, statusText: 'Not Found' });
+    await expect(resultat).resolves.toBeUndefined();
+  });
+
+  it('given un fichier qui ne s\'est pas chargé, when on le redemande, then il est requêté à nouveau', async () => {
+    const { service, http } = mise_en_place();
+    const premier = service.especes();
+    http.expectOne('assets/data/species.json').flush(null, { status: 503, statusText: 'Unavailable' });
+    await expect(premier).rejects.toBeDefined();
+    const second = service.especes();
+    http.expectOne('assets/data/species.json').flush(species);
+    expect(await second).toEqual(species);
+  });
 });
