@@ -10,7 +10,7 @@ PWA Angular + Ionic + Capacitor qui conseille aux pêcheurs débutants et interm
 - Lint : `npm run lint`
 - Type check : `npm run typecheck`
 - Tests unitaires et de composants (Vitest) : `npm test`
-- Validation du contenu (schémas de schemas/ sur src/assets/data) : `npm run validate-data`
+- Validation du contenu (schémas de schemas/ et références croisées sur src/assets/data) : `npm run validate-data`
 - Tests d'acceptation : `npm run test:acceptance`
 - Tests de bout en bout (Playwright) : `npm run test:e2e`
 - Serveur de développement : `npm start`

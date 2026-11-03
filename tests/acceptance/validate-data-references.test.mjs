@@ -88,7 +88,7 @@ test('critère 0 : given un type de leurre dont especes cite un code absent de s
   refuse((d) => { d['lure-types.json'][0].especes = ['SAN', 'ZZZ']; }, ['shad', 'ZZZ'], 'lure-types.json');
 });
 
-test('critère 0 : given un second type de leurre dont especes cite un code inconnu, when on lance la validation, then le message nomme ce type et pas l\'autre', () => {
+test('critère 0 : given un second type de leurre dont especes cite un code inconnu, when on lance la validation, then le message nomme ce type', () => {
   refuse((d) => { d['lure-types.json'][1].especes = ['QQQ']; }, ['spinnerbait', 'QQQ'], 'lure-types.json');
 });
 

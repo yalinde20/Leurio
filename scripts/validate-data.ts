@@ -1,4 +1,5 @@
-// Valide la structure des fichiers de contenu (PLAN §9) avec les schémas de `schemas/`.
+// Valide la structure des fichiers de contenu (PLAN §9) avec les schémas de `schemas/`, puis
+// leurs références croisées (codes d'espèce, animations, types de leurre cités) et les doublons.
 // Usage : node scripts/validate-data.ts [dossier]   (par défaut : src/assets/data)
 // Code de sortie : 0 si tout est conforme, 1 sinon. Syntaxe TypeScript effaçable seulement
 // (Node la exécute directement, sans compilation).
@@ -104,9 +105,9 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
   ];
   for (const t of contenu['lure-types'] ?? []) {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
-    for (const code of (t['especes'] as string[]) ?? [])
+    for (const code of new Set((t['especes'] as string[]) ?? []))
       if (!especes.has(code)) messages.push(`${lieu} : espèce inconnue « ${code} » (absente de species.json)`);
-    for (const id of (t['techniques'] as string[] | undefined) ?? [])
+    for (const id of new Set((t['techniques'] as string[] | undefined) ?? []))
       if (!animations.has(id)) messages.push(`${lieu} : animation inconnue « ${id} » (absente de techniques.json)`);
   }
   for (const k of contenu['starter-kit'] ?? []) {
@@ -118,7 +119,8 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
 }
 
 const erreurs = FICHIERS.flatMap(valider);
-if (erreurs.length === 0) {
+const structureValide = erreurs.length === 0;
+if (structureValide) {
   const lire = (nom: string): Entrees => JSON.parse(readFileSync(join(dossier, `${nom}.json`), 'utf8')) as Entrees;
   erreurs.push(
     ...verifierReferences({
@@ -132,6 +134,7 @@ if (erreurs.length === 0) {
 if (erreurs.length > 0) {
   console.error(`Contenu invalide (${erreurs.length} erreur${erreurs.length > 1 ? 's' : ''}) :`);
   for (const message of erreurs) console.error(`- ${message}`);
+  if (!structureValide) console.error('Références croisées et doublons non vérifiés : corrige d\'abord la structure.');
   process.exit(1);
 }
-console.log(`Contenu valide : ${FICHIERS.length} fichiers conformes à leur schéma (${dossier}).`);
+console.log(`Contenu valide : ${FICHIERS.length} fichiers conformes à leur schéma, références croisées cohérentes (${dossier}).`);
