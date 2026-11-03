@@ -1,0 +1,11 @@
+[
+  {
+    "id": "shad",
+    "nom": "Shad",
+    "especes": ["SAN"],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": false,
+    "sources": ["https://www.federationpeche.fr"],
+    "dateVerif": "2026-11-03"
+  }
+]

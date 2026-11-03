@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - name: Installation
         run: npm ci
+      - name: Validation du contenu
+        run: npm run validate-data
       - name: Lint
         run: npm run lint
       - name: Type check

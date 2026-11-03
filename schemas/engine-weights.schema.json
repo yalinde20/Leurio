@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Poids du moteur (engine-weights.json)",
+  "type": "object",
+  "required": [
+    "temperature",
+    "saison",
+    "clarte",
+    "luminosite",
+    "pression",
+    "lune",
+    "penaliteDifficulte"
+  ],
+  "properties": {
+    "temperature": {
+      "type": "number"
+    },
+    "saison": {
+      "type": "number"
+    },
+    "clarte": {
+      "type": "number"
+    },
+    "luminosite": {
+      "type": "number"
+    },
+    "pression": {
+      "type": "number"
+    },
+    "lune": {
+      "type": "number"
+    },
+    "penaliteDifficulte": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": {
+    "type": "number"
+  }
+}

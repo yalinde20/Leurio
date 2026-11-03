@@ -76,7 +76,7 @@ test('critère 1 : given une PR sans erreur, when le workflow CI tourne, then le
 test('critère 1 : given une PR sans erreur, when le workflow CI tourne, then le workflow est vert', () => {
   const r = simulerCI();
   assert.equal(r.ok, true, `étape en échec : ${r.failed?.command}\n${r.failed?.output}`);
-  assert.deepEqual(r.executed.map((e) => e.command.trim()), Object.values(cmd()));
+  assert.deepEqual(r.executed.map((e) => e.command.trim()), [cmd().install, 'npm run validate-data', cmd().lint, cmd().typecheck, cmd().tests, cmd().build]);
 });
 
 test('critère 1 : given le workflow CI, when on le lit, then Node vient de .nvmrc et le dépôt est récupéré avant l\'installation', () => {

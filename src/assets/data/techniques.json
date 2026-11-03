@@ -1,0 +1,15 @@
+[
+  {
+    "id": "tiree-relachee",
+    "nom": "Tirée-relâchée",
+    "geste": "Un coup de canne vers le haut, puis on laisse le leurre redescendre en reprenant le mou.",
+    "vitesse": "lente",
+    "erreurAEviter": "Ne pas laisser le leurre redescendre : il faut garder le fil légèrement tendu.",
+    "difficulte": 1,
+    "videos": [
+      { "provider": "self", "fichier": "videos/tiree-relachee.mp4", "boucle": true, "horsLigne": true, "licence": "propre" }
+    ],
+    "sources": ["https://www.federationpeche.fr"],
+    "dateVerif": "2026-11-03"
+  }
+]
