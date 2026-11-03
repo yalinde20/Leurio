@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/yalinde20/Leurio/compare/v1.7.0...v1.8.0) (2026-11-03)
+
+
+### Features
+
+* schémas JSON du contenu et validation par validate-data (US 38) ([3a54939](https://github.com/yalinde20/Leurio/commit/3a54939e2c8c8ce3409968b82336520574e5cf7f))
+
+
+### Bug Fixes
+
+* revue de l'US 38 (contenu provisoire honnête, fédérations vides, assertion du critère 1) ([bfd1a82](https://github.com/yalinde20/Leurio/commit/bfd1a820daab34ea6ca28a4313a0d1c8d12573eb))
+
 ## [1.7.0](https://github.com/yalinde20/Leurio/compare/v1.6.0...v1.7.0) (2026-11-03)
 
 
