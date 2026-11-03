@@ -1,4 +1,5 @@
 import { ApplicationConfig, inject, Injector, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular';
 import { provideRouter } from '@angular/router';
@@ -9,6 +10,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideIonicAngular(),
+    provideHttpClient(withFetch()),
     provideRouter(routes),
     // Applique le thème choisi dès le démarrage.
     provideAppInitializer(() => {
