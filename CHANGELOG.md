@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/yalinde20/Leurio/compare/v1.9.0...v1.10.0) (2026-11-04)
+
+
+### Features
+
+* species.json, les 7 espèces du lancement (US 41) ([b9063b1](https://github.com/yalinde20/Leurio/commit/b9063b1b8669f43d747d5ee88b47a796b0637f73))
+
+
+### Bug Fixes
+
+* revue de l'US 41 (plages de température jointives, sources qualifiées) ([77a088b](https://github.com/yalinde20/Leurio/commit/77a088b3d7af47b80d3708b58a9be4b56fec36dd))
+
 ## [1.9.0](https://github.com/yalinde20/Leurio/compare/v1.8.0...v1.9.0) (2026-11-03)
 
 
