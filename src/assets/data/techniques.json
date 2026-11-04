@@ -1,12 +1,46 @@
 [
   {
-    "id": "tiree-relachee",
-    "nom": "Tirée-relâchée",
-    "geste": "Un coup de canne vers le haut, puis on laisse le leurre redescendre en reprenant le mou.",
-    "vitesse": "lente",
-    "erreurAEviter": "Ne pas laisser le leurre redescendre : il faut garder le fil légèrement tendu.",
+    "id": "lineaire",
+    "nom": "Linéaire",
+    "geste": "Lance, laisse couler le leurre jusqu'à la profondeur voulue, puis mouline à vitesse régulière. Le leurre nage seul, sans coup de canne.",
+    "vitesse": "lente à moyenne, régulière",
+    "erreurAEviter": "Mouliner trop vite : le leurre remonte et passe au-dessus des poissons.",
     "difficulte": 1,
     "videos": [
+      {
+        "provider": "youtube",
+        "id": "f723H2xW7XU",
+        "start": 0,
+        "auteur": "La Pêche et les poissons (La Minute Carna)"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/lineaire.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "tiree-relachee",
+    "nom": "Tirée-relâchée",
+    "geste": "Laisse le leurre toucher le fond. Lève la canne d'un coup souple pour le décoller, puis redescends-la en reprenant le mou : le leurre retombe vers le fond.",
+    "vitesse": "lente, avec une pause au fond à chaque tirée",
+    "erreurAEviter": "Laisser le fil détendu pendant la descente : tu ne sens pas la touche, qui vient souvent à la chute.",
+    "difficulte": 1,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "LPtEvR6lL_k",
+        "start": 0,
+        "auteur": "À vérifier"
+      },
       {
         "provider": "self",
         "fichier": "videos/tiree-relachee.mp4",
@@ -16,8 +50,176 @@
       }
     ],
     "sources": [
-      "Contenu provisoire de l'US 38, repris de docs/PLAN.md §9 bis et §11 ; à vérifier et compléter par le ticket 5"
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
-    "dateVerif": "2026-11-03"
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "verticale",
+    "nom": "Verticale",
+    "geste": "Place-toi à la verticale du poste, en bateau, en float-tube ou depuis un ponton, et laisse descendre le leurre jusqu'au fond. Décolle-le de 10 à 30 cm par petits mouvements de canne, puis marque une pause.",
+    "vitesse": "très lente : mouvements courts et pauses",
+    "erreurAEviter": "Animer trop fort ou trop haut : en verticale, la pause compte autant que le mouvement.",
+    "difficulte": 2,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "srNYQMPy7vo",
+        "start": 0,
+        "auteur": "À vérifier"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/verticale.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Ardent Pêche, « Pêcher le sandre en verticale : comment débuter #3 » : https://blog.ardent-peche.com/2025/12/26/pecher-le-sandre-aux-leurres-en-verticale-comment-debuter-3/ (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "stop-and-go",
+    "nom": "Stop and go",
+    "geste": "Mouline quelques tours, puis arrête-toi une ou deux secondes. Recommence jusqu'au bord : l'attaque vient souvent à la reprise.",
+    "vitesse": "moyenne, coupée de pauses",
+    "erreurAEviter": "Ne pas faire de vraie pause, ou laisser le fil se détendre pendant l'arrêt : tu rates la touche à la reprise.",
+    "difficulte": 1,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "FY9l4Lm4JGc",
+        "start": 0,
+        "auteur": "À vérifier"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/stop-and-go.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "twitching",
+    "nom": "Twitching",
+    "geste": "Canne basse, donne de petits coups secs du bout de la canne et reprends le mou au moulinet entre deux coups. Le poisson nageur part à droite et à gauche comme un poisson blessé. Marque des pauses.",
+    "vitesse": "saccadée et vive, plus lente en eau froide",
+    "erreurAEviter": "Tirer avec toute la canne au lieu de la pointe : le leurre avance tout droit au lieu de zigzaguer.",
+    "difficulte": 2,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "zYUGsC_1IWE",
+        "start": 0,
+        "auteur": "Cyril, MordudelaPeche.com"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/twitching.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "peche.com, « La pêche du brochet au jerkbait minnow, une technique efficace » : https://www.peche.com/article/43020/la-peche-du-brochet-au-jerkbait-minnow-une-technique-efficace (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "walking-the-dog",
+    "nom": "Walking the dog",
+    "geste": "Canne basse, pointe vers l'eau, donne de petits coups réguliers en laissant un peu de mou entre deux coups. Le stickbait zigzague en surface, de gauche à droite.",
+    "vitesse": "rythme régulier : vif pour la perche et le black-bass, plus lent pour le brochet",
+    "erreurAEviter": "Garder le fil tendu : sans un peu de mou, le leurre ne zigzague pas.",
+    "difficulte": 3,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "ndE44sL6q6M",
+        "start": 0,
+        "auteur": "peche-technique.com"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/walking-the-dog.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "drop-shot",
+    "nom": "Drop shot",
+    "geste": "Laisse le plomb au fond : le leurre est fixé plus haut sur le fil. Fil tendu, fais vibrer la pointe de la canne sans bouger le plomb, puis avance le montage de quelques centimètres.",
+    "vitesse": "très lente, presque sur place",
+    "erreurAEviter": "Soulever le plomb à chaque mouvement : c'est le leurre qui doit bouger, pas le plomb.",
+    "difficulte": 2,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "HQ4Wh8P5imo",
+        "start": 0,
+        "auteur": "La Pêche et les poissons (La Minute Carna)"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/drop-shot.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "gratte",
+    "nom": "Gratté",
+    "geste": "Laisse le leurre sur le fond et ramène-le en tirant doucement la canne sur le côté, comme pour le traîner. Reprends le mou et recommence, avec de courtes pauses.",
+    "vitesse": "très lente, au contact du fond",
+    "erreurAEviter": "Ramener trop vite : le leurre décolle et ne touche plus le fond.",
+    "difficulte": 1,
+    "videos": [
+      {
+        "provider": "youtube",
+        "id": "yl1JTQ_4pew",
+        "start": 0,
+        "auteur": "Strike King TV France"
+      },
+      {
+        "provider": "self",
+        "fichier": "videos/gratte.mp4",
+        "boucle": true,
+        "horsLigne": true,
+        "licence": "propre"
+      }
+    ],
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)"
+    ],
+    "dateVerif": "2026-11-04"
   }
 ]
