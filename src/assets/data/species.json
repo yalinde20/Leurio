@@ -1,5 +1,45 @@
 [
   {
+    "code": "BRO",
+    "nom": "Brochet",
+    "tempEauC": {
+      "active": [
+        8,
+        20
+      ],
+      "ralentie": [
+        4,
+        8
+      ],
+      "quasiNulle": [
+        0,
+        4
+      ]
+    },
+    "postes": [
+      "herbiers",
+      "bordures",
+      "bois noyés",
+      "cassures"
+    ],
+    "proies": [
+      "gardon",
+      "rotengle",
+      "ablette",
+      "perche"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": true,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BRO = Esox lucius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau",
+      "docs/PLAN.md §6 : fermeture en 2e catégorie du dernier lundi de janvier au vendredi avant le dernier samedi d'avril"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
     "code": "SAN",
     "nom": "Sandre",
     "tempEauC": {
@@ -23,14 +63,212 @@
     ],
     "proies": [
       "gardon",
-      "ablette"
+      "ablette",
+      "grémille"
     ],
-    "tailleMinCm": 50,
+    "tailleMinCm": null,
     "fermetureAvecBrochet": true,
     "fermetureSpecifique": null,
     "sources": [
-      "Contenu provisoire de l'US 38, repris de docs/PLAN.md §7 ; à vérifier et compléter par le ticket 5"
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SAN = Sander lucioperca ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau",
+      "docs/PLAN.md §6 : souvent fermé en même temps que le brochet (arrêtés départementaux)"
     ],
-    "dateVerif": "2026-11-03"
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "code": "PER",
+    "nom": "Perche",
+    "tempEauC": {
+      "active": [
+        12,
+        24
+      ],
+      "ralentie": [
+        6,
+        12
+      ],
+      "quasiNulle": [
+        0,
+        5
+      ]
+    },
+    "postes": [
+      "bois noyés",
+      "tombants",
+      "piles de pont",
+      "herbiers"
+    ],
+    "proies": [
+      "alevins",
+      "ablette",
+      "gardon",
+      "écrevisses"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": false,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : PER = Perca fluviatilis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "code": "BBG",
+    "nom": "Black-bass",
+    "tempEauC": {
+      "active": [
+        16,
+        28
+      ],
+      "ralentie": [
+        10,
+        16
+      ],
+      "quasiNulle": [
+        0,
+        9
+      ]
+    },
+    "postes": [
+      "herbiers",
+      "nénuphars",
+      "bois noyés",
+      "pontons"
+    ],
+    "proies": [
+      "écrevisses",
+      "alevins",
+      "grenouilles",
+      "insectes"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": false,
+    "fermetureSpecifique": "Fermeture pendant la fraie, au printemps, dans certains départements : vérifie l'arrêté de ton département",
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BBG = Micropterus salmoides ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau",
+      "docs/PLAN.md §6 : fermeture spécifique dans certains départements (période de fraie)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "code": "CHE",
+    "nom": "Chevesne",
+    "tempEauC": {
+      "active": [
+        12,
+        26
+      ],
+      "ralentie": [
+        6,
+        12
+      ],
+      "quasiNulle": [
+        0,
+        5
+      ]
+    },
+    "postes": [
+      "bordures ombragées",
+      "radiers",
+      "veines de courant",
+      "sous les branches"
+    ],
+    "proies": [
+      "insectes",
+      "alevins",
+      "écrevisses",
+      "fruits tombés à l'eau"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": false,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : CHE = Squalius cephalus ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "code": "ASP",
+    "nom": "Aspe",
+    "tempEauC": {
+      "active": [
+        12,
+        24
+      ],
+      "ralentie": [
+        7,
+        12
+      ],
+      "quasiNulle": [
+        0,
+        6
+      ]
+    },
+    "postes": [
+      "veines de courant",
+      "sorties de barrages",
+      "radiers",
+      "chasses en surface"
+    ],
+    "proies": [
+      "ablette",
+      "alevins"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": false,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : ASP = Leuciscus aspius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "code": "SIL",
+    "nom": "Silure",
+    "tempEauC": {
+      "active": [
+        18,
+        28
+      ],
+      "ralentie": [
+        12,
+        18
+      ],
+      "quasiNulle": [
+        0,
+        11
+      ]
+    },
+    "postes": [
+      "fosses",
+      "cassures",
+      "bois noyés",
+      "sorties de barrages"
+    ],
+    "proies": [
+      "brème",
+      "gardon",
+      "carpe",
+      "écrevisses"
+    ],
+    "tailleMinCm": null,
+    "fermetureAvecBrochet": false,
+    "fermetureSpecifique": null,
+    "sources": [
+      "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SIL = Silurus glanis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
+      "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
+      "Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l'eau"
+    ],
+    "dateVerif": "2026-11-04"
   }
 ]
