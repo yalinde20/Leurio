@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/yalinde20/Leurio/compare/v1.10.0...v1.11.0) (2026-11-04)
+
+
+### Features
+
+* techniques.json, les 8 animations et leurs vidéos (US 42) ([a93c320](https://github.com/yalinde20/Leurio/commit/a93c320ecdb7e29d44945a3dc46e2e013451f9e7))
+
+
+### Bug Fixes
+
+* revue de l'US 42 (vidéos non vérifiées sans dateVerif, sources qualifiées) ([52c4345](https://github.com/yalinde20/Leurio/commit/52c434528595e7ec5837674c9027a12931752936))
+
 ## [1.10.0](https://github.com/yalinde20/Leurio/compare/v1.9.0...v1.10.0) (2026-11-04)
 
 
