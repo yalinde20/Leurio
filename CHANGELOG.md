@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/yalinde20/Leurio/compare/v1.11.0...v1.12.0) (2026-11-04)
+
+
+### Features
+
+* interditFermetureBrochet selon la décision du propriétaire, petits leurres (US 43) ([58faa1c](https://github.com/yalinde20/Leurio/commit/58faa1c5596fc7eb99661e1a1c71c166d1cb8774))
+
+
+### Bug Fixes
+
+* revue de l'US 43 (sources reprises de techniques.json, frog en walking-the-dog) ([93d2922](https://github.com/yalinde20/Leurio/commit/93d2922efab698b6abb7b1878e01dd0e212bcd85))
+
 ## [1.11.0](https://github.com/yalinde20/Leurio/compare/v1.10.0...v1.11.0) (2026-11-04)
 
 
