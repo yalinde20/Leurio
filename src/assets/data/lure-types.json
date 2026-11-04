@@ -3,13 +3,452 @@
     "id": "shad",
     "nom": "Shad",
     "especes": [
+      "SAN",
+      "BRO",
+      "PER"
+    ],
+    "techniques": [
+      "lineaire",
+      "tiree-relachee",
+      "verticale"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "ver-finesse",
+    "nom": "Ver souple finesse",
+    "especes": [
+      "PER",
+      "SAN",
+      "BBG"
+    ],
+    "techniques": [
+      "drop-shot",
+      "gratte",
+      "tiree-relachee"
+    ],
+    "zoneNage": "fond",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "creature",
+    "nom": "Créature",
+    "especes": [
+      "BBG",
+      "PER",
+      "BRO"
+    ],
+    "techniques": [
+      "gratte",
+      "tiree-relachee",
+      "drop-shot"
+    ],
+    "zoneNage": "fond",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "jig",
+    "nom": "Jig à jupe",
+    "especes": [
+      "BBG",
+      "PER",
+      "BRO"
+    ],
+    "techniques": [
+      "gratte",
+      "tiree-relachee"
+    ],
+    "zoneNage": "fond",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "spinnerbait",
+    "nom": "Spinnerbait",
+    "especes": [
+      "BRO",
+      "BBG",
+      "PER"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "chatterbait",
+    "nom": "Chatterbait",
+    "especes": [
+      "BBG",
+      "BRO"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "cuillere-tournante",
+    "nom": "Cuillère tournante",
+    "especes": [
+      "PER",
+      "CHE",
+      "BRO"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "cuillere-ondulante",
+    "nom": "Cuillère ondulante",
+    "especes": [
+      "BRO",
+      "PER",
+      "CHE"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "crankbait",
+    "nom": "Crankbait",
+    "especes": [
+      "BBG",
+      "BRO",
+      "PER"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "jerkbait-minnow",
+    "nom": "Minnow (jerkbait)",
+    "especes": [
+      "BRO",
+      "PER",
+      "SAN",
+      "CHE"
+    ],
+    "techniques": [
+      "twitching",
+      "stop-and-go",
+      "lineaire"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « La pêche du brochet au jerkbait minnow, une technique efficace » : https://www.peche.com/article/43020/la-peche-du-brochet-au-jerkbait-minnow-une-technique-efficace (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "lipless",
+    "nom": "Lipless (vibrant sans bavette)",
+    "especes": [
+      "BBG",
+      "BRO",
       "SAN"
+    ],
+    "techniques": [
+      "lineaire",
+      "tiree-relachee",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "stickbait",
+    "nom": "Stickbait",
+    "especes": [
+      "BBG",
+      "BRO",
+      "ASP",
+      "CHE",
+      "PER"
+    ],
+    "techniques": [
+      "walking-the-dog"
+    ],
+    "zoneNage": "surface",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "popper",
+    "nom": "Popper",
+    "especes": [
+      "BBG",
+      "CHE",
+      "BRO",
+      "ASP"
+    ],
+    "techniques": [
+      "stop-and-go",
+      "twitching"
+    ],
+    "zoneNage": "surface",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "frog",
+    "nom": "Grenouille",
+    "especes": [
+      "BBG",
+      "BRO"
+    ],
+    "techniques": [
+      "walking-the-dog",
+      "twitching",
+      "stop-and-go"
+    ],
+    "zoneNage": "surface",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "swimbait",
+    "nom": "Swimbait",
+    "especes": [
+      "BRO",
+      "BBG",
+      "SAN"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "tailspinner",
+    "nom": "Tailspinner",
+    "especes": [
+      "SAN",
+      "PER",
+      "BBG"
+    ],
+    "techniques": [
+      "tiree-relachee",
+      "verticale",
+      "lineaire"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "jig-metal",
+    "nom": "Jig métallique",
+    "especes": [
+      "ASP",
+      "PER",
+      "BRO"
+    ],
+    "techniques": [
+      "lineaire",
+      "tiree-relachee"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "shad-silure",
+    "nom": "Gros shad à silure",
+    "especes": [
+      "SIL",
+      "SAN"
+    ],
+    "techniques": [
+      "verticale",
+      "tiree-relachee"
+    ],
+    "zoneNage": "fond",
+    "interditFermetureBrochet": true,
+    "sources": [
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : types à carnassier interdits, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "micro-leurre-souple",
+    "nom": "Micro-leurre souple",
+    "especes": [
+      "PER",
+      "CHE"
+    ],
+    "techniques": [
+      "drop-shot",
+      "lineaire",
+      "tiree-relachee"
     ],
     "zoneNage": "mi-eau",
     "interditFermetureBrochet": false,
     "sources": [
-      "Contenu provisoire de l'US 38 (exemple de structure) ; à vérifier et compléter par le ticket 5"
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : petits leurres à perche et chevesne permis, à vérifier dans l'arrêté de ton département"
     ],
-    "dateVerif": "2026-11-03"
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "micro-cuillere",
+    "nom": "Micro-cuillère tournante (n°0 à 1)",
+    "especes": [
+      "PER",
+      "CHE"
+    ],
+    "techniques": [
+      "lineaire",
+      "stop-and-go"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": false,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : petits leurres à perche et chevesne permis, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "micro-crankbait",
+    "nom": "Micro-crankbait",
+    "especes": [
+      "CHE",
+      "PER"
+    ],
+    "techniques": [
+      "lineaire",
+      "twitching"
+    ],
+    "zoneNage": "mi-eau",
+    "interditFermetureBrochet": false,
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : petits leurres à perche et chevesne permis, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "id": "insecte-surface",
+    "nom": "Insecte de surface",
+    "especes": [
+      "CHE",
+      "PER",
+      "BBG"
+    ],
+    "techniques": [
+      "twitching",
+      "stop-and-go"
+    ],
+    "zoneNage": "surface",
+    "interditFermetureBrochet": false,
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (repris de techniques.json, US 42 ; non relu en ligne pendant l'US 43)",
+      "Légifrance, Code de l'environnement, article R436-33 (leurres artificiels susceptibles de capturer le brochet interdits en 2e catégorie pendant la fermeture du brochet ; non relu en ligne pendant l'US 43) ; décision du propriétaire (US 43) : petits leurres à perche et chevesne permis, à vérifier dans l'arrêté de ton département"
+    ],
+    "dateVerif": "2026-11-04"
   }
 ]
