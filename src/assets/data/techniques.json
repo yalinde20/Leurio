@@ -11,8 +11,7 @@
         "provider": "youtube",
         "id": "f723H2xW7XU",
         "start": 0,
-        "auteur": "La Pêche et les poissons (La Minute Carna)",
-        "dateVerif": "2026-11-04"
+        "auteur": "La Pêche et les poissons (La Minute Carna)"
       },
       {
         "provider": "self",
@@ -23,8 +22,8 @@
       }
     ],
     "sources": [
-      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre",
-      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html"
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -40,8 +39,7 @@
         "provider": "youtube",
         "id": "LPtEvR6lL_k",
         "start": 0,
-        "auteur": "À vérifier",
-        "dateVerif": "2026-11-04"
+        "auteur": "À vérifier"
       },
       {
         "provider": "self",
@@ -52,16 +50,15 @@
       }
     ],
     "sources": [
-      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre",
-      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html",
-      "docs/PLAN.md §9 bis et §11 (Leurio)"
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
   {
     "id": "verticale",
     "nom": "Verticale",
-    "geste": "Place-toi au-dessus du poisson, en bateau ou en float-tube, et laisse descendre le leurre jusqu'au fond. Décolle-le de 10 à 30 cm par petits mouvements de canne, puis marque une pause.",
+    "geste": "Place-toi à la verticale du poste, en bateau, en float-tube ou depuis un ponton, et laisse descendre le leurre jusqu'au fond. Décolle-le de 10 à 30 cm par petits mouvements de canne, puis marque une pause.",
     "vitesse": "très lente : mouvements courts et pauses",
     "erreurAEviter": "Animer trop fort ou trop haut : en verticale, la pause compte autant que le mouvement.",
     "difficulte": 2,
@@ -70,8 +67,7 @@
         "provider": "youtube",
         "id": "srNYQMPy7vo",
         "start": 0,
-        "auteur": "À vérifier",
-        "dateVerif": "2026-11-04"
+        "auteur": "À vérifier"
       },
       {
         "provider": "self",
@@ -82,9 +78,8 @@
       }
     ],
     "sources": [
-      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage",
-      "Ardent Pêche, « Pêcher le sandre en verticale : comment débuter #3 » : https://blog.ardent-peche.com/2025/12/26/pecher-le-sandre-aux-leurres-en-verticale-comment-debuter-3/",
-      "docs/PLAN.md §9 bis et §11 (Leurio)"
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Ardent Pêche, « Pêcher le sandre en verticale : comment débuter #3 » : https://blog.ardent-peche.com/2025/12/26/pecher-le-sandre-aux-leurres-en-verticale-comment-debuter-3/ (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -93,15 +88,14 @@
     "nom": "Stop and go",
     "geste": "Mouline quelques tours, puis arrête-toi une ou deux secondes. Recommence jusqu'au bord : l'attaque vient souvent à la reprise.",
     "vitesse": "moyenne, coupée de pauses",
-    "erreurAEviter": "Faire des pauses trop longues avec un leurre flottant : il remonte vers la surface.",
+    "erreurAEviter": "Ne pas faire de vraie pause, ou laisser le fil se détendre pendant l'arrêt : tu rates la touche à la reprise.",
     "difficulte": 1,
     "videos": [
       {
         "provider": "youtube",
         "id": "FY9l4Lm4JGc",
         "start": 0,
-        "auteur": "À vérifier",
-        "dateVerif": "2026-11-04"
+        "auteur": "À vérifier"
       },
       {
         "provider": "self",
@@ -112,8 +106,7 @@
       }
     ],
     "sources": [
-      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre",
-      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html"
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -129,8 +122,7 @@
         "provider": "youtube",
         "id": "zYUGsC_1IWE",
         "start": 0,
-        "auteur": "Cyril, MordudelaPeche.com",
-        "dateVerif": "2026-11-04"
+        "auteur": "Cyril, MordudelaPeche.com"
       },
       {
         "provider": "self",
@@ -141,8 +133,8 @@
       }
     ],
     "sources": [
-      "peche.com, « La pêche du brochet au jerkbait minnow, une technique efficace » : https://www.peche.com/article/43020/la-peche-du-brochet-au-jerkbait-minnow-une-technique-efficace",
-      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html"
+      "peche.com, « La pêche du brochet au jerkbait minnow, une technique efficace » : https://www.peche.com/article/43020/la-peche-du-brochet-au-jerkbait-minnow-une-technique-efficace (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -158,8 +150,7 @@
         "provider": "youtube",
         "id": "ndE44sL6q6M",
         "start": 0,
-        "auteur": "peche-technique.com",
-        "dateVerif": "2026-11-04"
+        "auteur": "peche-technique.com"
       },
       {
         "provider": "self",
@@ -170,8 +161,8 @@
       }
     ],
     "sources": [
-      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface",
-      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html"
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -187,8 +178,7 @@
         "provider": "youtube",
         "id": "HQ4Wh8P5imo",
         "start": 0,
-        "auteur": "La Pêche et les poissons (La Minute Carna)",
-        "dateVerif": "2026-11-04"
+        "auteur": "La Pêche et les poissons (La Minute Carna)"
       },
       {
         "provider": "self",
@@ -199,8 +189,8 @@
       }
     ],
     "sources": [
-      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre",
-      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html"
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "peche.com, « Pêche en verticale, variez les animations et les profondeurs de nage » : https://www.peche.com/article/44550/peche-en-verticale-variez-les-animations-et-les-profondeurs-de-nage (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   },
@@ -216,8 +206,7 @@
         "provider": "youtube",
         "id": "yl1JTQ_4pew",
         "start": 0,
-        "auteur": "Strike King TV France",
-        "dateVerif": "2026-11-04"
+        "auteur": "Strike King TV France"
       },
       {
         "provider": "self",
@@ -228,8 +217,8 @@
       }
     ],
     "sources": [
-      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html",
-      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre"
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (trouvé par recherche, non relu en ligne pendant l'US 42)",
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
     "dateVerif": "2026-11-04"
   }
