@@ -1,10 +1,43 @@
 [
   {
     "typeId": "shad",
-    "raison": "Un leurre souple polyvalent, efficace sur le sandre comme sur la perche.",
+    "raison": "Un shad souple de 7 à 10 cm, naturel ou clair : avec lui, tu cherches le sandre, la perche et le brochet. C'est le leurre le plus polyvalent.",
     "sources": [
-      "Contenu provisoire de l'US 38 (exemple de structure) ; à vérifier et compléter par le ticket 5"
+      "peche.com, « Les techniques de pêche aux leurres souples pour rechercher le sandre » : https://www.peche.com/article/33975/les-techniques-de-peche-aux-leurres-souples-pour-le-sandre (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)"
     ],
-    "dateVerif": "2026-11-03"
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "typeId": "cuillere-tournante",
+    "raison": "Une cuillère tournante n°2 ou 3, argentée : lance-la et ramène-la à vitesse régulière. Facile pour la perche, le chevesne et le brochet.",
+    "sources": [
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "typeId": "ver-finesse",
+    "raison": "Un ver souple de 7 à 10 cm, que tu montes en drop-shot pour prospecter le fond. Il fait mouche quand les poissons sont difficiles.",
+    "sources": [
+      "Leurre de la pêche, « Comment animer un leurre souple ? » : https://www.leurredelapeche.fr/articles/29-comment-animer-un-leurre-souple-.html (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "typeId": "jerkbait-minnow",
+    "raison": "Un minnow de 10 à 12 cm, couleur naturelle, pour pêcher à mi-eau. Donne quelques coups de scion et marque des pauses : ça déclenche les touches.",
+    "sources": [
+      "peche.com, « La pêche du brochet au jerkbait minnow, une technique efficace » : https://www.peche.com/article/43020/la-peche-du-brochet-au-jerkbait-minnow-une-technique-efficace (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)",
+      "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)"
+    ],
+    "dateVerif": "2026-11-04"
+  },
+  {
+    "typeId": "stickbait",
+    "raison": "Un stickbait de 10 à 12 cm pour pêcher en surface au lever du jour. Tu feras sortir le black-bass, le chevesne ou l'aspe.",
+    "sources": [
+      "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (repris de lure-types.json, US 43 ; non relu en ligne pendant l'US 44)"
+    ],
+    "dateVerif": "2026-11-04"
   }
 ]
