@@ -116,8 +116,9 @@ export function moyenneAirJours(fenetre: string[], jours: unknown, valeurs: unkn
   if (retenus.size < JOURS_MIN) {
     return { disponible: false };
   }
-  const somme = [...retenus.values()].reduce((total, v) => total + v, 0);
-  const moyenne = Math.round((somme / retenus.size) * 10) / 10;
+  // Somme en dixièmes entiers : l'arrondi au dixième ne dépend pas des erreurs de virgule flottante.
+  const sommeDixiemes = [...retenus.values()].reduce((total, v) => total + Math.round(v * 10), 0);
+  const moyenne = Math.round(sommeDixiemes / retenus.size) / 10;
   // Math.round peut rendre -0 : on le ramène à 0.
   return { disponible: true, moyenneC: moyenne === 0 ? 0 : moyenne, joursUtilises: retenus.size };
 }
