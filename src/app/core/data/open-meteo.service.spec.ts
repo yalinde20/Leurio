@@ -4,7 +4,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { WeatherProvider, Lieu } from './weather-provider';
+import { WeatherProvider, Lieu, MeteoPrevue as Prevue } from './weather-provider';
 import { OpenMeteoService } from './open-meteo.service';
 
 const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
@@ -132,11 +132,6 @@ describe('WeatherProvider (Open-Meteo)', () => {
 // US 50 : la météo prévue à un moment choisi (aujourd'hui ou dans les 48 h à venir).
 // Contrat : WeatherProvider.meteoPrevue(lieu, moment) rend MeteoPrevue (météo + `heure`), MeteoIndisponible
 // ou DemandeRefusee ({ disponible: false, refusee: true, motif }) sans aucun appel réseau.
-// Le cast local ci-dessous évite qu'une erreur de type fasse échouer tout le fichier avant que la méthode existe.
-type Prevue = { disponible: true; pressionHpa: number; couvertureNuageusePct: number; ventKmh: number; temperatureAirC: number; heure: Date };
-type Refusee = { disponible: false; refusee: true; motif: 'moment hors des 48 h à venir' | 'moment déjà passé' };
-type ResultatPrevu = Prevue | { disponible: false } | Refusee;
-type AvecPrevision = { meteoPrevue(lieu: Lieu, moment: Date): Promise<ResultatPrevu> };
 
 const HEURE_MS = 3_600_000;
 
@@ -170,7 +165,7 @@ function miseEnPlacePrevue(maintenant: string) {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(maintenant));
   const { fournisseur, http } = miseEnPlace();
-  return { fournisseur: fournisseur as unknown as AvecPrevision, http };
+  return { fournisseur, http };
 }
 
 describe('WeatherProvider (Open-Meteo) — météo prévue à un moment choisi (US 50)', () => {
