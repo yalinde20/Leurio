@@ -34,4 +34,8 @@ describe('heureDemandee (fenêtre de prévision)', () => {
       motif: 'moment déjà passé',
     });
   });
+
+  it('given une date invalide, when on valide, then la météo est indisponible, sans exception', () => {
+    expect(heureDemandee(new Date(''), MAINTENANT)).toStrictEqual({ disponible: false });
+  });
 });

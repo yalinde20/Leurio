@@ -4,7 +4,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { WeatherProvider, Lieu, MeteoPrevue as Prevue } from './weather-provider';
+import { WeatherProvider, Lieu, MeteoPrevue } from './weather-provider';
 import { OpenMeteoService } from './open-meteo.service';
 
 const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
@@ -152,7 +152,7 @@ const reponseHoraire = (debut: Date, nb = 50) => {
   };
 };
 
-const attendu = (i: number, heure: Date): Prevue => ({
+const attendu = (i: number, heure: Date): MeteoPrevue => ({
   disponible: true,
   pressionHpa: 1000 + i * 0.4,
   couvertureNuageusePct: i * 2,
@@ -199,6 +199,8 @@ describe('WeatherProvider (Open-Meteo) — météo prévue à un moment choisi (
     expect(req.request.params.get('timezone')).toBe('GMT');
     expect(req.request.params.get('temperature_unit')).toBe('celsius');
     expect(req.request.params.get('wind_speed_unit')).toBe('kmh');
+    expect(req.request.params.get('start_hour')).toBe('2026-11-06T06:00');
+    expect(req.request.params.get('end_hour')).toBe('2026-11-06T06:00');
     req.flush(reponseHoraire(new Date('2026-11-05T10:00:00Z')));
     await resultat;
   });
@@ -265,6 +267,12 @@ describe('WeatherProvider (Open-Meteo) — météo prévue à un moment choisi (
     const resultat = fournisseur.meteoPrevue(LIEU, new Date('2026-11-07T10:00:00Z'));
     http.expectOne((r) => r.url === URL_PREVISION).flush(reponseHoraire(new Date('2026-11-05T10:00:00Z'), 49));
     expect(await resultat).toEqual(attendu(48, new Date('2026-11-07T10:00:00Z')));
+  });
+
+  it('given une date invalide, when on demande la météo prévue, then il rend « météo indisponible » sans rejeter ni appeler le réseau', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-05T10:20:00Z');
+    await expect(fournisseur.meteoPrevue(LIEU, new Date(''))).resolves.toStrictEqual({ disponible: false });
+    http.expectNone(() => true);
   });
 
   it('given une valeur nulle à l\'heure retenue, when on demande la météo prévue, then il rend « météo indisponible » sans champ refusee', async () => {
