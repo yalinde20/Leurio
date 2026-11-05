@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/yalinde20/Leurio/compare/v1.14.0...v1.15.0) (2026-11-05)
+
+
+### Features
+
+* météo du moment d'un lieu via WeatherProvider (Open-Meteo) ([622c5b0](https://github.com/yalinde20/Leurio/commit/622c5b0794d1960cda2b1b6a6cf12ae316dd19a4))
+
+
+### Bug Fixes
+
+* délai max et unités explicites pour la météo, câblage toléré resserré ([bd6cd8c](https://github.com/yalinde20/Leurio/commit/bd6cd8ce619d8df4bb4c0309088ed23c2204016d))
+
 ## [1.14.0](https://github.com/yalinde20/Leurio/compare/v1.13.0...v1.14.0) (2026-11-05)
 
 
