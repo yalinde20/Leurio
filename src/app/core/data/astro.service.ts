@@ -41,16 +41,12 @@ const formatFuseau = new Intl.DateTimeFormat('en-US', {
   hourCycle: 'h23',
 });
 
-/** Écart de Paris à UTC (minutes, positif à l'est) pour le jour civil français de `jour`. */
-function decalageParisMinutes(jour: Date): number {
-  const valeur = (parties: Intl.DateTimeFormatPart[], type: string): number =>
-    Number(parties.find((p) => p.type === type)?.value);
-  const parties = formatFuseau.formatToParts(jour);
-  // Midi UTC tombe l'après-midi à Paris : même jour civil, hors des heures de changement d'heure.
-  const midi = new Date(Date.UTC(valeur(parties, 'year'), valeur(parties, 'month') - 1, valeur(parties, 'day'), 12));
-  const p = formatFuseau.formatToParts(midi);
-  const muralUtc = Date.UTC(valeur(p, 'year'), valeur(p, 'month') - 1, valeur(p, 'day'), valeur(p, 'hour'), valeur(p, 'minute'));
-  return Math.round((muralUtc - midi.getTime()) / 60000);
+/** Écart de Paris à UTC (minutes, positif à l'est) à l'instant `instant`. */
+function decalageParisMinutes(instant: Date): number {
+  const valeur = (type: string): number => Number(parties.find((p) => p.type === type)?.value);
+  const parties = formatFuseau.formatToParts(instant);
+  const muralUtc = Date.UTC(valeur('year'), valeur('month') - 1, valeur('day'), valeur('hour'), valeur('minute'), valeur('second'));
+  return Math.round((muralUtc - Math.floor(instant.getTime() / 1000) * 1000) / 60000);
 }
 
 /** Soleil et lune calculés en local avec suncalc : aucun accès réseau (PLAN §4). */
