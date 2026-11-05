@@ -71,7 +71,8 @@ describe('WeatherProvider (Open-Meteo)', () => {
     const { fournisseur, http } = miseEnPlace();
     const resultat = fournisseur.meteoActuelle(LIEU);
     const reponse = reponseComplete();
-    const { pressure_msl: _pression, ...sansPression } = reponse.current;
+    const sansPression: Record<string, unknown> = { ...reponse.current };
+    delete sansPression['pressure_msl'];
     http.expectOne((r) => r.url === URL_PREVISION).flush({ ...reponse, current: sansPression });
     expect(await resultat).toEqual({ disponible: false });
   });
