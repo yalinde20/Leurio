@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/yalinde20/Leurio/compare/v1.13.0...v1.14.0) (2026-11-05)
+
+
+### Features
+
+* poids initiaux du moteur dans engine-weights.json (US 46) ([b56e75f](https://github.com/yalinde20/Leurio/commit/b56e75fbfc94e97d6b17056e86312edb470bb8d6))
+
 ## [1.13.0](https://github.com/yalinde20/Leurio/compare/v1.12.0...v1.13.0) (2026-11-05)
 
 
