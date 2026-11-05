@@ -8,6 +8,11 @@ import { ROOT } from '../helpers/run.mjs';
 const IMPLEMENTATION = 'src/app/core/data/open-meteo.service.ts';
 const AUTORISES = [IMPLEMENTATION, 'src/app/core/data/open-meteo.service.spec.ts'];
 const MENTION = /open[-_ ]?meteo/i;
+// Seules lignes tolérées dans app.config.ts : l'import de la classe et son câblage sur WeatherProvider.
+const CABLAGE = [
+  "import { OpenMeteoService } from './core/data/open-meteo.service';",
+  '{ provide: WeatherProvider, useClass: OpenMeteoService },',
+];
 
 function fichiers(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -39,7 +44,7 @@ test('critère 4 : given le code source de l\'app, when on cherche une mention d
     const lignes = texte.split('\n').flatMap((l, i) => (MENTION.test(l) ? [`${rel}:${i + 1}: ${l.trim()}`] : []));
     if (MENTION.test(rel)) trouves.push(rel);
     if (rel === 'src/app/app.config.ts') {
-      trouves.push(...lignes.filter((l) => !/OpenMeteoService|open-meteo\.service/.test(l)));
+      trouves.push(...lignes.filter((l) => !CABLAGE.includes(l.slice(l.indexOf(': ') + 2))));
     } else {
       trouves.push(...lignes);
     }

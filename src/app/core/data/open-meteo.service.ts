@@ -1,9 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout } from 'rxjs';
 import { Lieu, ResultatMeteo, WeatherProvider } from './weather-provider';
 
 const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
+/** Au-delà, la requête est abandonnée : un réseau faible ne bloque jamais le conseil (PLAN §4). */
+const DELAI_MAX_MS = 10_000;
 const VALEURS_COURANTES = 'temperature_2m,cloud_cover,wind_speed_10m,pressure_msl';
 
 interface ReponsePrevision {
@@ -21,8 +23,14 @@ export class OpenMeteoService extends WeatherProvider {
     try {
       const reponse = await firstValueFrom(
         this.http.get<ReponsePrevision>(URL_PREVISION, {
-          params: { latitude: lieu.latitude, longitude: lieu.longitude, current: VALEURS_COURANTES },
-        }),
+          params: {
+            latitude: lieu.latitude,
+            longitude: lieu.longitude,
+            current: VALEURS_COURANTES,
+            temperature_unit: 'celsius',
+            wind_speed_unit: 'kmh',
+          },
+        }).pipe(timeout(DELAI_MAX_MS)),
       );
       const courant = reponse?.current;
       // Une valeur manquante ou invalide rend la météo indisponible en entier : on n'invente rien.

@@ -104,4 +104,27 @@ describe('WeatherProvider (Open-Meteo)', () => {
     http.expectOne((r) => r.url === URL_PREVISION).flush({ latitude: 47.47, longitude: -0.55 });
     expect(await resultat).toEqual({ disponible: false });
   });
+  it('given un serveur qui ne répond pas, when 10 s passent, then il rend « météo indisponible » au lieu d\'attendre sans fin', async () => {
+    vi.useFakeTimers();
+    try {
+      const { fournisseur, http } = miseEnPlace();
+      const resultat = fournisseur.meteoActuelle(LIEU);
+      const req = http.expectOne((r) => r.url === URL_PREVISION);
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(await resultat).toEqual({ disponible: false });
+      expect(req.cancelled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('given un lieu, when on demande la météo, then la requête fixe les unités en °C et km/h', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.meteoActuelle(LIEU);
+    const req = http.expectOne((r) => r.url === URL_PREVISION);
+    expect(req.request.params.get('temperature_unit')).toBe('celsius');
+    expect(req.request.params.get('wind_speed_unit')).toBe('kmh');
+    req.flush(reponseComplete());
+    await resultat;
+  });
 });
