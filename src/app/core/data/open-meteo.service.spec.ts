@@ -156,10 +156,7 @@ const pressionSimulee = (i: number) => 1000 + i * 0.4;
 
 // US 51 : la tendance attendue est dérivée des mêmes données simulées : disponible seulement si la réponse
 // contient l'heure 48 h avant (index i - 48), sinon « indisponible ».
-// Type local transitoire : MeteoPrevue ne porte pas encore `pressionTendance48h` (à venir avec l'implémentation).
-type AvecTendance = MeteoPrevue & { pressionTendance48h: { disponible: true; ecartHpa: number } | { disponible: false } };
-
-const attendu = (i: number, heure: Date): AvecTendance => ({
+const attendu = (i: number, heure: Date): MeteoPrevue => ({
   disponible: true,
   pressionHpa: pressionSimulee(i),
   couvertureNuageusePct: i * 2,

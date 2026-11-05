@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
-import { heureDemandee, Lieu, ResultatMeteo, ResultatMeteoPrevue, WeatherProvider } from './weather-provider';
+import { heureDemandee, Lieu, ResultatMeteo, ResultatMeteoPrevue, tendancePression48h, WeatherProvider } from './weather-provider';
 
 const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
 /** Au-delà, la requête est abandonnée : un réseau faible ne bloque jamais le conseil (PLAN §4). */
@@ -70,8 +70,10 @@ export class OpenMeteoService extends WeatherProvider {
       return demande;
     }
     const { heure } = demande;
-    // Format GMT « AAAA-MM-JJTHH:00 », celui de la réponse (timezone=GMT) ; une seule heure demandée garde la réponse légère.
-    const heureTexte = heure.toISOString().slice(0, 13) + ':00';
+    // Format GMT « AAAA-MM-JJTHH:00 », celui de la réponse (timezone=GMT) ; la fenêtre va de 48 h avant le moment au moment.
+    const enTexte = (h: Date) => h.toISOString().slice(0, 13) + ':00';
+    const heureTexte = enTexte(heure);
+    const avant48hTexte = enTexte(new Date(heure.getTime() - 48 * 3_600_000));
     try {
       const reponse = await firstValueFrom(
         this.http.get<ReponsePrevision>(URL_PREVISION, {
@@ -80,7 +82,7 @@ export class OpenMeteoService extends WeatherProvider {
             longitude: lieu.longitude,
             hourly: VALEURS,
             timezone: 'GMT',
-            start_hour: heureTexte,
+            start_hour: avant48hTexte,
             end_hour: heureTexte,
             temperature_unit: 'celsius',
             wind_speed_unit: 'kmh',
@@ -89,6 +91,7 @@ export class OpenMeteoService extends WeatherProvider {
       );
       const horaire = reponse?.hourly;
       const index = Array.isArray(horaire?.time) ? horaire.time.indexOf(heureTexte) : -1;
+      const indexAvant = Array.isArray(horaire?.time) ? horaire.time.indexOf(avant48hTexte) : -1;
       if (horaire && index >= 0) {
         const pression = valeurA(horaire.pressure_msl, index);
         const nuages = valeurA(horaire.cloud_cover, index);
@@ -102,6 +105,7 @@ export class OpenMeteoService extends WeatherProvider {
             ventKmh: vent,
             temperatureAirC: temperature,
             heure,
+            pressionTendance48h: tendancePression48h(pression, indexAvant >= 0 ? valeurA(horaire.pressure_msl, indexAvant) : undefined),
           };
         }
       }
