@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.0](https://github.com/yalinde20/Leurio/compare/v1.15.0...v1.16.0) (2026-11-05)
+
+
+### Features
+
+* météo prévue à un moment choisi dans les 48 h via WeatherProvider ([e7389a8](https://github.com/yalinde20/Leurio/commit/e7389a813fb63e8627b74229a3bb8cd69eb644a5))
+
+
+### Bug Fixes
+
+* date invalide sans exception pour la météo prévue, heure demandée vérifiée dans la requête ([f8c1e6f](https://github.com/yalinde20/Leurio/commit/f8c1e6faee97422c02c72d8c6bd8c2eaa88e3392))
+
 ## [1.15.0](https://github.com/yalinde20/Leurio/compare/v1.14.0...v1.15.0) (2026-11-05)
 
 
