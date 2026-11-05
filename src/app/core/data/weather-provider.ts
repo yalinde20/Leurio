@@ -29,9 +29,13 @@ export interface DemandeRefusee {
   motif: MotifRefus;
 }
 
+/** Tendance de la pression sur 48 h (PLAN §8.1) : écart signé en hPa, ou indisponible si la pression 48 h avant manque. */
+export type TendancePression = { disponible: true; ecartHpa: number } | { disponible: false };
+
 /** Météo prévue pour une heure pleine ; `heure` est l'instant UTC de l'heure retenue. */
 export interface MeteoPrevue extends MeteoActuelle {
   heure: Date;
+  pressionTendance48h: TendancePression;
 }
 
 export type ResultatMeteoPrevue = MeteoPrevue | MeteoIndisponible | DemandeRefusee;
@@ -56,6 +60,19 @@ export function heureDemandee(moment: Date, maintenant: Date): { heure: Date } |
     return { disponible: false, refusee: true, motif: 'moment déjà passé' };
   }
   return { heure: new Date(Math.round(t / HEURE_MS) * HEURE_MS) };
+}
+
+/**
+ * Tendance de la pression sur 48 h : pression au moment choisi moins pression 48 h avant, arrondie à 0,1 hPa.
+ * Une pression 48 h avant absente ou invalide rend la tendance indisponible, jamais une valeur inventée.
+ */
+export function tendancePression48h(pressionMoment: number, pression48hAvant: unknown): TendancePression {
+  if (typeof pression48hAvant !== 'number' || !Number.isFinite(pression48hAvant)) {
+    return { disponible: false };
+  }
+  const ecart = Math.round((pressionMoment - pression48hAvant) * 10) / 10;
+  // Math.round peut rendre -0 : on le ramène à 0.
+  return { disponible: true, ecartHpa: ecart === 0 ? 0 : ecart };
 }
 
 /** Source de la météo, du moment ou prévue dans les 48 h (PLAN §4) : jeton d'injection, l'app ne connaît pas le service derrière. */
