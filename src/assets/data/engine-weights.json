@@ -1,9 +1,9 @@
 {
   "temperature": 3,
   "saison": 2,
-  "clarte": 1.5,
+  "clarte": 2,
   "luminosite": 1,
   "pression": 1,
   "lune": 0.5,
-  "penaliteDifficulte": 1
+  "penaliteDifficulte": -1
 }
