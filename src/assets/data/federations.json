@@ -173,10 +173,10 @@
   {
     "departement": "18",
     "nom": "Fédération de pêche du Cher",
-    "url": "https://federationpeche18.fr",
+    "url": "https://www.federationpeche.fr/116-fd.htm",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
+      "Le 2026-11-05, le site federationpeche18.fr était en maintenance (constaté par le propriétaire) : le lien mène, en attendant, à l'annuaire des fédérations de la FNPF (choix du propriétaire)"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -495,7 +495,7 @@
     "url": "https://www.lozerepeche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
+      "Site ouvert en https par le propriétaire le 2026-11-05 (refusé aux robots depuis l'environnement de développement)"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -881,7 +881,7 @@
     "url": "https://www.peche86.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
+      "Site ouvert en https par le propriétaire le 2026-11-05 (refusé aux robots depuis l'environnement de développement)"
     ],
     "dateVerif": "2026-11-05"
   },
