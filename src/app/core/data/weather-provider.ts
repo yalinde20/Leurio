@@ -75,6 +75,54 @@ export function tendancePression48h(pressionMoment: number, pression48hAvant: un
   return { disponible: true, ecartHpa: ecart === 0 ? 0 : ecart };
 }
 
+/** Moyenne de la température de l'air des derniers jours (PLAN §8.2) : indisponible s'il y a moins de 5 jours valides. */
+export type MoyenneAir = { disponible: true; moyenneC: number; joursUtilises: number } | { disponible: false };
+
+const JOURS_FENETRE = 7;
+const JOURS_MIN = 5;
+
+const formatJourParis = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/**
+ * Les 7 jours civils qui précèdent le jour du moment à Paris, au format AAAA-MM-JJ, du plus ancien au plus récent.
+ * Calcul sur des dates civiles (UTC) : un changement d'heure ne décale aucun jour. Moment invalide : `null`.
+ */
+export function joursPrecedents(moment: Date): string[] | null {
+  if (!Number.isFinite(moment.getTime())) {
+    return null;
+  }
+  const parties = Object.fromEntries(formatJourParis.formatToParts(moment).map((p) => [p.type, p.value]));
+  const jourMoment = Date.UTC(Number(parties['year']), Number(parties['month']) - 1, Number(parties['day']));
+  return Array.from({ length: JOURS_FENETRE }, (_, i) =>
+    new Date(jourMoment + (i - JOURS_FENETRE) * 86_400_000).toISOString().slice(0, 10),
+  );
+}
+
+/**
+ * Moyenne des températures journalières des jours demandés, arrondie à 0,1 °C. Seuls comptent les jours de la fenêtre
+ * (comptés une fois) dont la valeur est un nombre fini ; moins de 5 jours valides : indisponible, jamais une valeur inventée.
+ */
+export function moyenneAirJours(fenetre: string[], jours: unknown, valeurs: unknown): MoyenneAir {
+  if (!Array.isArray(jours) || !Array.isArray(valeurs)) {
+    return { disponible: false };
+  }
+  const retenus = new Map<string, number>();
+  jours.forEach((jour: unknown, i) => {
+    const valeur: unknown = valeurs[i];
+    if (typeof jour === 'string' && fenetre.includes(jour) && typeof valeur === 'number' && Number.isFinite(valeur)) {
+      retenus.set(jour, valeur);
+    }
+  });
+  if (retenus.size < JOURS_MIN) {
+    return { disponible: false };
+  }
+  // Somme en dixièmes entiers : l'arrondi au dixième ne dépend pas des erreurs de virgule flottante.
+  const sommeDixiemes = [...retenus.values()].reduce((total, v) => total + Math.round(v * 10), 0);
+  const moyenne = Math.round(sommeDixiemes / retenus.size) / 10;
+  // Math.round peut rendre -0 : on le ramène à 0.
+  return { disponible: true, moyenneC: moyenne === 0 ? 0 : moyenne, joursUtilises: retenus.size };
+}
+
 /** Source de la météo, du moment ou prévue dans les 48 h (PLAN §4) : jeton d'injection, l'app ne connaît pas le service derrière. */
 export abstract class WeatherProvider {
   /** Ne rejette jamais : toute panne ou réponse incomplète donne `{ disponible: false }`. */
@@ -85,4 +133,10 @@ export abstract class WeatherProvider {
    * Ne rejette jamais ; un moment hors fenêtre est refusé sans aucun appel réseau.
    */
   abstract meteoPrevue(lieu: Lieu, moment: Date): Promise<ResultatMeteoPrevue>;
+
+  /**
+   * Moyenne de la température de l'air des 7 jours qui précèdent le jour du moment choisi (au moins 5 jours valides).
+   * Ne rejette jamais : toute panne, moment invalide ou réponse incomplète donne `{ disponible: false }`.
+   */
+  abstract moyenneAirDerniersJours(lieu: Lieu, moment: Date): Promise<MoyenneAir>;
 }
