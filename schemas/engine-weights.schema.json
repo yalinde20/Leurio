@@ -13,25 +13,39 @@
   ],
   "properties": {
     "temperature": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la température de l'eau (fort)."
     },
     "saison": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la saison (moyen)."
     },
     "clarte": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la clarté de l'eau (moyen)."
     },
     "luminosite": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la luminosité (faible)."
     },
     "pression": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la pression atmosphérique (faible)."
     },
     "lune": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Poids de la lune : bonus seulement, jamais négatif."
     },
     "penaliteDifficulte": {
-      "type": "number"
+      "type": "number",
+      "exclusiveMaximum": 0,
+      "description": "Pénalité négative ajoutée au score quand la difficulté de l'animation dépasse le niveau du pêcheur."
     }
   },
   "additionalProperties": {
