@@ -4,6 +4,8 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { OpenMeteoService } from './core/data/open-meteo.service';
+import { WeatherProvider } from './core/data/weather-provider';
 import { ThemeService } from './shared/theme.service';
 
 export const appConfig: ApplicationConfig = {
@@ -12,6 +14,8 @@ export const appConfig: ApplicationConfig = {
     provideIonicAngular(),
     provideHttpClient(withFetch()),
     provideRouter(routes),
+    // La météo du moment vient de WeatherProvider ; le service derrière se change ici seulement (PLAN §4).
+    { provide: WeatherProvider, useClass: OpenMeteoService },
     // Applique le thème choisi dès le démarrage.
     provideAppInitializer(() => {
       inject(ThemeService);
