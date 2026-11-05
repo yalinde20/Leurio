@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.17.0](https://github.com/yalinde20/Leurio/compare/v1.16.0...v1.17.0) (2026-11-05)
+
+
+### Features
+
+* moyenne de la température de l'air des derniers jours (US 52) ([e3893d9](https://github.com/yalinde20/Leurio/commit/e3893d97df7ba2e148ea37ab573a150ddd003186))
+
+
+### Bug Fixes
+
+* arrondi de la moyenne de l'air en dixièmes entiers (US 52) ([d63c330](https://github.com/yalinde20/Leurio/commit/d63c33081ab6199a255b0451db1d024c0399781d))
+
 ## [1.16.0](https://github.com/yalinde20/Leurio/compare/v1.15.0...v1.16.0) (2026-11-05)
 
 
