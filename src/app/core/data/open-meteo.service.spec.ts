@@ -152,13 +152,24 @@ const reponseHoraire = (debut: Date, nb = 50) => {
   };
 };
 
-const attendu = (i: number, heure: Date): MeteoPrevue => ({
+const pressionSimulee = (i: number) => 1000 + i * 0.4;
+
+// US 51 : la tendance attendue est dérivée des mêmes données simulées : disponible seulement si la réponse
+// contient l'heure 48 h avant (index i - 48), sinon « indisponible ».
+// Type local transitoire : MeteoPrevue ne porte pas encore `pressionTendance48h` (à venir avec l'implémentation).
+type AvecTendance = MeteoPrevue & { pressionTendance48h: { disponible: true; ecartHpa: number } | { disponible: false } };
+
+const attendu = (i: number, heure: Date): AvecTendance => ({
   disponible: true,
-  pressionHpa: 1000 + i * 0.4,
+  pressionHpa: pressionSimulee(i),
   couvertureNuageusePct: i * 2,
   ventKmh: 10 + i * 0.5,
   temperatureAirC: 5 + i * 0.3,
   heure,
+  pressionTendance48h:
+    i >= 48
+      ? { disponible: true, ecartHpa: Math.round((pressionSimulee(i) - pressionSimulee(i - 48)) * 10) / 10 }
+      : { disponible: false },
 });
 
 function miseEnPlacePrevue(maintenant: string) {
@@ -199,7 +210,8 @@ describe('WeatherProvider (Open-Meteo) — météo prévue à un moment choisi (
     expect(req.request.params.get('timezone')).toBe('GMT');
     expect(req.request.params.get('temperature_unit')).toBe('celsius');
     expect(req.request.params.get('wind_speed_unit')).toBe('kmh');
-    expect(req.request.params.get('start_hour')).toBe('2026-11-06T06:00');
+    // Évolution de la requête exigée par l'US 51 : la fenêtre démarre 48 h avant le moment (tendance de la pression).
+    expect(req.request.params.get('start_hour')).toBe('2026-11-04T06:00');
     expect(req.request.params.get('end_hour')).toBe('2026-11-06T06:00');
     req.flush(reponseHoraire(new Date('2026-11-05T10:00:00Z')));
     await resultat;
@@ -296,6 +308,128 @@ describe('WeatherProvider (Open-Meteo) — météo prévue à un moment choisi (
     const { fournisseur, http } = miseEnPlacePrevue('2026-11-05T10:20:00Z');
     const resultat = fournisseur.meteoPrevue(LIEU, new Date('2026-11-06T07:00:00+01:00'));
     http.expectOne((r) => r.url === URL_PREVISION).error(new ProgressEvent('error'));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+});
+
+// US 51 : tendance de la pression sur 48 h (PLAN §8.1 `pressionTendance48h`).
+// Contrat : MeteoPrevue.pressionTendance48h vaut { disponible: true, ecartHpa } (pression(heure) - pression(heure - 48 h),
+// arrondi à 0,1 hPa) ou { disponible: false } ; les quatre valeurs du moment restent rendues dans les deux cas.
+
+const MOMENT_TENDANCE = new Date('2026-11-06T07:00:00+01:00'); // demain 7 h France = 06:00 GMT
+const HEURE_TENDANCE = new Date('2026-11-06T06:00:00Z');
+const AVANT_48H = new Date('2026-11-04T06:00:00Z');
+const MAINTENANT_TENDANCE = '2026-11-05T10:20:00Z';
+
+/** 49 heures, de heure - 48 h (index 0) à heure (index 48), valeurs distinctes, pressions des deux bouts imposées. */
+const reponseTendance = (pressionAvant: number | null, pressionMoment: number | null) => {
+  const reponse = reponseHoraire(AVANT_48H, 49);
+  const pression: (number | null)[] = reponse.hourly.pressure_msl.map((_, i) => 1000 + i * 0.4);
+  pression[0] = pressionAvant;
+  pression[48] = pressionMoment;
+  return { ...reponse, hourly: { ...reponse.hourly, pressure_msl: pression } };
+};
+
+const valeursDuMoment = {
+  couvertureNuageusePct: 96,
+  ventKmh: 34,
+  temperatureAirC: 5 + 48 * 0.3,
+};
+
+describe('WeatherProvider (Open-Meteo) — tendance de la pression sur 48 h (US 51)', () => {
+  afterEach(() => {
+    try {
+      TestBed.inject(HttpTestingController).verify();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('critère 0 : given 1020 hPa 48 h avant le moment choisi et 1012 hPa au moment choisi, when on demande la météo pour ce moment, then la tendance de la pression sur 48 h vaut −8 hPa', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+    const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponseTendance(1020, 1012));
+    expect(await resultat).toEqual({
+      disponible: true,
+      pressionHpa: 1012,
+      ...valeursDuMoment,
+      heure: HEURE_TENDANCE,
+      pressionTendance48h: { disponible: true, ecartHpa: -8 },
+    });
+  });
+
+  it('critère 1 : given 1008 hPa 48 h avant le moment choisi et 1013 hPa au moment choisi, when on demande la météo pour ce moment, then la tendance de la pression sur 48 h vaut +5 hPa', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+    const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponseTendance(1008, 1013));
+    expect(await resultat).toEqual({
+      disponible: true,
+      pressionHpa: 1013,
+      ...valeursDuMoment,
+      heure: HEURE_TENDANCE,
+      pressionTendance48h: { disponible: true, ecartHpa: 5 },
+    });
+  });
+
+  it('critère 1 : given 1008,1 hPa 48 h avant et 1013,2 hPa au moment choisi, when on demande la météo, then l\'écart est arrondi à 0,1 hPa (5,1 exactement)', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+    const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponseTendance(1008.1, 1013.2));
+    const meteo = await resultat;
+    expect(meteo).toMatchObject({ disponible: true, pressionTendance48h: { disponible: true, ecartHpa: 5.1 } });
+  });
+
+  it('given un moment, when on demande la météo prévue, then la requête couvre de 48 h avant le moment jusqu\'au moment (start_hour et end_hour en GMT)', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+    const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+    const req = http.expectOne((r) => r.url === URL_PREVISION);
+    expect(req.request.params.get('timezone')).toBe('GMT');
+    expect(req.request.params.get('start_hour')).toBe('2026-11-04T06:00');
+    expect(req.request.params.get('end_hour')).toBe('2026-11-06T06:00');
+    req.flush(reponseTendance(1020, 1012));
+    await resultat;
+  });
+
+  it.each([
+    ['la pression 48 h avant est null', () => reponseTendance(null, 1012)],
+    ['la pression 48 h avant n\'est pas un nombre', () => reponseTendance('1020' as unknown as number, 1012)],
+    [
+      'l\'heure 48 h avant est absente de la réponse',
+      () => {
+        const r = reponseTendance(1020, 1012);
+        const h = r.hourly;
+        return {
+          ...r,
+          hourly: {
+            time: h.time.slice(1),
+            temperature_2m: h.temperature_2m.slice(1),
+            cloud_cover: h.cloud_cover.slice(1),
+            wind_speed_10m: h.wind_speed_10m.slice(1),
+            pressure_msl: h.pressure_msl.slice(1),
+          },
+        };
+      },
+    ],
+  ])(
+    'critère 2 : given une réponse où %s, when on demande la météo pour ce moment, then la tendance est « indisponible » et la pression, les nuages, le vent et la température de l\'air du moment restent rendus',
+    async (_cas, fabrique) => {
+      const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+      const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+      http.expectOne((r) => r.url === URL_PREVISION).flush(fabrique());
+      expect(await resultat).toStrictEqual({
+        disponible: true,
+        pressionHpa: 1012,
+        ...valeursDuMoment,
+        heure: HEURE_TENDANCE,
+        pressionTendance48h: { disponible: false },
+      });
+    },
+  );
+
+  it('critère 2 : given une réponse sans la pression du moment lui-même, when on demande la météo, then toute la météo reste « indisponible » (comme en US 50)', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue(MAINTENANT_TENDANCE);
+    const resultat = fournisseur.meteoPrevue(LIEU, MOMENT_TENDANCE);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponseTendance(1020, null));
     expect(await resultat).toStrictEqual({ disponible: false });
   });
 });
