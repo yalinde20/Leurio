@@ -1,9 +1,20 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom, timeout } from 'rxjs';
-import { heureDemandee, Lieu, ResultatMeteo, ResultatMeteoPrevue, tendancePression48h, WeatherProvider } from './weather-provider';
+import {
+  heureDemandee,
+  joursPrecedents,
+  Lieu,
+  MoyenneAir,
+  moyenneAirJours,
+  ResultatMeteo,
+  ResultatMeteoPrevue,
+  tendancePression48h,
+  WeatherProvider,
+} from './weather-provider';
 
 const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
+const URL_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
 /** Au-delà, la requête est abandonnée : un réseau faible ne bloque jamais le conseil (PLAN §4). */
 const DELAI_MAX_MS = 10_000;
 const VALEURS = 'temperature_2m,cloud_cover,wind_speed_10m,pressure_msl';
@@ -17,6 +28,10 @@ interface ReponsePrevision {
     wind_speed_10m?: unknown;
     pressure_msl?: unknown;
   } | null;
+}
+
+interface ReponseArchive {
+  daily?: { time?: unknown; temperature_2m_mean?: unknown } | null;
 }
 
 const estUnNombre = (valeur: unknown): valeur is number => typeof valeur === 'number' && Number.isFinite(valeur);
@@ -109,6 +124,31 @@ export class OpenMeteoService extends WeatherProvider {
           };
         }
       }
+    } catch {
+      // Réseau coupé ou erreur HTTP : une source indisponible ne bloque jamais le conseil (PLAN §4).
+    }
+    return { disponible: false };
+  }
+
+  async moyenneAirDerniersJours(lieu: Lieu, moment: Date): Promise<MoyenneAir> {
+    const fenetre = joursPrecedents(moment);
+    if (!fenetre) {
+      return { disponible: false };
+    }
+    try {
+      const reponse = await firstValueFrom(
+        this.http.get<ReponseArchive>(URL_ARCHIVE, {
+          params: {
+            latitude: lieu.latitude,
+            longitude: lieu.longitude,
+            daily: 'temperature_2m_mean',
+            timezone: 'Europe/Paris',
+            start_date: fenetre[0],
+            end_date: fenetre[fenetre.length - 1],
+          },
+        }).pipe(timeout(DELAI_MAX_MS)),
+      );
+      return moyenneAirJours(fenetre, reponse?.daily?.time, reponse?.daily?.temperature_2m_mean);
     } catch {
       // Réseau coupé ou erreur HTTP : une source indisponible ne bloque jamais le conseil (PLAN §4).
     }
