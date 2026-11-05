@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.13.0](https://github.com/yalinde20/Leurio/compare/v1.12.0...v1.13.0) (2026-11-05)
+
+
+### Features
+
+* federations.json, la fédération de chaque département (US 45) ([6f43ba9](https://github.com/yalinde20/Leurio/commit/6f43ba98040454ea76aa58c648b1aa82f6d32a5c))
+
+
+### Bug Fixes
+
+* adresses des fédérations vérifiées en ligne (US 45) ([af1dc57](https://github.com/yalinde20/Leurio/commit/af1dc57f41517090e6b932274724546fd5f2016f))
+* Cher vers l'annuaire FNPF, Lozère et Vienne confirmés (US 45) ([44bc482](https://github.com/yalinde20/Leurio/commit/44bc482355a0f8c8106ec538200a3c5fe2e4eddc))
+* lien vers l'annuaire FNPF pour les fédérations sans adresse https (US 45) ([d6eb608](https://github.com/yalinde20/Leurio/commit/d6eb6087ccf791344d5371c71d3672c870ad6a79))
+* revue de l'US 45 (articles des noms de fédération) ([83c103c](https://github.com/yalinde20/Leurio/commit/83c103ca08eed21f8e7f5b29a0af027d33eeca84))
+
 ## [1.12.0](https://github.com/yalinde20/Leurio/compare/v1.11.0...v1.12.0) (2026-11-04)
 
 
