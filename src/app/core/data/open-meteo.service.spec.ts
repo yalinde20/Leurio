@@ -430,3 +430,164 @@ describe('WeatherProvider (Open-Meteo) — tendance de la pression sur 48 h (US 
     expect(await resultat).toStrictEqual({ disponible: false });
   });
 });
+
+// US 52 : moyenne de la température de l'air des 7 jours précédant le jour du moment choisi (PLAN §8.2, §4).
+// Contrat : WeatherProvider.moyenneAirDerniersJours(lieu, moment) rend { disponible: true, moyenneC, joursUtilises }
+// (au moins 5 jours, moyenne arrondie à 0,1 °C) ou { disponible: false } ; ne rejette jamais. Un seul appel à l'archive.
+
+const URL_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
+const MOMENT_MOYENNE = new Date('2026-11-05T10:00:00Z'); // jour à Paris : 2026-11-05
+const SEPT_JOURS = ['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04'];
+const SEPT_VALEURS = [10.2, 9.8, 11.1, 12.4, 8.7, 9.3, 10.0]; // somme 71,5 : moyenne 10,214…
+
+const reponseArchive = (time: string[], temperature_2m_mean: (number | null)[]) => ({
+  latitude: 47.47,
+  longitude: -0.55,
+  timezone: 'Europe/Paris',
+  daily: { time, temperature_2m_mean },
+});
+
+describe('WeatherProvider (Open-Meteo) — moyenne de la température de l\'air des derniers jours (US 52)', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('critère 0 : given une réponse archive simulée avec 7 températures moyennes journalières, when on demande la moyenne de l\'air des derniers jours, then le fournisseur rend la moyenne des 7 valeurs arrondie au dixième et 7 jours utilisés', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS, SEPT_VALEURS));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.2, joursUtilises: 7 });
+  });
+
+  it('critère 0 : given des valeurs dont la moyenne vaut 10,27, when on demande la moyenne, then elle est arrondie au dixième supérieur (10,3)', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS, [10, 10, 10, 10, 10, 10, 11.9]));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.3, joursUtilises: 7 });
+  });
+
+  it('critère 0 : given une moyenne légèrement négative qui s\'arrondit à zéro, when on demande la moyenne, then elle vaut 0 et non -0', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS, [-0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.04]));
+    const moyenne = await resultat;
+    expect(moyenne).toMatchObject({ disponible: true, joursUtilises: 7 });
+    expect(Object.is((moyenne as { moyenneC: number }).moyenneC, 0)).toBe(true);
+  });
+
+  it('critère 0 : given un lieu et un moment, when on demande la moyenne, then un seul GET archive demande la température moyenne journalière des 7 jours précédant le jour du moment (fuseau Europe/Paris)', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    const req = http.expectOne((r) => r.url === URL_ARCHIVE);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('latitude')).toBe(String(LIEU.latitude));
+    expect(req.request.params.get('longitude')).toBe(String(LIEU.longitude));
+    expect(req.request.params.get('daily')).toBe('temperature_2m_mean');
+    expect(req.request.params.get('timezone')).toBe('Europe/Paris');
+    expect(req.request.params.get('start_date')).toBe('2026-10-29');
+    expect(req.request.params.get('end_date')).toBe('2026-11-04');
+    http.expectNone((r) => r.url === URL_PREVISION);
+    req.flush(reponseArchive(SEPT_JOURS, SEPT_VALEURS));
+    await resultat;
+  });
+
+  it('critère 0 : given un moment à 00 h 30 le 5 novembre à Paris (23 h 30 UTC le 4), when on demande la moyenne, then la fenêtre est celle du jour de Paris (29 octobre au 4 novembre)', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, new Date('2026-11-04T23:30:00Z'));
+    const req = http.expectOne((r) => r.url === URL_ARCHIVE);
+    expect(req.request.params.get('start_date')).toBe('2026-10-29');
+    expect(req.request.params.get('end_date')).toBe('2026-11-04');
+    req.flush(reponseArchive(SEPT_JOURS, SEPT_VALEURS));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.2, joursUtilises: 7 });
+  });
+
+  it('critère 0 : given un moment à 0 h 30 le jour du changement d\'heure d\'été (heure de Paris), when on demande la moyenne, then la fenêtre est celle du jour de Paris', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    // 2026-03-29 00:30 à Paris = 2026-03-28T23:30Z (UTC+1) ; fenêtre : 22 au 28 mars.
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, new Date('2026-03-28T23:30:00Z'));
+    const req = http.expectOne((r) => r.url === URL_ARCHIVE);
+    expect(req.request.params.get('start_date')).toBe('2026-03-22');
+    expect(req.request.params.get('end_date')).toBe('2026-03-28');
+    req.flush(reponseArchive([], []));
+    await resultat;
+  });
+
+  it('critère 1 : given une réponse archive simulée qui ne contient que 5 des 7 jours, when on demande la moyenne, then il rend la moyenne des 5 jours disponibles et 5 jours utilisés', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    // 5 jours présents : 10-31 à 11-04 ; 10,0 + 12,0 + 8,0 + 9,0 + 11,5 = 50,5 → 10,1
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS.slice(2), [10, 12, 8, 9, 11.5]));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.1, joursUtilises: 5 });
+  });
+
+  it('critère 1 : given une réponse dont 2 jours sont à null, when on demande la moyenne, then les jours null sont ignorés : moyenne des 5 autres et 5 jours utilisés', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS, [null, 10, 12, 8, 9, 11.5, null]));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.1, joursUtilises: 5 });
+  });
+
+  it('critère 1 : given une réponse avec 6 jours, when on demande la moyenne, then le nombre de jours utilisés est 6', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS.slice(1), [10, 10, 10, 10, 10, 12]));
+    expect(await resultat).toStrictEqual({ disponible: true, moyenneC: 10.3, joursUtilises: 6 });
+  });
+
+  it('critère 2 : given une réponse archive simulée qui ne contient que 4 jours, when on demande la moyenne, then il rend « moyenne indisponible »', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS.slice(3), [10, 12, 8, 9]));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('critère 2 : given une réponse de 7 jours dont 3 sont à null (4 valeurs), when on demande la moyenne, then il rend « moyenne indisponible »', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(SEPT_JOURS, [10, null, 12, null, 8, null, 9]));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('critère 2 : given 4 jours dans la fenêtre et 3 jours hors fenêtre, when on demande la moyenne, then les jours hors fenêtre ne comptent pas et il rend « moyenne indisponible »', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    const jours = ['2026-10-28', ...SEPT_JOURS.slice(3), '2026-11-05', '2026-11-06'];
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush(reponseArchive(jours, [1, 10, 12, 8, 9, 20, 20]));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('critère 2 : given une réponse sans bloc daily, when on demande la moyenne, then il rend « moyenne indisponible »', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush({ latitude: 47.47, longitude: -0.55 });
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('critère 2 : given une réponse HTTP 500 simulée sur l\'archive, when on demande la moyenne, then il rend « moyenne indisponible » sans rejeter', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const resultat = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).flush({ error: true, reason: 'panne' }, { status: 500, statusText: 'Server Error' });
+    await expect(resultat).resolves.toStrictEqual({ disponible: false });
+  });
+
+  it('given un moment invalide, when on demande la moyenne, then il rend « moyenne indisponible » sans rejeter ni appeler le réseau', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    await expect(fournisseur.moyenneAirDerniersJours(LIEU, new Date(NaN))).resolves.toStrictEqual({ disponible: false });
+    http.expectNone(() => true);
+  });
+
+  it('critère 3 : given une erreur réseau simulée sur l\'archive et une réponse forecast simulée valide, when on demande la moyenne de l\'air puis la météo du moment, then la moyenne est « indisponible » et la météo du moment est rendue normalement', async () => {
+    const { fournisseur, http } = miseEnPlace();
+    const moyenne = fournisseur.moyenneAirDerniersJours(LIEU, MOMENT_MOYENNE);
+    http.expectOne((r) => r.url === URL_ARCHIVE).error(new ProgressEvent('error'));
+    expect(await moyenne).toStrictEqual({ disponible: false });
+
+    const meteo = fournisseur.meteoActuelle(LIEU);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponseComplete());
+    expect(await meteo).toEqual({
+      disponible: true,
+      pressionHpa: 1008.4,
+      couvertureNuageusePct: 72,
+      ventKmh: 14.6,
+      temperatureAirC: 11.3,
+    });
+  });
+});
