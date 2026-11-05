@@ -5,7 +5,7 @@
     "url": "https://www.federation-peche-ain.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -14,7 +14,8 @@
     "nom": "Fédération de pêche de l'Aisne",
     "url": "https://www.peche02.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -24,7 +25,7 @@
     "url": "https://www.federation-peche-allier.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -34,7 +35,7 @@
     "url": "https://www.peche04.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -44,17 +45,18 @@
     "url": "https://peche-hautes-alpes.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "06",
     "nom": "Fédération de pêche des Alpes-Maritimes",
-    "url": "https://www.peche-cote-azur.fr",
+    "url": "https://www.peche06.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.peche06.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -64,7 +66,7 @@
     "url": "https://www.peche-ardeche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -74,7 +76,7 @@
     "url": "https://www.generationpeche.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -84,7 +86,7 @@
     "url": "https://www.peche-ariege.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -94,7 +96,7 @@
     "url": "https://www.fedepeche10.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -104,7 +106,7 @@
     "url": "https://www.fedepeche11.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -113,7 +115,8 @@
     "nom": "Fédération de pêche de l'Aveyron",
     "url": "https://www.pecheaveyron.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -123,7 +126,7 @@
     "url": "https://www.peche13.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -133,7 +136,7 @@
     "url": "https://www.federation-peche14.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -143,7 +146,7 @@
     "url": "https://www.cantal-peche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -153,7 +156,7 @@
     "url": "https://www.federationpeche16.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -163,7 +166,7 @@
     "url": "https://www.peche17.org",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -173,7 +176,7 @@
     "url": "https://federationpeche18.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -183,29 +186,31 @@
     "url": "https://www.peche19.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "2A",
     "nom": "Fédération de pêche de Corse",
-    "url": "https://truitecorse.org",
+    "url": "https://www.truitecorse.org",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre la Corse-du-Sud (2A) et la Haute-Corse (2B)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.truitecorse.org ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "2B",
     "nom": "Fédération de pêche de Corse",
-    "url": "https://truitecorse.org",
+    "url": "https://www.truitecorse.org",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre la Corse-du-Sud (2A) et la Haute-Corse (2B)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.truitecorse.org ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -215,17 +220,18 @@
     "url": "https://www.fedepeche21.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "22",
     "nom": "Fédération de pêche des Côtes-d'Armor",
-    "url": "https://www.federation-peche22.com",
+    "url": "https://www.federationpeche22.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.federationpeche22.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -234,7 +240,8 @@
     "nom": "Fédération de pêche de la Creuse",
     "url": "https://fdpeche23.wixsite.com/peche23",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -244,17 +251,18 @@
     "url": "https://www.federationpechedordogne.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "25",
     "nom": "Fédération de pêche du Doubs",
-    "url": "https://www.federation-peche-doubs.org",
+    "url": "https://federation-peche-doubs.org",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://federation-peche-doubs.org ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -264,7 +272,7 @@
     "url": "https://drome.federationpeche.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -274,7 +282,7 @@
     "url": "https://www.peche27.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -284,17 +292,18 @@
     "url": "https://www.peche28.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "29",
     "nom": "Fédération de pêche du Finistère",
-    "url": "https://www.peche-en-finistere.fr",
+    "url": "https://peche-en-finistere.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://peche-en-finistere.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -304,7 +313,7 @@
     "url": "https://www.pechegard.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -314,7 +323,7 @@
     "url": "https://www.fede-peche31.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -324,7 +333,7 @@
     "url": "https://www.gers-peche.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -334,7 +343,7 @@
     "url": "https://www.peche33.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -344,7 +353,7 @@
     "url": "https://www.pecheherault.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -353,7 +362,8 @@
     "nom": "Fédération de pêche d'Ille-et-Vilaine",
     "url": "https://www.peche35.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -363,7 +373,7 @@
     "url": "https://www.peche36.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -373,7 +383,7 @@
     "url": "https://www.fedepeche37.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -383,7 +393,7 @@
     "url": "https://www.peche-isere.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -393,7 +403,7 @@
     "url": "https://www.peche-jura.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -403,7 +413,7 @@
     "url": "https://www.peche-landes.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -413,17 +423,18 @@
     "url": "https://www.peche41.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "42",
     "nom": "Fédération de pêche de la Loire",
-    "url": "https://www.federationpeche42.fr",
+    "url": "https://peche42.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://peche42.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -433,7 +444,7 @@
     "url": "https://www.pechehauteloire.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -443,17 +454,18 @@
     "url": "https://www.federationpeche44.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "45",
     "nom": "Fédération de pêche du Loiret",
-    "url": "https://federationpeche45.fr",
+    "url": "https://www.federationpeche45.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.federationpeche45.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -463,7 +475,7 @@
     "url": "https://www.pechelot.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -472,7 +484,8 @@
     "nom": "Fédération de pêche du Lot-et-Garonne",
     "url": "https://www.peche47.com",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -482,17 +495,18 @@
     "url": "https://www.lozerepeche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "49",
     "nom": "Fédération de pêche du Maine-et-Loire",
-    "url": "https://www.fedepeche49.fr",
+    "url": "https://fedepeche49.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://fedepeche49.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -502,7 +516,7 @@
     "url": "https://www.peche-manche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -512,7 +526,7 @@
     "url": "https://www.peche51.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -522,7 +536,7 @@
     "url": "https://www.peche52.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -532,7 +546,7 @@
     "url": "https://www.fedepeche53.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -542,7 +556,7 @@
     "url": "https://www.peche-54.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -551,7 +565,8 @@
     "nom": "Fédération de pêche de la Meuse",
     "url": "https://www.peche55.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -561,7 +576,7 @@
     "url": "https://morbihan.federationpeche.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -571,7 +586,7 @@
     "url": "https://www.federationpeche57.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -581,7 +596,7 @@
     "url": "https://www.federationdepeche58.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -591,7 +606,7 @@
     "url": "https://www.peche59.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -600,7 +615,8 @@
     "nom": "Fédération de pêche de l'Oise",
     "url": "https://www.peche60.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -610,7 +626,7 @@
     "url": "https://www.peche-orne.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -620,7 +636,7 @@
     "url": "https://www.peche62.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -630,7 +646,7 @@
     "url": "https://www.peche63.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -640,7 +656,7 @@
     "url": "https://www.federation-peche64.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -649,7 +665,8 @@
     "nom": "Fédération de pêche des Hautes-Pyrénées",
     "url": "https://www.peche65.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -659,7 +676,7 @@
     "url": "https://www.peche66.org",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -669,7 +686,7 @@
     "url": "https://www.peche67.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -679,17 +696,18 @@
     "url": "https://www.peche68.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "69",
     "nom": "Fédération de pêche du Rhône",
-    "url": "https://www.federation-peche-rhone.fr",
+    "url": "https://www.peche69.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.peche69.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -699,7 +717,7 @@
     "url": "https://www.peche-haute-saone.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -709,7 +727,7 @@
     "url": "https://www.peche-saone-et-loire.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -719,7 +737,7 @@
     "url": "https://www.peche72.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -729,17 +747,18 @@
     "url": "https://www.savoiepeche.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "74",
     "nom": "Fédération de pêche de la Haute-Savoie",
-    "url": "https://www.pechehautesavoie.com",
+    "url": "https://pechehautesavoie.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://pechehautesavoie.com ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -750,7 +769,7 @@
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre Paris (75), les Hauts-de-Seine (92), la Seine-Saint-Denis (93) et le Val-de-Marne (94)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -760,7 +779,7 @@
     "url": "https://www.peche76.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -770,7 +789,7 @@
     "url": "https://www.federationpeche77.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -780,17 +799,18 @@
     "url": "https://www.federationpeche78.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, ce domaine était en vente : ce n'est plus le site de la fédération, adresse à remplacer"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "79",
     "nom": "Fédération de pêche des Deux-Sèvres",
-    "url": "https://www.peche-en-deux-sevres.com",
+    "url": "https://peche-en-deux-sevres.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://peche-en-deux-sevres.com ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -800,7 +820,7 @@
     "url": "https://www.peche80.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -810,7 +830,7 @@
     "url": "https://www.pechetarn.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -819,7 +839,8 @@
     "nom": "Fédération de pêche du Tarn-et-Garonne",
     "url": "https://www.pechetarnetgaronne.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -829,7 +850,7 @@
     "url": "https://www.pechevar.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -838,17 +859,19 @@
     "nom": "Fédération de pêche du Vaucluse",
     "url": "https://www.peche-vaucluse.com",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "85",
     "nom": "Fédération de pêche de la Vendée",
-    "url": "https://www.federation-peche-vendee.fr",
+    "url": "https://federation-peche-vendee.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://federation-peche-vendee.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -858,7 +881,7 @@
     "url": "https://www.peche86.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site n'a pas pu être ouvert en https depuis l'environnement de développement (refus ou erreur 403) : adresse à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -868,7 +891,7 @@
     "url": "https://www.federation-peche87.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -878,17 +901,18 @@
     "url": "https://www.peche88.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "89",
     "nom": "Fédération de pêche de l'Yonne",
-    "url": "https://www.peche-yonne.com",
+    "url": "https://www.federation-peche-yonne.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.federation-peche-yonne.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -897,7 +921,8 @@
     "nom": "Fédération de pêche du Territoire de Belfort",
     "url": "https://www.fede-peche90.fr",
     "sources": [
-      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05"
+      "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -907,7 +932,7 @@
     "url": "https://www.peche91.com",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -918,7 +943,7 @@
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre Paris (75), les Hauts-de-Seine (92), la Seine-Saint-Denis (93) et le Val-de-Marne (94)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -929,7 +954,7 @@
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre Paris (75), les Hauts-de-Seine (92), la Seine-Saint-Denis (93) et le Val-de-Marne (94)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
@@ -940,17 +965,18 @@
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
       "Fédération interdépartementale : elle couvre Paris (75), les Hauts-de-Seine (92), la Seine-Saint-Denis (93) et le Val-de-Marne (94)",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "Le 2026-11-05, le site ne répondait qu'en http : l'adresse https reste à confirmer"
     ],
     "dateVerif": "2026-11-05"
   },
   {
     "departement": "95",
     "nom": "Fédération de pêche du Val-d'Oise",
-    "url": "https://www.pecheurs95.fr",
+    "url": "https://www.peche95.fr",
     "sources": [
       "Fédération nationale de la pêche en France, annuaire des fédérations départementales (https://www.federationpeche.fr/116-fd.htm), consulté le 2026-11-05",
-      "Adresse du site passée en https ; disponibilité en https non vérifiée depuis l'environnement de développement"
+      "L'annuaire donne une ancienne adresse, qui redirige vers https://www.peche95.fr ; adresse corrigée le 2026-11-05",
+      "Site ouvert en https le 2026-11-05"
     ],
     "dateVerif": "2026-11-05"
   }
