@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Conditions, saisonDe } from '../engine/conditions';
 import { SaisieTempEau, saisieRecente } from '../engine/temperature-eau';
+import { ConditionsCache } from './conditions-cache';
 import { GeoService } from './geo.service';
 import { HubeauService } from './hubeau.service';
 import { MomentJourneeService } from './moment-journee.service';
@@ -25,6 +26,30 @@ export interface DemandeConditions {
   saisieTempEau?: SaisieTempEau;
 }
 
+/** Conditions assemblées, avec la pression et, si elles viennent du cache, la mention de leur date. */
+export interface ReleveActuel {
+  conditions: Conditions;
+  pressionHpa: number | null;
+  /** « Conditions du 27/10 à 18 h » quand météo en panne et conditions reprises du cache. */
+  mention?: string;
+}
+
+/** « Conditions du 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
+export function mentionConditionsDu(date: Date): string {
+  const parties = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const valeur = (type: string) => parties.find((p) => p.type === type)?.value ?? '';
+  const minutes = valeur('minute');
+  const heure = `${Number(valeur('hour'))} h${minutes === '00' ? '' : ` ${minutes}`}`;
+  return `Conditions du ${valeur('day')}/${valeur('month')} à ${heure}`;
+}
+
 /** Une source qui rejette est traitée comme indisponible. */
 async function ouNull<T>(source: Promise<T>): Promise<T | null> {
   try {
@@ -46,8 +71,19 @@ export class ConditionsService {
   private readonly momentJournee = inject(MomentJourneeService);
   private readonly geo = inject(GeoService);
 
+  private readonly cache = inject(ConditionsCache);
+
   /** Ne rejette jamais : une source indisponible donne `null` (ou « inconnu » pour le débit). */
   async conditions(demande: DemandeConditions): Promise<Conditions> {
+    return (await this.releve(demande)).conditions;
+  }
+
+  /**
+   * Conditions et pression. Si Open-Meteo répond, le relevé est gardé en cache local ; sinon, le dernier relevé
+   * en cache fournit pression, tendance, nuages et vent, avec une mention datée (PLAN §4, « Si une API est en panne »).
+   * Le reste (eau, débit, moment, saison, département) est toujours calculé en direct. Ne rejette jamais.
+   */
+  async releve(demande: DemandeConditions): Promise<ReleveActuel> {
     const { lieu, spot, especeCible } = demande;
     // Un moment invalide est traité comme un moment omis : « maintenant » (la méthode ne rejette jamais).
     const moment = demande.moment && !Number.isNaN(demande.moment.getTime()) ? demande.moment : new Date();
@@ -58,13 +94,18 @@ export class ConditionsService {
       ouNull(this.weather.meteoPrevue(lieu, moment)),
     ]);
     const meteoConnue = meteo !== null && meteo.disponible && 'pressionTendance48h' in meteo ? meteo : null;
+    const enCache = meteoConnue ? null : await this.cache.lire();
     const conditions: Conditions = {
       tempEau: saisie ? saisie.valeurC : eau?.statut === 'connue' ? eau.tempEauC : null,
       sourceTempEau: saisie ? 'saisie' : eau?.statut === 'connue' ? eau.source : null,
       debitTendance: debit?.statut === 'tendance' ? debit.tendance : 'inconnu',
-      pressionTendance48h: meteoConnue?.pressionTendance48h.disponible ? meteoConnue.pressionTendance48h.ecartHpa : null,
-      nuages: meteoConnue?.couvertureNuageusePct ?? null,
-      vent: meteoConnue?.ventKmh ?? null,
+      pressionTendance48h: meteoConnue
+        ? meteoConnue.pressionTendance48h.disponible
+          ? meteoConnue.pressionTendance48h.ecartHpa
+          : null
+        : (enCache?.conditions.pressionTendance48h ?? null),
+      nuages: meteoConnue ? (meteoConnue.couvertureNuageusePct ?? null) : (enCache?.conditions.nuages ?? null),
+      vent: meteoConnue ? (meteoConnue.ventKmh ?? null) : (enCache?.conditions.vent ?? null),
       moment: this.momentJournee.moment(lieu, moment),
       saison: saisonDe(moment),
       categorie: spot?.categorie ?? null,
@@ -72,6 +113,14 @@ export class ConditionsService {
       niveau: demande.niveau ?? 'debutant',
     };
     if (especeCible !== undefined && especeCible !== 'toutes') conditions.especeCible = especeCible;
-    return conditions;
+    if (meteoConnue) {
+      const pressionHpa = meteoConnue.pressionHpa ?? null;
+      await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: moment.toISOString() });
+      return { conditions, pressionHpa };
+    }
+    if (enCache) {
+      return { conditions, pressionHpa: enCache.pressionHpa, mention: mentionConditionsDu(new Date(enCache.obtenuesA)) };
+    }
+    return { conditions, pressionHpa: null };
   }
 }
