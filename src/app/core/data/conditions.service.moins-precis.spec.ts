@@ -149,7 +149,15 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
       ],
     });
     const service = TestBed.inject(ConditionsService);
-    const releve = await service.releve({ lieu: ANGERS, moment: MOMENT });
+    // L'horloge est fixée juste avant MOMENT : sinon le vrai fournisseur météo refuse un moment déjà passé, sans appel réseau.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(MOMENT.getTime() - 30 * 60 * 1000));
+    let releve;
+    try {
+      releve = await service.releve({ lieu: ANGERS, moment: MOMENT });
+    } finally {
+      vi.useRealTimers();
+    }
     expect(requetes.length).toBeGreaterThan(0);
     expect(releve.moinsPrecis).toBe(true);
     expect(releve.conditions.saison).toBe('automne');
