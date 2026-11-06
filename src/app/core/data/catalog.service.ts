@@ -28,16 +28,21 @@ export class CatalogService {
   }
 
   /**
-   * URL de la fédération du département, ou `undefined` si elle n'est pas dans le contenu
+   * Fédération du département, ou `undefined` si elle n'est pas dans le contenu
    * ou si federations.json ne se charge pas : une source indisponible ne bloque jamais (PLAN §4).
    */
-  async urlFederation(departement: string): Promise<string | undefined> {
+  async federation(departement: string): Promise<Federation | undefined> {
     try {
       const federations = await this.charger<Federation>('federations');
-      return federations.find((f) => f.departement === departement)?.url;
+      return federations.find((f) => f.departement === departement);
     } catch {
       return undefined;
     }
+  }
+
+  /** URL de la fédération du département, ou `undefined` (voir `federation`). */
+  async urlFederation(departement: string): Promise<string | undefined> {
+    return (await this.federation(departement))?.url;
   }
 
   private charger<T>(fichier: string): Promise<T[]> {

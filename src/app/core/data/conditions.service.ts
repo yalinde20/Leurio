@@ -32,6 +32,12 @@ export interface ReleveActuel {
   pressionHpa: number | null;
   /** « Conditions du 27/10 à 18 h » quand météo en panne et conditions reprises du cache. */
   mention?: string;
+  /** Station Hub'Eau qui a mesuré la température de l'eau (source « capteur »). */
+  stationEau?: { nom: string; distanceKm: number };
+  /** Instant de la saisie au thermomètre (source « saisie »). */
+  saisieA?: Date;
+  /** Pourquoi le débit est « inconnu » : pas de station proche, ou Hub'Eau en panne. */
+  debitAbsent?: 'aucune station' | "Hub'Eau indisponible";
   /**
    * Vrai exactement quand la météo est en vraie panne (rejet, ou « indisponible » sans refus) et qu'aucun relevé
    * n'est en cache : le conseil repose alors sur la saison et la température saisie, et est signalé « moins précis »
@@ -121,10 +127,16 @@ export class ConditionsService {
       niveau: demande.niveau ?? 'debutant',
     };
     if (especeCible !== undefined && especeCible !== 'toutes') conditions.especeCible = especeCible;
+    const origine: Pick<ReleveActuel, 'stationEau' | 'saisieA' | 'debitAbsent'> = {};
+    if (saisie) origine.saisieA = saisie.mesureeA;
+    else if (eau?.statut === 'connue' && eau.source === 'capteur') {
+      origine.stationEau = { nom: eau.station.nom, distanceKm: eau.distanceKm };
+    }
+    if (debit?.statut !== 'tendance') origine.debitAbsent = debit?.statut === 'aucune station' ? 'aucune station' : "Hub'Eau indisponible";
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
       await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
-      return { conditions, pressionHpa, moinsPrecis: false };
+      return { conditions, pressionHpa, moinsPrecis: false, ...origine };
     }
     if (enCache) {
       return {
@@ -132,8 +144,9 @@ export class ConditionsService {
         pressionHpa: enCache.pressionHpa ?? null,
         mention: mentionConditionsDu(new Date(enCache.obtenuesA)),
         moinsPrecis: false,
+        ...origine,
       };
     }
-    return { conditions, pressionHpa: null, moinsPrecis: enPanne };
+    return { conditions, pressionHpa: null, moinsPrecis: enPanne, ...origine };
   }
 }

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 64 : carte « Conditions »</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte « Conditions ». */
+  .carte {
+    background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px;
+    padding: 16px; color: var(--lr-texte);
+  }
+  .carte h3 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+  .carte .mention { margin: -6px 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .carte dl { margin: 0; }
+  .ligne { padding: 10px 0; border-top: 1px solid var(--lr-bordure); }
+  .ligne:first-child { border-top: none; padding-top: 0; }
+  .ligne dt { display: inline; font-size: 16px; font-weight: 600; }
+  .ligne dd { display: inline; margin: 0; font-size: 16px; }
+  .ligne .source { display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ligne.eau dd { font-size: 22px; font-weight: 700; }
+  .lien-fede {
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
+</style>
+</head>
+<body>
+<h1>US 64 — Carte « Conditions » sur l'écran Conseil</h1>
+<p class="note">iPhone, app installée. Lieu = position GPS, moment = maintenant (pas de sélecteur dans cette story). La carte est en haut de l'écran Conseil ; les cartes de conseil viendront avec leur story. Une ligne par donnée, au format « Libellé : valeur ». La température de l'eau est mise en avant ; sa source est écrite en dessous, en texte secondaire. Interrupteur ci-dessous pour voir chaque thème.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+
+  <h2>1. Chargement</h2>
+  <p class="note">Tant que les conditions sont en cours de récupération.</p>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Conseil</span></div>
+    <div class="content">
+      <section class="carte">
+        <h3>Conditions</h3>
+        <p class="chargement">Chargement des conditions…</p>
+      </section>
+    </div>
+    <nav class="tabbar">
+      <div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+
+  <h2>2. Conditions complètes, eau mesurée par une station</h2>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Conseil</span></div>
+    <div class="content">
+      <section class="carte">
+        <h3>Conditions</h3>
+        <dl>
+          <div class="ligne eau"><dt>Température de l'eau :</dt> <dd>11,5 °C</dd><span class="source">Station Hub'Eau La Maine à Angers, à 4 km</span></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Normal</dd></div>
+          <div class="ligne"><dt>Pression :</dt> <dd>1012 hPa (−8 hPa en 48 h)</dd></div>
+          <div class="ligne"><dt>Ciel :</dt> <dd>80 % de nuages</dd></div>
+          <div class="ligne"><dt>Vent :</dt> <dd>12 km/h</dd></div>
+          <div class="ligne"><dt>Lune :</dt> <dd>Pleine lune</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
+        </dl>
+      </section>
+    </div>
+    <nav class="tabbar">
+      <div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+
+  <h2>3. Les trois sources de la température de l'eau</h2>
+  <p class="note">Seule la ligne de l'eau change ; le reste de la carte est identique à l'écran 2.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <section class="carte" style="margin-bottom:12px">
+        <dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>11,5 °C</dd><span class="source">Station Hub'Eau La Maine à Angers, à 4 km</span></div></dl>
+      </section>
+      <section class="carte" style="margin-bottom:12px">
+        <dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>9 °C</dd><span class="source">Estimée depuis l'air des derniers jours</span></div></dl>
+      </section>
+      <section class="carte" style="margin-bottom:12px">
+        <dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>12,4 °C</dd><span class="source">Mesurée au thermomètre à 7 h 30</span></div></dl>
+      </section>
+      <section class="carte">
+        <dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>Inconnue</dd></div></dl>
+      </section>
+    </div>
+  </div>
+
+  <h2>4. Les quatre cas du débit</h2>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <section class="carte">
+        <dl>
+          <div class="ligne"><dt>Débit :</dt> <dd>En crue</dd></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Normal</dd></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>À l'étiage</dd></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Pas de station proche</dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+
+  <h2>5. Météo en panne, conditions reprises du cache</h2>
+  <p class="note">Mention datée sous le titre (US 62, PLAN §4). Les valeurs sont celles du dernier relevé gardé.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <section class="carte">
+        <h3>Conditions</h3>
+        <p class="mention">Conditions du 05/11 à 18 h</p>
+        <dl>
+          <div class="ligne eau"><dt>Température de l'eau :</dt> <dd>9 °C</dd><span class="source">Estimée depuis l'air des derniers jours</span></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Pas de station proche</dd></div>
+          <div class="ligne"><dt>Pression :</dt> <dd>1015 hPa (+2 hPa en 48 h)</dd></div>
+          <div class="ligne"><dt>Ciel :</dt> <dd>40 % de nuages</dd></div>
+          <div class="ligne"><dt>Vent :</dt> <dd>8 km/h</dd></div>
+          <div class="ligne"><dt>Lune :</dt> <dd>Dernier quartier</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+
+  <h2>6. Hors ligne, rien en cache</h2>
+  <p class="note">Une valeur que l'on n'a pas est dite « Indisponible », jamais inventée. Lune et heures légales sont calculées sur le téléphone : toujours là.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <section class="carte">
+        <h3>Conditions</h3>
+        <dl>
+          <div class="ligne eau"><dt>Température de l'eau :</dt> <dd>Inconnue</dd></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Indisponible</dd></div>
+          <div class="ligne"><dt>Pression :</dt> <dd>Indisponible</dd></div>
+          <div class="ligne"><dt>Ciel :</dt> <dd>Indisponible</dd></div>
+          <div class="ligne"><dt>Vent :</dt> <dd>Indisponible</dd></div>
+          <div class="ligne"><dt>Lune :</dt> <dd>Pleine lune</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+
+  <h2>7. Position GPS refusée ou introuvable</h2>
+  <p class="note">Sans lieu, pas de conditions. Le sélecteur de lieu viendra avec sa propre story.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <section class="carte">
+        <h3>Conditions</h3>
+        <p class="chargement">Position introuvable : autorise la localisation pour voir les conditions.</p>
+      </section>
+    </div>
+  </div>
+
+  <h2>8. Mention réglementaire des heures légales (PLAN §6)</h2>
+  <p class="note">Sous « Heures légales » : « À vérifier dans l'arrêté de ton département » et le lien vers la fédération du département (zone tactile de 48 px de haut). Si la fédération est introuvable, seule la mention s'affiche.</p>
+
+  <h2>9. Ce qui reste hors de cette story</h2>
+  <p class="note">Sélecteur lieu et moment, cartes de conseil, bandeau réglementation, boutons thermomètre et « Préparer ma sortie ». Android : même carte, seule la barre du haut change (titre aligné à gauche).</p>
+</div>
+</body>
+</html>
