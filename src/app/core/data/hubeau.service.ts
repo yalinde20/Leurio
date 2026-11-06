@@ -8,6 +8,9 @@ const URL_CHRONIQUE = 'https://hubeau.eaufrance.fr/api/v1/temperature/chronique'
 const DELAI_MAX_MS = 10_000;
 const CHAMPS = 'code_station,libelle_station,longitude,latitude,date_mesure_temp,heure_mesure_temp,resultat';
 const RAYON_TERRE_KM = 6371;
+const TOLERANCE_KM = 1e-6;
+/** Une mesure datée de plus d'une heure dans le futur est une donnée douteuse : elle est ignorée. */
+const MARGE_FUTUR_MS = 3_600_000;
 
 /** Rayon de recherche des stations autour du lieu, en km (PLAN §8.2) : une station à 30 km ou plus est trop loin. */
 export const RAYON_MAX_KM = 30;
@@ -19,9 +22,9 @@ export interface TemperatureEauMesuree {
   statut: 'mesure';
   /** Température de l'eau en °C. */
   temperatureC: number;
-  /** Date de la mesure en UTC, « AAAA-MM-JJ ». */
+  /** Date de la mesure, « AAAA-MM-JJ », telle que Hub'Eau la donne (lue comme UTC). */
   date: string;
-  /** Heure de la mesure en UTC, « HH:MM:SS ». */
+  /** Heure de la mesure, « HH:MM:SS », telle que Hub'Eau la donne (lue comme UTC). */
   heure: string;
   station: { code: string; nom: string };
   /** Distance du lieu à la station en km, arrondie à 0,1 km. */
@@ -98,6 +101,7 @@ export class HubeauService {
             distance: RAYON_MAX_KM,
             date_debut_mesure: new Date(limite).toISOString().slice(0, 10),
             sort: 'desc',
+            // Tri décroissant : si la limite tronque la réponse, seules les mesures les plus anciennes manquent.
             size: 5000,
             fields: CHAMPS,
           },
@@ -116,10 +120,11 @@ export class HubeauService {
 
       let meilleure: { mesure: MesureStation; distance: number } | undefined;
       for (const mesure of dernieres.values()) {
-        if (mesure.instant < limite) continue;
-        // Borne stricte sur la distance arrondie : une station pile à 30 km reste dehors malgré l'erreur flottante.
-        const distance = Math.round(distanceKm(lieu, mesure) * 10) / 10;
-        if (distance >= RAYON_MAX_KM) continue;
+        // Inactive (dernière mesure de plus de 48 h) ou datée dans le futur (donnée douteuse) : ignorée.
+        if (mesure.instant < limite || mesure.instant > maintenant.getTime() + MARGE_FUTUR_MS) continue;
+        // Borne stricte (< 30 km) sur la distance brute ; la tolérance garde dehors une station pile à 30 km malgré l'erreur flottante.
+        const distance = distanceKm(lieu, mesure);
+        if (distance >= RAYON_MAX_KM - TOLERANCE_KM) continue;
         if (!meilleure || distance < meilleure.distance || (distance === meilleure.distance && mesure.instant > meilleure.mesure.instant)) {
           meilleure = { mesure, distance };
         }
@@ -132,7 +137,7 @@ export class HubeauService {
         date: mesure.date,
         heure: mesure.heure,
         station: { code: mesure.code, nom: mesure.nom },
-        distanceKm: distance,
+        distanceKm: Math.round(distance * 10) / 10,
       };
     } catch {
       // Réseau coupé, erreur HTTP ou délai dépassé : une source indisponible ne bloque jamais le conseil (PLAN §4).

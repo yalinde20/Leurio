@@ -76,4 +76,23 @@ describe('HubeauService, cas limites', () => {
     });
     expect(resultat).toMatchObject({ station: { code: 'RECENTE' } });
   });
+
+  it('given une station à 29,97 km, when on demande la température, then elle est dans le rayon et sa distance est arrondie à 30 km', async () => {
+    const latitude = 47.47 + 29.97 / ((6371 * Math.PI) / 180);
+    const resultat = await demande({ data: [ligne('LIMITE', '2026-11-05', '09:00:00', 11, latitude)] });
+    expect(resultat).toMatchObject({ statut: 'mesure', station: { code: 'LIMITE' }, distanceKm: 30 });
+  });
+
+  it('given deux stations à 7,96 et 8,04 km, la plus lointaine mesurée plus récemment, when on demande la température, then la plus proche l\'emporte', async () => {
+    const km = (d: number) => 47.47 + d / ((6371 * Math.PI) / 180);
+    const resultat = await demande({
+      data: [ligne('LOIN', '2026-11-05', '09:00:00', 12, km(8.04)), ligne('PRES', '2026-11-05', '08:00:00', 10, km(7.96))],
+    });
+    expect(resultat).toMatchObject({ station: { code: 'PRES' }, distanceKm: 8 });
+  });
+
+  it('given une seule station dont la mesure est datée de demain, when on demande la température, then il rend « aucune station »', async () => {
+    const resultat = await demande({ data: [ligne('FUTUR', '2026-11-07', '10:00:00', 12)] });
+    expect(resultat).toEqual({ statut: 'aucune station' });
+  });
 });
