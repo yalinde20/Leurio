@@ -37,4 +37,29 @@ describe('ConditionsService, sources en panne', () => {
       niveau: 'debutant',
     });
   });
+
+  it('given un moment invalide, when on demande les conditions, then elles sont rendues pour maintenant', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2027-01-15T12:00:00Z'));
+    try {
+      const meteoPrevue = vi.fn().mockResolvedValue({ disponible: false });
+      const temperatureEauProche = vi.fn().mockResolvedValue({ statut: "température de l'eau inconnue" });
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: TemperatureEauService, useValue: { temperatureEauProche } },
+          { provide: HubeauService, useValue: { tendanceDebitProche: vi.fn().mockResolvedValue({ statut: 'aucune station' }) } },
+          { provide: WeatherProvider, useValue: { meteoPrevue } },
+          { provide: MomentJourneeService, useValue: { moment: () => 'jour' } },
+          { provide: GeoService, useValue: { departement: () => '49' } },
+        ],
+      });
+      const lieu = { latitude: 47.47, longitude: -0.55 };
+      const conditions = await TestBed.inject(ConditionsService).conditions({ lieu, moment: new Date('') });
+      expect(conditions.saison).toBe('hiver');
+      expect(meteoPrevue).toHaveBeenCalledWith(lieu, new Date('2027-01-15T12:00:00Z'));
+      expect(temperatureEauProche).toHaveBeenCalledWith(lieu, new Date('2027-01-15T12:00:00Z'));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -43,7 +43,8 @@ export class ConditionsService {
   /** Ne rejette jamais : une source indisponible donne `null` (ou « inconnu » pour le débit). */
   async conditions(demande: DemandeConditions): Promise<Conditions> {
     const { lieu, spot, especeCible } = demande;
-    const moment = demande.moment ?? new Date();
+    // Un moment invalide est traité comme un moment omis : « maintenant » (la méthode ne rejette jamais).
+    const moment = demande.moment && !Number.isNaN(demande.moment.getTime()) ? demande.moment : new Date();
     const [eau, debit, meteo] = await Promise.all([
       ouNull(this.temperatureEau.temperatureEauProche(lieu, moment)),
       ouNull(this.hubeau.tendanceDebitProche(lieu, moment)),
