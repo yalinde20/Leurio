@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.20.0](https://github.com/yalinde20/Leurio/compare/v1.19.0...v1.20.0) (2026-11-06)
+
+
+### Features
+
+* **position:** position GPS ou spot enregistré (US 59) ([217b51e](https://github.com/yalinde20/Leurio/commit/217b51ebcddbc51cc51f06b8598a2e6d5dd40cab))
+
+
+### Bug Fixes
+
+* **position:** la position approximative suffit (Android 12+) (US 59) ([5a5170d](https://github.com/yalinde20/Leurio/commit/5a5170da14405033984f7d1c23e9389e1bcdc1c0))
+* **position:** refus natif et délai après la demande d'autorisation (US 59) ([31dee81](https://github.com/yalinde20/Leurio/commit/31dee81535fcb5b89717afef98153aa3809ef6c8))
+
 ## [1.19.0](https://github.com/yalinde20/Leurio/compare/v1.18.0...v1.19.0) (2026-11-06)
 
 
