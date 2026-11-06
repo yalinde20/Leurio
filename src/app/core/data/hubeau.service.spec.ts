@@ -44,6 +44,7 @@ describe('HubeauService (température de l\'eau)', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('les constantes du contrat valent 30 km et 48 h', () => {
+    miseEnPlace();
     expect(RAYON_MAX_KM).toBe(30);
     expect(ANCIENNETE_MAX_H).toBe(48);
   });
