@@ -37,3 +37,18 @@ for (const theme of ['clair', 'sombre']) {
     }
   });
 }
+
+// ---------- US 65 : badge « Moins précis » ----------
+test('US 65 critère 2 : given le badge « Moins précis » de la carte, when on lit les fichiers de l\'écran Conseil, then il est peint avec les tokens --lr-sable et --lr-texte', () => {
+  const tout = sources().map(({ texte }) => texte).join('\n');
+  assert.match(tout, /Moins précis/, 'le badge « Moins précis » est absent de l\'écran Conseil');
+  assert.match(tout, /var\(--lr-sable\)/, 'le badge n\'utilise pas le token --lr-sable');
+});
+
+for (const theme of ['clair', 'sombre']) {
+  test(`US 65 critère 2 : given le thème ${theme}, when on mesure --lr-texte sur --lr-sable, then le contraste du badge est d'au moins 4,5:1`, () => {
+    const t = lireThemes()[theme];
+    const c = contraste(t['--lr-texte'], t['--lr-sable']);
+    assert.ok(c >= 4.5, `--lr-texte sur --lr-sable (${theme}) : ${c.toFixed(2)}:1 < 4,5:1`);
+  });
+}

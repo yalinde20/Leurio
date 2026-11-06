@@ -84,3 +84,20 @@ for (const theme of ['light', 'dark'] as const) {
     }
   });
 }
+
+// US 65 : Open-Meteo est coupé et le cache est vide au premier chargement, donc les conditions sont « moins précis » :
+// le badge « Moins précis » s'affiche et son contraste est mesuré avec celui des autres textes de la carte.
+for (const theme of ['light', 'dark'] as const) {
+  test(`US 65 critère 2 : given le thème ${theme === 'light' ? 'clair' : 'sombre'} et la météo en panne sans cache, when la carte « Conditions » s'affiche, then le badge « Moins précis » est visible avec un contraste d'au moins 4,5:1`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await simulerServices(page);
+    await page.goto('/');
+    await expect(page.getByText('Moins précis', { exact: true })).toBeVisible();
+
+    const mesures = await mesurerContrastes(page);
+    expect(mesures, 'aucune carte titrée « Conditions »').not.toBeNull();
+    const badge = mesures!.find((m) => m.texte === 'Moins précis');
+    expect(badge, 'le texte « Moins précis » est absent de la carte').toBeDefined();
+    expect(badge!.contraste, `« Moins précis » : contraste ${badge!.contraste.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+  });
+}
