@@ -16,6 +16,8 @@ interface Fichier {
   element?: string;
   /** Champs qui identifient un élément, par ordre de préférence. */
   identifiants?: string[];
+  /** Fichier validé s'il est présent dans le dossier, sans être exigé (jeux de données partiels). */
+  facultatif?: boolean;
 }
 
 const FICHIERS: Fichier[] = [
@@ -25,6 +27,7 @@ const FICHIERS: Fichier[] = [
   { nom: 'starter-kit', element: 'kit de départ', identifiants: ['typeId'] },
   { nom: 'federations', element: 'fédération', identifiants: ['departement', 'nom'] },
   { nom: 'engine-weights' },
+  { nom: 'departements', facultatif: true },
 ];
 
 const racine = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -52,7 +55,7 @@ function decrire(e: ErrorObject): string {
 function valider(fichier: Fichier): string[] {
   const nomFichier = `${fichier.nom}.json`;
   const chemin = join(dossier, nomFichier);
-  if (!existsSync(chemin)) return [`${nomFichier} : fichier absent (${chemin})`];
+  if (!existsSync(chemin)) return fichier.facultatif ? [] : [`${nomFichier} : fichier absent (${chemin})`];
   let donnees: unknown;
   try {
     donnees = JSON.parse(readFileSync(chemin, 'utf8'));
