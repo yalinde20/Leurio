@@ -121,7 +121,7 @@ export class ConditionsService {
       return { conditions, pressionHpa };
     }
     if (enCache) {
-      return { conditions, pressionHpa: enCache.pressionHpa, mention: mentionConditionsDu(new Date(enCache.obtenuesA)) };
+      return { conditions, pressionHpa: enCache.pressionHpa ?? null, mention: mentionConditionsDu(new Date(enCache.obtenuesA)) };
     }
     return { conditions, pressionHpa: null };
   }
