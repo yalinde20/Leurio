@@ -111,10 +111,9 @@ describe('HubeauService (température de l\'eau)', () => {
     expect(resultat).toEqual({ statut: 'aucune station' });
   });
 
-  it('critère 3 : given une seule station active à 30 km, when on demande la température de l\'eau, then il rend « aucune station »', async () => {
-    // 30,0004 km plein nord (distance haversine calculée ≈ 30,0004, arrondie à 30,0) : hors rayon sans ambiguïté
-    // malgré les erreurs d'arrondi flottant ; la borne est stricte (< 30 km).
-    const resultat = await demande([ligne('S1', 'Pile 30 km', 30.0004, '2026-11-05', '09:00:00')]);
+  it('critère 3 : given une seule station active à exactement 30 km, when on demande la température de l\'eau, then il rend « aucune station »', async () => {
+    // Exactement 30 km plein nord : la borne est stricte (< 30 km), une erreur d'arrondi flottant ne la fait pas entrer.
+    const resultat = await demande([ligne('S1', 'Pile 30 km', 30, '2026-11-05', '09:00:00')]);
     expect(resultat).toEqual({ statut: 'aucune station' });
   });
 
