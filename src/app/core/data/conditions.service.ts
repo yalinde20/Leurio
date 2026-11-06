@@ -32,6 +32,12 @@ export interface ReleveActuel {
   pressionHpa: number | null;
   /** « Conditions du 27/10 à 18 h » quand météo en panne et conditions reprises du cache. */
   mention?: string;
+  /** Station Hub'Eau qui a mesuré la température de l'eau (source « capteur »). */
+  stationEau?: { nom: string; distanceKm: number };
+  /** Instant de la saisie au thermomètre (source « saisie »). */
+  saisieA?: Date;
+  /** Pourquoi le débit est « inconnu » : pas de station proche, ou Hub'Eau en panne. */
+  debitAbsent?: 'aucune station' | "Hub'Eau indisponible";
 }
 
 /** « Conditions du 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
@@ -115,14 +121,25 @@ export class ConditionsService {
       niveau: demande.niveau ?? 'debutant',
     };
     if (especeCible !== undefined && especeCible !== 'toutes') conditions.especeCible = especeCible;
+    const origine: Pick<ReleveActuel, 'stationEau' | 'saisieA' | 'debitAbsent'> = {};
+    if (saisie) origine.saisieA = saisie.mesureeA;
+    else if (eau?.statut === 'connue' && eau.source === 'capteur') {
+      origine.stationEau = { nom: eau.station.nom, distanceKm: eau.distanceKm };
+    }
+    if (debit?.statut !== 'tendance') origine.debitAbsent = debit?.statut === 'aucune station' ? 'aucune station' : "Hub'Eau indisponible";
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
       await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
-      return { conditions, pressionHpa };
+      return { conditions, pressionHpa, ...origine };
     }
     if (enCache) {
-      return { conditions, pressionHpa: enCache.pressionHpa ?? null, mention: mentionConditionsDu(new Date(enCache.obtenuesA)) };
+      return {
+        conditions,
+        pressionHpa: enCache.pressionHpa ?? null,
+        mention: mentionConditionsDu(new Date(enCache.obtenuesA)),
+        ...origine,
+      };
     }
-    return { conditions, pressionHpa: null };
+    return { conditions, pressionHpa: null, ...origine };
   }
 }

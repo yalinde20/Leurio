@@ -72,7 +72,12 @@ export interface Geolocalisation {
 
 export const GEOLOCALISATION = new InjectionToken<Geolocalisation>('GEOLOCALISATION', {
   providedIn: 'root',
-  factory: () => Geolocation,
+  // Objet simple, pas le proxy du plugin : Angular y chercherait `ngOnDestroy`, que le proxy rend comme une méthode non implémentée.
+  factory: () => ({
+    checkPermissions: () => Geolocation.checkPermissions(),
+    requestPermissions: () => Geolocation.requestPermissions(),
+    getCurrentPosition: (options) => Geolocation.getCurrentPosition(options),
+  }),
 });
 
 const REFUSEE: PositionManquante = { disponible: false, motif: POSITION_REFUSEE };
