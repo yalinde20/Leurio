@@ -21,6 +21,17 @@ const CODE_NON_IMPLEMENTE = 'UNIMPLEMENTED';
 
 type EtatPermission = 'prompt' | 'prompt-with-rationale' | 'granted' | 'denied';
 
+/** Statut rendu par le plugin ; `coarseLocation` est la position approximative (Android 12+). */
+interface StatutPermission {
+  location: EtatPermission;
+  coarseLocation?: EtatPermission;
+}
+
+/** La position approximative suffit (météo, département) : elle compte comme une autorisation accordée. */
+function etat({ location, coarseLocation }: StatutPermission): EtatPermission {
+  return coarseLocation === 'granted' ? 'granted' : location;
+}
+
 /** Spot enregistré par l'utilisateur, au format du PLAN §7 (`users/{uid}/spots`), réduit à ce dont la position a besoin. */
 export interface Spot {
   nom: string;
@@ -49,9 +60,9 @@ export type ResultatPosition = PositionTrouvee | PositionManquante;
 
 /** Partie du plugin Capacitor Geolocation que le service utilise (remplacée par un double dans les tests). */
 export interface Geolocalisation {
-  checkPermissions(): Promise<{ location: EtatPermission }>;
+  checkPermissions(): Promise<StatutPermission>;
   /** Affiche la demande d'autorisation du système ; absente ou non implémentée sur le web. */
-  requestPermissions?(): Promise<{ location: EtatPermission }>;
+  requestPermissions?(): Promise<StatutPermission>;
   getCurrentPosition(options?: {
     enableHighAccuracy?: boolean;
     timeout?: number;
@@ -137,8 +148,8 @@ export class PositionService {
   private async demanderPermission(): Promise<PositionManquante | 'continuer'> {
     if (!this.geolocalisation.requestPermissions) return 'continuer';
     try {
-      const { location } = await this.geolocalisation.requestPermissions();
-      return location === 'granted' ? 'continuer' : REFUSEE;
+      const statut = await this.geolocalisation.requestPermissions();
+      return etat(statut) === 'granted' ? 'continuer' : REFUSEE;
     } catch (erreur) {
       if (codeErreur(erreur) === CODE_NON_IMPLEMENTE) return 'continuer';
       return CODES_REFUS.includes(codeErreur(erreur)) ? REFUSEE : INDISPONIBLE;
@@ -148,7 +159,7 @@ export class PositionService {
   /** État de la permission ; « prompt » si on ne peut pas le lire (web sans API Permissions). */
   private async permission(): Promise<EtatPermission> {
     try {
-      return (await this.geolocalisation.checkPermissions()).location;
+      return etat(await this.geolocalisation.checkPermissions());
     } catch {
       return 'prompt';
     }

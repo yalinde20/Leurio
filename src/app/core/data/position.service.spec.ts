@@ -160,6 +160,55 @@ describe('PositionService (GPS ou spot enregistré)', () => {
     });
   });
 
+  it('critère 0 (Android 12+) : given seule la position approximative accordée, when on demande la position en mode GPS, then le service rend la position et son département', async () => {
+    const double: Geolocalisation = {
+      checkPermissions: vi.fn(async () => ({
+        location: 'denied' as const,
+        coarseLocation: 'granted' as const,
+      })),
+      requestPermissions: vi.fn(async () => ({
+        location: 'denied' as const,
+        coarseLocation: 'granted' as const,
+      })),
+      getCurrentPosition: vi.fn(async () => ({
+        coords: { latitude: ANGERS.latitude, longitude: ANGERS.longitude, accuracy: 900 },
+      })),
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: GEOLOCALISATION, useValue: double }] });
+
+    const resultat = await service().positionGps();
+
+    expect(resultat).toEqual({
+      disponible: true,
+      source: 'gps',
+      latitude: ANGERS.latitude,
+      longitude: ANGERS.longitude,
+      precisionM: 900,
+      departement: '49',
+    });
+  });
+
+  it('critère 0 (Android 12+) : given la position approximative choisie dans la demande du système, when on demande la position en mode GPS, then le service rend la position', async () => {
+    const double: Geolocalisation = {
+      checkPermissions: vi.fn(async () => ({
+        location: 'prompt' as const,
+        coarseLocation: 'prompt' as const,
+      })),
+      requestPermissions: vi.fn(async () => ({
+        location: 'denied' as const,
+        coarseLocation: 'granted' as const,
+      })),
+      getCurrentPosition: vi.fn(async () => ({
+        coords: { latitude: ANGERS.latitude, longitude: ANGERS.longitude, accuracy: 900 },
+      })),
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: GEOLOCALISATION, useValue: double }] });
+
+    const resultat = await service().positionGps();
+
+    expect(resultat).toMatchObject({ disponible: true, source: 'gps', departement: '49' });
+  });
+
   it('critère 2 : given la localisation sans réponse dans le délai prévu, when on demande la position en mode GPS, then le service rend « position indisponible », distinct de « position refusée »', async () => {
     vi.useFakeTimers();
     doubleGeolocalisation('granted', () => new Promise<never>(() => undefined));
