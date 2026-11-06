@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.1](https://github.com/yalinde20/Leurio/compare/v1.22.0...v1.22.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **conditions:** un moment invalide est traité comme « maintenant », le service ne rejette jamais (US 60) ([b631b89](https://github.com/yalinde20/Leurio/commit/b631b8920bff957c84e0d2eaf77382cf9c6ad98d))
+
 ## [1.22.0](https://github.com/yalinde20/Leurio/compare/v1.21.0...v1.22.0) (2026-11-06)
 
 
