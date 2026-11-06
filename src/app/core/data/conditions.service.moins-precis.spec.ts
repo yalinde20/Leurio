@@ -3,17 +3,22 @@ import { HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { throwError } from 'rxjs';
+import { appConfig } from '../../app.config';
 import { ConditionsCache, INDEXED_DB, ReleveConditions } from './conditions-cache';
 import { ConditionsService } from './conditions.service';
 import { GeoService } from './geo.service';
 import { HubeauService } from './hubeau.service';
 import { MomentJourneeService } from './moment-journee.service';
-import { OpenMeteoService } from './open-meteo.service';
 import { TemperatureEauService } from './temperature-eau.service';
 import { Lieu, WeatherProvider } from './weather-provider';
 
 const ANGERS: Lieu = { latitude: 47.47, longitude: -0.55 };
 const MOMENT = new Date('2026-11-06T12:00:00Z');
+
+/** Le câblage de WeatherProvider de l'app, sans nommer le service qui est derrière (PLAN §4). */
+const FOURNISSEUR_METEO_REEL = appConfig.providers.find(
+  (p) => typeof p === 'object' && p !== null && 'provide' in p && p.provide === WeatherProvider,
+)!;
 const IL_Y_A_1_H = new Date('2026-11-06T11:00:00Z');
 
 const RELEVE_CACHE: ReleveConditions = {
@@ -34,9 +39,9 @@ const RELEVE_CACHE: ReleveConditions = {
   obtenuesA: '2026-11-05T17:00:00.000Z',
 };
 
-/** Open-Meteo en panne : la requête échoue (rejet), ou répond « indisponible » sans refus. */
+/** La météo en panne : la requête échoue (rejet), ou répond « indisponible » sans refus. */
 const METEO_EN_PANNE = {
-  rejet: vi.fn().mockRejectedValue(new Error('Open-Meteo en panne')),
+  rejet: vi.fn().mockRejectedValue(new Error('météo en panne')),
   indisponible: vi.fn().mockResolvedValue({ disponible: false }),
 };
 
@@ -68,7 +73,7 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
     ['la requête rejette', 'rejet'],
     ['la météo répond « indisponible »', 'indisponible'],
   ] as const)(
-    'given Open-Meteo en panne (%s), aucun cache et une saisie au thermomètre de 1 h, when on demande les conditions, then elles sont moins précises, avec saison, moment, département et tempEau issus de la saisie',
+    'given la météo en panne (%s), aucun cache et une saisie au thermomètre de 1 h, when on demande les conditions, then elles sont moins précises, avec saison, moment, département et tempEau issus de la saisie',
     async (_nom, panne) => {
       const { service } = miseEnPlaceDoublee({ meteoPrevue: METEO_EN_PANNE[panne] });
       const releve = await service.releve({
@@ -86,18 +91,35 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
     },
   );
 
-  it("given Open-Meteo en panne, aucun cache, aucune saisie et Hub'Eau en panne, when on demande les conditions, then elles sont moins précises et la température de l'eau est inconnue", async () => {
-    const { service } = miseEnPlaceDoublee({
-      meteoPrevue: METEO_EN_PANNE.rejet,
-      temperatureEauProche: vi.fn().mockResolvedValue({ statut: "température de l'eau inconnue" }),
+  it("given la météo en panne, aucun cache, aucune saisie et Hub'Eau en panne, when on demande les conditions, then elles sont moins précises et la température de l'eau est inconnue", async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: INDEXED_DB, useValue: new IDBFactory() },
+        {
+          provide: HubeauService,
+          useValue: {
+            temperatureEauProche: vi.fn().mockRejectedValue(new Error("Hub'Eau en panne")),
+            tendanceDebitProche: vi.fn().mockRejectedValue(new Error("Hub'Eau en panne")),
+          },
+        },
+        {
+          provide: WeatherProvider,
+          useValue: {
+            meteoPrevue: METEO_EN_PANNE.rejet,
+            moyenneAirDerniersJours: vi.fn().mockRejectedValue(new Error('météo en panne')),
+          },
+        },
+        { provide: MomentJourneeService, useValue: { moment: vi.fn().mockReturnValue('jour') } },
+        { provide: GeoService, useValue: { departement: vi.fn().mockReturnValue('49') } },
+      ],
     });
-    const releve = await service.releve({ lieu: ANGERS, moment: MOMENT });
+    const releve = await TestBed.inject(ConditionsService).releve({ lieu: ANGERS, moment: MOMENT });
     expect(releve.moinsPrecis).toBe(true);
     expect(releve.conditions.tempEau).toBeNull();
     expect(releve.conditions.sourceTempEau).toBeNull();
   });
 
-  it("given Open-Meteo en panne, aucun cache, aucune saisie et une station Hub'Eau active à 10 km, when on demande les conditions, then elles sont moins précises et tempEau vaut la mesure de la station", async () => {
+  it("given la météo en panne, aucun cache, aucune saisie et une station Hub'Eau active à 10 km, when on demande les conditions, then elles sont moins précises et tempEau vaut la mesure de la station", async () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: INDEXED_DB, useValue: new IDBFactory() },
@@ -118,8 +140,8 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
         {
           provide: WeatherProvider,
           useValue: {
-            meteoPrevue: vi.fn().mockRejectedValue(new Error('Open-Meteo en panne')),
-            moyenneAirDerniersJours: vi.fn().mockRejectedValue(new Error('Open-Meteo en panne')),
+            meteoPrevue: vi.fn().mockRejectedValue(new Error('météo en panne')),
+            moyenneAirDerniersJours: vi.fn().mockRejectedValue(new Error('météo en panne')),
           },
         },
         { provide: MomentJourneeService, useValue: { moment: vi.fn().mockReturnValue('jour') } },
@@ -145,7 +167,8 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
             },
           ]),
         ),
-        { provide: WeatherProvider, useClass: OpenMeteoService },
+        // Le vrai fournisseur météo, tel que l'app le câble.
+        FOURNISSEUR_METEO_REEL,
       ],
     });
     const service = TestBed.inject(ConditionsService);
@@ -184,7 +207,7 @@ describe('ConditionsService, conditions « moins précis » (US 63)', () => {
     expect(releve.moinsPrecis).toBe(false);
   });
 
-  it("given Open-Meteo en panne et des conditions en cache, when on demande les conditions, then elles ne sont pas marquées « moins précis » et la mention du cache est rendue", async () => {
+  it("given la météo en panne et des conditions en cache, when on demande les conditions, then elles ne sont pas marquées « moins précis » et la mention du cache est rendue", async () => {
     const { service, cache } = miseEnPlaceDoublee({ meteoPrevue: METEO_EN_PANNE.rejet });
     await cache.ecrire(RELEVE_CACHE);
     const releve = await service.releve({ lieu: ANGERS, moment: MOMENT });
