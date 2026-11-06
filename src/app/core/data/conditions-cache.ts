@@ -51,7 +51,7 @@ function estReleve(valeur: unknown): valeur is ReleveConditions {
 }
 
 /**
- * Garde dans IndexedDB les dernières conditions obtenues, pour les reprendre quand Open-Meteo est en panne
+ * Garde dans IndexedDB les dernières conditions obtenues, pour les reprendre quand la météo est en panne
  * (PLAN §4, « Si une API est en panne »). Une seule entrée, quel que soit le lieu, sans expiration.
  * Ne rejette jamais : sans IndexedDB ou en cas d'erreur, `lire` rend `null` et `ecrire` ne fait rien.
  */

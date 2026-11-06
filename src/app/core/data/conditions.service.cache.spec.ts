@@ -1,5 +1,5 @@
-// US 62 : retrouver les dernières conditions connues quand Open-Meteo ne répond pas (PLAN §4, §8.2).
-// Le vrai ConditionsCache tourne sur fake-indexeddb ; Open-Meteo, Hub'Eau et l'eau sont des doubles.
+// US 62 : retrouver les dernières conditions connues quand la météo ne répond pas (PLAN §4, §8.2).
+// Le vrai ConditionsCache tourne sur fake-indexeddb ; la météo, Hub'Eau et l'eau sont des doubles.
 import { TestBed } from '@angular/core/testing';
 import { IDBFactory } from 'fake-indexeddb';
 import { ConditionsCache, INDEXED_DB, ReleveConditions } from './conditions-cache';
@@ -58,7 +58,7 @@ function miseEnPlace(meteoPrevue: ReturnType<typeof vi.fn>, eau: unknown = { sta
 const enPanne = () => vi.fn().mockResolvedValue({ disponible: false });
 
 describe('ConditionsService, cache des dernières conditions', () => {
-  it('critère 1 : given Open-Meteo en panne et des conditions en cache du 27/10 à 18 h, when on demande les conditions, then pression, tendance, nuages et vent sont ceux du cache avec la mention « Conditions du 27/10 à 18 h »', async () => {
+  it('critère 1 : given la météo en panne et des conditions en cache du 27/10 à 18 h, when on demande les conditions, then pression, tendance, nuages et vent sont ceux du cache avec la mention « Conditions du 27/10 à 18 h »', async () => {
     const { service, cache } = miseEnPlace(enPanne());
     await cache.ecrire(RELEVE_27_10);
     const releve = await service.releve({ lieu: ANGERS, moment: new Date('2026-10-30T10:00:00Z') });
@@ -69,7 +69,7 @@ describe('ConditionsService, cache des dernières conditions', () => {
     expect(releve.mention).toBe('Conditions du 27/10 à 18 h');
   });
 
-  it('critère 1 : given Open-Meteo qui rejette et un cache du 27/10, when on demande les conditions, then le cache est utilisé de la même façon', async () => {
+  it('critère 1 : given la météo qui rejette et un cache du 27/10, when on demande les conditions, then le cache est utilisé de la même façon', async () => {
     const { service, cache } = miseEnPlace(vi.fn().mockRejectedValue(new Error('panne')));
     await cache.ecrire(RELEVE_27_10);
     const releve = await service.releve({ lieu: ANGERS, moment: new Date('2026-10-30T10:00:00Z') });
@@ -77,14 +77,14 @@ describe('ConditionsService, cache des dernières conditions', () => {
     expect(releve.mention).toBe('Conditions du 27/10 à 18 h');
   });
 
-  it('critère 1 : given un cache obtenu à 18 h 30, when Open-Meteo est en panne, then la mention indique « à 18 h 30 »', async () => {
+  it('critère 1 : given un cache obtenu à 18 h 30, when la météo est en panne, then la mention indique « à 18 h 30 »', async () => {
     const { service, cache } = miseEnPlace(enPanne());
     await cache.ecrire({ ...RELEVE_27_10, obtenuesA: '2026-10-27T17:30:00.000Z' });
     const releve = await service.releve({ lieu: ANGERS, moment: new Date('2026-10-30T10:00:00Z') });
     expect(releve.mention).toBe('Conditions du 27/10 à 18 h 30');
   });
 
-  it('critère 1 : given un cache, when Open-Meteo est en panne, then moment, saison et département sont recalculés et le cache n\'est pas modifié', async () => {
+  it('critère 1 : given un cache, when la météo est en panne, then moment, saison et département sont recalculés et le cache n\'est pas modifié', async () => {
     const { service, cache } = miseEnPlace(enPanne());
     await cache.ecrire(RELEVE_27_10);
     const releve = await service.releve({
@@ -99,7 +99,7 @@ describe('ConditionsService, cache des dernières conditions', () => {
     expect(await cache.lire()).toEqual(RELEVE_27_10);
   });
 
-  it('critère 1 : given Open-Meteo en panne et aucun cache, when on demande les conditions, then pression, nuages et vent sont nuls et il n\'y a pas de mention', async () => {
+  it('critère 1 : given la météo en panne et aucun cache, when on demande les conditions, then pression, nuages et vent sont nuls et il n\'y a pas de mention', async () => {
     const { service } = miseEnPlace(enPanne());
     const releve = await service.releve({ lieu: ANGERS, moment: new Date('2026-10-30T10:00:00Z') });
     expect(releve.pressionHpa).toBeNull();
@@ -109,7 +109,7 @@ describe('ConditionsService, cache des dernières conditions', () => {
     expect(releve.mention).toBeUndefined();
   });
 
-  it('critère 1 : given Open-Meteo en panne et un cache, when on appelle conditions(), then elle rend les conditions du relevé', async () => {
+  it('critère 1 : given la météo en panne et un cache, when on appelle conditions(), then elle rend les conditions du relevé', async () => {
     const { service, cache } = miseEnPlace(enPanne());
     await cache.ecrire(RELEVE_27_10);
     const demande = { lieu: ANGERS, moment: new Date('2026-10-30T10:00:00Z') };
@@ -131,7 +131,7 @@ describe('ConditionsService, cache des dernières conditions', () => {
     expect(enCache?.conditions).toEqual(releve.conditions);
   });
 
-  it('critère 3 : given Open-Meteo en panne, des conditions en cache et une saisie au thermomètre de moins de 6 h, when on demande les conditions, then tempEau vaut la saisie et sourceTempEau vaut « saisie »', async () => {
+  it('critère 3 : given la météo en panne, des conditions en cache et une saisie au thermomètre de moins de 6 h, when on demande les conditions, then tempEau vaut la saisie et sourceTempEau vaut « saisie »', async () => {
     const { service, cache } = miseEnPlace(enPanne());
     await cache.ecrire(RELEVE_27_10);
     const releve = await service.releve({

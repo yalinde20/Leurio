@@ -79,7 +79,7 @@ export class ConditionsService {
   }
 
   /**
-   * Conditions et pression. Si Open-Meteo répond, le relevé est gardé en cache local ; sinon, le dernier relevé
+   * Conditions et pression. Si la météo répond, le relevé est gardé en cache local ; sinon, le dernier relevé
    * en cache fournit pression, tendance, nuages et vent, avec une mention datée (PLAN §4, « Si une API est en panne »).
    * Le reste (eau, débit, moment, saison, département) est toujours calculé en direct. Ne rejette jamais.
    */
