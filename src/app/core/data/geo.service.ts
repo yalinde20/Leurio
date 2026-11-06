@@ -5,7 +5,12 @@ import type { Lieu } from './weather-provider';
 /** Résultat quand le lieu n'est dans aucun département de la France métropolitaine. */
 export const HORS_FRANCE = 'hors France';
 
-/** Marge, en mètres, à l'extérieur d'un contour où l'on rattache encore le lieu au département le plus proche. */
+/**
+ * Marge, en mètres, à l'extérieur d'un contour où l'on rattache encore le lieu au département le plus proche.
+ * Elle vaut pour les côtes comme pour les frontières terrestres : un lieu étranger à moins de 500 m de la
+ * France (Monaco par exemple) reçoit le département voisin. Les contours étant simplifiés un par un, deux
+ * départements voisins peuvent se chevaucher de quelques dizaines de mètres : le premier code trouvé l'emporte.
+ */
 const TOLERANCE_M = 500;
 const METRES_PAR_DEGRE = 111_320;
 

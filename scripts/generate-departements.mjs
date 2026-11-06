@@ -2,7 +2,8 @@
 // métropolitaine, embarqués dans l'app pour trouver un département sans réseau.
 // Source : https://github.com/gregoiredavid/france-geojson (departements-version-simplifiee.geojson ;
 // tracés IGN Admin Express COG 2018, Licence Ouverte Etalab).
-// Usage : node scripts/generate-departements.mjs <departements-version-simplifiee.geojson>
+// Usage : node scripts/generate-departements.mjs <departements-version-simplifiee.geojson> [dateVerif AAAA-MM-JJ]
+// (dateVerif : par défaut la date du jour)
 // Simplification : Douglas-Peucker (0,0015°, soit ~150 m), coordonnées arrondies à 4 décimales (~10 m).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -78,8 +79,9 @@ const contenu = {
   sources: [
     'https://github.com/gregoiredavid/france-geojson',
     'https://geoservices.ign.fr/adminexpress',
+    'IGN Admin Express COG, édition 2018 (codes INSEE COG 2018), Licence Ouverte Etalab 2.0, via france-geojson (Grégoire David)',
   ],
-  dateVerif: '2026-11-06',
+  dateVerif: process.argv[3] ?? new Date().toISOString().slice(0, 10),
   departements,
 };
 writeFileSync(sortie, JSON.stringify(contenu) + '\n');

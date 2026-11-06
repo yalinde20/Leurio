@@ -105,6 +105,11 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     ...doublons('species.json', contenu['species'] ?? [], 'code'),
     ...doublons('lure-types.json', contenu['lure-types'] ?? [], 'id'),
     ...doublons('techniques.json', contenu['techniques'] ?? [], 'id'),
+    ...doublons(
+      'departements.json',
+      (contenu['departements'] as unknown as { departements?: Entrees } | undefined)?.departements ?? [],
+      'code',
+    ),
   ];
   for (const t of contenu['lure-types'] ?? []) {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
