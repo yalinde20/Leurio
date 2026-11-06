@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.24.0](https://github.com/yalinde20/Leurio/compare/v1.23.0...v1.24.0) (2026-11-06)
+
+
+### Features
+
+* carte Conditions sur l'écran Conseil (US 64) ([34450ec](https://github.com/yalinde20/Leurio/commit/34450ec0ef49f262028cb50b3f8ae3598457b874))
+
+
+### Bug Fixes
+
+* carte Conditions, mention réglementaire et corrections de revue (US 64) ([80c1d11](https://github.com/yalinde20/Leurio/commit/80c1d11bb23f91e9340b2fe3245df5ca9e179fff))
+
 ## [1.23.0](https://github.com/yalinde20/Leurio/compare/v1.22.1...v1.23.0) (2026-11-06)
 
 
