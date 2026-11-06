@@ -84,6 +84,7 @@ describe("HubeauService (tendance du débit)", () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('les constantes du contrat valent 1,5, 0,5 et 30 jours', () => {
+    miseEnPlace();
     expect(SEUIL_CRUE).toBe(1.5);
     expect(SEUIL_ETIAGE).toBe(0.5);
     expect(DUREE_MOYENNE_JOURS).toBe(30);
@@ -161,8 +162,11 @@ describe("HubeauService (tendance du débit)", () => {
     expect(await unePlusProche(40, 80)).toMatchObject({ tendance: 'étiage' });
   });
 
-  it('critère 2 : given un débit juste sous 1,5 fois et juste au-dessus de 0,5 fois la moyenne, when on demande la tendance, then il rend « normal »', async () => {
+  it('critère 2 : given un débit juste sous 1,5 fois la moyenne, when on demande la tendance, then il rend « normal »', async () => {
     expect(await unePlusProche(119, 80)).toMatchObject({ tendance: 'normal' });
+  });
+
+  it('critère 2 : given un débit juste au-dessus de 0,5 fois la moyenne, when on demande la tendance, then il rend « normal »', async () => {
     expect(await unePlusProche(41, 80)).toMatchObject({ tendance: 'normal' });
   });
 
