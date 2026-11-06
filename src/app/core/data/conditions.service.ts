@@ -94,7 +94,9 @@ export class ConditionsService {
       ouNull(this.weather.meteoPrevue(lieu, moment)),
     ]);
     const meteoConnue = meteo !== null && meteo.disponible && 'pressionTendance48h' in meteo ? meteo : null;
-    const enCache = meteoConnue ? null : await this.cache.lire();
+    // Seule une vraie panne (indisponible sans refus, ou rejet) reprend le cache ; une demande refusée n'est pas une panne.
+    const enPanne = meteo === null || (!meteo.disponible && !('refusee' in meteo));
+    const enCache = enPanne ? await this.cache.lire() : null;
     const conditions: Conditions = {
       tempEau: saisie ? saisie.valeurC : eau?.statut === 'connue' ? eau.tempEauC : null,
       sourceTempEau: saisie ? 'saisie' : eau?.statut === 'connue' ? eau.source : null,
@@ -115,7 +117,7 @@ export class ConditionsService {
     if (especeCible !== undefined && especeCible !== 'toutes') conditions.especeCible = especeCible;
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
-      await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: moment.toISOString() });
+      await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
       return { conditions, pressionHpa };
     }
     if (enCache) {

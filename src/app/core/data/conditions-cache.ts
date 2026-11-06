@@ -19,6 +19,37 @@ const BASE = 'leurio';
 const MAGASIN = 'conditions';
 const CLE = 'dernieres';
 
+/** Délai maximal d'une opération IndexedDB : certains Safari iOS laissent `open()` sans réponse. */
+export const DELAI_INDEXED_DB_MS = 2000;
+
+/** Rend la valeur de `operation`, ou `defaut` si elle ne répond pas dans le délai (ou rejette). */
+function avecDelai<T>(operation: Promise<T>, defaut: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    const minuteur = setTimeout(() => resolve(defaut), DELAI_INDEXED_DB_MS);
+    operation.then(
+      (valeur) => {
+        clearTimeout(minuteur);
+        resolve(valeur);
+      },
+      () => {
+        clearTimeout(minuteur);
+        resolve(defaut);
+      },
+    );
+  });
+}
+
+function estReleve(valeur: unknown): valeur is ReleveConditions {
+  if (typeof valeur !== 'object' || valeur === null) return false;
+  const { conditions, obtenuesA } = valeur as Partial<Record<keyof ReleveConditions, unknown>>;
+  return (
+    typeof conditions === 'object' &&
+    conditions !== null &&
+    typeof obtenuesA === 'string' &&
+    !Number.isNaN(new Date(obtenuesA).getTime())
+  );
+}
+
 /**
  * Garde dans IndexedDB les dernières conditions obtenues, pour les reprendre quand Open-Meteo est en panne
  * (PLAN §4, « Si une API est en panne »). Une seule entrée, quel que soit le lieu, sans expiration.
@@ -28,7 +59,15 @@ const CLE = 'dernieres';
 export class ConditionsCache {
   private readonly indexedDb = inject(INDEXED_DB);
 
-  async lire(): Promise<ReleveConditions | null> {
+  lire(): Promise<ReleveConditions | null> {
+    return avecDelai(this.lireSansDelai(), null);
+  }
+
+  ecrire(releve: ReleveConditions): Promise<void> {
+    return avecDelai(this.ecrireSansDelai(releve), undefined);
+  }
+
+  private async lireSansDelai(): Promise<ReleveConditions | null> {
     try {
       const base = await this.ouvrir();
       if (!base) return null;
@@ -37,7 +76,7 @@ export class ConditionsCache {
           const requete = base.transaction(MAGASIN, 'readonly').objectStore(MAGASIN).get(CLE);
           requete.onsuccess = () => {
             base.close();
-            resolve((requete.result as ReleveConditions | undefined) ?? null);
+            resolve(estReleve(requete.result) ? requete.result : null);
           };
           requete.onerror = () => {
             base.close();
@@ -53,7 +92,7 @@ export class ConditionsCache {
     }
   }
 
-  async ecrire(releve: ReleveConditions): Promise<void> {
+  private async ecrireSansDelai(releve: ReleveConditions): Promise<void> {
     try {
       const base = await this.ouvrir();
       if (!base) return;
