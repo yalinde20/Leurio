@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/yalinde20/Leurio/compare/v1.21.0...v1.22.0) (2026-11-06)
+
+
+### Features
+
+* **eau:** estimer la température de l'eau depuis l'air quand Hub'Eau n'a pas de mesure (US 55) ([ea4523f](https://github.com/yalinde20/Leurio/commit/ea4523f02533475831f2bb4af0209c49e2545229))
+
 ## [1.21.0](https://github.com/yalinde20/Leurio/compare/v1.20.0...v1.21.0) (2026-11-06)
 
 
