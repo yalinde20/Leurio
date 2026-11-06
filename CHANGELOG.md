@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/yalinde20/Leurio/compare/v1.18.0...v1.19.0) (2026-11-06)
+
+
+### Features
+
+* département à partir des coordonnées, sans réseau (US 58) ([747070e](https://github.com/yalinde20/Leurio/commit/747070e66122980e5a4c4654717a44c3506fefe7))
+
 ## [1.18.0](https://github.com/yalinde20/Leurio/compare/v1.17.0...v1.18.0) (2026-11-05)
 
 
