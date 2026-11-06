@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/yalinde20/Leurio/compare/v1.17.0...v1.18.0) (2026-11-05)
+
+
+### Features
+
+* moment de la journée (aube, jour, crépuscule, nuit) avec suncalc (US 57) ([3726acd](https://github.com/yalinde20/Leurio/commit/3726acdc3d6f2cf68bf46df09e4b8d1bcf098b2c))
+
 ## [1.17.0](https://github.com/yalinde20/Leurio/compare/v1.16.0...v1.17.0) (2026-11-05)
 
 
