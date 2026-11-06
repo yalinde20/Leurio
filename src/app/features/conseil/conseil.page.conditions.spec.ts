@@ -17,6 +17,7 @@
  */
 import { TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
+import { CatalogService } from '../../core/data/catalog.service';
 import { AstroService, LuneDuMoment, NomPhaseLune, SoleilDuJour } from '../../core/data/astro.service';
 import { Conditions } from '../../core/engine/conditions';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
@@ -83,6 +84,7 @@ async function afficher({ releve: relevé = releve(), position = ANGERS, lune = 
     providers: [
       provideIonicAngular(),
       { provide: PositionService, useValue: { positionGps: async () => position } },
+      { provide: CatalogService, useValue: { federation: async () => undefined } },
       {
         provide: ConditionsService,
         useValue: {

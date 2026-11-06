@@ -1,6 +1,7 @@
-import { Component, inject, Injector, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
+import { CatalogService, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { heuresLegales } from '../../core/regulation/legal-hours';
@@ -25,9 +26,13 @@ interface CarteConditions {
   vent: string;
   lune: string;
   heuresLegales: string;
+  federation?: Federation;
 }
 
-type Etat = { type: 'chargement' } | { type: 'indisponible' } | { type: 'position introuvable' } | { type: 'pret'; carte: CarteConditions };
+type Etat =
+  | { type: 'chargement' }
+  | { type: 'position introuvable' }
+  | { type: 'pret'; carte: CarteConditions };
 
 @Component({
   selector: 'app-conseil',
@@ -88,6 +93,15 @@ type Etat = { type: 'chargement' } | { type: 'indisponible' } | { type: 'positio
       display: block;
       margin-top: 2px;
     }
+    .lien-federation {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--lr-primaire);
+      text-decoration: underline;
+    }
   `,
   template: `
     <ion-header>
@@ -102,11 +116,10 @@ type Etat = { type: 'chargement' } | { type: 'indisponible' } | { type: 'positio
           @case ('chargement') {
             <p class="message">Chargement des conditions…</p>
           }
-          @case ('indisponible') {
-            <p class="message">Les conditions sont indisponibles pour le moment.</p>
-          }
           @case ('position introuvable') {
-            <p class="message">Position introuvable : autorise la localisation pour voir les conditions.</p>
+            <p class="message">
+              Position introuvable : autorise la localisation pour voir les conditions.
+            </p>
           }
           @default {
             @if (carte(); as c) {
@@ -121,12 +134,36 @@ type Etat = { type: 'chargement' } | { type: 'indisponible' } | { type: 'positio
                     <span class="source">{{ c.sourceEau }}</span>
                   }
                 </div>
-                <div class="ligne"><dt>Débit :</dt> <dd>{{ c.debit }}</dd></div>
-                <div class="ligne"><dt>Pression :</dt> <dd>{{ c.pression }}</dd></div>
-                <div class="ligne"><dt>Ciel :</dt> <dd>{{ c.ciel }}</dd></div>
-                <div class="ligne"><dt>Vent :</dt> <dd>{{ c.vent }}</dd></div>
-                <div class="ligne"><dt>Lune :</dt> <dd>{{ c.lune }}</dd></div>
-                <div class="ligne"><dt>Heures légales :</dt> <dd>{{ c.heuresLegales }}</dd></div>
+                <div class="ligne">
+                  <dt>Débit :</dt>
+                  <dd>{{ c.debit }}</dd>
+                </div>
+                <div class="ligne">
+                  <dt>Pression :</dt>
+                  <dd>{{ c.pression }}</dd>
+                </div>
+                <div class="ligne">
+                  <dt>Ciel :</dt>
+                  <dd>{{ c.ciel }}</dd>
+                </div>
+                <div class="ligne">
+                  <dt>Vent :</dt>
+                  <dd>{{ c.vent }}</dd>
+                </div>
+                <div class="ligne">
+                  <dt>Lune :</dt>
+                  <dd>{{ c.lune }}</dd>
+                </div>
+                <div class="ligne">
+                  <dt>Heures légales :</dt>
+                  <dd>{{ c.heuresLegales }}</dd>
+                  <span class="source">À vérifier dans l'arrêté de ton département</span>
+                  @if (c.federation; as f) {
+                    <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{
+                      f.nom
+                    }}</a>
+                  }
+                </div>
               </dl>
             }
           }
@@ -137,8 +174,9 @@ type Etat = { type: 'chargement' } | { type: 'indisponible' } | { type: 'positio
 })
 export class ConseilPage implements OnInit {
   private readonly position = inject(PositionService);
-  private readonly injector = inject(Injector);
+  private readonly conditions = inject(ConditionsService);
   private readonly astro = inject(AstroService);
+  private readonly catalogue = inject(CatalogService);
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
 
@@ -153,14 +191,6 @@ export class ConseilPage implements OnInit {
 
   /** Lieu = position GPS, moment = maintenant. */
   private async charger(): Promise<void> {
-    try {
-      await this.afficherConditions();
-    } catch {
-      this.etat.set({ type: 'indisponible' });
-    }
-  }
-
-  private async afficherConditions(): Promise<void> {
     const position = await this.position.positionGps();
     if (!position.disponible) {
       this.etat.set({ type: 'position introuvable' });
@@ -168,12 +198,19 @@ export class ConseilPage implements OnInit {
     }
     const lieu = { latitude: position.latitude, longitude: position.longitude };
     const maintenant = new Date();
-    // Résolu à la demande : si le service des conditions ne peut pas être construit, la carte le dit au lieu de casser l'écran.
-    const releve = await this.injector.get(ConditionsService).releve({ lieu, moment: maintenant });
+    const releve = await this.conditions.releve({ lieu, moment: maintenant });
     const heures = heuresLegales(this.astro.soleil(lieu, maintenant));
+    const federation = await this.catalogue.federation(releve.conditions.departement);
     this.etat.set({
       type: 'pret',
-      carte: this.composer(releve, this.astro.lune(maintenant, lieu).phase, heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible'),
+      carte: {
+        ...this.composer(
+          releve,
+          this.astro.lune(maintenant, lieu).phase,
+          heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible',
+        ),
+        federation,
+      },
     });
   }
 

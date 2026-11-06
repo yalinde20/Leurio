@@ -33,7 +33,8 @@ export function formaterSourceTempEau(releve: ReleveActuel): string | null {
     return `Station Hub'Eau ${releve.stationEau.nom}, à ${nombre.format(releve.stationEau.distanceKm)} km`;
   }
   if (sourceTempEau === 'estimation') return "Estimée depuis l'air des derniers jours";
-  if (sourceTempEau === 'saisie' && releve.saisieA) return `Mesurée au thermomètre à ${formaterHeure(releve.saisieA)}`;
+  if (sourceTempEau === 'saisie' && releve.saisieA)
+    return `Mesurée au thermomètre à ${formaterHeure(releve.saisieA)}`;
   return null;
 }
 
@@ -51,12 +52,16 @@ export function formaterDebit(releve: ReleveActuel): string {
 }
 
 /** « 1012 hPa (−8 hPa en 48 h) » ; la tendance est omise si elle manque. */
-export function formaterPression(pressionHpa: number | null, tendance48h: Conditions['pressionTendance48h']): string {
+export function formaterPression(
+  pressionHpa: number | null,
+  tendance48h: Conditions['pressionTendance48h'],
+): string {
   if (pressionHpa === null) return INDISPONIBLE;
-  const base = `${nombre.format(pressionHpa)} hPa`;
+  const base = `${Math.round(pressionHpa)} hPa`;
   if (tendance48h === null) return base;
-  const signe = tendance48h < 0 ? MOINS : tendance48h > 0 ? '+' : '';
-  return `${base} (${signe}${nombre.format(Math.abs(tendance48h))} hPa en 48 h)`;
+  const ecart = Math.round(tendance48h);
+  const signe = ecart < 0 ? MOINS : ecart > 0 ? '+' : '';
+  return `${base} (${signe}${Math.abs(ecart)} hPa en 48 h)`;
 }
 
 export function formaterCiel(nuages: number | null): string {
@@ -64,7 +69,7 @@ export function formaterCiel(nuages: number | null): string {
 }
 
 export function formaterVent(vent: number | null): string {
-  return vent === null ? INDISPONIBLE : `${nombre.format(vent)} km/h`;
+  return vent === null ? INDISPONIBLE : `${Math.round(vent)} km/h`;
 }
 
 /** « 7 h 02 – 18 h 31 » (demi-cadratin). */

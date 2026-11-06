@@ -24,13 +24,19 @@ const base: Conditions = {
   departement: '49',
   niveau: 'debutant',
 };
-const releve = (c: Partial<Conditions>, r: Partial<ReleveActuel> = {}): ReleveActuel => ({ conditions: { ...base, ...c }, pressionHpa: null, ...r });
+const releve = (c: Partial<Conditions>, r: Partial<ReleveActuel> = {}): ReleveActuel => ({
+  conditions: { ...base, ...c },
+  pressionHpa: null,
+  ...r,
+});
 
 describe('conditions-format', () => {
   it('formate les heures de Paris sans zéro initial', () => {
     expect(formaterHeure(new Date('2026-11-06T06:02:00Z'))).toBe('7 h 02');
     expect(formaterHeure(new Date('2026-07-15T22:05:00Z'))).toBe('0 h 05');
-    expect(formaterHeuresLegales(new Date('2026-11-06T06:02:00Z'), new Date('2026-11-06T17:31:00Z'))).toBe('7 h 02 – 18 h 31');
+    expect(
+      formaterHeuresLegales(new Date('2026-11-06T06:02:00Z'), new Date('2026-11-06T17:31:00Z')),
+    ).toBe('7 h 02 – 18 h 31');
   });
 
   it('formate la température avec la virgule française, ou « Inconnue »', () => {
@@ -40,17 +46,31 @@ describe('conditions-format', () => {
   });
 
   it("formate la source de l'eau selon son origine", () => {
-    expect(formaterSourceTempEau(releve({}, { stationEau: { nom: 'La Maine à Angers', distanceKm: 4 } }))).toBe("Station Hub'Eau La Maine à Angers, à 4 km");
-    expect(formaterSourceTempEau(releve({ sourceTempEau: 'estimation' }))).toBe("Estimée depuis l'air des derniers jours");
-    expect(formaterSourceTempEau(releve({ sourceTempEau: 'saisie' }, { saisieA: new Date('2026-11-06T06:30:00Z') }))).toBe('Mesurée au thermomètre à 7 h 30');
+    expect(
+      formaterSourceTempEau(
+        releve({}, { stationEau: { nom: 'La Maine à Angers', distanceKm: 4 } }),
+      ),
+    ).toBe("Station Hub'Eau La Maine à Angers, à 4 km");
+    expect(formaterSourceTempEau(releve({ sourceTempEau: 'estimation' }))).toBe(
+      "Estimée depuis l'air des derniers jours",
+    );
+    expect(
+      formaterSourceTempEau(
+        releve({ sourceTempEau: 'saisie' }, { saisieA: new Date('2026-11-06T06:30:00Z') }),
+      ),
+    ).toBe('Mesurée au thermomètre à 7 h 30');
     expect(formaterSourceTempEau(releve({ tempEau: null, sourceTempEau: null }))).toBeNull();
   });
 
   it('formate le débit, y compris quand il manque', () => {
     expect(formaterDebit(releve({ debitTendance: 'crue' }))).toBe('En crue');
     expect(formaterDebit(releve({ debitTendance: 'étiage' }))).toBe("À l'étiage");
-    expect(formaterDebit(releve({ debitTendance: 'inconnu' }, { debitAbsent: 'aucune station' }))).toBe('Pas de station proche');
-    expect(formaterDebit(releve({ debitTendance: 'inconnu' }, { debitAbsent: "Hub'Eau indisponible" }))).toBe('Indisponible');
+    expect(
+      formaterDebit(releve({ debitTendance: 'inconnu' }, { debitAbsent: 'aucune station' })),
+    ).toBe('Pas de station proche');
+    expect(
+      formaterDebit(releve({ debitTendance: 'inconnu' }, { debitAbsent: "Hub'Eau indisponible" })),
+    ).toBe('Indisponible');
     expect(formaterDebit(releve({ debitTendance: 'inconnu' }))).toBe('Indisponible');
   });
 
@@ -60,6 +80,13 @@ describe('conditions-format', () => {
     expect(formaterPression(1015, 0)).toBe('1015 hPa (0 hPa en 48 h)');
     expect(formaterPression(1015, null)).toBe('1015 hPa');
     expect(formaterPression(null, -8)).toBe('Indisponible');
+  });
+
+  it("arrondit pression, tendance et vent à l'entier, et le signe suit l'arrondi", () => {
+    expect(formaterPression(1012.4, -8.3)).toBe('1012 hPa (\u22128 hPa en 48 h)');
+    expect(formaterPression(1012, -0.04)).toBe('1012 hPa (0 hPa en 48 h)');
+    expect(formaterPression(1012, 0.4)).toBe('1012 hPa (0 hPa en 48 h)');
+    expect(formaterVent(12.6)).toBe('13 km/h');
   });
 
   it('formate ciel et vent, ou « Indisponible »', () => {

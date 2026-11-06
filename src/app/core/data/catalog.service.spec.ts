@@ -74,6 +74,20 @@ describe('CatalogService', () => {
     expect(await resultat).toBe('https://exemple.test/49');
   });
 
+  it('given un département présent dans federations.json, when on demande sa fédération, then il rend la fiche avec son nom et son URL', async () => {
+    const { service, http } = mise_en_place();
+    const resultat = service.federation('49');
+    http.expectOne('assets/data/federations.json').flush([federation('44'), federation('49')]);
+    expect(await resultat).toMatchObject({ departement: '49', url: 'https://exemple.test/49' });
+  });
+
+  it('given un département absent de federations.json, when on demande sa fédération, then il rend undefined', async () => {
+    const { service, http } = mise_en_place();
+    const resultat = service.federation('99');
+    http.expectOne('assets/data/federations.json').flush([federation('49')]);
+    await expect(resultat).resolves.toBeUndefined();
+  });
+
   it('critère 4 : given un département absent de federations.json, when on demande son URL, then il rend undefined sans erreur', async () => {
     const { service, http } = mise_en_place();
     const resultat = service.urlFederation('99');
