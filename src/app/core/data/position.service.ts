@@ -11,8 +11,15 @@ export const DELAI_GPS_MS = 15_000;
 
 /** Âge maximal, en millisecondes, d'une position en cache acceptée. */
 const AGE_MAX_POSITION_MS = 60_000;
-/** Code d'erreur « permission refusée » de l'API web de géolocalisation. */
-const CODE_PERMISSION_REFUSEE = 1;
+/**
+ * Codes d'erreur d'un refus : `1` pour l'API web de géolocalisation, `OS-PLUG-GLOC-0003` (refusée) et
+ * `OS-PLUG-GLOC-0008` (restreinte, iOS) pour le plugin natif.
+ */
+const CODES_REFUS: readonly unknown[] = [1, 'OS-PLUG-GLOC-0003', 'OS-PLUG-GLOC-0008'];
+/** Code d'une méthode que le plugin n'implémente pas sur cette plateforme (`requestPermissions` sur le web). */
+const CODE_NON_IMPLEMENTE = 'UNIMPLEMENTED';
+
+type EtatPermission = 'prompt' | 'prompt-with-rationale' | 'granted' | 'denied';
 
 /** Spot enregistré par l'utilisateur, au format du PLAN §7 (`users/{uid}/spots`), réduit à ce dont la position a besoin. */
 export interface Spot {
@@ -42,7 +49,9 @@ export type ResultatPosition = PositionTrouvee | PositionManquante;
 
 /** Partie du plugin Capacitor Geolocation que le service utilise (remplacée par un double dans les tests). */
 export interface Geolocalisation {
-  checkPermissions(): Promise<{ location: 'prompt' | 'prompt-with-rationale' | 'granted' | 'denied' }>;
+  checkPermissions(): Promise<{ location: EtatPermission }>;
+  /** Affiche la demande d'autorisation du système ; absente ou non implémentée sur le web. */
+  requestPermissions?(): Promise<{ location: EtatPermission }>;
   getCurrentPosition(options?: {
     enableHighAccuracy?: boolean;
     timeout?: number;
@@ -69,7 +78,13 @@ export class PositionService {
 
   /** Position du GPS, ou « position refusée » / « position indisponible » (délai de `DELAI_GPS_MS`). */
   async positionGps(): Promise<ResultatPosition> {
-    if ((await this.permission()) === 'denied') return REFUSEE;
+    const permission = await this.permission();
+    if (permission === 'denied') return REFUSEE;
+    // La demande d'autorisation se fait avant le minuteur : le temps passé à la lire ne compte pas dans le délai.
+    if (permission !== 'granted') {
+      const reponse = await this.demanderPermission();
+      if (reponse !== 'continuer') return reponse;
+    }
 
     let minuteur: ReturnType<typeof setTimeout> | undefined;
     const delaiDepasse = new Promise<'delai'>((resolve) => {
@@ -95,7 +110,7 @@ export class PositionService {
         departement: this.geo.departement({ latitude, longitude }),
       };
     } catch (erreur) {
-      if ((erreur as { code?: unknown } | null)?.code === CODE_PERMISSION_REFUSEE) return REFUSEE;
+      if (CODES_REFUS.includes(codeErreur(erreur))) return REFUSEE;
       return (await this.permission()) === 'denied' ? REFUSEE : INDISPONIBLE;
     } finally {
       clearTimeout(minuteur);
@@ -114,12 +129,32 @@ export class PositionService {
     };
   }
 
+  /**
+   * Demande l'autorisation au système. Rend « position refusée » si elle n'est pas accordée, « position
+   * indisponible » si la demande échoue (localisation désactivée), ou « continuer » quand la plateforme n'a pas
+   * de demande séparée (web) : `getCurrentPosition` affichera alors celle du navigateur.
+   */
+  private async demanderPermission(): Promise<PositionManquante | 'continuer'> {
+    if (!this.geolocalisation.requestPermissions) return 'continuer';
+    try {
+      const { location } = await this.geolocalisation.requestPermissions();
+      return location === 'granted' ? 'continuer' : REFUSEE;
+    } catch (erreur) {
+      if (codeErreur(erreur) === CODE_NON_IMPLEMENTE) return 'continuer';
+      return CODES_REFUS.includes(codeErreur(erreur)) ? REFUSEE : INDISPONIBLE;
+    }
+  }
+
   /** État de la permission ; « prompt » si on ne peut pas le lire (web sans API Permissions). */
-  private async permission(): Promise<string> {
+  private async permission(): Promise<EtatPermission> {
     try {
       return (await this.geolocalisation.checkPermissions()).location;
     } catch {
       return 'prompt';
     }
   }
+}
+
+function codeErreur(erreur: unknown): unknown {
+  return (erreur as { code?: unknown } | null)?.code;
 }

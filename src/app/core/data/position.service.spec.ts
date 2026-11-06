@@ -77,6 +77,89 @@ describe('PositionService (GPS ou spot enregistré)', () => {
     expect(resultat).toEqual({ disponible: false, motif: POSITION_REFUSEE });
   });
 
+  it('critère 1 (natif) : given l’autorisation à redemander (Android) puis refusée dans la demande du système, when on demande la position en mode GPS, then le service rend « position refusée » sans interroger le GPS', async () => {
+    const getCurrentPosition = vi.fn(async () => ({
+      coords: { latitude: 0, longitude: 0, accuracy: 1 },
+    }));
+    const double: Geolocalisation = {
+      checkPermissions: vi.fn(async () => ({ location: 'prompt-with-rationale' as const })),
+      requestPermissions: vi.fn(async () => ({ location: 'denied' as const })),
+      getCurrentPosition,
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: GEOLOCALISATION, useValue: double }] });
+
+    const resultat = await service().positionGps();
+
+    expect(resultat).toEqual({ disponible: false, motif: POSITION_REFUSEE });
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+  });
+
+  it('critère 1 (natif) : given le plugin natif qui rejette par le code de refus OS-PLUG-GLOC-0003, when on demande la position en mode GPS, then le service rend « position refusée »', async () => {
+    doubleGeolocalisation('prompt-with-rationale', async () => {
+      throw { code: 'OS-PLUG-GLOC-0003', message: 'Location permission request was denied.' };
+    });
+
+    const resultat = await service().positionGps();
+
+    expect(resultat).toEqual({ disponible: false, motif: POSITION_REFUSEE });
+  });
+
+  it('critère 2 (natif) : given la demande d’autorisation lue plus longtemps que le délai puis acceptée, when on demande la position en mode GPS, then le délai court après la réponse et la position est rendue', async () => {
+    vi.useFakeTimers();
+    const double: Geolocalisation = {
+      checkPermissions: vi.fn(async () => ({ location: 'prompt' as const })),
+      requestPermissions: vi.fn(
+        () =>
+          new Promise<{ location: 'granted' }>((resolve) =>
+            setTimeout(() => resolve({ location: 'granted' }), 2 * DELAI_GPS_MS),
+          ),
+      ),
+      getCurrentPosition: vi.fn(async () => ({
+        coords: { latitude: ANGERS.latitude, longitude: ANGERS.longitude, accuracy: 30 },
+      })),
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: GEOLOCALISATION, useValue: double }] });
+
+    const attente = service().positionGps();
+    await vi.advanceTimersByTimeAsync(2 * DELAI_GPS_MS);
+    const resultat = await attente;
+
+    expect(resultat).toEqual({
+      disponible: true,
+      source: 'gps',
+      latitude: ANGERS.latitude,
+      longitude: ANGERS.longitude,
+      precisionM: 30,
+      departement: '49',
+    });
+    const demande = vi.mocked(double.requestPermissions!);
+    const gps = vi.mocked(double.getCurrentPosition);
+    expect(demande).toHaveBeenCalledOnce();
+    expect(gps.mock.invocationCallOrder[0]).toBeGreaterThan(demande.mock.invocationCallOrder[0]);
+  });
+
+  it('critère 2 (web) : given une demande d’autorisation non implémentée (navigateur), when on demande la position en mode GPS, then le service interroge directement le GPS', async () => {
+    const double: Geolocalisation = {
+      checkPermissions: vi.fn(async () => ({ location: 'prompt' as const })),
+      requestPermissions: vi.fn(async () => {
+        throw { code: 'UNIMPLEMENTED', message: 'Not implemented on web.' };
+      }),
+      getCurrentPosition: vi.fn(async () => ({
+        coords: { latitude: ANGERS.latitude, longitude: ANGERS.longitude, accuracy: 50 },
+      })),
+    };
+    TestBed.configureTestingModule({ providers: [{ provide: GEOLOCALISATION, useValue: double }] });
+
+    const resultat = await service().positionGps();
+
+    expect(resultat).toMatchObject({
+      disponible: true,
+      source: 'gps',
+      precisionM: 50,
+      departement: '49',
+    });
+  });
+
   it('critère 2 : given la localisation sans réponse dans le délai prévu, when on demande la position en mode GPS, then le service rend « position indisponible », distinct de « position refusée »', async () => {
     vi.useFakeTimers();
     doubleGeolocalisation('granted', () => new Promise<never>(() => undefined));
@@ -106,7 +189,12 @@ describe('PositionService (GPS ou spot enregistré)', () => {
     const { checkPermissions, getCurrentPosition } = doubleGeolocalisation('granted', async () => ({
       coords: { latitude: 0, longitude: 0, accuracy: 1 },
     }));
-    const spot: Spot = { nom: 'Étang de Saint-Nicolas', lat: 47.478, lng: -0.563, departement: '49' };
+    const spot: Spot = {
+      nom: 'Étang de Saint-Nicolas',
+      lat: 47.478,
+      lng: -0.563,
+      departement: '49',
+    };
 
     const resultat = await service().positionSpot(spot);
 
