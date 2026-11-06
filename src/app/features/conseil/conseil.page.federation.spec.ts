@@ -26,6 +26,7 @@ const RELEVE: ReleveActuel = {
     niveau: 'debutant',
   },
   pressionHpa: 1012,
+  moinsPrecis: false,
 };
 
 async function afficher(federation: (departement: string) => Promise<unknown>) {

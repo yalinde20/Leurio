@@ -27,6 +27,7 @@ const base: Conditions = {
 const releve = (c: Partial<Conditions>, r: Partial<ReleveActuel> = {}): ReleveActuel => ({
   conditions: { ...base, ...c },
   pressionHpa: null,
+  moinsPrecis: false,
   ...r,
 });
 

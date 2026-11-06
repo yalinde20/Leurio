@@ -65,6 +65,7 @@ function releve(surcharge: Partial<ReleveCarte> = {}): ReleveCarte {
   return {
     conditions: conditions(),
     pressionHpa: 1012,
+    moinsPrecis: false,
     stationEau: { nom: 'La Maine à Angers', distanceKm: 4 },
     ...surcharge,
   };
@@ -238,6 +239,7 @@ describe('ConseilPage : carte « Conditions » (US 64)', () => {
       releve: {
         conditions: conditions({ tempEau: null, sourceTempEau: null, debitTendance: 'inconnu', pressionTendance48h: null, nuages: null, vent: null }),
         pressionHpa: null,
+        moinsPrecis: false,
         debitAbsent: "Hub'Eau indisponible",
       },
     });
