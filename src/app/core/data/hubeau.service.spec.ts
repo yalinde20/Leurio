@@ -1,5 +1,5 @@
 // US 53 : température de l'eau de la station Hub'Eau la plus proche (PLAN §4, §8.2, §11).
-// Contrat : hubeau.service.ts exporte `HubeauService`, `ResultatTemperatureEau`, `RAYON_MAX_KM` (30) et `ANCIENNETE_MAX_H` (48).
+// Contrat : hubeau.service.ts exporte `HubeauService`, `ResultatTemperatureEau`, `RAYON_MAX_KM` (30) et `ANCIENNETE_MAX_H` (168, soit 7 jours : seuil passé de 48 h à 7 jours par le propriétaire, Hub'Eau publiant avec plusieurs jours de retard).
 // Les tests passent par l'interface publique, avec des réponses Hub'Eau simulées (aucun appel réel).
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -43,10 +43,10 @@ async function demande(corps: unknown[]) {
 describe('HubeauService (température de l\'eau)', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
-  it('les constantes du contrat valent 30 km et 48 h', () => {
+  it('les constantes du contrat valent 30 km et 7 jours', () => {
     miseEnPlace();
     expect(RAYON_MAX_KM).toBe(30);
-    expect(ANCIENNETE_MAX_H).toBe(48);
+    expect(ANCIENNETE_MAX_H).toBe(168);
   });
 
   it('critère 0 : given une seule station active à 12 km (plusieurs mesures, la plus récente en premier), when on demande la température de l\'eau, then il rend la température de la dernière mesure, sa date et heure, le nom de la station et sa distance en km', async () => {
@@ -65,7 +65,7 @@ describe('HubeauService (température de l\'eau)', () => {
     });
   });
 
-  it('critère 0 : given un lieu, when on demande la température de l\'eau, then une seule requête GET part avec latitude, longitude, distance=30 et date_debut_mesure = la date UTC de maintenant moins 48 h', async () => {
+  it('critère 0 : given un lieu, when on demande la température de l\'eau, then une seule requête GET part avec latitude, longitude, distance=30 et date_debut_mesure = la date UTC de maintenant moins 7 jours', async () => {
     const { service, http } = miseEnPlace();
     const resultat = service.temperatureEauProche(LIEU, MAINTENANT);
     const req = http.expectOne((r) => r.url === URL_CHRONIQUE);
@@ -73,14 +73,14 @@ describe('HubeauService (température de l\'eau)', () => {
     expect(req.request.params.get('latitude')).toBe(String(LIEU.latitude));
     expect(req.request.params.get('longitude')).toBe(String(LIEU.longitude));
     expect(req.request.params.get('distance')).toBe('30');
-    expect(req.request.params.get('date_debut_mesure')).toBe('2026-11-04');
+    expect(req.request.params.get('date_debut_mesure')).toBe('2026-10-30');
     expect(req.request.params.get('sort')).toBe('desc');
     req.flush(reponse([]));
     await resultat;
   });
 
-  it('critère 0 : given une station dont la dernière mesure a exactement 48 h, when on demande la température, then elle est active et sa mesure est rendue', async () => {
-    const resultat = await demande([ligne('S1', 'Limite', 10, '2026-11-04', '10:00:00', 9.5)]);
+  it('critère 0 : given une station dont la dernière mesure a exactement 7 jours, when on demande la température, then elle est active et sa mesure est rendue', async () => {
+    const resultat = await demande([ligne('S1', 'Limite', 10, '2026-10-30', '10:00:00', 9.5)]);
     expect(resultat).toMatchObject({ statut: 'mesure', temperatureC: 9.5, station: { code: 'S1', nom: 'Limite' } });
   });
 
@@ -121,7 +121,7 @@ describe('HubeauService (température de l\'eau)', () => {
   it('critère 4 : given une station inactive à 5 km et une station active à 18 km, when on demande la température de l\'eau, then il rend la mesure de la station à 18 km', async () => {
     const resultat = await demande([
       ligne('ACTIVE', 'Station à 18 km', 18, '2026-11-05', '07:00:00', 13.1),
-      ligne('INACTIVE', 'Station à 5 km', 5, '2026-11-04', '09:59:59', 8),
+      ligne('INACTIVE', 'Station à 5 km', 5, '2026-10-30', '09:59:59', 8),
     ]);
     expect(resultat).toEqual({
       statut: 'mesure',
@@ -134,7 +134,7 @@ describe('HubeauService (température de l\'eau)', () => {
   });
 
   it('critère 5 : given une seule station proche mais inactive, when on demande la température de l\'eau, then il rend « aucune station »', async () => {
-    const resultat = await demande([ligne('S1', 'Inactive', 5, '2026-11-03', '12:00:00')]);
+    const resultat = await demande([ligne('S1', 'Inactive', 5, '2026-10-29', '12:00:00')]);
     expect(resultat).toEqual({ statut: 'aucune station' });
   });
 

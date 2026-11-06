@@ -14,8 +14,12 @@ const MARGE_FUTUR_MS = 3_600_000;
 
 /** Rayon de recherche des stations autour du lieu, en km (PLAN §8.2) : une station à 30 km ou plus est trop loin. */
 export const RAYON_MAX_KM = 30;
-/** Une station dont la dernière mesure est plus vieille que cette durée, en heures, est inactive (PLAN §8.2). */
-export const ANCIENNETE_MAX_H = 48;
+/**
+ * Une station dont la dernière mesure est plus vieille que cette durée, en heures (7 jours), est inactive (PLAN §8.2).
+ * Hub'Eau publie les températures avec quelques jours de retard (le 06/11/2026, la mesure la plus récente en France datait
+ * du 03/11) : un seuil de 48 h ne retenait presque jamais de station. Choix du propriétaire, US 53.
+ */
+export const ANCIENNETE_MAX_H = 7 * 24;
 
 /** Température de l'eau mesurée par la station active la plus proche. */
 export interface TemperatureEauMesuree {
@@ -120,7 +124,7 @@ export class HubeauService {
 
       let meilleure: { mesure: MesureStation; distance: number } | undefined;
       for (const mesure of dernieres.values()) {
-        // Inactive (dernière mesure de plus de 48 h) ou datée dans le futur (donnée douteuse) : ignorée.
+        // Inactive (dernière mesure de plus de 7 jours) ou datée dans le futur (donnée douteuse) : ignorée.
         if (mesure.instant < limite || mesure.instant > maintenant.getTime() + MARGE_FUTUR_MS) continue;
         // Borne stricte (< 30 km) sur la distance brute ; la tolérance garde dehors une station pile à 30 km malgré l'erreur flottante.
         const distance = distanceKm(lieu, mesure);

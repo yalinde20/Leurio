@@ -95,4 +95,9 @@ describe('HubeauService, cas limites', () => {
     const resultat = await demande({ data: [ligne('FUTUR', '2026-11-07', '10:00:00', 12)] });
     expect(resultat).toEqual({ statut: 'aucune station' });
   });
+
+  it('given une station dont la dernière mesure a 3 jours (retard habituel de Hub\'Eau), when on demande la température, then sa mesure est rendue avec sa date', async () => {
+    const resultat = await demande({ data: [ligne('RETARD', '2026-11-03', '10:00:00', 11.2)] });
+    expect(resultat).toMatchObject({ statut: 'mesure', station: { code: 'RETARD' }, date: '2026-11-03', heure: '10:00:00' });
+  });
 });
