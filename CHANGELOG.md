@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.23.0](https://github.com/yalinde20/Leurio/compare/v1.22.1...v1.23.0) (2026-11-06)
+
+
+### Features
+
+* **conditions:** garder les dernières conditions en IndexedDB et les reprendre si la météo est en panne (US 62) ([e579ca0](https://github.com/yalinde20/Leurio/commit/e579ca0a445a0da632dfbb73bae7de2f6e75300d))
+
+
+### Bug Fixes
+
+* **conditions:** pression du cache absente rendue null (US 62) ([1f77d20](https://github.com/yalinde20/Leurio/commit/1f77d20c2f62504e4e58e9565e336f3255136390))
+* **conditions:** une demande refusée ne reprend pas le cache, date du cache à l'heure prévue, IndexedDB borné à 2 s et relevé contrôlé (US 62) ([1e092ff](https://github.com/yalinde20/Leurio/commit/1e092ff35e6796e29f7941523136eaf056cc6af5))
+
 ## [1.22.1](https://github.com/yalinde20/Leurio/compare/v1.22.0...v1.22.1) (2026-11-06)
 
 
