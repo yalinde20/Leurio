@@ -16,11 +16,11 @@ const RELEVE_27_10: ReleveConditions = {
   conditions: {
     tempEau: 11.2,
     sourceTempEau: 'capteur',
-    debitTendance: 'stable',
+    debitTendance: 'normal',
     pressionTendance48h: -4,
     nuages: 40,
     vent: 12,
-    moment: 'soir',
+    moment: 'crépuscule',
     saison: 'automne',
     categorie: null,
     departement: '49',
