@@ -12,7 +12,7 @@ const DELAI_MAX_MS = 10_000;
 const CHAMPS = 'code_station,libelle_station,longitude,latitude,date_mesure_temp,heure_mesure_temp,resultat';
 const CHAMPS_STATIONS_HYDRO = 'code_station,libelle_station,longitude_station,latitude_station';
 const CHAMPS_OBSERVATIONS = 'code_station,date_obs,resultat_obs';
-const CHAMPS_MOYENNES = 'code_station,date_obs_elab,resultat_obs_elab';
+const CHAMPS_MOYENNES = 'code_station,resultat_obs_elab';
 const MS_PAR_JOUR = 86_400_000;
 /** Hub'Eau donne les débits en L/s ; l'app les affiche en m³/s. */
 const LITRES_PAR_M3 = 1000;
@@ -95,7 +95,7 @@ interface ObservationDebit {
   debitM3s: number;
 }
 
-interface ReponseChronique {
+interface ReponseHubeau {
   data?: unknown;
 }
 
@@ -170,7 +170,7 @@ export class HubeauService {
     const limite = maintenant.getTime() - ANCIENNETE_MAX_H * 3_600_000;
     try {
       const reponse = await firstValueFrom(
-        this.http.get<ReponseChronique>(URL_CHRONIQUE, {
+        this.http.get<ReponseHubeau>(URL_CHRONIQUE, {
           params: {
             latitude: lieu.latitude,
             longitude: lieu.longitude,
@@ -229,7 +229,7 @@ export class HubeauService {
     const limite = maintenant.getTime() - ANCIENNETE_MAX_H * 3_600_000;
     try {
       const stationsReponse = await firstValueFrom(
-        this.http.get<ReponseChronique>(URL_STATIONS_HYDRO, {
+        this.http.get<ReponseHubeau>(URL_STATIONS_HYDRO, {
           params: {
             latitude: lieu.latitude,
             longitude: lieu.longitude,
@@ -249,14 +249,14 @@ export class HubeauService {
       if (stations.size === 0) return { statut: 'aucune station' };
 
       const observationsReponse = await firstValueFrom(
-        this.http.get<ReponseChronique>(URL_OBSERVATIONS_TR, {
+        this.http.get<ReponseHubeau>(URL_OBSERVATIONS_TR, {
           params: {
             code_entite: [...stations.keys()].join(','),
             grandeur_hydro: 'Q',
             date_debut_obs: new Date(limite).toISOString(),
+            // Pas de `timestep` : Hub'Eau le refuse (HTTP 400) dès que plusieurs stations sont demandées.
+            // Tri décroissant : si la limite tronque la réponse, seules les mesures les plus anciennes manquent.
             sort: 'desc',
-            // Un point par heure suffit pour connaître le dernier débit et garde la réponse légère.
-            timestep: 60,
             size: 20000,
             fields: CHAMPS_OBSERVATIONS,
           },
@@ -280,13 +280,19 @@ export class HubeauService {
         if (observation.instant < limite || observation.instant > maintenant.getTime() + MARGE_FUTUR_MS) continue;
         const distance = distanceKm(lieu, station);
         if (distance >= RAYON_MAX_KM - TOLERANCE_KM) continue;
-        if (!meilleure || distance < meilleure.distance) meilleure = { station, observation, distance };
+        if (
+          !meilleure ||
+          distance < meilleure.distance ||
+          (distance === meilleure.distance && observation.instant > meilleure.observation.instant)
+        ) {
+          meilleure = { station, observation, distance };
+        }
       }
       if (!meilleure) return { statut: 'aucune station' };
       const { station, observation, distance } = meilleure;
 
       const moyennesReponse = await firstValueFrom(
-        this.http.get<ReponseChronique>(URL_OBS_ELAB, {
+        this.http.get<ReponseHubeau>(URL_OBS_ELAB, {
           params: {
             code_entite: station.code,
             grandeur_hydro_elab: 'QmnJ',

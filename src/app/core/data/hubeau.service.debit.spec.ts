@@ -141,6 +141,8 @@ describe("HubeauService (tendance du débit)", () => {
     );
     const r2 = await prochaine(http, URL_OBS);
     expect(r2.request.params.get('code_entite')?.split(',').sort()).toEqual(['S1', 'S2']);
+    // Hub'Eau refuse `timestep` (HTTP 400) quand plusieurs codes sont demandés.
+    expect(r2.request.params.has('timestep')).toBe(false);
     r2.flush(reponse([obs('S1', RECENTE, 12.5), obs('S2', RECENTE, 99)]));
     (await prochaine(http, URL_ELAB)).flush(reponse([elab('S1', '2026-10-20', 10), elab('S1', '2026-10-21', 20)]));
     expect(await resultat).toMatchObject({ station: { code: 'S1' }, debitActuelM3s: 12.5, debitMoyenM3s: 15 });
