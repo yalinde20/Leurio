@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.21.0](https://github.com/yalinde20/Leurio/compare/v1.20.0...v1.21.0) (2026-11-06)
+
+
+### Features
+
+* **hubeau:** température de l'eau de la station la plus proche (US 53) ([be0f32d](https://github.com/yalinde20/Leurio/commit/be0f32d789f4d75b88fee9578c91d38976762f31))
+* **hubeau:** une station reste active 7 jours au lieu de 48 h (US 53) ([3571c1a](https://github.com/yalinde20/Leurio/commit/3571c1a4d4a37c914b9b295c7de71094dded8240))
+
+
+### Bug Fixes
+
+* **hubeau:** rayon et classement sur la distance brute, mesures futures ignorées (US 53) ([f835edc](https://github.com/yalinde20/Leurio/commit/f835edc23797aa773be149dddf22e0f3c1d81366))
+
 ## [1.20.0](https://github.com/yalinde20/Leurio/compare/v1.19.0...v1.20.0) (2026-11-06)
 
 
