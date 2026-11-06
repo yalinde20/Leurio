@@ -81,6 +81,10 @@
   .ligne dd { display: inline; margin: 0; font-size: 16px; }
   .ligne .source { display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
   .ligne.eau dd { font-size: 22px; font-weight: 700; }
+  .lien-fede {
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
   .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
 </style>
 </head>
@@ -138,7 +142,7 @@
           <div class="ligne"><dt>Ciel :</dt> <dd>80 % de nuages</dd></div>
           <div class="ligne"><dt>Vent :</dt> <dd>12 km/h</dd></div>
           <div class="ligne"><dt>Lune :</dt> <dd>Pleine lune</dd></div>
-          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
         </dl>
       </section>
     </div>
@@ -197,7 +201,7 @@
           <div class="ligne"><dt>Ciel :</dt> <dd>40 % de nuages</dd></div>
           <div class="ligne"><dt>Vent :</dt> <dd>8 km/h</dd></div>
           <div class="ligne"><dt>Lune :</dt> <dd>Dernier quartier</dd></div>
-          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
         </dl>
       </section>
     </div>
@@ -216,7 +220,7 @@
           <div class="ligne"><dt>Ciel :</dt> <dd>Indisponible</dd></div>
           <div class="ligne"><dt>Vent :</dt> <dd>Indisponible</dd></div>
           <div class="ligne"><dt>Lune :</dt> <dd>Pleine lune</dd></div>
-          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd></div>
+          <div class="ligne"><dt>Heures légales :</dt> <dd>7 h 02 – 18 h 31</dd><span class="source">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire</a></div>
         </dl>
       </section>
     </div>
@@ -233,7 +237,10 @@
     </div>
   </div>
 
-  <h2>8. Ce qui reste hors de cette story</h2>
+  <h2>8. Mention réglementaire des heures légales (PLAN §6)</h2>
+  <p class="note">Sous « Heures légales » : « À vérifier dans l'arrêté de ton département » et le lien vers la fédération du département (zone tactile de 48 px de haut). Si la fédération est introuvable, seule la mention s'affiche.</p>
+
+  <h2>9. Ce qui reste hors de cette story</h2>
   <p class="note">Sélecteur lieu et moment, cartes de conseil, bandeau réglementation, boutons thermomètre et « Préparer ma sortie ». Android : même carte, seule la barre du haut change (titre aligné à gauche).</p>
 </div>
 </body>
