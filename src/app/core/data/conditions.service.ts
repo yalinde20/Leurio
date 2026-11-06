@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Conditions, saisonDe } from '../engine/conditions';
+import { SaisieTempEau, saisieRecente } from '../engine/temperature-eau';
 import { GeoService } from './geo.service';
 import { HubeauService } from './hubeau.service';
 import { MomentJourneeService } from './moment-journee.service';
@@ -17,6 +18,11 @@ export interface DemandeConditions {
   especeCible?: string;
   /** « debutant » s'il est omis. */
   niveau?: 'debutant' | 'intermediaire';
+  /**
+   * Température de l'eau saisie au thermomètre. Prioritaire si elle a moins de 6 h au moment visé (PLAN §8.2) ;
+   * sinon ignorée : station Hub'Eau, puis estimation depuis l'air.
+   */
+  saisieTempEau?: SaisieTempEau;
 }
 
 /** Une source qui rejette est traitée comme indisponible. */
@@ -45,15 +51,16 @@ export class ConditionsService {
     const { lieu, spot, especeCible } = demande;
     // Un moment invalide est traité comme un moment omis : « maintenant » (la méthode ne rejette jamais).
     const moment = demande.moment && !Number.isNaN(demande.moment.getTime()) ? demande.moment : new Date();
+    const saisie = saisieRecente(demande.saisieTempEau, moment) ? demande.saisieTempEau : undefined;
     const [eau, debit, meteo] = await Promise.all([
-      ouNull(this.temperatureEau.temperatureEauProche(lieu, moment)),
+      saisie ? null : ouNull(this.temperatureEau.temperatureEauProche(lieu, moment)),
       ouNull(this.hubeau.tendanceDebitProche(lieu, moment)),
       ouNull(this.weather.meteoPrevue(lieu, moment)),
     ]);
     const meteoConnue = meteo !== null && meteo.disponible && 'pressionTendance48h' in meteo ? meteo : null;
     const conditions: Conditions = {
-      tempEau: eau?.statut === 'connue' ? eau.tempEauC : null,
-      sourceTempEau: eau?.statut === 'connue' ? eau.source : null,
+      tempEau: saisie ? saisie.valeurC : eau?.statut === 'connue' ? eau.tempEauC : null,
+      sourceTempEau: saisie ? 'saisie' : eau?.statut === 'connue' ? eau.source : null,
       debitTendance: debit?.statut === 'tendance' ? debit.tendance : 'inconnu',
       pressionTendance48h: meteoConnue?.pressionTendance48h.disponible ? meteoConnue.pressionTendance48h.ecartHpa : null,
       nuages: meteoConnue?.couvertureNuageusePct ?? null,
