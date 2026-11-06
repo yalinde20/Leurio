@@ -32,6 +32,12 @@ export interface ReleveActuel {
   pressionHpa: number | null;
   /** « Conditions du 27/10 à 18 h » quand météo en panne et conditions reprises du cache. */
   mention?: string;
+  /**
+   * Vrai exactement quand la météo est en vraie panne (rejet, ou « indisponible » sans refus) et qu'aucun relevé
+   * n'est en cache : le conseil repose alors sur la saison et la température saisie, et est signalé « moins précis »
+   * (PLAN §4, « Si une API est en panne »). Faux si la météo répond, si le cache prend le relais ou si la demande est refusée.
+   */
+  moinsPrecis: boolean;
 }
 
 /** « Conditions du 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
@@ -118,11 +124,16 @@ export class ConditionsService {
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
       await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
-      return { conditions, pressionHpa };
+      return { conditions, pressionHpa, moinsPrecis: false };
     }
     if (enCache) {
-      return { conditions, pressionHpa: enCache.pressionHpa ?? null, mention: mentionConditionsDu(new Date(enCache.obtenuesA)) };
+      return {
+        conditions,
+        pressionHpa: enCache.pressionHpa ?? null,
+        mention: mentionConditionsDu(new Date(enCache.obtenuesA)),
+        moinsPrecis: false,
+      };
     }
-    return { conditions, pressionHpa: null };
+    return { conditions, pressionHpa: null, moinsPrecis: enPanne };
   }
 }
