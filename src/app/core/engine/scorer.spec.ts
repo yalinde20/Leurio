@@ -67,6 +67,7 @@ const contenu = (typesLeurres: TypeLeurre[], animations = ANIMATIONS, especes = 
   especes,
   typesLeurres,
   animations,
+  couleurs: [],
 });
 
 describe('recommander', () => {
@@ -151,7 +152,7 @@ describe('recommander', () => {
     const ajoutes = types.slice(0, 3).map((t) => t.id);
     const conseils = recommander(
       conditions({ especeCible: 'TRF', tempEau: 6 }),
-      { especes, typesLeurres: types, animations: animationsReelles as unknown as Animation[] },
+      { especes, typesLeurres: types, animations: animationsReelles as unknown as Animation[], couleurs: [] },
       POIDS,
     );
     expect(conseils.length).toBeGreaterThan(0);

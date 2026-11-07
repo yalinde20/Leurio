@@ -7,7 +7,7 @@ import { ROOT, run, readPackageJson } from '../helpers/run.mjs';
 import { readWorkflowText, parseSteps, simulate } from '../helpers/workflow.mjs';
 
 const SCRIPT = 'scripts/validate-data.ts';
-const FICHIERS = ['species', 'lure-types', 'techniques', 'starter-kit', 'federations', 'engine-weights'];
+const FICHIERS = ['species', 'lure-types', 'techniques', 'starter-kit', 'federations', 'engine-weights', 'couleurs'];
 const POIDS = ['temperature', 'saison', 'clarte', 'luminosite', 'pression', 'lune', 'penaliteDifficulte'];
 const uid = `${process.pid}-${Date.now()}`;
 
@@ -35,6 +35,10 @@ const base = () => ({
     sources: ['https://exemple.fr/technique'], dateVerif: '2026-10-28',
   }],
   'starter-kit.json': [{ typeId: 'shad', raison: 'Polyvalent', sources: ['https://exemple.fr/kit'], dateVerif: '2026-10-28' }],
+  'couleurs.json': [
+    { id: 'naturelle-a', nom: 'Naturelle A', classe: 'naturelle', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
+    { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
+  ],
   'federations.json': [{ departement: '75', nom: 'Fédération de Paris', url: 'https://exemple.fr', sources: ['https://exemple.fr'], dateVerif: '2026-10-28' }],
   'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70 },
 });

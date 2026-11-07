@@ -1,0 +1,65 @@
+[
+  {
+    "id": "gardon",
+    "nom": "Gardon",
+    "classe": "naturelle",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "ablette",
+    "nom": "Ablette",
+    "classe": "naturelle",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "perche",
+    "nom": "Perche",
+    "classe": "naturelle",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "ecrevisse",
+    "nom": "Écrevisse",
+    "classe": "naturelle",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "fire-tiger",
+    "nom": "Fire tiger",
+    "classe": "vive",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "chartreuse",
+    "nom": "Chartreuse",
+    "classe": "vive",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  },
+  {
+    "id": "blanc-rose-fluo",
+    "nom": "Blanc et rose fluo",
+    "classe": "vive",
+    "sources": [
+      "Principe général de l'orientation de la couleur selon la clarté de l'eau (couleurs vives en eau trouble, naturelles en eau claire), décrit dans plusieurs guides de pêche aux leurres, par exemple peche.com et Leurre de la pêche (non relu en ligne pendant l'US 68 ; classement de la couleur à confirmer par le propriétaire)"
+    ],
+    "dateVerif": "2026-11-07"
+  }
+]

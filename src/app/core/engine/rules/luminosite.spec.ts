@@ -72,6 +72,7 @@ const deuxCouples = (): ContenuMoteur => ({
   especes: [sandre],
   typesLeurres: [type('neutre', ['a']), type('sombre', ['b'], { faibleLumiere: true })],
   animations: [animation('a', 'lent'), animation('b', 'lent')],
+  couleurs: [],
 });
 
 describe('regleLuminosite', () => {
@@ -86,6 +87,7 @@ describe('recommander avec la règle de luminosité', () => {
       especes: especesReelles as Espece[],
       typesLeurres: typesReels as TypeLeurre[],
       animations: animationsReelles as unknown as Animation[],
+      couleurs: [],
     };
     const c = conditions('aube', null, { tempEau: 22, especeCible: 'BBG' });
     const [premier] = recommander(c, contenu, poids);
@@ -164,6 +166,7 @@ describe('recommander avec la règle de luminosité', () => {
       especes: [sandre],
       typesLeurres: [type('neutre', ['a'])],
       animations: [animation('a', 'lent')],
+      couleurs: [],
     };
     const [seul] = recommander(conditions('aube', 100), contenu, poids);
     expect(seul.pourquoi.some((p) => p.includes('lumière'))).toBe(false);
@@ -174,6 +177,7 @@ describe('recommander avec la règle de luminosité', () => {
       especes: [sandre],
       typesLeurres: [type('b', ['rapide'], { faibleLumiere: true }), type('a', ['lent'])],
       animations: [animation('lent', 'lent'), animation('rapide', 'rapide')],
+      couleurs: [],
     };
     const conseils = recommander(conditions('aube', 90), contenu, poids);
     expect(conseils.map((c) => c.typeId)).toEqual(['a', 'b']);
@@ -185,6 +189,7 @@ describe('recommander avec la règle de luminosité', () => {
       especes: [sandre],
       typesLeurres: [type('b', ['moyen'], { faibleLumiere: true }), type('a', ['lent'])],
       animations: [animation('lent', 'lent'), animation('moyen', 'moyen')],
+      couleurs: [],
     };
     const conseils = recommander(conditions('aube', null), contenu, poids);
     expect(conseils.map((c) => c.typeId)).toEqual(['a', 'b']);
@@ -198,6 +203,7 @@ describe('recommander avec la règle de luminosité', () => {
         type('a', ['lent']),
       ],
       animations: [animation('lent', 'lent'), animation('moyen', 'moyen')],
+      couleurs: [],
     };
     const conseils = recommander(conditions('aube', null, { saison: 'hiver' }), contenu, poids);
     expect(conseils.map((c) => c.typeId)).toEqual(['a', 'b']);

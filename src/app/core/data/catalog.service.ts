@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { Animation, ElementKit, Espece, Federation, TypeLeurre } from './catalog.types';
+import type { Animation, Couleur, ElementKit, Espece, Federation, TypeLeurre } from './catalog.types';
 
 export type * from './catalog.types';
 
@@ -21,6 +21,10 @@ export class CatalogService {
 
   animations(): Promise<Animation[]> {
     return this.charger<Animation>('techniques');
+  }
+
+  couleurs(): Promise<Couleur[]> {
+    return this.charger<Couleur>('couleurs');
   }
 
   kitDeDepart(): Promise<ElementKit[]> {

@@ -26,6 +26,7 @@ const FICHIERS: Fichier[] = [
   { nom: 'techniques', element: 'animation', identifiants: ['id', 'nom'] },
   { nom: 'starter-kit', element: 'kit de départ', identifiants: ['typeId'] },
   { nom: 'federations', element: 'fédération', identifiants: ['departement', 'nom'] },
+  { nom: 'couleurs', element: 'couleur', identifiants: ['id', 'nom'] },
   { nom: 'engine-weights' },
   { nom: 'departements', facultatif: true },
 ];
@@ -105,12 +106,16 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     ...doublons('species.json', contenu['species'] ?? [], 'code'),
     ...doublons('lure-types.json', contenu['lure-types'] ?? [], 'id'),
     ...doublons('techniques.json', contenu['techniques'] ?? [], 'id'),
+    ...doublons('couleurs.json', contenu['couleurs'] ?? [], 'id'),
     ...doublons(
       'departements.json',
       (contenu['departements'] as unknown as { departements?: Entrees } | undefined)?.departements ?? [],
       'code',
     ),
   ];
+  const classes = new Set((contenu['couleurs'] ?? []).map((c) => c['classe']));
+  for (const classe of ['vive', 'naturelle'])
+    if (!classes.has(classe)) messages.push(`couleurs.json : aucune couleur de classe « ${classe} » (il en faut au moins une vive et une naturelle)`);
   for (const t of contenu['lure-types'] ?? []) {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
     for (const code of new Set((t['especes'] as string[]) ?? []))
@@ -135,6 +140,7 @@ if (structureValide) {
       species: lire('species'),
       'lure-types': lire('lure-types'),
       techniques: lire('techniques'),
+      couleurs: lire('couleurs'),
       'starter-kit': lire('starter-kit'),
     }),
   );

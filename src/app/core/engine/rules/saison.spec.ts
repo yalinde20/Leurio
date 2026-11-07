@@ -59,7 +59,7 @@ const conditions = (saison: Saison, tempEau: number | null = 6): Conditions => (
   niveau: 'debutant',
 });
 const appliquer = (saison: Saison, t: TypeLeurre, a: Animation) =>
-  regleSaison({ conditions: conditions(saison), espece: sandre, type: t, animation: a });
+  regleSaison({ conditions: conditions(saison), espece: sandre, type: t, animation: a, couleurs: [] });
 
 describe('regleSaison', () => {
   it('given ni le type ni l’animation ne listent de saison, when la règle s’applique, then elle n’est pas déclenchée', () => {
@@ -103,6 +103,7 @@ describe('recommander avec la règle de saison', () => {
       especes: especesReelles as Espece[],
       typesLeurres: typesReels as TypeLeurre[],
       animations: animationsReelles as unknown as Animation[],
+      couleurs: [],
     };
     const [premier] = recommander(conditions('hiver'), contenu, poids);
     expect(['verticale', 'tiree-relachee']).toContain(premier.techniqueId);
@@ -115,6 +116,7 @@ describe('recommander avec la règle de saison', () => {
       especes: [sandre],
       typesLeurres: [type('neutre', ['a']), type('hivernal', ['b'], ['hiver'])],
       animations: [animation('a', 'lent'), animation('b', 'lent')],
+      couleurs: [],
     };
     const [premier, second] = recommander(conditions('hiver'), contenu, poids);
     expect(premier.typeId).toBe('hivernal');
@@ -128,6 +130,7 @@ describe('recommander avec la règle de saison', () => {
       especes: [sandre],
       typesLeurres: [type('neutre', ['a']), type('hivernal', ['b'], ['hiver'])],
       animations: [animation('a', 'lent'), animation('b', 'lent')],
+      couleurs: [],
     };
     const [premier, second] = recommander(conditions('été'), contenu, poids);
     expect(premier.score).toBe(second.score);
@@ -140,6 +143,7 @@ describe('recommander avec la règle de saison', () => {
       especes: [sandre],
       typesLeurres: [type('b', ['moyen'], ['hiver']), type('a', ['lent'])],
       animations: [animation('lent', 'lent'), animation('moyen', 'moyen')],
+      couleurs: [],
     };
     const conseils = recommander(conditions('hiver'), contenu, poids);
     expect(conseils.map((c) => c.typeId)).toEqual(['a', 'b']);
@@ -151,6 +155,7 @@ describe('recommander avec la règle de saison', () => {
       especes: [sandre],
       typesLeurres: [type('b', ['rapide'], ['hiver']), type('a', ['lent'])],
       animations: [animation('lent', 'lent'), animation('rapide', 'rapide')],
+      couleurs: [],
     };
     const conseils = recommander(conditions('hiver'), contenu, poids);
     expect(conseils.map((c) => c.typeId)).toEqual(['a', 'b']);

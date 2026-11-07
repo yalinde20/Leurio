@@ -58,6 +58,7 @@ const appliquer = (tempEau: number | null, rythme: Animation['rythme'] = 'lent')
     espece: sandre,
     type,
     animation: animation(rythme),
+    couleurs: [],
   });
 
 describe('regleTemperature', () => {
@@ -109,6 +110,7 @@ describe('recommander avec le contenu réel', () => {
     especes: especesReelles as Espece[],
     typesLeurres: typesReels as TypeLeurre[],
     animations: animationsReelles as unknown as Animation[],
+    couleurs: [],
   };
   const poids: PoidsMoteur = poidsReels;
 
@@ -144,7 +146,7 @@ describe('recommander avec le contenu réel', () => {
     const partage: TypeLeurre = { ...type, especes: ['SAN', 'BRO'], techniques: ['a'] };
     const conseils = recommander(
       { ...conditions(6), especeCible: undefined },
-      { especes: [sandre, autre], typesLeurres: [partage], animations: [animation('lent')] },
+      { especes: [sandre, autre], typesLeurres: [partage], animations: [animation('lent')], couleurs: [] },
       poids,
     );
     // Sandre : eau ralentie, lente = 1 point. Brochet : eau active, lente = 0,5 point.
