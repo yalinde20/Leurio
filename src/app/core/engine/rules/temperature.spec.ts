@@ -62,13 +62,17 @@ const appliquer = (tempEau: number | null, rythme: Animation['rythme'] = 'lent')
 
 describe('regleTemperature', () => {
   it('given une température sur la borne basse d’une plage, when la règle s’applique, then la plage commence là', () => {
-    expect(appliquer(6)?.phrase).toContain('ralenti');
-    expect(appliquer(0)?.phrase).toContain('quasi inactif');
+    expect(appliquer(6)?.phrase).toContain('est ralentie');
+    expect(appliquer(0)?.phrase).toContain('est quasi nulle');
   });
 
   it('given la borne commune de deux plages, when la règle s’applique, then la plage du dessus l’emporte', () => {
-    expect(appliquer(12)?.phrase).toContain('actif');
-    expect(appliquer(12)?.phrase).not.toContain('ralenti');
+    expect(appliquer(12, 'rapide')).toEqual({
+      facteur: 'temperature',
+      points: 1,
+      phrase:
+        "À 12 °C, l'activité du poisson (sandre) est pleine : une animation rapide lui convient.",
+    });
   });
 
   it('given le haut de la plage active, when la règle s’applique, then il est inclus', () => {
@@ -90,7 +94,7 @@ describe('regleTemperature', () => {
     const r = appliquer(6, 'rapide');
     expect(r?.points).toBe(0);
     expect(r?.phrase).toBe(
-      "L'eau est à 6 °C : le sandre est ralenti, une animation rapide risque de le laisser indifférent.",
+      "À 6 °C, l'activité du poisson (sandre) est ralentie : une animation rapide risque de le laisser indifférent.",
     );
   });
 
@@ -110,11 +114,42 @@ describe('recommander avec le contenu réel', () => {
 
   it('given l’hiver, une eau à 6 °C et le sandre (PLAN §11), when le moteur calcule, then le premier conseil est une animation lente', () => {
     const [premier] = recommander({ ...conditions(6), especeCible: 'SAN' }, contenu, poids);
-    const lente = contenu.animations.find((a) => a.id === premier.techniqueId);
-    expect(lente?.rythme).toBe('lent');
+    expect(['tiree-relachee', 'verticale']).toContain(premier.techniqueId);
   });
 
   it('given une espèce cible absente du contenu, when le moteur calcule, then il ne rend aucun conseil', () => {
     expect(recommander({ ...conditions(6), especeCible: 'ZZZ' }, contenu, poids)).toEqual([]);
+  });
+
+  it.each([
+    ['PER', 'perche'],
+    ['ASP', 'aspe'],
+  ])(
+    'given %s, when le moteur explique, then la phrase n’exige aucun accord avec le nom (%s)',
+    (code, nom) => {
+      const [conseil] = recommander({ ...conditions(8), especeCible: code }, contenu, poids);
+      const phrase = conseil.pourquoi.join(' ');
+      expect(phrase).toContain(`(${nom})`);
+      expect(phrase).not.toContain(`le ${nom}`);
+    },
+  );
+
+  it('given aucune espèce cible et un couple partagé par deux espèces, when le moteur calcule, then il garde le meilleur score', () => {
+    const autre: Espece = {
+      ...sandre,
+      code: 'BRO',
+      nom: 'Brochet',
+      tempEauC: { active: [2, 24], ralentie: [0, 2], quasiNulle: [0, 0] },
+    };
+    const partage: TypeLeurre = { ...type, especes: ['SAN', 'BRO'], techniques: ['a'] };
+    const conseils = recommander(
+      { ...conditions(6), especeCible: undefined },
+      { especes: [sandre, autre], typesLeurres: [partage], animations: [animation('lent')] },
+      poids,
+    );
+    // Sandre : eau ralentie, lente = 1 point. Brochet : eau active, lente = 0,5 point.
+    expect(conseils).toHaveLength(1);
+    expect(conseils[0].especeCode).toBe('SAN');
+    expect(conseils[0].score).toBe(poids.temperature);
   });
 });

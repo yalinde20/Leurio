@@ -26,10 +26,11 @@ function bandeDe(espece: Espece, temperature: number): Bande | null {
   );
 }
 
-function etat(bande: Bande, nom: string): string {
-  if (bande === 'active') return `${nom} est actif`;
-  return bande === 'ralentie' ? `${nom} est ralenti` : `${nom} est quasi inactif`;
-}
+const ACTIVITE: Record<Bande, string> = {
+  active: 'pleine',
+  ralentie: 'ralentie',
+  quasiNulle: 'quasi nulle',
+};
 
 function conseilRythme(bande: Bande, rythme: Rythme): string {
   if (bande === 'active') {
@@ -47,12 +48,10 @@ export const regleTemperature: Regle = ({ conditions, espece, animation }) => {
   if (conditions.tempEau === null) return null;
   const bande = bandeDe(espece, conditions.tempEau);
   if (bande === null) return null;
-  const nom = `le ${espece.nom.toLowerCase()}`;
   const degres = `${TEMPERATURE.format(conditions.tempEau)} °C`.replace(/\s/g, ' ');
-  const sujet = etat(bande, nom);
   return {
     facteur: 'temperature',
     points: POINTS[bande][animation.rythme],
-    phrase: `L'eau est à ${degres} : ${sujet}, ${conseilRythme(bande, animation.rythme)}.`,
+    phrase: `À ${degres}, l'activité du poisson (${espece.nom.toLowerCase()}) est ${ACTIVITE[bande]} : ${conseilRythme(bande, animation.rythme)}.`,
   };
 };
