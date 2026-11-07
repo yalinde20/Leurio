@@ -1,6 +1,6 @@
 import { Regle } from './regle';
 
-const ECART = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+const ECART = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 /**
  * Règle de pression (PLAN §8.3) : un indice, pas une certitude. Elle ne se déclenche que si l'écart sur 48 h dépasse
@@ -12,7 +12,7 @@ const ECART = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
  */
 export const reglePression: Regle = ({ conditions, animation, poids }) => {
   const ecart = conditions.pressionTendance48h;
-  if (ecart === null || poids === undefined || Math.abs(ecart) <= poids.seuilPression) return null;
+  if (ecart === null || !Number.isFinite(ecart) || poids === undefined || Math.abs(ecart) <= poids.seuilPression) return null;
   const baisse = ecart < 0;
   const hpa = `${baisse ? '−' : '+'}${ECART.format(Math.abs(ecart))} hPa`.replace(/\s/g, ' ');
   const favorable = baisse ? animation.rythme !== 'lent' : animation.rythme === 'lent';
