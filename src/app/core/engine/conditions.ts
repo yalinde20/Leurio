@@ -1,7 +1,8 @@
+import { Saison } from '../data/catalog.types';
 import { SourceTempEau } from './temperature-eau';
 
-/** Saison météorologique (PLAN §8.1) : hiver de décembre à février, printemps de mars à mai, été de juin à août, automne de septembre à novembre. */
-export type Saison = 'hiver' | 'printemps' | 'été' | 'automne';
+// La saison est définie avec les types du contenu (qui l'utilisent aussi) ; le moteur la réexporte.
+export type { Saison };
 
 const MOIS_PARIS = new Intl.DateTimeFormat('fr-FR', { month: 'numeric', timeZone: 'Europe/Paris' });
 

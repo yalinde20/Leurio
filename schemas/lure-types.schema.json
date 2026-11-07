@@ -48,6 +48,18 @@
       "interditFermetureBrochet": {
         "type": "boolean"
       },
+      "saisons": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "hiver",
+            "printemps",
+            "été",
+            "automne"
+          ]
+        }
+      },
       "sources": {
         "type": "array",
         "minItems": 1,
