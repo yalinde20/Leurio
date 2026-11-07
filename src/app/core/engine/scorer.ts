@@ -33,7 +33,7 @@ function evaluer(
   let score = 0;
   const pourquoi: string[] = [];
   for (const regle of REGLES) {
-    const resultat = regle({ conditions, espece, type, animation });
+    const resultat = regle({ conditions, espece, type, animation, poids });
     if (resultat === null) continue;
     score += (poids[resultat.facteur] ?? 0) * resultat.points;
     pourquoi.push(resultat.phrase);
