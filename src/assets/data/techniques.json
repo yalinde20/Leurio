@@ -155,7 +155,7 @@
     "vitesse": "rythme régulier : vif pour la perche et le black-bass, plus lent pour le brochet",
     "rythme": "rapide",
     "erreurAEviter": "Garder le fil tendu : sans un peu de mou, le leurre ne zigzague pas.",
-    "difficulte": 3,
+    "difficulte": 1,
     "videos": [
       {
         "provider": "youtube",
@@ -176,7 +176,7 @@
       "peche.com, « Les différentes techniques d'animation des leurres de surface » : https://www.peche.com/article/33563/les-differentes-techniques-d-animation-des-leurres-de-surface (trouvé par recherche, non relu en ligne pendant l'US 42)",
       "Leurre de la pêche, « Comment animer un poisson nageur ? » : https://www.leurredelapeche.fr/articles/212-comment-animer-un-poisson-nageur.html (trouvé par recherche, non relu en ligne pendant l'US 42)"
     ],
-    "dateVerif": "2026-11-04"
+    "dateVerif": "2026-11-07"
   },
   {
     "id": "drop-shot",
