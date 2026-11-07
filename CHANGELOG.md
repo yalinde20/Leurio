@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.2](https://github.com/yalinde20/Leurio/compare/v1.28.1...v1.28.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* résolution de la fusion de main dans les règles du moteur (US 70 pression et lune + US 71 taille) ([991faf3](https://github.com/yalinde20/Leurio/commit/991faf3816acd26bb09d182de6b744445a4e65ea))
+
 ## [1.28.1](https://github.com/yalinde20/Leurio/compare/v1.28.0...v1.28.1) (2026-11-07)
 
 
