@@ -31,6 +31,12 @@ export interface ContexteRegle {
   poids?: PoidsMoteur;
 }
 
+/** Taille (cm) ou poids (g) conseillé pour un type de leurre. */
+export interface TailleLeurre {
+  valeur: number;
+  unite: 'cm' | 'g';
+}
+
 export interface ResultatRegle {
   facteur: keyof PoidsMoteur;
   /** Adéquation du couple, de 0 à 1 ; multipliée par le poids du facteur. */
@@ -39,6 +45,8 @@ export interface ResultatRegle {
   phrase: string;
   /** Identifiant de la couleur de leurre conseillée par la règle, s'il y en a une. */
   couleur?: string;
+  /** Taille ou poids du leurre conseillé par la règle, s'il y en a un. */
+  taille?: TailleLeurre;
 }
 
 /** Une règle rend `null` quand elle n'est pas déclenchée : elle ne compte pas et n'écrit rien. */

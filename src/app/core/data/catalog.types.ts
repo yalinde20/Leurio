@@ -33,6 +33,10 @@ export interface TypeLeurre extends Fiche {
   saisons?: Saison[];
   /** Type adapté à la faible lumière : aube, crépuscule ou ciel couvert (PLAN §8.3). */
   faibleLumiere?: boolean;
+  /** Gamme de taille en cm [min, max] des leurres souples et durs ; exclusive avec `poidsG` (PLAN §2.1). */
+  tailleCm?: [number, number];
+  /** Gamme de poids en g [min, max] des leurres métalliques ou lestés ; exclusive avec `tailleCm` (PLAN §2.1). */
+  poidsG?: [number, number];
   [champ: string]: unknown;
 }
 
