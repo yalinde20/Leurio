@@ -136,6 +136,24 @@ describe('recommander avec la règle de luminosité', () => {
     expect(premier.score).toBe(second.score);
   });
 
+  it.each([
+    ['aube', 'aube', null, "À l'aube, la lumière est faible : c'est le moment d'un leurre adapté (sombre)."],
+    ['crépuscule', 'crépuscule', null, "À la tombée du jour, la lumière est faible : c'est le moment d'un leurre adapté (sombre)."],
+    ['ciel couvert', 'jour', 80, "Par ciel couvert, la lumière est faible : c'est le moment d'un leurre adapté (sombre)."],
+  ] as [string, Conditions['moment'], number | null, string][])(
+    'critère 2 : given un couple adapté, when le moteur calcule à/par %s, then la phrase est exactement celle attendue',
+    (_nom, moment, nuages, phrase) => {
+      const [premier] = recommander(conditions(moment, nuages), deuxCouples(), poids);
+      expect(premier.pourquoi).toContain(phrase);
+    },
+  );
+
+  it('critère 2 : given la nuit avec 90 % de nuages, when le moteur calcule, then ils sont à égalité et aucune phrase ne cite la lumière', () => {
+    const [premier, second] = recommander(conditions('nuit', 90), deuxCouples(), poids);
+    expect(premier.score).toBe(second.score);
+    expect([...premier.pourquoi, ...second.pourquoi].some((p) => p.includes('lumière'))).toBe(false);
+  });
+
   it('critère 2 : given la nuit, when le moteur calcule, then la règle n’est pas déclenchée', () => {
     const [premier, second] = recommander(conditions('nuit', null), deuxCouples(), poids);
     expect(premier.score).toBe(second.score);

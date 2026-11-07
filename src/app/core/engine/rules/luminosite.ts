@@ -8,6 +8,7 @@ import { Regle } from './regle';
  */
 export const regleLuminosite: Regle = ({ conditions, type, poids }) => {
   const { moment, nuages } = conditions;
+  if (moment === 'nuit') return null; // La nuit n'est pas traitée ici.
   const momentFaible = moment === 'aube' || moment === 'crépuscule';
   const cielCouvert = nuages !== null && poids !== undefined && nuages >= poids.seuilCielCouvert;
   if (type.faibleLumiere !== true || (!momentFaible && !cielCouvert)) return null;
@@ -16,6 +17,6 @@ export const regleLuminosite: Regle = ({ conditions, type, poids }) => {
   return {
     facteur: 'luminosite',
     points: 0.4,
-    phrase: `${cause}, la lumière est faible : ${nomType} est un leurre adapté.`,
+    phrase: `${cause}, la lumière est faible : c'est le moment d'un leurre adapté (${nomType}).`,
   };
 };

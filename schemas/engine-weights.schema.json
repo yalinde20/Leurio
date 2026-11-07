@@ -9,7 +9,8 @@
     "luminosite",
     "pression",
     "lune",
-    "penaliteDifficulte"
+    "penaliteDifficulte",
+    "seuilCielCouvert"
   ],
   "properties": {
     "temperature": {

@@ -42,7 +42,7 @@ const base = () => ({
   'techniques.json': [technique('tiree-relachee', 'Tirée-relâchée'), technique('lineaire', 'Linéaire')],
   'starter-kit.json': [kit('shad'), kit('spinnerbait')],
   'federations.json': [{ departement: '75', nom: 'Fédération de Paris', url: 'https://exemple.fr', sources: ['https://exemple.fr'], dateVerif: DATE }],
-  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1 },
+  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70 },
 });
 
 function dossier(mutate = () => {}) {
