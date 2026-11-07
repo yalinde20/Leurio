@@ -1,4 +1,5 @@
 import { regleCouleur } from './couleur';
+import { regleDifficulte } from './difficulte';
 import { regleLuminosite } from './luminosite';
 import { Regle } from './regle';
 import { regleLune } from './lune';
@@ -16,4 +17,5 @@ export const REGLES: Regle[] = [
   reglePression,
   regleLune,
   regleTaille,
+  regleDifficulte,
 ];
