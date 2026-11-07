@@ -1,6 +1,7 @@
-import { Animation, Espece, TypeLeurre } from '../data/catalog.types';
+import { Animation, Couleur, Espece, TypeLeurre } from '../data/catalog.types';
 import { Conditions } from './conditions';
 import { REGLES } from './rules';
+import { couleurParDefaut } from './rules/couleur';
 import { PoidsMoteur } from './rules/regle';
 
 export type { PoidsMoteur } from './rules/regle';
@@ -10,6 +11,7 @@ export interface ContenuMoteur {
   especes: Espece[];
   typesLeurres: TypeLeurre[];
   animations: Animation[];
+  couleurs: Couleur[];
 }
 
 /** Un couple « type de leurre + animation » conseillé, avec son pourquoi (PLAN §8.4). */
@@ -19,6 +21,8 @@ export interface Conseil {
   especeCode: string;
   score: number;
   pourquoi: string[];
+  /** Identifiant de la couleur de leurre conseillée (vide si le contenu n'a aucune couleur). */
+  couleur: string;
 }
 
 const NOMBRE_DE_CONSEILS = 3;
@@ -28,17 +32,20 @@ function evaluer(
   espece: Espece,
   type: TypeLeurre,
   animation: Animation,
+  couleurs: Couleur[],
   poids: PoidsMoteur,
 ): Conseil {
   let score = 0;
+  let couleur = couleurParDefaut(couleurs);
   const pourquoi: string[] = [];
   for (const regle of REGLES) {
-    const resultat = regle({ conditions, espece, type, animation });
+    const resultat = regle({ conditions, espece, type, animation, couleurs });
     if (resultat === null) continue;
     score += (poids[resultat.facteur] ?? 0) * resultat.points;
     pourquoi.push(resultat.phrase);
+    if (resultat.couleur !== undefined) couleur = resultat.couleur;
   }
-  return { typeId: type.id, techniqueId: animation.id, especeCode: espece.code, score, pourquoi };
+  return { typeId: type.id, techniqueId: animation.id, especeCode: espece.code, score, pourquoi, couleur };
 }
 
 /**
@@ -64,7 +71,7 @@ export function recommander(
       let meilleur: Conseil | null = null;
       for (const espece of especes) {
         if (!type.especes.includes(espece.code)) continue;
-        const conseil = evaluer(conditions, espece, type, animation, poids);
+        const conseil = evaluer(conditions, espece, type, animation, contenu.couleurs, poids);
         if (meilleur === null || conseil.score > meilleur.score) meilleur = conseil;
       }
       if (meilleur !== null) conseils.push(meilleur);

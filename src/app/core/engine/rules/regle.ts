@@ -1,5 +1,5 @@
 import { Conditions } from '../conditions';
-import { Animation, Espece, TypeLeurre } from '../../data/catalog.types';
+import { Animation, Couleur, Espece, TypeLeurre } from '../../data/catalog.types';
 
 /** Facteurs pondérés par `engine-weights.json` (PLAN §8.2). */
 export interface PoidsMoteur {
@@ -19,6 +19,8 @@ export interface ContexteRegle {
   espece: Espece;
   type: TypeLeurre;
   animation: Animation;
+  /** Les couleurs du contenu, dans l'ordre du contenu. */
+  couleurs: Couleur[];
 }
 
 export interface ResultatRegle {
@@ -27,6 +29,8 @@ export interface ResultatRegle {
   points: number;
   /** Phrase du « pourquoi », en français. */
   phrase: string;
+  /** Identifiant de la couleur de leurre conseillée par la règle, s'il y en a une. */
+  couleur?: string;
 }
 
 /** Une règle rend `null` quand elle n'est pas déclenchée : elle ne compte pas et n'écrit rien. */
