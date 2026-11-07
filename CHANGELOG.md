@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/yalinde20/Leurio/compare/v1.24.0...v1.25.0) (2026-11-07)
+
+
+### Features
+
+* carte Conditions en mode dégradé (US 65) ([6e4de29](https://github.com/yalinde20/Leurio/commit/6e4de297ab65a77368e06163f469e509cad81239))
+
 ## [1.24.0](https://github.com/yalinde20/Leurio/compare/v1.23.0...v1.24.0) (2026-11-06)
 
 
