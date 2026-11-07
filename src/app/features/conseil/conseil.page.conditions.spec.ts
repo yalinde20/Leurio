@@ -226,12 +226,12 @@ describe('ConseilPage : carte « Conditions » (US 64)', () => {
   });
 
   // Compléments issus de la maquette validée (écrans 5, 6 et 7).
-  it("maquette 3 et 6 : given une eau inconnue, when la carte s'affiche, then « Température de l'eau : Inconnue » sans source", async () => {
+  it("maquette 3 et 6 : given une eau inconnue, when la carte s'affiche, then « Température de l'eau inconnue » sans source (texte remplacé par la US 65)", async () => {
     const { page } = await afficher({
       releve: releve({ conditions: conditions({ tempEau: null, sourceTempEau: null }), stationEau: undefined }),
     });
 
-    afficheLigne(page, "Température de l'eau : Inconnue");
+    afficheLigne(page, "Température de l'eau inconnue");
   });
 
   it("maquette 6 : given Hub'Eau et la météo indisponibles, when la carte s'affiche, then débit, pression, ciel et vent disent « Indisponible » et lune et heures légales restent là", async () => {
