@@ -78,3 +78,20 @@ test('critère 6 : given le contenu de 8 animations, when on lance npm run valid
   const r = run('npm', ['run', 'validate-data'], 120_000);
   assert.equal(r.status, 0, r.output);
 });
+
+// US 66 : chaque animation porte son rythme, lu par le moteur (PLAN §8.3, §7).
+const RYTHMES = ['lent', 'moyen', 'rapide'];
+
+test('US 66 critère contenu : given chaque animation de techniques.json, when on lit son rythme, then il vaut lent, moyen ou rapide', () => {
+  const liste = animations();
+  exigeHuitAnimations(liste);
+  for (const a of liste) {
+    assert.ok(RYTHMES.includes(a.rythme), `${a.id} : rythme "${a.rythme}" invalide, lent|moyen|rapide attendu`);
+  }
+});
+
+test('US 66 critère contenu : given le schéma des animations, when on le lit, then il exige un rythme lent, moyen ou rapide', () => {
+  const schema = JSON.parse(readFileSync(join(ROOT, 'schemas/techniques.schema.json'), 'utf8'));
+  assert.ok(schema.items.required.includes('rythme'), 'rythme doit être requis par le schéma');
+  assert.deepEqual([...schema.items.properties.rythme.enum].sort(), [...RYTHMES].sort());
+});
