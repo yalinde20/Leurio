@@ -10,6 +10,8 @@
     "pression",
     "lune",
     "penaliteDifficulte",
+    "seuilPression",
+    "phasesLuneBonus",
     "seuilCielCouvert"
   ],
   "properties": {
@@ -53,6 +55,18 @@
       "type": "number",
       "exclusiveMaximum": 0,
       "description": "Pénalité négative ajoutée au score quand la difficulté de l'animation dépasse le niveau du pêcheur."
+    },
+    "seuilPression": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Écart de pression sur 48 h, en hPa, au-delà duquel (en valeur absolue) la pression devient un indice dans le conseil."
+    },
+    "phasesLuneBonus": {
+      "type": "array",
+      "items": {
+        "enum": ["Nouvelle lune", "Premier croissant", "Premier quartier", "Gibbeuse croissante", "Pleine lune", "Gibbeuse décroissante", "Dernier quartier", "Dernier croissant"]
+      },
+      "description": "Phases de lune qui donnent un petit bonus aux animations moyennes ou rapides (noms donnés par le calcul astro)."
     }
   },
   "additionalProperties": {

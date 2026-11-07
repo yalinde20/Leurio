@@ -10,9 +10,13 @@ export interface PoidsMoteur {
   pression: number;
   lune: number;
   penaliteDifficulte: number;
+  /** Écart de pression sur 48 h (hPa) au-delà duquel la pression devient un indice. */
+  seuilPression: number;
+  /** Phases de lune (noms de l'AstroService) qui donnent le bonus de lune. */
+  phasesLuneBonus: string[];
   /** Pourcentage de nuages à partir duquel le ciel est couvert. */
   seuilCielCouvert: number;
-  [facteur: string]: number;
+  [facteur: string]: number | string[];
 }
 
 /** Le couple évalué : un type de leurre, une animation, pour une espèce. */
@@ -23,7 +27,7 @@ export interface ContexteRegle {
   animation: Animation;
   /** Les couleurs du contenu, dans l'ordre du contenu. */
   couleurs: Couleur[];
-  /** Poids du moteur ; absents, le seuil de ciel couvert est inconnu et seul le moment compte. */
+  /** Poids du moteur ; les règles qui ont un seuil ou une liste dans le contenu les lisent ici (absents, elles se taisent ou, pour la luminosité, seul le moment compte). */
   poids?: PoidsMoteur;
 }
 
