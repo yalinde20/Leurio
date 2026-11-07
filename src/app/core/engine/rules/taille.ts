@@ -11,7 +11,7 @@ function gammeDe(type: TypeLeurre): { min: number; max: number; unite: TailleLeu
   return null;
 }
 
-/** Taille par défaut (PLAN §8.3) : le milieu de la gamme, null si le type n'en a pas. */
+/** Taille par défaut, choix de l'US 71 (le plan ne la fixe pas) : le milieu de la gamme, null si le type n'en a pas. */
 export function tailleParDefaut(type: TypeLeurre): TailleLeurre | null {
   const gamme = gammeDe(type);
   return gamme === null ? null : { valeur: (gamme.min + gamme.max) / 2, unite: gamme.unite };
