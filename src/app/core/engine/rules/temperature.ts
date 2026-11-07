@@ -1,7 +1,7 @@
 import { Animation, Espece } from '../../data/catalog.types';
 import { Regle } from './regle';
 
-type Bande = 'active' | 'ralentie' | 'quasiNulle';
+export type Bande = 'active' | 'ralentie' | 'quasiNulle';
 type Rythme = Animation['rythme'];
 
 /** Ordre de recherche ; les plages sont [min, max[, sauf le haut de la plage active, inclus. */
@@ -15,7 +15,7 @@ const POINTS: Record<Bande, Record<Rythme, number>> = {
 
 const TEMPERATURE = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
-function bandeDe(espece: Espece, temperature: number): Bande | null {
+export function bandeDe(espece: Espece, temperature: number): Bande | null {
   return (
     BANDES.find((bande) => {
       const [min, max] = espece.tempEauC[bande];

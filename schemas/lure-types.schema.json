@@ -14,6 +14,12 @@
       "dateVerif"
     ],
     "additionalProperties": true,
+    "not": {
+      "required": [
+        "tailleCm",
+        "poidsG"
+      ]
+    },
     "properties": {
       "id": {
         "type": "string",
@@ -62,6 +68,26 @@
             "été",
             "automne"
           ]
+        }
+      },
+      "tailleCm": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "Gamme de taille du leurre, en cm : [min, max], 0 < min < max. Un type porte tailleCm ou poidsG, jamais les deux.",
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "poidsG": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "Gamme de poids du leurre, en g : [min, max], 0 < min < max. Un type porte poidsG ou tailleCm, jamais les deux.",
+        "items": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
       "sources": {

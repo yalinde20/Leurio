@@ -2,7 +2,8 @@ import { Animation, Couleur, Espece, TypeLeurre } from '../data/catalog.types';
 import { Conditions } from './conditions';
 import { REGLES } from './rules';
 import { couleurParDefaut } from './rules/couleur';
-import { PoidsMoteur } from './rules/regle';
+import { PoidsMoteur, TailleLeurre } from './rules/regle';
+import { tailleParDefaut } from './rules/taille';
 
 export type { PoidsMoteur } from './rules/regle';
 
@@ -23,6 +24,8 @@ export interface Conseil {
   pourquoi: string[];
   /** Identifiant de la couleur de leurre conseillée (vide si le contenu n'a aucune couleur). */
   couleur: string;
+  /** Taille (cm) ou poids (g) conseillé ; null si le type de leurre n'a pas de gamme dans le contenu. */
+  taille: TailleLeurre | null;
 }
 
 const NOMBRE_DE_CONSEILS = 3;
@@ -37,6 +40,7 @@ function evaluer(
 ): Conseil {
   let score = 0;
   let couleur = couleurParDefaut(couleurs);
+  let taille = tailleParDefaut(type);
   const pourquoi: string[] = [];
   for (const regle of REGLES) {
     const resultat = regle({ conditions, espece, type, animation, couleurs, poids });
@@ -44,8 +48,9 @@ function evaluer(
     score += (poids[resultat.facteur] ?? 0) * resultat.points;
     pourquoi.push(resultat.phrase);
     if (resultat.couleur !== undefined) couleur = resultat.couleur;
+    if (resultat.taille !== undefined) taille = resultat.taille;
   }
-  return { typeId: type.id, techniqueId: animation.id, especeCode: espece.code, score, pourquoi, couleur };
+  return { typeId: type.id, techniqueId: animation.id, especeCode: espece.code, score, pourquoi, couleur, taille };
 }
 
 /**
