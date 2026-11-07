@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/yalinde20/Leurio/compare/v1.26.0...v1.27.0) (2026-11-07)
+
+
+### Features
+
+* règle de saison dans le moteur de conseil (US 67) ([6621cc5](https://github.com/yalinde20/Leurio/commit/6621cc579e5fe89a2361eddad263e42829ea7aa9))
+
 ## [1.26.0](https://github.com/yalinde20/Leurio/compare/v1.25.0...v1.26.0) (2026-11-07)
 
 
