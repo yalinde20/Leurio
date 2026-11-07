@@ -1,6 +1,9 @@
 // Types du contenu embarqué (src/assets/data/*.json), alignés sur les schémas de schemas/.
 type Plage = [number, number];
 
+/** Saison météorologique (PLAN §8.1) : hiver de décembre à février, printemps de mars à mai, été de juin à août, automne de septembre à novembre. */
+export type Saison = 'hiver' | 'printemps' | 'été' | 'automne';
+
 interface Fiche {
   sources: string[];
   /** Date de vérification, au format AAAA-MM-JJ. */
@@ -26,6 +29,8 @@ export interface TypeLeurre extends Fiche {
   zoneNage: 'surface' | 'mi-eau' | 'fond';
   interditFermetureBrochet: boolean;
   techniques?: string[];
+  /** Saisons où ce type de leurre est favorable (PLAN §8.3). */
+  saisons?: Saison[];
   [champ: string]: unknown;
 }
 
@@ -61,6 +66,8 @@ export interface Animation extends Fiche {
   erreurAEviter: string;
   difficulte: 1 | 2 | 3;
   videos: Video[];
+  /** Saisons où l'animation est favorable (PLAN §8.3). */
+  saisons?: Saison[];
 }
 
 export interface ElementKit extends Fiche {
