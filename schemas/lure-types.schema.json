@@ -48,6 +48,10 @@
       "interditFermetureBrochet": {
         "type": "boolean"
       },
+      "faibleLumiere": {
+        "type": "boolean",
+        "description": "Vrai si ce type de leurre est adapté à la faible lumière (aube, crépuscule, ciel couvert)."
+      },
       "saisons": {
         "type": "array",
         "uniqueItems": true,

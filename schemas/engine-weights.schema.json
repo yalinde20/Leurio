@@ -12,6 +12,7 @@
     "penaliteDifficulte",
     "seuilPression",
     "phasesLuneBonus"
+    "seuilCielCouvert"
   ],
   "properties": {
     "temperature": {
@@ -43,6 +44,12 @@
       "type": "number",
       "exclusiveMinimum": 0,
       "description": "Poids de la lune : bonus seulement, jamais négatif."
+    },
+    "seuilCielCouvert": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Pourcentage de nuages à partir duquel le ciel est couvert et la lumière faible."
     },
     "penaliteDifficulte": {
       "type": "number",

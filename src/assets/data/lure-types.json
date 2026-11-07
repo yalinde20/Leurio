@@ -229,6 +229,7 @@
   },
   {
     "id": "stickbait",
+    "faibleLumiere": true,
     "nom": "Stickbait",
     "especes": [
       "BBG",
@@ -251,6 +252,7 @@
   },
   {
     "id": "popper",
+    "faibleLumiere": true,
     "nom": "Popper",
     "especes": [
       "BBG",
@@ -272,6 +274,7 @@
   },
   {
     "id": "frog",
+    "faibleLumiere": true,
     "nom": "Grenouille",
     "especes": [
       "BBG",
@@ -433,6 +436,7 @@
   },
   {
     "id": "insecte-surface",
+    "faibleLumiere": true,
     "nom": "Insecte de surface",
     "especes": [
       "CHE",

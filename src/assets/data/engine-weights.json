@@ -8,4 +8,5 @@
   "penaliteDifficulte": -1,
   "seuilPression": 5,
   "phasesLuneBonus": ["Nouvelle lune", "Pleine lune"]
+  "seuilCielCouvert": 70
 }

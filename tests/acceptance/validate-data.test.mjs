@@ -41,6 +41,7 @@ const base = () => ({
   ],
   'federations.json': [{ departement: '75', nom: 'Fédération de Paris', url: 'https://exemple.fr', sources: ['https://exemple.fr'], dateVerif: '2026-10-28' }],
   'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilPression: 5, phasesLuneBonus: ['Nouvelle lune', 'Pleine lune'] },
+  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70 },
 });
 
 /** Dossier temporaire contenant le jeu conforme modifié par `mutate(donnees)`. Retourne { dir, nettoyer }. */
