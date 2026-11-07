@@ -11,7 +11,7 @@
     "lune",
     "penaliteDifficulte",
     "seuilPression",
-    "phasesLuneBonus"
+    "phasesLuneBonus",
     "seuilCielCouvert"
   ],
   "properties": {

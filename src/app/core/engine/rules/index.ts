@@ -7,5 +7,11 @@ import { regleSaison } from './saison';
 import { regleTemperature } from './temperature';
 
 /** Règles appliquées à chaque couple, dans l'ordre de leurs phrases du « pourquoi ». */
-export const REGLES: Regle[] = [regleTemperature, regleSaison, regleCouleur, reglePression, regleLune];
-export const REGLES: Regle[] = [regleTemperature, regleSaison, regleCouleur, regleLuminosite];
+export const REGLES: Regle[] = [
+  regleTemperature,
+  regleSaison,
+  regleCouleur,
+  regleLuminosite,
+  reglePression,
+  regleLune,
+];

@@ -46,8 +46,7 @@ const base = () => ({
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: DATE },
   ],
   'federations.json': [{ departement: '75', nom: 'Fédération de Paris', url: 'https://exemple.fr', sources: ['https://exemple.fr'], dateVerif: DATE }],
-  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilPression: 5, phasesLuneBonus: ['Nouvelle lune', 'Pleine lune'] },
-  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70 },
+  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70, seuilPression: 5, phasesLuneBonus: ['Nouvelle lune', 'Pleine lune'] },
 });
 
 function dossier(mutate = () => {}) {
