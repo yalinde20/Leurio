@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.28.0](https://github.com/yalinde20/Leurio/compare/v1.27.0...v1.28.0) (2026-11-07)
+
+
+### Features
+
+* règle de luminosité dans le moteur de conseil (US 69) ([7b4c4c8](https://github.com/yalinde20/Leurio/commit/7b4c4c83674bedde6648d5485126f18fe5ec726e))
+
+
+### Bug Fixes
+
+* phrase de luminosité, nuit exclue et seuil de ciel couvert obligatoire (US 69) ([1893bc7](https://github.com/yalinde20/Leurio/commit/1893bc726d3b8c02cd819967f96f5df58eee8567))
+
 ## [1.27.0](https://github.com/yalinde20/Leurio/compare/v1.26.0...v1.27.0) (2026-11-07)
 
 
