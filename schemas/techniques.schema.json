@@ -9,6 +9,7 @@
       "nom",
       "geste",
       "vitesse",
+      "rythme",
       "erreurAEviter",
       "difficulte",
       "videos",
@@ -32,6 +33,13 @@
       "vitesse": {
         "type": "string",
         "minLength": 1
+      },
+      "rythme": {
+        "enum": [
+          "lent",
+          "moyen",
+          "rapide"
+        ]
       },
       "erreurAEviter": {
         "type": "string",

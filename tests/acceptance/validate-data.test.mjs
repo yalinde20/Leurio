@@ -26,7 +26,7 @@ const base = () => ({
     sources: ['https://exemple.fr/shad'], dateVerif: '2026-10-28',
   }],
   'techniques.json': [{
-    id: 'ramener-lent', nom: 'Ramener lent', geste: 'Moulinet régulier', vitesse: 'lente',
+    id: 'ramener-lent', nom: 'Ramener lent', geste: 'Moulinet régulier', vitesse: 'lente', rythme: 'lent',
     erreurAEviter: 'Aller trop vite', difficulte: 1,
     videos: [
       { provider: 'youtube', id: 'abc123', start: 10, auteur: 'Auteur', lienAuteur: 'https://exemple.fr/a', dateVerif: '2026-10-28' },

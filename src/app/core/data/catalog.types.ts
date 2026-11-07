@@ -56,6 +56,8 @@ export interface Animation extends Fiche {
   nom: string;
   geste: string;
   vitesse: string;
+  /** Rythme de l'animation, lu par le moteur (PLAN §8.3). */
+  rythme: 'lent' | 'moyen' | 'rapide';
   erreurAEviter: string;
   difficulte: 1 | 2 | 3;
   videos: Video[];
