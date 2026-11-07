@@ -39,7 +39,7 @@ export interface TailleLeurre {
 
 export interface ResultatRegle {
   facteur: keyof PoidsMoteur;
-  /** Adéquation du couple, de 0 à 1 ; multipliée par le poids du facteur. */
+  /** Adéquation du couple, de 0 à 1 ; multipliée par le poids du facteur. Seule la pénalité de difficulté va au-delà : l'écart de niveaux (1 ou 2). */
   points: number;
   /** Phrase du « pourquoi », en français. */
   phrase: string;

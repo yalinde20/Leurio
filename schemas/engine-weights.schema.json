@@ -54,7 +54,7 @@
     "penaliteDifficulte": {
       "type": "number",
       "exclusiveMaximum": 0,
-      "description": "Pénalité négative ajoutée au score quand la difficulté de l'animation dépasse le niveau du pêcheur."
+      "description": "Pénalité négative par niveau d'écart, ajoutée au score quand la difficulté de l'animation dépasse le niveau du pêcheur (débutant 1, intermédiaire 2) : elle est multipliée par l'écart."
     },
     "seuilPression": {
       "type": "number",
