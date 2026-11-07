@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.26.0](https://github.com/yalinde20/Leurio/compare/v1.25.0...v1.26.0) (2026-11-07)
+
+
+### Features
+
+* classement des couples leurre + animation selon la température de l'eau (US 66) ([eb72b81](https://github.com/yalinde20/Leurio/commit/eb72b814a72fa45c8fe1b4c91b7f600d4a294362))
+
+
+### Bug Fixes
+
+* phrase de température sans accord de genre avec le nom de l'espèce (US 66) ([d0f2bfa](https://github.com/yalinde20/Leurio/commit/d0f2bfaca1c87bcfce880dab6ad10727fe70b256))
+
 ## [1.25.0](https://github.com/yalinde20/Leurio/compare/v1.24.0...v1.25.0) (2026-11-07)
 
 
