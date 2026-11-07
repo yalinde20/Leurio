@@ -5,5 +5,7 @@
   "luminosite": 1,
   "pression": 1,
   "lune": 0.5,
-  "penaliteDifficulte": -1
+  "penaliteDifficulte": -1,
+  "seuilPression": 5,
+  "phasesLuneBonus": ["Nouvelle lune", "Pleine lune"]
 }

@@ -39,9 +39,10 @@ function evaluer(
   let couleur = couleurParDefaut(couleurs);
   const pourquoi: string[] = [];
   for (const regle of REGLES) {
-    const resultat = regle({ conditions, espece, type, animation, couleurs });
+    const resultat = regle({ conditions, espece, type, animation, couleurs, poids });
     if (resultat === null) continue;
-    score += (poids[resultat.facteur] ?? 0) * resultat.points;
+    const poidsDuFacteur = poids[resultat.facteur];
+    score += (typeof poidsDuFacteur === 'number' ? poidsDuFacteur : 0) * resultat.points;
     pourquoi.push(resultat.phrase);
     if (resultat.couleur !== undefined) couleur = resultat.couleur;
   }

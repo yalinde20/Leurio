@@ -31,6 +31,8 @@ export interface Conditions {
   nuages: number | null;
   /** Vent en km/h, `null` si la météo est indisponible. */
   vent: number | null;
+  /** Nom de la phase de lune tel que le donne l'AstroService ; `null` ou absent si inconnue. */
+  phaseLune?: string | null;
   moment: 'aube' | 'jour' | 'crépuscule' | 'nuit';
   saison: Saison;
   /** Catégorie piscicole du cours d'eau ; `null` pour une position GPS sans spot. */
