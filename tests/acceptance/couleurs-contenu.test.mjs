@@ -95,3 +95,17 @@ test('US 68 validate-data : given une couleur sans sources, when on valide, then
   assert.match(r.output, /couleurs\.json/);
   assert.match(r.output, /sources/);
 });
+
+test('US 68 validate-data : given un couleurs.json sans couleur vive, when on valide, then l’échec nomme couleurs.json et vive', () => {
+  const r = valider((c) => { c.splice(0, c.length, ...c.filter((x) => x.classe !== 'vive')); });
+  assert.notEqual(r.status, 0, 'la validation aurait dû échouer');
+  assert.match(r.output, /couleurs\.json/);
+  assert.match(r.output, /vive/);
+});
+
+test('US 68 validate-data : given un couleurs.json sans couleur naturelle, when on valide, then l’échec nomme couleurs.json et naturelle', () => {
+  const r = valider((c) => { c.splice(0, c.length, ...c.filter((x) => x.classe !== 'naturelle')); });
+  assert.notEqual(r.status, 0, 'la validation aurait dû échouer');
+  assert.match(r.output, /couleurs\.json/);
+  assert.match(r.output, /naturelle/);
+});

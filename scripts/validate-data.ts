@@ -113,6 +113,9 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
       'code',
     ),
   ];
+  const classes = new Set((contenu['couleurs'] ?? []).map((c) => c['classe']));
+  for (const classe of ['vive', 'naturelle'])
+    if (!classes.has(classe)) messages.push(`couleurs.json : aucune couleur de classe « ${classe} » (il en faut au moins une vive et une naturelle)`);
   for (const t of contenu['lure-types'] ?? []) {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
     for (const code of new Set((t['especes'] as string[]) ?? []))

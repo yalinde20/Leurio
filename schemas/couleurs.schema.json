@@ -26,7 +26,7 @@
           "vive",
           "naturelle"
         ],
-        "description": "Vive pour l'eau trouble, naturelle pour l'eau claire. La première couleur du fichier est la couleur par défaut : elle doit être naturelle."
+        "description": "Vive pour l'eau trouble, naturelle pour l'eau claire. La couleur par défaut est la première couleur naturelle du fichier. Le fichier doit contenir au moins une couleur vive et une naturelle."
       },
       "sources": {
         "type": "array",

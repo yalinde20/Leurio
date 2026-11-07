@@ -163,3 +163,38 @@ describe('US 68 critère 4 : débit inconnu, règle non déclenchée', () => {
     expect(inconnu.map((c) => c.pourquoi)).toEqual(normal.map((c) => c.pourquoi));
   });
 });
+
+describe('US 68 règle de clarté : phrase et contenu incomplet', () => {
+  it('given un débit en crue et une température inconnue, when le moteur calcule, then la phrase de clarté nomme le poisson', () => {
+    const c = { ...conditions('crue'), tempEau: null };
+    for (const conseil of recommander(c, fixture, poids)) {
+      expect(conseil.pourquoi.find((p) => p.includes('eau trouble'))).toContain('le poisson');
+    }
+  });
+
+  it('given un débit en étiage et une température inconnue, when le moteur calcule, then la phrase de clarté nomme le poisson', () => {
+    const c = { ...conditions('étiage'), tempEau: null };
+    for (const conseil of recommander(c, fixture, poids)) {
+      expect(conseil.pourquoi.find((p) => p.includes('eau claire'))).toContain('le poisson');
+    }
+  });
+
+  it('given un contenu sans couleur vive, when le moteur calcule en crue, then la règle n’est pas déclenchée et le conseil garde la couleur par défaut', () => {
+    const sansVive: ContenuMoteur = { ...fixture, couleurs: [couleur('nat', 'naturelle')] };
+    const conseils = recommander(conditions('crue'), sansVive, poids);
+    expect(conseils.length).toBeGreaterThan(0);
+    for (const c of conseils) {
+      expect(c.couleur).toBe('nat');
+      for (const mot of CLARTE) expect(parle(c.pourquoi, mot)).toBe(false);
+    }
+  });
+
+  it('given un contenu sans couleur naturelle, when le moteur calcule en étiage, then la règle n’est pas déclenchée et le conseil garde la première couleur', () => {
+    const sansNat: ContenuMoteur = { ...fixture, couleurs: [couleur('viv', 'vive')] };
+    const conseils = recommander(conditions('étiage'), sansNat, poids);
+    for (const c of conseils) {
+      expect(c.couleur).toBe('viv');
+      for (const mot of CLARTE) expect(parle(c.pourquoi, mot)).toBe(false);
+    }
+  });
+});
