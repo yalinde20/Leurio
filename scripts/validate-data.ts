@@ -26,6 +26,7 @@ const FICHIERS: Fichier[] = [
   { nom: 'techniques', element: 'animation', identifiants: ['id', 'nom'] },
   { nom: 'starter-kit', element: 'kit de départ', identifiants: ['typeId'] },
   { nom: 'federations', element: 'fédération', identifiants: ['departement', 'nom'] },
+  { nom: 'couleurs', element: 'couleur', identifiants: ['id', 'nom'] },
   { nom: 'engine-weights' },
   { nom: 'departements', facultatif: true },
 ];
@@ -105,6 +106,7 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     ...doublons('species.json', contenu['species'] ?? [], 'code'),
     ...doublons('lure-types.json', contenu['lure-types'] ?? [], 'id'),
     ...doublons('techniques.json', contenu['techniques'] ?? [], 'id'),
+    ...doublons('couleurs.json', contenu['couleurs'] ?? [], 'id'),
     ...doublons(
       'departements.json',
       (contenu['departements'] as unknown as { departements?: Entrees } | undefined)?.departements ?? [],
@@ -135,6 +137,7 @@ if (structureValide) {
       species: lire('species'),
       'lure-types': lire('lure-types'),
       techniques: lire('techniques'),
+      couleurs: lire('couleurs'),
       'starter-kit': lire('starter-kit'),
     }),
   );
