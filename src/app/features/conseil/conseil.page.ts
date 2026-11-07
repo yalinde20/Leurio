@@ -18,7 +18,9 @@ import {
 /** Ce que la carte « Conditions » affiche, déjà formaté. */
 interface CarteConditions {
   mention?: string;
+  moinsPrecis: boolean;
   eau: string;
+  eauInconnue: boolean;
   sourceEau: string | null;
   debit: string;
   pression: string;
@@ -59,6 +61,22 @@ type Etat =
     }
     .mention {
       margin: -6px 0 12px;
+    }
+    .badge {
+      display: inline-block;
+      margin: -4px 0 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--lr-sable);
+      color: var(--lr-texte);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .invitation {
+      display: block;
+      margin-top: 2px;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
     }
     .message {
       margin: 0;
@@ -123,13 +141,21 @@ type Etat =
           }
           @default {
             @if (carte(); as c) {
+              @if (c.moinsPrecis) {
+                <p><span class="badge">Moins précis</span></p>
+              }
               @if (c.mention) {
                 <p class="mention">{{ c.mention }}</p>
               }
               <dl>
                 <div class="ligne eau">
-                  <dt>Température de l'eau :</dt>
-                  <dd>{{ c.eau }}</dd>
+                  @if (c.eauInconnue) {
+                    <dd>Température de l'eau inconnue</dd>
+                    <span class="invitation">Mesure-la au thermomètre</span>
+                  } @else {
+                    <dt>Température de l'eau :</dt>
+                    <dd>{{ c.eau }}</dd>
+                  }
                   @if (c.sourceEau) {
                     <span class="source">{{ c.sourceEau }}</span>
                   }
@@ -218,6 +244,8 @@ export class ConseilPage implements OnInit {
     const { conditions } = releve;
     return {
       mention: releve.mention,
+      moinsPrecis: releve.moinsPrecis,
+      eauInconnue: conditions.tempEau === null,
       eau: formaterTempEau(conditions.tempEau),
       sourceEau: formaterSourceTempEau(releve),
       debit: formaterDebit(releve),
