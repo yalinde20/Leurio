@@ -72,6 +72,13 @@ export interface Animation extends Fiche {
   saisons?: Saison[];
 }
 
+/** Couleur de leurre (PLAN §8.3) : vive pour l'eau trouble, naturelle pour l'eau claire. La première du contenu est la couleur par défaut. */
+export interface Couleur extends Fiche {
+  id: string;
+  nom: string;
+  classe: 'vive' | 'naturelle';
+}
+
 export interface ElementKit extends Fiche {
   typeId: string;
   raison: string;
