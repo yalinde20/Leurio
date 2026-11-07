@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.28.1](https://github.com/yalinde20/Leurio/compare/v1.28.0...v1.28.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* écart de pression au dixième et valeur non finie ignorée (US 70) ([d746883](https://github.com/yalinde20/Leurio/commit/d746883196a34b998f2e58f729174c33c12666f5))
+* résolution de la fusion de main (US 69 luminosité + US 70 pression et lune) ([fce21fe](https://github.com/yalinde20/Leurio/commit/fce21fe1cc5a6117e9ce21b9171cd9a0eb8e6b6a))
+
 ## [1.28.0](https://github.com/yalinde20/Leurio/compare/v1.27.0...v1.28.0) (2026-11-07)
 
 
