@@ -40,7 +40,7 @@ const base = () => ({
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
   ],
   'federations.json': [{ departement: '75', nom: 'Fédération de Paris', url: 'https://exemple.fr', sources: ['https://exemple.fr'], dateVerif: '2026-10-28' }],
-  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1 },
+  'engine-weights.json': { ...Object.fromEntries(POIDS.map((p, i) => [p, i + 1])), penaliteDifficulte: -1, seuilCielCouvert: 70 },
 });
 
 /** Dossier temporaire contenant le jeu conforme modifié par `mutate(donnees)`. Retourne { dir, nettoyer }. */

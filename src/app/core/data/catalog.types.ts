@@ -31,6 +31,8 @@ export interface TypeLeurre extends Fiche {
   techniques?: string[];
   /** Saisons où ce type de leurre est favorable (PLAN §8.3). */
   saisons?: Saison[];
+  /** Type adapté à la faible lumière : aube, crépuscule ou ciel couvert (PLAN §8.3). */
+  faibleLumiere?: boolean;
   [champ: string]: unknown;
 }
 

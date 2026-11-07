@@ -10,6 +10,8 @@ export interface PoidsMoteur {
   pression: number;
   lune: number;
   penaliteDifficulte: number;
+  /** Pourcentage de nuages à partir duquel le ciel est couvert. */
+  seuilCielCouvert: number;
   [facteur: string]: number;
 }
 
@@ -21,6 +23,8 @@ export interface ContexteRegle {
   animation: Animation;
   /** Les couleurs du contenu, dans l'ordre du contenu. */
   couleurs: Couleur[];
+  /** Poids du moteur ; absents, le seuil de ciel couvert est inconnu et seul le moment compte. */
+  poids?: PoidsMoteur;
 }
 
 export interface ResultatRegle {
