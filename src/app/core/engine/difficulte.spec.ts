@@ -66,6 +66,8 @@ const difficulteDe = (animations: Animation[], id: string): number =>
   animations.find((a) => a.id === id)!.difficulte;
 
 describe('pénalité de difficulté selon le niveau', () => {
+  // Garde-fou du cas §11 : depuis le choix du propriétaire (walking-the-dog en difficulté 1), le contenu réel n'a plus
+  // d'animation de difficulté 3 ; ce test protège contre une future. Le test construit qui suit prouve le critère.
   it('critère 0 : given des conditions avec niveau débutant et le contenu réel (hiver, eau à 6 °C, sandre), when le moteur calcule le conseil, then le premier conseil n\'est pas une animation de difficulté 3', () => {
     const animations = animationsReelles as unknown as Animation[];
     const reel: ContenuMoteur = {
