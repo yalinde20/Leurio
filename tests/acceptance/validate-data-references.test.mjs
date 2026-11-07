@@ -21,7 +21,7 @@ const espece = (code, nom) => ({
 });
 
 const technique = (id, nom) => ({
-  id, nom, geste: 'Moulinet régulier', vitesse: 'lente', erreurAEviter: 'Aller trop vite', difficulte: 1,
+  id, nom, geste: 'Moulinet régulier', vitesse: 'lente', rythme: 'lent', erreurAEviter: 'Aller trop vite', difficulte: 1,
   videos: [{ provider: 'youtube', id: 'abc123', start: 10, auteur: 'Auteur', lienAuteur: 'https://exemple.fr/a', dateVerif: DATE }],
   sources: ['https://exemple.fr/technique'], dateVerif: DATE,
 });

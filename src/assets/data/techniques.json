@@ -4,6 +4,7 @@
     "nom": "Linéaire",
     "geste": "Lance, laisse couler le leurre jusqu'à la profondeur voulue, puis mouline à vitesse régulière. Le leurre nage seul, sans coup de canne.",
     "vitesse": "lente à moyenne, régulière",
+    "rythme": "moyen",
     "erreurAEviter": "Mouliner trop vite : le leurre remonte et passe au-dessus des poissons.",
     "difficulte": 1,
     "videos": [
@@ -32,6 +33,7 @@
     "nom": "Tirée-relâchée",
     "geste": "Laisse le leurre toucher le fond. Lève la canne d'un coup souple pour le décoller, puis redescends-la en reprenant le mou : le leurre retombe vers le fond.",
     "vitesse": "lente, avec une pause au fond à chaque tirée",
+    "rythme": "lent",
     "erreurAEviter": "Laisser le fil détendu pendant la descente : tu ne sens pas la touche, qui vient souvent à la chute.",
     "difficulte": 1,
     "videos": [
@@ -60,6 +62,7 @@
     "nom": "Verticale",
     "geste": "Place-toi à la verticale du poste, en bateau, en float-tube ou depuis un ponton, et laisse descendre le leurre jusqu'au fond. Décolle-le de 10 à 30 cm par petits mouvements de canne, puis marque une pause.",
     "vitesse": "très lente : mouvements courts et pauses",
+    "rythme": "lent",
     "erreurAEviter": "Animer trop fort ou trop haut : en verticale, la pause compte autant que le mouvement.",
     "difficulte": 2,
     "videos": [
@@ -88,6 +91,7 @@
     "nom": "Stop and go",
     "geste": "Mouline quelques tours, puis arrête-toi une ou deux secondes. Recommence jusqu'au bord : l'attaque vient souvent à la reprise.",
     "vitesse": "moyenne, coupée de pauses",
+    "rythme": "moyen",
     "erreurAEviter": "Ne pas faire de vraie pause, ou laisser le fil se détendre pendant l'arrêt : tu rates la touche à la reprise.",
     "difficulte": 1,
     "videos": [
@@ -115,6 +119,7 @@
     "nom": "Twitching",
     "geste": "Canne basse, donne de petits coups secs du bout de la canne et reprends le mou au moulinet entre deux coups. Le poisson nageur part à droite et à gauche comme un poisson blessé. Marque des pauses.",
     "vitesse": "saccadée et vive, plus lente en eau froide",
+    "rythme": "rapide",
     "erreurAEviter": "Tirer avec toute la canne au lieu de la pointe : le leurre avance tout droit au lieu de zigzaguer.",
     "difficulte": 2,
     "videos": [
@@ -143,6 +148,7 @@
     "nom": "Walking the dog",
     "geste": "Canne basse, pointe vers l'eau, donne de petits coups réguliers en laissant un peu de mou entre deux coups. Le stickbait zigzague en surface, de gauche à droite.",
     "vitesse": "rythme régulier : vif pour la perche et le black-bass, plus lent pour le brochet",
+    "rythme": "rapide",
     "erreurAEviter": "Garder le fil tendu : sans un peu de mou, le leurre ne zigzague pas.",
     "difficulte": 3,
     "videos": [
@@ -171,6 +177,7 @@
     "nom": "Drop shot",
     "geste": "Laisse le plomb au fond : le leurre est fixé plus haut sur le fil. Fil tendu, fais vibrer la pointe de la canne sans bouger le plomb, puis avance le montage de quelques centimètres.",
     "vitesse": "très lente, presque sur place",
+    "rythme": "lent",
     "erreurAEviter": "Soulever le plomb à chaque mouvement : c'est le leurre qui doit bouger, pas le plomb.",
     "difficulte": 2,
     "videos": [
@@ -199,6 +206,7 @@
     "nom": "Gratté",
     "geste": "Laisse le leurre sur le fond et ramène-le en tirant doucement la canne sur le côté, comme pour le traîner. Reprends le mou et recommence, avec de courtes pauses.",
     "vitesse": "très lente, au contact du fond",
+    "rythme": "lent",
     "erreurAEviter": "Ramener trop vite : le leurre décolle et ne touche plus le fond.",
     "difficulte": 1,
     "videos": [
