@@ -125,3 +125,13 @@ export function avertissementEspece(espece: EspeceAvertissable, date: Date): Ave
   }
   return null;
 }
+
+/**
+ * Prochain jour d'ouverture de la 1re catégorie à partir d'une date : le 2e samedi de mars de l'année,
+ * ou celui de l'année suivante une fois la saison commencée (PLAN §6). Utile pour dire « fermé jusqu'au… ».
+ */
+export function prochaineOuverture1reCategorie(date: Date): Date {
+  const jour = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const { debut } = periodeOuverture1reCategorie(date.getFullYear());
+  return jour <= debut ? debut : periodeOuverture1reCategorie(date.getFullYear() + 1).debut;
+}

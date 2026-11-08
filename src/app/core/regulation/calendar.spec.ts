@@ -5,6 +5,7 @@ import {
   LIBELLES_AVERTISSEMENT,
   periodeFermetureBrochet,
   periodeOuverture1reCategorie,
+  prochaineOuverture1reCategorie,
 } from './calendar';
 import type { Espece } from '../data/catalog.types';
 import species from '../../../assets/data/species.json';
@@ -236,5 +237,19 @@ describe('avertissementEspece', () => {
 
   it('given une fiche qui cumule fermetureAvecBrochet et verifDepartementPrintemps pendant la fermeture du brochet, when on demande l\'état, then « probablement fermé » l\'emporte', () => {
     expect(avertissementEspece(litterale(true, true), new Date(2026, 2, 1, 12, 0))).toBe('probablement-ferme');
+  });
+});
+
+describe('prochaineOuverture1reCategorie', () => {
+  it('given le 01/03/2026, when on demande la prochaine ouverture, then le 14/03/2026', () => {
+    expect(prochaineOuverture1reCategorie(new Date(2026, 2, 1))).toEqual(new Date(2026, 2, 14));
+  });
+
+  it("given le 14/03/2026, when on demande la prochaine ouverture, then le jour même", () => {
+    expect(prochaineOuverture1reCategorie(new Date(2026, 2, 14, 15))).toEqual(new Date(2026, 2, 14));
+  });
+
+  it("given le 08/11/2026, when on demande la prochaine ouverture, then le 13/03/2027", () => {
+    expect(prochaineOuverture1reCategorie(new Date(2026, 10, 8))).toEqual(new Date(2027, 2, 13));
   });
 });
