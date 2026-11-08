@@ -123,7 +123,8 @@ export function conseiller(
   const explications: string[] = [];
   if (reglementation.finFermetureBrochet !== null) {
     explications.push(
-      `Brochet fermé : certains leurres sont interdits jusqu'au ${jourMois(reglementation.finFermetureBrochet)}`,
+      `Brochet fermé : certains leurres sont interdits jusqu'au ${jourMois(reglementation.finFermetureBrochet)}` +
+        (reglementation.categorieIncertaine ? ' (si tu es en 2e catégorie)' : ''),
     );
   }
   return { conseils: recommander(conditions, autorises, poids), explications };

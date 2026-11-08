@@ -98,6 +98,8 @@ export interface EtatReglementaire {
   brochetFerme: boolean;
   /** Dernier jour (inclus, jour local) de la fermeture du brochet ; `null` si le brochet n'est pas fermé. */
   finFermetureBrochet: Date | null;
+  /** Présent (vrai) quand la catégorie est inconnue et que la fermeture est appliquée par prudence (US 78). */
+  categorieIncertaine?: true;
 }
 
 /**
@@ -105,12 +107,12 @@ export interface EtatReglementaire {
  * La fermeture du brochet ne vaut qu'en 2e catégorie.
  */
 export function etatReglementaire(categorie: Categorie | null, date: Date): EtatReglementaire {
-  // À confirmer par le propriétaire (US 78) : catégorie inconnue traitée pour l'instant comme la 1re (brochet non fermé).
-  const ferme = etatBrochet(categorie ?? 1, date) === 'ferme';
-  return {
-    brochetFerme: ferme,
-    finFermetureBrochet: ferme ? periodeFermetureBrochet(date.getFullYear()).fin : null,
-  };
+  // Catégorie inconnue (position GPS sans spot) : la règle de la 2e catégorie s'applique par prudence (décision du propriétaire, US 78).
+  const ferme = etatBrochet(categorie ?? 2, date) === 'ferme';
+  if (!ferme) return { brochetFerme: false, finFermetureBrochet: null };
+  const etat: EtatReglementaire = { brochetFerme: true, finFermetureBrochet: periodeFermetureBrochet(date.getFullYear()).fin };
+  if (categorie === null) etat.categorieIncertaine = true;
+  return etat;
 }
 
 /**
