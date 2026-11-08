@@ -3,12 +3,15 @@
 //   dansHeuresLegales(moment: Date, heures: HeuresLegales): boolean  (bornes incluses).
 // Référence : IMCCE, service web Miriade RTS (https://ssp.imcce.fr/webservices/miriade/api/rts.php),
 // corps Sun, altitude 35 m, heures en UT, relevé le 2026-11-08. Constantes fixes : aucun appel réseau.
-import { TestBed } from '@angular/core/testing';
+// AstroService n'a pas de dépendance : il est instancié directement (pas de TestBed dans core/regulation, lint).
 import { AstroService } from '../data/astro.service';
 import { Lieu } from '../data/weather-provider';
 import { HeuresLegales, dansHeuresLegales, heuresLegales } from './legal-hours';
 
-const TOLERANCE_MS = 2 * 60_000;
+// Miriade donne le lever et le coucher du centre du soleil, à la minute ; l'app suit la convention usuelle
+// du bord supérieur (suncalc), soit 1 à 2,5 min d'écart. Décision du propriétaire (US 77, option a) :
+// on garde le bord supérieur et la tolérance passe de 2 à 3 minutes.
+const TOLERANCE_MS = 3 * 60_000;
 const MINUTE = 60_000;
 
 interface CasReference {
@@ -32,7 +35,7 @@ const CAS: CasReference[] = [
 const PARIS = CAS[0];
 
 function heuresDe(cas: CasReference): HeuresLegales {
-  const soleil = TestBed.inject(AstroService).soleil(cas.lieu, new Date(cas.jour));
+  const soleil = new AstroService().soleil(cas.lieu, new Date(cas.jour));
   const heures = heuresLegales(soleil);
   expect(heures).not.toBeNull();
   return heures as HeuresLegales;
@@ -40,8 +43,8 @@ function heuresDe(cas: CasReference): HeuresLegales {
 
 describe('Heures légales de pêche : éphéméride (US 77)', () => {
   for (const cas of CAS) {
-    it(`critère 1 : given ${cas.nom}, when on demande les heures légales, then le début est le lever − 30 min et la fin le coucher + 30 min, à 2 minutes au plus de l'éphéméride IMCCE`, () => {
-      const soleil = TestBed.inject(AstroService).soleil(cas.lieu, new Date(cas.jour));
+    it(`critère 1 : given ${cas.nom}, when on demande les heures légales, then le début est le lever − 30 min et la fin le coucher + 30 min, à 3 minutes au plus de l'éphéméride IMCCE (Miriade, centre du soleil)`, () => {
+      const soleil = new AstroService().soleil(cas.lieu, new Date(cas.jour));
       const heures = heuresDe(cas);
 
       expect(heures.debut.getTime()).toBe((soleil.lever as Date).getTime() - 30 * MINUTE);
