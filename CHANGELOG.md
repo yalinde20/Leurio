@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.0](https://github.com/yalinde20/Leurio/compare/v1.32.0...v1.33.0) (2026-11-08)
+
+
+### Features
+
+* **conseil:** bandeau réglementation ([#80](https://github.com/yalinde20/Leurio/issues/80)) ([04bd8b4](https://github.com/yalinde20/Leurio/commit/04bd8b4edb56bb4d3a75aaa8fd4a270ad330b0b4))
+
 ## [1.32.0](https://github.com/yalinde20/Leurio/compare/v1.31.0...v1.32.0) (2026-11-08)
 
 
