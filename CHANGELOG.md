@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.0](https://github.com/yalinde20/Leurio/compare/v1.29.0...v1.30.0) (2026-11-08)
+
+
+### Features
+
+* **regulation:** ouverture de la 1re catégorie ([#73](https://github.com/yalinde20/Leurio/issues/73)) ([1870755](https://github.com/yalinde20/Leurio/commit/187075576817457e1ac1d8f066bd47f2539fc668))
+
 ## [1.29.0](https://github.com/yalinde20/Leurio/compare/v1.28.2...v1.29.0) (2026-11-07)
 
 
