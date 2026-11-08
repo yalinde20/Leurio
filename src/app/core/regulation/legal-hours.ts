@@ -15,3 +15,9 @@ export function heuresLegales(soleil: { lever: Date | null; coucher: Date | null
     fin: new Date(soleil.coucher.getTime() + MARGE_MINUTES * 60_000),
   };
 }
+
+/** Le moment est-il dans les heures légales ? Les deux bornes sont incluses (PLAN §6). */
+export function dansHeuresLegales(moment: Date, heures: HeuresLegales): boolean {
+  const t = moment.getTime();
+  return t >= heures.debut.getTime() && t <= heures.fin.getTime();
+}
