@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 80 : bandeau « Réglementation »</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte « Conditions ». */
+  .carte {
+    background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px;
+    padding: 16px; color: var(--lr-texte);
+  }
+  .carte h3 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+  .carte .mention { margin: -6px 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .carte dl { margin: 0; }
+  .ligne { padding: 10px 0; border-top: 1px solid var(--lr-bordure); }
+  .ligne:first-child { border-top: none; padding-top: 0; }
+  .ligne dt { display: inline; font-size: 16px; font-weight: 600; }
+  .ligne dd { display: inline; margin: 0; font-size: 16px; }
+  .ligne .source { display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ligne.eau dd { font-size: 22px; font-weight: 700; }
+  .lien-fede {
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
+
+  /* Le bandeau « Réglementation » : même gabarit que la carte « Conditions ». */
+  .bandeau .ligne dd.ferme, .bandeau .alerte { color: var(--lr-danger); font-weight: 700; }
+  .bandeau .alerte { display: block; font-size: 16px; }
+  .resume { font-size: 14px; color: var(--lr-texte-secondaire); margin: 0 0 12px; }
+</style>
+</head>
+<body>
+<h1>US 80 — Bandeau « Réglementation » sur l'écran Conseil</h1>
+<p class="note">iPhone, app installée. Le bandeau est une carte titrée « Réglementation », placée sous la carte « Conditions » (PLAN §3), avec le même gabarit : une ligne par règle, au format « Libellé : valeur ». Ce qui est fermé est écrit en rouge (token --lr-danger, contraste d'au moins 4,5:1 dans les deux thèmes). En bas, toujours : « À vérifier dans l'arrêté de ton département » et le lien vers la fédération (cible de 48 px). Tout est calculé sur le téléphone : le bandeau s'affiche aussi hors ligne. Interrupteur ci-dessous pour voir chaque thème.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+
+  <h2>1. L'écran Conseil aujourd'hui (position GPS, le 08/11/2026)</h2>
+  <p class="note">Ce qui existe déjà : position GPS, donc catégorie inconnue, toutes les espèces, maintenant. Comme la catégorie est inconnue, le bandeau donne l'état des deux catégories. Le choix du spot (US 87) et de l'espèce (US 83) le brancheront ensuite. Sans espèce visée, pas de ligne « Taille minimale ». Le quota ne vaut qu'en 2e catégorie, d'où sa ligne préfixée. En Maine-et-Loire (critère 6), le lien ouvre fedepeche49.fr, lu dans federations.json.</p>
+  <div class="phone" style="height:auto">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Conseil</span></div>
+    <div class="content">
+      <section class="carte" style="margin-bottom:12px">
+        <h3>Conditions</h3>
+        <dl>
+          <div class="ligne eau"><dt>Température de l'eau :</dt> <dd>11,5 °C</dd><span class="source">Station Hub'Eau La Maine à Angers, à 4 km</span></div>
+          <div class="ligne"><dt>Débit :</dt> <dd>Normal</dd></div>
+          <div class="ligne"><dt>…</dt></div>
+        </dl>
+      </section>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>1re catégorie :</dt> <dd class="ferme">Fermé jusqu'au 13/03</dd></div><div class="ligne"><dt>2e catégorie :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>Quota en 2e catégorie :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+    <nav class="tabbar">
+      <div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+
+  <h2>2. Spot de 1re catégorie, le 01/03/2026 (critère 1)</h2>
+  <p class="note">La date affichée est celle de l'ouverture, comme le dit le critère : « Fermé jusqu'au 14/03 ». Pas de quota en 1re catégorie (décision de la US 76).</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Spot de 1re catégorie · toutes les espèces · 01/03/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>Pêche :</dt> <dd class="ferme">Fermé jusqu'au 14/03</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>3. Spot de 2e catégorie, sandre visé, le 10/02/2026 (critères 2, 3 et 4)</h2>
+  <p class="note">« Brochet fermé jusqu'au 24/04 » donne le dernier jour de la fermeture. L'avertissement du sandre vient de sa fiche (fermetureAvecBrochet). La fiche du sandre n'a pas de taille (décision de la US 76) ; avec une fiche à 50 cm, la ligne serait « Taille minimale : 50 cm ».</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Spot de 2e catégorie · sandre · 10/02/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>Pêche :</dt> <dd class="ferme">Brochet fermé jusqu'au 24/04</dd></div><div class="ligne"><span class="alerte">Sandre : probablement fermé, vérifie</span></div><div class="ligne"><dt>Taille minimale :</dt> <dd>pas de taille minimale nationale</dd></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>4. Spot de 2e catégorie, black-bass visé, le 15/04/2026 (critère 3)</h2>
+  <p class="note">Au printemps (du 1er mars au 31 mai), la fiche du black-bass demande de vérifier l'arrêté du département.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Spot de 2e catégorie · black-bass · 15/04/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>Pêche :</dt> <dd class="ferme">Brochet fermé jusqu'au 24/04</dd></div><div class="ligne"><span class="alerte">Black-bass : vérifie ton département</span></div><div class="ligne"><dt>Taille minimale :</dt> <dd>pas de taille minimale nationale</dd></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>5. Spot de 2e catégorie, toutes les espèces, le 15/06/2026 (critère 5)</h2>
+  <p class="note">Rien n'est fermé. Avec « toutes » les espèces, aucune ligne « Taille minimale ».</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Spot de 2e catégorie · toutes les espèces · 15/06/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>Pêche :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>6. Catégorie inconnue pendant la fermeture du brochet, le 10/02/2026</h2>
+  <p class="note">Position GPS sans spot : l'état des deux catégories.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Position GPS · toutes les espèces · 10/02/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>1re catégorie :</dt> <dd class="ferme">Fermé jusqu'au 14/03</dd></div><div class="ligne"><dt>2e catégorie :</dt> <dd class="ferme">Brochet fermé jusqu'au 24/04</dd></div><div class="ligne"><dt>Quota en 2e catégorie :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération de pêche de ton département</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>7. Département inconnu ou absent de federations.json</h2>
+  <p class="note">Le lien mène au site de la Fédération nationale de la pêche en France.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px">
+    <div class="content">
+      <p class="resume">Position GPS · département inconnu · 15/06/2026</p>
+      <section class="carte bandeau"><h3>Réglementation</h3><dl><div class="ligne"><dt>1re catégorie :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>2e catégorie :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>Quota en 2e catégorie :</dt> <dd>3 carnassiers par jour, dont 2 brochets maximum</dd></div><div class="ligne"><span class="source" style="margin-top:0">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Fédération nationale de la pêche en France</a></div></dl></section>
+    </div>
+  </div>
+
+  <h2>8. Ce qui reste hors de cette story</h2>
+  <p class="note">Le choix du spot, de l'espèce et du moment (US 87, 83 et 82). Les cartes de conseil. Le filtre des leurres pendant la fermeture du brochet (US 78, dans le moteur). Android : même carte ; seule la barre du haut change (titre aligné à gauche).</p>
+</div>
+</body>
+</html>

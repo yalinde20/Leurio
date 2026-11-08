@@ -5,6 +5,7 @@ import { CatalogService, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { heuresLegales } from '../../core/regulation/legal-hours';
+import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import {
   formaterCiel,
   formaterDebit,
@@ -29,6 +30,7 @@ interface CarteConditions {
   lune: string;
   heuresLegales: string;
   federation?: Federation;
+  date: Date;
 }
 
 type Etat =
@@ -38,7 +40,7 @@ type Etat =
 
 @Component({
   selector: 'app-conseil',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent],
   host: { class: 'ion-page' },
   styles: `
     .carte {
@@ -195,6 +197,14 @@ type Etat =
           }
         }
       </section>
+      @if (carte(); as c) {
+        <app-bandeau-reglementation
+          [categorie]="null"
+          [espece]="null"
+          [date]="c.date"
+          [federation]="c.federation"
+        />
+      }
     </ion-content>
   `,
 })
@@ -236,11 +246,16 @@ export class ConseilPage implements OnInit {
           heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible',
         ),
         federation,
+        date: maintenant,
       },
     });
   }
 
-  private composer(releve: ReleveActuel, lune: string, heures: string): CarteConditions {
+  private composer(
+    releve: ReleveActuel,
+    lune: string,
+    heures: string,
+  ): Omit<CarteConditions, 'federation' | 'date'> {
     const { conditions } = releve;
     return {
       mention: releve.mention,
