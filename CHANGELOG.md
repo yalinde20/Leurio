@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/yalinde20/Leurio/compare/v1.30.0...v1.31.0) (2026-11-08)
+
+
+### Features
+
+* **regulation:** avertissements sandre et black-bass ([#75](https://github.com/yalinde20/Leurio/issues/75)) ([e5403df](https://github.com/yalinde20/Leurio/commit/e5403df932302396c99dc032981efabfb0863301))
+
 ## [1.30.0](https://github.com/yalinde20/Leurio/compare/v1.29.0...v1.30.0) (2026-11-08)
 
 
