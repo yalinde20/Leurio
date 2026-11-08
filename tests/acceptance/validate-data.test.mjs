@@ -18,7 +18,7 @@ const base = () => ({
     code: 'SAN', nom: 'Sandre',
     tempEauC: { active: [12, 22], ralentie: [6, 12], quasiNulle: [0, 6] },
     postes: ['bordure', 'herbier'], proies: ['gardon'],
-    tailleMinCm: 50, fermetureAvecBrochet: true, fermetureSpecifique: null,
+    tailleMinCm: 50, fermetureAvecBrochet: true, fermetureSpecifique: null, verifDepartementPrintemps: false,
     sources: ['https://exemple.fr/sandre'], dateVerif: '2026-10-28',
   }],
   'lure-types.json': [{
@@ -116,7 +116,7 @@ test('critère 0 : given le dossier schemas, when on le liste, then il y a un sc
 
 // ---------- critère 1 : espèce ----------
 
-for (const champ of ['code', 'nom', 'tempEauC', 'postes', 'proies', 'tailleMinCm', 'fermetureAvecBrochet', 'sources', 'dateVerif']) {
+for (const champ of ['code', 'nom', 'tempEauC', 'postes', 'proies', 'tailleMinCm', 'fermetureAvecBrochet', 'verifDepartementPrintemps', 'sources', 'dateVerif']) {
   test(`critère 1 : given une espèce sans ${champ}, when on valide, then l'échec nomme species.json, l'espèce et ${champ}`, () => {
     // sans code, l'espèce est identifiée par son nom ou sa position
     refuse((d) => sans(d['species.json'][0], champ), [champ, champ === 'code' ? /espèce (Sandre|n° 1)/ : 'SAN'], { fichier: 'species.json' });

@@ -1,4 +1,13 @@
-import { etatBrochet, etatOuverture, periodeFermetureBrochet, periodeOuverture1reCategorie } from './calendar';
+import {
+  avertissementEspece,
+  etatBrochet,
+  etatOuverture,
+  LIBELLES_AVERTISSEMENT,
+  periodeFermetureBrochet,
+  periodeOuverture1reCategorie,
+} from './calendar';
+import type { Espece } from '../data/catalog.types';
+import species from '../../../assets/data/species.json';
 
 // US 73, PLAN §6 : la 1re catégorie ouvre le 2e samedi de mars et ferme le 3e dimanche de septembre, jours inclus.
 // La 2e catégorie est ouverte en général ; US 74 : le brochet y est fermé du dernier lundi de janvier
@@ -138,5 +147,94 @@ describe('etatBrochet', () => {
   it('given une catégorie inconnue (position GPS sans spot), when on demande l\'état du brochet, then l\'état est donné pour les deux catégories', () => {
     expect(etatBrochet(null, new Date(2026, 2, 1, 12, 0))).toEqual({ 1: 'non-applicable', 2: 'ferme' });
     expect(etatBrochet(null, new Date(2026, 5, 1, 12, 0))).toEqual({ 1: 'non-applicable', 2: 'ouvert' });
+  });
+});
+
+// US 75, PLAN §6 : avertissement par espèce, lu dans la fiche (aucune espèce en dur).
+// Sandre : fermetureAvecBrochet vrai, donc « probablement fermé » pendant la fermeture du brochet en 2e catégorie.
+// Black-bass : verifDepartementPrintemps vrai, donc « vérifie ton département » du 1er mars au 31 mai inclus.
+describe('avertissementEspece', () => {
+  const fiche = (code: string) => {
+    const trouvee = (species as unknown as Espece[]).find((e) => e.code === code);
+    if (!trouvee) throw new Error(`fiche ${code} absente de species.json`);
+    return trouvee;
+  };
+  const sandre = fiche('SAN');
+  const blackBass = fiche('BBG');
+  const perche = fiche('PER');
+  const brochet = fiche('BRO');
+  const litterale = (fermetureAvecBrochet: boolean, verifDepartementPrintemps: boolean) => ({
+    fermetureAvecBrochet,
+    verifDepartementPrintemps,
+  });
+
+  it('given les libellés d\'avertissement, when on les lit, then ils valent « probablement fermé, vérifie » et « vérifie ton département »', () => {
+    expect(LIBELLES_AVERTISSEMENT['probablement-ferme']).toBe('probablement fermé, vérifie');
+    expect(LIBELLES_AVERTISSEMENT['verifie-departement']).toBe('vérifie ton département');
+  });
+
+  it('critère 1 : given le sandre et une date dans la fermeture du brochet (01/03/2026), when on demande l\'état de l\'espèce, then il vaut « probablement fermé, vérifie »', () => {
+    const etat = avertissementEspece(sandre, new Date(2026, 2, 1, 12, 0));
+
+    expect(etat).toBe('probablement-ferme');
+    expect(LIBELLES_AVERTISSEMENT[etat!]).toBe('probablement fermé, vérifie');
+  });
+
+  it('critère 1 : given le sandre et les bornes de la fermeture (26/01/2026 00:00 et 24/04/2026 23:59), when on demande l\'état de l\'espèce, then il vaut « probablement fermé »', () => {
+    expect(avertissementEspece(sandre, new Date(2026, 0, 26, 0, 0))).toBe('probablement-ferme');
+    expect(avertissementEspece(sandre, new Date(2026, 3, 24, 23, 59))).toBe('probablement-ferme');
+  });
+
+  it('critère 1 : given une fiche littérale avec fermetureAvecBrochet vrai et la fermeture du brochet, when on demande l\'état de l\'espèce, then il vaut « probablement fermé »', () => {
+    expect(avertissementEspece(litterale(true, false), new Date(2026, 2, 1, 12, 0))).toBe('probablement-ferme');
+  });
+
+  it('critère 2 : given le sandre et des dates hors de la fermeture du brochet (25/01, 25/04 et 15/07/2026), when on demande l\'état de l\'espèce, then aucun avertissement n\'est rendu', () => {
+    expect(avertissementEspece(sandre, new Date(2026, 0, 25, 23, 59))).toBeNull();
+    expect(avertissementEspece(sandre, new Date(2026, 3, 25, 0, 0))).toBeNull();
+    expect(avertissementEspece(sandre, new Date(2026, 6, 15, 12, 0))).toBeNull();
+  });
+
+  it('critère 3 : given la perche, dont la fiche n\'a pas fermetureAvecBrochet, when on demande son état pendant la fermeture du brochet (01/03/2026), then aucun avertissement « probablement fermé » n\'est rendu', () => {
+    expect(perche.fermetureAvecBrochet).toBe(false);
+    expect(avertissementEspece(perche, new Date(2026, 2, 1, 12, 0))).not.toBe('probablement-ferme');
+  });
+
+  it('critère 3 : given une fiche littérale sans fermetureAvecBrochet, when on demande son état pendant la fermeture du brochet, then aucun avertissement n\'est rendu', () => {
+    expect(avertissementEspece(litterale(false, false), new Date(2026, 2, 1, 12, 0))).toBeNull();
+  });
+
+  it('given le brochet (fermetureAvecBrochet vrai, pas d\'exclusion), when on demande son état le 01/03/2026, then il vaut « probablement fermé »', () => {
+    expect(avertissementEspece(brochet, new Date(2026, 2, 1, 12, 0))).toBe('probablement-ferme');
+  });
+
+  it('critère 4 : given le black-bass et le 15/04/2026, when on demande l\'état de l\'espèce, then il vaut « vérifie ton département »', () => {
+    const etat = avertissementEspece(blackBass, new Date(2026, 3, 15, 12, 0));
+
+    expect(blackBass.verifDepartementPrintemps).toBe(true);
+    expect(etat).toBe('verifie-departement');
+    expect(LIBELLES_AVERTISSEMENT[etat!]).toBe('vérifie ton département');
+  });
+
+  it('critère 4 : given le black-bass et les bornes du printemps (01/03/2026 00:00 et 31/05/2026 23:59), when on demande l\'état de l\'espèce, then il vaut « vérifie ton département »', () => {
+    expect(avertissementEspece(blackBass, new Date(2026, 2, 1, 0, 0))).toBe('verifie-departement');
+    expect(avertissementEspece(blackBass, new Date(2026, 4, 31, 23, 59))).toBe('verifie-departement');
+  });
+
+  it('critère 5 : given le black-bass et le 15/08/2026, when on demande l\'état de l\'espèce, then aucun avertissement n\'est rendu', () => {
+    expect(avertissementEspece(blackBass, new Date(2026, 7, 15, 12, 0))).toBeNull();
+  });
+
+  it('critère 5 : given le black-bass et les jours voisins du printemps (28/02/2026 23:59 et 01/06/2026 00:00), when on demande l\'état de l\'espèce, then aucun avertissement n\'est rendu', () => {
+    expect(avertissementEspece(blackBass, new Date(2026, 1, 28, 23, 59))).toBeNull();
+    expect(avertissementEspece(blackBass, new Date(2026, 5, 1, 0, 0))).toBeNull();
+  });
+
+  it('given une fiche sans verifDepartementPrintemps (la perche) le 15/04/2026, when on demande l\'état de l\'espèce, then aucun avertissement « vérifie ton département » n\'est rendu', () => {
+    expect(avertissementEspece(perche, new Date(2026, 3, 15, 12, 0))).not.toBe('verifie-departement');
+  });
+
+  it('given une fiche qui cumule fermetureAvecBrochet et verifDepartementPrintemps pendant la fermeture du brochet, when on demande l\'état, then « probablement fermé » l\'emporte', () => {
+    expect(avertissementEspece(litterale(true, true), new Date(2026, 2, 1, 12, 0))).toBe('probablement-ferme');
   });
 });

@@ -19,6 +19,8 @@ export interface Espece extends Fiche {
   tailleMinCm: number | null;
   fermetureAvecBrochet: boolean;
   fermetureSpecifique?: string | null;
+  /** Fermeture possible au printemps selon le département : avertir « vérifie ton département » du 1er mars au 31 mai (PLAN §6). */
+  verifDepartementPrintemps: boolean;
 }
 
 /** Le schéma des types de leurres est ouvert : d'autres champs de contenu sont permis. */

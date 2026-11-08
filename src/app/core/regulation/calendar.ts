@@ -1,3 +1,5 @@
+import type { Espece } from '../data/catalog.types';
+
 /** Catégorie piscicole d'un cours d'eau ou d'un plan d'eau : 1re (salmonidés) ou 2e (cyprinidés). */
 export type Categorie = 1 | 2;
 
@@ -88,4 +90,38 @@ export function etatBrochet(categorie: Categorie | null, date: Date): EtatBroche
   const { debut, fin } = periodeFermetureBrochet(date.getFullYear());
   const jour = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   return jour >= debut && jour <= fin ? 'ferme' : 'ouvert';
+}
+
+/**
+ * Avertissement propre à une espèce (PLAN §6) :
+ * - `probablement-ferme` : l'espèce se ferme avec le brochet (sandre…) et on est dans la fermeture du brochet en 2e catégorie ;
+ * - `verifie-departement` : la fermeture dépend du département au printemps (black-bass…).
+ */
+export type AvertissementEspece = 'probablement-ferme' | 'verifie-departement';
+
+/** Libellés affichés pour chaque avertissement d'espèce (PLAN §6). */
+export const LIBELLES_AVERTISSEMENT: Record<AvertissementEspece, string> = {
+  'probablement-ferme': 'probablement fermé, vérifie',
+  'verifie-departement': 'vérifie ton département',
+};
+
+/** Champs de la fiche espèce qui pilotent les avertissements : lus dans le contenu, aucune espèce en dur. */
+export type EspeceAvertissable = Pick<Espece, 'fermetureAvecBrochet' | 'verifDepartementPrintemps'>;
+
+const MAI = 4;
+
+/**
+ * Avertissement d'une espèce à une date, comparé par jour local, ou `null` s'il n'y en a pas (PLAN §6).
+ * La catégorie piscicole n'est pas demandée : la fermeture du brochet est évaluée en 2e catégorie, la seule où elle vaut.
+ * Le printemps va du 1er mars au 31 mai inclus. « Probablement fermé » l'emporte sur « vérifie ton département ».
+ */
+export function avertissementEspece(espece: EspeceAvertissable, date: Date): AvertissementEspece | null {
+  if (espece.fermetureAvecBrochet && etatBrochet(2, date) === 'ferme') return 'probablement-ferme';
+  if (espece.verifDepartementPrintemps) {
+    const jour = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const debut = new Date(date.getFullYear(), MARS, 1);
+    const fin = new Date(date.getFullYear(), MAI, 31);
+    if (jour >= debut && jour <= fin) return 'verifie-departement';
+  }
+  return null;
 }

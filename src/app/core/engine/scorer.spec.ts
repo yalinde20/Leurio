@@ -21,6 +21,7 @@ const espece = (code: string, nom: string): Espece => ({
   proies: [],
   tailleMinCm: null,
   fermetureAvecBrochet: false,
+  verifDepartementPrintemps: false,
   ...FICHE,
 });
 

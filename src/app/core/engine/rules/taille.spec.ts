@@ -16,6 +16,7 @@ const sandre: Espece = {
   proies: [],
   tailleMinCm: null,
   fermetureAvecBrochet: false,
+  verifDepartementPrintemps: false,
   ...FICHE,
 };
 const type = (id: string, gamme: Partial<Pick<TypeLeurre, 'tailleCm' | 'poidsG'>>): TypeLeurre => ({

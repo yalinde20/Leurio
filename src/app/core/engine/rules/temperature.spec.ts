@@ -16,6 +16,7 @@ const sandre: Espece = {
   proies: [],
   tailleMinCm: null,
   fermetureAvecBrochet: false,
+  verifDepartementPrintemps: false,
   ...FICHE,
 };
 const type: TypeLeurre = {
