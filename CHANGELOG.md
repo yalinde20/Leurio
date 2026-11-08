@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.0](https://github.com/yalinde20/Leurio/compare/v1.28.2...v1.29.0) (2026-11-07)
+
+
+### Features
+
+* **moteur:** pénalité de difficulté selon le niveau (US 72) ([4a2f055](https://github.com/yalinde20/Leurio/commit/4a2f055bbaa51086ff653d5471279d2f0d1fc207))
+
 ## [1.28.2](https://github.com/yalinde20/Leurio/compare/v1.28.1...v1.28.2) (2026-11-07)
 
 
