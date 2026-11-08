@@ -1,7 +1,8 @@
 import { etatBrochet, etatOuverture, periodeFermetureBrochet, periodeOuverture1reCategorie } from './calendar';
 
 // US 73, PLAN §6 : la 1re catégorie ouvre le 2e samedi de mars et ferme le 3e dimanche de septembre, jours inclus.
-// La 2e catégorie est ouverte en général (la fermeture du brochet est une autre story).
+// La 2e catégorie est ouverte en général ; US 74 : le brochet y est fermé du dernier lundi de janvier
+// au vendredi avant le dernier samedi d'avril, bornes incluses.
 // Module de réglementation : TypeScript pur. Les dates sont comparées en jours locaux, indépendamment du fuseau.
 const jour = (d: Date) => [d.getFullYear(), d.getMonth() + 1, d.getDate()];
 
@@ -90,6 +91,17 @@ describe('periodeFermetureBrochet', () => {
       expect(jour(periode.fin)).toEqual(fin);
       expect(periode.fin.getDay()).toBe(5);
     }
+  });
+});
+
+describe('periodeFermetureBrochet, années limites', () => {
+  it("given l'année 2022 (dernier lundi de janvier le 31, dernier samedi d'avril le 30), when on demande la période de fermeture du brochet, then elle va du lundi 31/01/2022 au vendredi 29/04/2022", () => {
+    const periode = periodeFermetureBrochet(2022);
+
+    expect(jour(periode.debut)).toEqual([2022, 1, 31]);
+    expect(periode.debut.getDay()).toBe(1);
+    expect(jour(periode.fin)).toEqual([2022, 4, 29]);
+    expect(periode.fin.getDay()).toBe(5);
   });
 });
 

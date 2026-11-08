@@ -76,6 +76,10 @@ export function periodeFermetureBrochet(annee: number): PeriodeFermeture {
  */
 export function etatBrochet(categorie: Categorie, date: Date): EtatBrochet;
 export function etatBrochet(categorie: null, date: Date): { 1: EtatBrochet; 2: EtatBrochet };
+export function etatBrochet(
+  categorie: Categorie | null,
+  date: Date,
+): EtatBrochet | { 1: EtatBrochet; 2: EtatBrochet };
 export function etatBrochet(categorie: Categorie | null, date: Date): EtatBrochet | { 1: EtatBrochet; 2: EtatBrochet } {
   if (categorie === null) {
     return { 1: etatBrochet(1, date), 2: etatBrochet(2, date) };
