@@ -16,7 +16,7 @@ const espece = (code, nom) => ({
   code, nom,
   tempEauC: { active: [12, 22], ralentie: [6, 12], quasiNulle: [0, 6] },
   postes: ['bordure'], proies: ['gardon'],
-  tailleMinCm: 50, fermetureAvecBrochet: true, fermetureSpecifique: null,
+  tailleMinCm: 50, fermetureAvecBrochet: true, fermetureSpecifique: null, verifDepartementPrintemps: false,
   sources: ['https://exemple.fr/espece'], dateVerif: DATE,
 });
 

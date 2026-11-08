@@ -12,6 +12,7 @@
       "proies",
       "tailleMinCm",
       "fermetureAvecBrochet",
+      "verifDepartementPrintemps",
       "sources",
       "dateVerif"
     ],
@@ -89,6 +90,9 @@
           "string",
           "null"
         ]
+      },
+      "verifDepartementPrintemps": {
+        "type": "boolean"
       },
       "sources": {
         "type": "array",
