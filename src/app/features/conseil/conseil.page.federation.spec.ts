@@ -78,6 +78,12 @@ async function afficher(federation: (departement: string) => Promise<unknown>) {
   return { page: fixture.nativeElement as HTMLElement, demandes };
 }
 
+/** La carte « Conditions » : l'élément qui porte le titre « Conditions » (le bandeau Réglementation est à part). */
+function carte(page: HTMLElement): HTMLElement {
+  const titre = [...page.querySelectorAll('h2, h3')].find((t) => t.textContent?.trim() === 'Conditions');
+  return titre?.closest('section, article, ion-card') as HTMLElement;
+}
+
 const MENTION = "À vérifier dans l'arrêté de ton département";
 
 describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN §6)', () => {
@@ -90,7 +96,7 @@ describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN 
 
     expect(demandes).toEqual(['49']);
     expect(page.textContent).toContain(MENTION);
-    const lien = page.querySelector('a');
+    const lien = carte(page).querySelector('a');
     expect(lien?.textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire');
     expect(lien?.getAttribute('href')).toBe('https://www.federation-peche49.fr');
     expect(lien?.getAttribute('target')).toBe('_blank');
@@ -101,6 +107,6 @@ describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN 
     const { page } = await afficher(async () => undefined);
 
     expect(page.textContent).toContain(MENTION);
-    expect(page.querySelector('a')).toBeNull();
+    expect(carte(page).querySelector('a')).toBeNull();
   });
 });
