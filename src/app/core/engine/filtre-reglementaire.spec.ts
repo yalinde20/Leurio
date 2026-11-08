@@ -134,3 +134,31 @@ describe('conseiller : filtre réglementaire', () => {
     expect(resultat.explications.some((e) => e.includes('Brochet fermé'))).toBe(false);
   });
 });
+
+// Décision du propriétaire (US 78, 08/11) : catégorie inconnue (position GPS sans spot) pendant la fermeture du brochet,
+// on exclut par prudence les leurres interditFermetureBrochet, et l'explication précise « (si tu es en 2e catégorie) ».
+describe('conseiller : catégorie inconnue (décision du propriétaire)', () => {
+  const c = conditions({ categorie: null });
+
+  it("given une catégorie inconnue dans la fermeture du brochet, when on demande l'état réglementaire, then le brochet est tenu pour fermé jusqu'au 24/04/2026, catégorie incertaine", () => {
+    expect(etatReglementaire(null, DANS_LA_FERMETURE)).toEqual({
+      brochetFerme: true,
+      finFermetureBrochet: new Date(2026, 3, 24),
+      categorieIncertaine: true,
+    });
+  });
+
+  it('given une catégorie inconnue dans la fermeture du brochet, when le moteur calcule le conseil, then les types interdits sont exclus par prudence, avec l\'explication « (si tu es en 2e catégorie) »', () => {
+    const { conseils, explications } = conseiller(c, CONTENU_REEL, POIDS, reglementation(c, DANS_LA_FERMETURE));
+    expect(conseils.length).toBeGreaterThan(0);
+    for (const x of conseils) expect(interdits.has(x.typeId), x.typeId).toBe(false);
+    expect(explications).toContain(`${EXPLICATION} (si tu es en 2e catégorie)`);
+  });
+
+  it('given une catégorie inconnue hors fermeture, when le moteur calcule le conseil, then les types interdits peuvent être proposés, sans explication de fermeture', () => {
+    const { conseils, explications } = conseiller(c, CONTENU_REEL, POIDS, reglementation(c, HORS_FERMETURE));
+    expect(conseils).toEqual(recommander(c, CONTENU_REEL, POIDS));
+    expect(conseils.some((x) => interdits.has(x.typeId))).toBe(true);
+    expect(explications.some((e) => e.includes('Brochet fermé'))).toBe(false);
+  });
+});
