@@ -1,4 +1,5 @@
 import { Animation, Couleur, Espece, TypeLeurre } from '../data/catalog.types';
+import type { EtatReglementaire } from '../regulation/calendar';
 import { Conditions } from './conditions';
 import { REGLES } from './rules';
 import { couleurParDefaut } from './rules/couleur';
@@ -85,4 +86,46 @@ export function recommander(
   }
   // Array.prototype.sort est stable : les égalités gardent l'ordre du contenu.
   return conseils.sort((a, b) => b.score - a.score).slice(0, NOMBRE_DE_CONSEILS);
+}
+
+/** Le résultat du moteur : les conseils et les explications à afficher (PLAN §6, §8.4). */
+export interface ResultatConseil {
+  conseils: Conseil[];
+  explications: string[];
+}
+
+/** Date au format JJ/MM (jour local, zéros de tête). */
+function jourMois(date: Date): string {
+  const jour = String(date.getDate()).padStart(2, '0');
+  const mois = String(date.getMonth() + 1).padStart(2, '0');
+  return `${jour}/${mois}`;
+}
+
+/**
+ * Conseils filtrés par la réglementation (PLAN §6, §8.4).
+ * Pendant la fermeture du brochet, les types `interditFermetureBrochet` sont écartés AVANT le classement,
+ * pour que les trois conseils soient pris parmi les types autorisés, et le résultat l'explique.
+ * Sinon, le résultat est celui de `recommander`, sans explication.
+ */
+export function conseiller(
+  conditions: Conditions,
+  contenu: ContenuMoteur,
+  poids: PoidsMoteur,
+  reglementation: EtatReglementaire,
+): ResultatConseil {
+  if (!reglementation.brochetFerme) {
+    return { conseils: recommander(conditions, contenu, poids), explications: [] };
+  }
+  const autorises: ContenuMoteur = {
+    ...contenu,
+    typesLeurres: contenu.typesLeurres.filter((type) => !type.interditFermetureBrochet),
+  };
+  const explications: string[] = [];
+  if (reglementation.finFermetureBrochet !== null) {
+    explications.push(
+      `Brochet fermé : certains leurres sont interdits jusqu'au ${jourMois(reglementation.finFermetureBrochet)}` +
+        (reglementation.categorieIncertaine ? ' (si tu es en 2e catégorie)' : ''),
+    );
+  }
+  return { conseils: recommander(conditions, autorises, poids), explications };
 }

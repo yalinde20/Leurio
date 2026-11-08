@@ -92,6 +92,29 @@ export function etatBrochet(categorie: Categorie | null, date: Date): EtatBroche
   return jour >= debut && jour <= fin ? 'ferme' : 'ouvert';
 }
 
+/** État réglementaire à une date, lu par le moteur pour filtrer les conseils (PLAN §6, §8.4). */
+export interface EtatReglementaire {
+  /** Vrai quand le brochet est fermé : certains types de leurres sont alors interdits. */
+  brochetFerme: boolean;
+  /** Dernier jour (inclus, jour local) de la fermeture du brochet ; `null` si le brochet n'est pas fermé. */
+  finFermetureBrochet: Date | null;
+  /** Présent (vrai) quand la catégorie est inconnue et que la fermeture est appliquée par prudence (US 78). */
+  categorieIncertaine?: true;
+}
+
+/**
+ * État réglementaire d'un lieu à une date (PLAN §6) : réutilise `etatBrochet` et `periodeFermetureBrochet`.
+ * La fermeture du brochet ne vaut qu'en 2e catégorie.
+ */
+export function etatReglementaire(categorie: Categorie | null, date: Date): EtatReglementaire {
+  // Catégorie inconnue (position GPS sans spot) : la règle de la 2e catégorie s'applique par prudence (décision du propriétaire, US 78).
+  const ferme = etatBrochet(categorie ?? 2, date) === 'ferme';
+  if (!ferme) return { brochetFerme: false, finFermetureBrochet: null };
+  const etat: EtatReglementaire = { brochetFerme: true, finFermetureBrochet: periodeFermetureBrochet(date.getFullYear()).fin };
+  if (categorie === null) etat.categorieIncertaine = true;
+  return etat;
+}
+
 /**
  * Avertissement propre à une espèce (PLAN §6) :
  * - `probablement-ferme` : l'espèce se ferme avec le brochet (sandre…) et on est dans la fermeture du brochet en 2e catégorie ;
