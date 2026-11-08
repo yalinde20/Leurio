@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.32.0](https://github.com/yalinde20/Leurio/compare/v1.31.0...v1.32.0) (2026-11-08)
+
+
+### Features
+
+* **regulation:** dansHeuresLegales, bornes incluses ([#77](https://github.com/yalinde20/Leurio/issues/77)) ([bc38822](https://github.com/yalinde20/Leurio/commit/bc38822b66fe64b7d5c9b2f3e721043827937bb5))
+
 ## [1.31.0](https://github.com/yalinde20/Leurio/compare/v1.30.0...v1.31.0) (2026-11-08)
 
 
