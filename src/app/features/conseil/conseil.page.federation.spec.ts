@@ -95,7 +95,7 @@ describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN 
     }));
 
     expect(demandes).toEqual(['49']);
-    expect(page.textContent).toContain(MENTION);
+    expect(carte(page).textContent).toContain(MENTION);
     const lien = carte(page).querySelector('a');
     expect(lien?.textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire');
     expect(lien?.getAttribute('href')).toBe('https://www.federation-peche49.fr');
@@ -106,7 +106,7 @@ describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN 
   it("given aucune fédération pour le département, when la carte s'affiche, then seule la mention est écrite, sans lien", async () => {
     const { page } = await afficher(async () => undefined);
 
-    expect(page.textContent).toContain(MENTION);
+    expect(carte(page).textContent).toContain(MENTION);
     expect(carte(page).querySelector('a')).toBeNull();
   });
 });
