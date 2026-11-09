@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.35.0](https://github.com/yalinde20/Leurio/compare/v1.34.0...v1.35.0) (2026-11-09)
+
+
+### Features
+
+* **US 83:** choisir l'espèce visée sur l'écran Conseil ([92dc150](https://github.com/yalinde20/Leurio/commit/92dc150cdaba6f69f751cb15ce1f5c0d48db8ef3))
+
+
+### Bug Fixes
+
+* **US 83:** l'avertissement hors heures légales résiste au choix d'une espèce ([4dd7afc](https://github.com/yalinde20/Leurio/commit/4dd7afc67c8b00b00d24252e9148c8c8199eb5fc))
+
 ## [1.34.0](https://github.com/yalinde20/Leurio/compare/v1.33.0...v1.34.0) (2026-11-09)
 
 
