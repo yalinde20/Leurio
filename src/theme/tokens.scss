@@ -23,6 +23,7 @@
   --lr-graphique-1: #0e6b5c;
   --lr-graphique-2: #e8590c;
   --lr-graphique-grille: #d9d0be;
+  --lr-voile: rgb(0 0 0 / 35%);
 }
 
 :root,
@@ -50,6 +51,7 @@ html[data-theme='clair'] {
   --lr-graphique-1: #5cc8b0;
   --lr-graphique-2: #ff8a3d;
   --lr-graphique-grille: #2b3b36;
+  --lr-voile: rgb(0 0 0 / 60%);
 }
 
 @media (prefers-color-scheme: dark) {
