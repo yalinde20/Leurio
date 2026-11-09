@@ -13,6 +13,10 @@ export function estimerTempEau(moyenneAirC: number): { tempEauC: number; source:
 /** Durée de validité, en heures, d'une température saisie au thermomètre (PLAN §8.2). */
 export const DUREE_MAX_SAISIE_H = 6;
 
+/** Bornes, en °C, d'une température saisie au thermomètre. */
+export const TEMP_SAISIE_MIN_C = 0;
+export const TEMP_SAISIE_MAX_C = 35;
+
 /** Température de l'eau mesurée par l'utilisateur au thermomètre, avec l'instant de la mesure (PLAN §8.2). */
 export interface SaisieTempEau {
   valeurC: number;

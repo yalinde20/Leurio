@@ -107,16 +107,20 @@ interface Reglages {
   /** Source de l'eau quand la mesure n'est pas utilisée. */
   sansMesure?: 'capteur' | 'estimation' | 'inconnue';
   maintenant?: Date;
+  /** Le stockage refuse d'écrire : `ecrire` ne garde rien et `lire` rend toujours `null`. */
+  stockageInaccessible?: boolean;
 }
 
-async function configurer({ deja, vraiStore = false, sansMesure = 'capteur', maintenant = MAINTENANT }: Reglages = {}) {
+async function configurer({ deja, vraiStore = false, sansMesure = 'capteur', maintenant = MAINTENANT, stockageInaccessible = false }: Reglages = {}) {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(maintenant);
   const appelsReleve: DemandeConditions[] = [];
   const appelsMoteur: { conditions: Conditions; moment: Date }[] = [];
   const ecritures: SaisieTempEau[] = [];
   let gardee = deja ?? null;
-  const store = { lire: () => gardee, ecrire: (s: SaisieTempEau) => { ecritures.push(s); gardee = s; } };
+  const store = stockageInaccessible
+    ? { lire: () => null, ecrire: () => undefined }
+    : { lire: () => gardee, ecrire: (s: SaisieTempEau) => { ecritures.push(s); gardee = s; } };
   TestBed.resetTestingModule();
   await TestBed.configureTestingModule({
     imports: [ConseilPage],
@@ -413,6 +417,17 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     expect(env.page.querySelector('[role="alert"]')).toBeNull();
     expect(env.ecritures).toHaveLength(1);
     expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 9 °C"));
+  });
+
+  it("critère 2 : given le stockage du téléphone est inaccessible, when j'entre 9 et je touche « Valider », then la carte affiche 9 °C mesurée au thermomètre", async () => {
+    const env = await configurer({ stockageInaccessible: true });
+
+    await mesurer(env, '9');
+
+    const texte = texteCarte(env.page);
+    expect(texte).toContain(compact("Température de l'eau : 9 °C"));
+    expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
+    expect(env.appelsReleve.at(-1)?.saisieTempEau?.valeurC).toBe(9);
   });
 
   it("critère 3 : given le champ est affiché, when je touche « Annuler », then le champ se ferme sans rien enregistrer", async () => {

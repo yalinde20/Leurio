@@ -1,3 +1,4 @@
+import { TEMP_SAISIE_MAX_C, TEMP_SAISIE_MIN_C } from '../../core/engine/temperature-eau';
 import { TailleLeurre } from '../../core/engine/rules/regle';
 
 const INSECABLE = String.fromCharCode(0xa0);
@@ -18,9 +19,6 @@ export function libelleTaille(taille: TailleLeurre): string {
 export function formaterTaille(taille: TailleLeurre): string {
   return `${nombre.format(taille.valeur)}${INSECABLE}${taille.unite}`;
 }
-
-export const TEMP_SAISIE_MIN_C = 0;
-export const TEMP_SAISIE_MAX_C = 35;
 
 /** Lit une température saisie (virgule ou point) ; `null` si vide, non numérique ou hors de 0 à 35 °C. */
 export function lireTempSaisie(texte: string): number | null {

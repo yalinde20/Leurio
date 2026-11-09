@@ -32,11 +32,12 @@ describe('lireTempSaisie', () => {
     ['0', 0],
     ['35', 35],
     ['-0', 0],
+    ['+9', 9],
   ])('given « %s », then %s', (texte, attendu) => {
     expect(lireTempSaisie(texte)).toBe(attendu);
   });
 
-  it.each([[''], ['   '], ['abc'], ['12abc'], ['1,2,3'], ['-0,5'], ['35,1'], ['42'], ['Infinity'], ['1e1']])(
+  it.each([[''], ['   '], ['abc'], ['12abc'], ['1,2,3'], ['-0,5'], ['35,1'], ['42'], ['Infinity'], ['1e1'], ['0x10'], ['12.'], [',5']])(
     'given « %s », then null',
     (texte) => {
       expect(lireTempSaisie(texte)).toBeNull();

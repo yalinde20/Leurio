@@ -6,6 +6,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
+import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
@@ -430,6 +431,8 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                         id="temp-mesuree"
                         class="champ"
                         [class.invalide]="saisieInvalide()"
+                        [attr.aria-invalid]="saisieInvalide() ? 'true' : null"
+                        [attr.aria-describedby]="saisieInvalide() ? 'erreur-temp-mesuree' : null"
                         type="text"
                         inputmode="decimal"
                         placeholder="Ex. : 12,5"
@@ -438,7 +441,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                         (input)="brouillonTemp.set(champTemp.value)"
                       />
                       @if (saisieInvalide()) {
-                        <p class="erreur" role="alert">Entre une température entre 0 et 35 °C.</p>
+                        <p id="erreur-temp-mesuree" class="erreur" role="alert">Entre une température entre 0 et 35 °C.</p>
                       }
                       <div class="actions">
                         <button type="button" class="annuler" (click)="fermerSaisie()">Annuler</button>
@@ -446,7 +449,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                       </div>
                     </div>
                   } @else {
-                    <button type="button" class="bouton-mesure" (click)="ouvrirSaisie()">
+                    <button #boutonMesure type="button" class="bouton-mesure" (click)="ouvrirSaisie()">
                       J'ai mesuré l'eau
                     </button>
                   }
@@ -598,9 +601,22 @@ export class ConseilPage implements OnInit {
   protected readonly brouillonTemp = signal('');
   private readonly champTemp = viewChild<ElementRef<HTMLInputElement>>('champTemp');
 
+  private readonly boutonMesure = viewChild<ElementRef<HTMLButtonElement>>('boutonMesure');
+  /** La dernière mesure validée, gardée en mémoire : elle compte même si le stockage du téléphone la refuse. */
+  private saisieMemoire: SaisieTempEau | null = null;
+  private focusSurBouton = false;
+
   constructor() {
     // Le focus entre dans le champ dès qu'il s'ouvre.
     effect(() => this.champTemp()?.nativeElement.focus());
+    // Et revient au bouton « J'ai mesuré l'eau » quand la saisie se ferme par Annuler ou Valider.
+    effect(() => {
+      const bouton = this.boutonMesure();
+      if (bouton && this.focusSurBouton) {
+        this.focusSurBouton = false;
+        bouton.nativeElement.focus();
+      }
+    });
   }
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
@@ -729,8 +745,14 @@ export class ConseilPage implements OnInit {
   }
 
   protected fermerSaisie(): void {
+    this.focusSurBouton = true;
+    this.fermerSaisieSansFocus();
+  }
+
+  private fermerSaisieSansFocus(): void {
     this.saisieOuverte.set(false);
     this.saisieInvalide.set(false);
+    this.brouillonTemp.set('');
   }
 
   /** Une température valide est gardée, puis le moment affiché est recalculé avec elle. */
@@ -741,7 +763,9 @@ export class ConseilPage implements OnInit {
       return;
     }
     const maintenant = new Date();
-    this.saisieTempEau.ecrire({ valeurC, mesureeA: maintenant });
+    const saisie = { valeurC, mesureeA: maintenant };
+    this.saisieMemoire = saisie;
+    this.saisieTempEau.ecrire(saisie);
     this.fermerSaisie();
     const choisi = this.moment();
     void this.chargerMoment(choisi?.date ?? maintenant, choisi);
@@ -788,6 +812,7 @@ export class ConseilPage implements OnInit {
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
     this.relancable = null;
+    this.fermerSaisieSansFocus();
     void this.chargerEspeces();
     this.moment.set(choisi);
     this.etat.set({ type: 'chargement' });
@@ -795,7 +820,7 @@ export class ConseilPage implements OnInit {
     const releve = await this.conditions.releve({
       lieu,
       moment,
-      saisieTempEau: this.saisieTempEau.lire() ?? undefined,
+      saisieTempEau: this.saisieMemoire ?? this.saisieTempEau.lire() ?? undefined,
     });
     if (perime()) return;
     const heures = heuresLegales(this.astro.soleil(lieu, moment));

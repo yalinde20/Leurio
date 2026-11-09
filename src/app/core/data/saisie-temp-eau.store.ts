@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SaisieTempEau } from '../engine/temperature-eau';
+import { SaisieTempEau, TEMP_SAISIE_MAX_C, TEMP_SAISIE_MIN_C } from '../engine/temperature-eau';
 
 const CLE = 'leurio.saisieTempEau';
 
@@ -14,7 +14,7 @@ export class SaisieTempEauStore {
       const donnees: unknown = JSON.parse(brut);
       if (typeof donnees !== 'object' || donnees === null) return null;
       const { valeurC, mesureeA } = donnees as Record<string, unknown>;
-      if (typeof valeurC !== 'number' || !Number.isFinite(valeurC) || typeof mesureeA !== 'string') return null;
+      if (typeof valeurC !== 'number' || !Number.isFinite(valeurC) || valeurC < TEMP_SAISIE_MIN_C || valeurC > TEMP_SAISIE_MAX_C || typeof mesureeA !== 'string') return null;
       const date = new Date(mesureeA);
       return Number.isNaN(date.getTime()) ? null : { valeurC, mesureeA: date };
     } catch {
@@ -22,7 +22,7 @@ export class SaisieTempEauStore {
     }
   }
 
-  /** Remplace la saisie gardée. Un stockage plein ou inaccessible est ignoré : la mesure n'est alors pas retenue. */
+  /** Remplace la saisie gardée. Un stockage plein ou inaccessible est ignoré : la page garde la mesure en mémoire, mais elle ne survit pas à la fermeture de l'app. */
   ecrire(saisie: SaisieTempEau): void {
     try {
       localStorage.setItem(CLE, JSON.stringify({ valeurC: saisie.valeurC, mesureeA: saisie.mesureeA.toISOString() }));
