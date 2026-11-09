@@ -360,10 +360,9 @@ export class ConseilPage implements OnInit {
   protected readonly etat = signal<Etat>({ type: 'chargement' });
 
   protected readonly conseil = signal<EtatConseil>({ type: 'calcul' });
-  private readonly heures = signal('');
-
   protected heuresDuJour(): string {
-    return this.heures();
+    const etat = this.conseil();
+    return etat.type === 'hors heures' ? etat.heures : '';
   }
 
   protected moinsPrecis(): boolean {
@@ -407,7 +406,6 @@ export class ConseilPage implements OnInit {
       },
     });
     if (heures && !dansHeuresLegales(maintenant, heures)) {
-      this.heures.set(texteHeures);
       this.conseil.set({ type: 'hors heures', heures: texteHeures });
       return;
     }
