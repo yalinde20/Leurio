@@ -432,6 +432,7 @@ export class ConseilPage implements OnInit {
   private horsHeures = false;
   /** Numéro du dernier calcul demandé : un résultat plus ancien est jeté. */
   private calcul = 0;
+  private especes: Espece[] = [];
 
   protected nomEspece(): string {
     return this.espece()?.nom ?? TOUTES;
@@ -468,8 +469,6 @@ export class ConseilPage implements OnInit {
     this.espece.set(choisie);
     if (this.releve && !this.horsHeures) void this.chargerConseil(this.releve, this.moment);
   }
-
-  private especes: Espece[] = [];
   protected heuresDuJour(): string {
     const etat = this.conseil();
     return etat.type === 'hors heures' ? etat.heures : '';
@@ -504,9 +503,14 @@ export class ConseilPage implements OnInit {
     const lieu = { latitude: position.latitude, longitude: position.longitude };
     const maintenant = new Date();
     const releve = await this.conditions.releve({ lieu, moment: maintenant });
-    this.releve = releve;
-    this.moment = maintenant;
     const heures = heuresLegales(this.astro.soleil(lieu, maintenant));
+    // La décision des heures légales précède tout ce que le choix d'une espèce peut déclencher.
+    const horsHeures = heures !== null && !dansHeuresLegales(maintenant, heures);
+    this.horsHeures = horsHeures;
+    if (!horsHeures) {
+      this.releve = releve;
+      this.moment = maintenant;
+    }
     const federation = await this.catalogue.federation(releve.conditions.departement);
     const texteHeures = heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible';
     this.etat.set({
@@ -517,8 +521,8 @@ export class ConseilPage implements OnInit {
         date: maintenant,
       },
     });
-    if (heures && !dansHeuresLegales(maintenant, heures)) {
-      this.horsHeures = true;
+    if (horsHeures) {
+      this.calcul++;
       this.conseil.set({ type: 'hors heures', heures: texteHeures });
       return;
     }

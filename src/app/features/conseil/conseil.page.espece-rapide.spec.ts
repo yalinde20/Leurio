@@ -23,9 +23,10 @@ const resultat = (typeId: string): ResultatConseil => ({
   explications: [],
 });
 
-async function afficher() {
+async function afficher(nuit = false, federation: Promise<undefined> = Promise.resolve(undefined)) {
   vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date('2026-11-09T12:00:00Z'));
+  vi.setSystemTime(new Date(nuit ? '2026-11-09T23:00:00Z' : '2026-11-09T12:00:00Z'));
+  const appels: (string | undefined)[] = [];
   const attentes = new Map<string, (r: ResultatConseil) => void>();
   await TestBed.configureTestingModule({
     imports: [ConseilPage],
@@ -33,7 +34,7 @@ async function afficher() {
       provideIonicAngular(),
       { provide: PositionService, useValue: { positionGps: async () => ({ disponible: true, source: 'gps', latitude: 47, longitude: -0.5, precisionM: 1, departement: '49' }) } },
       { provide: CatalogService, useValue: {
-        federation: async () => undefined,
+        federation: () => federation,
         typesDeLeurres: async () => [{ id: 'bro', nom: 'Pour brochet' }, { id: 'san', nom: 'Pour sandre' }, { id: 'tous', nom: 'Pour tous' }],
         animations: async () => [{ id: 't', nom: 'Anim' }],
         couleurs: async () => [{ id: 'c', nom: 'Coul' }],
@@ -46,7 +47,7 @@ async function afficher() {
       } },
       { provide: MoteurService, useValue: {
         conseiller: (c: Conditions) =>
-          c.especeCible === undefined
+          (appels.push(c.especeCible), c.especeCible) === undefined
             ? Promise.resolve(resultat('tous'))
             : new Promise<ResultatConseil>((fin) => attentes.set(c.especeCible!, fin)),
       } },
@@ -64,7 +65,7 @@ async function afficher() {
   const bouton = () => page.querySelector<HTMLElement>('button.selecteur')!;
   const ligne = (nom: string) =>
     [...page.querySelectorAll<HTMLElement>('[role="radio"]')].find((l) => l.textContent?.includes(nom))!;
-  return { page, attentes, stabiliser, bouton, ligne };
+  return { page, attentes, appels,  stabiliser, bouton, ligne };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -104,5 +105,24 @@ describe('ConseilPage : feuille « Espèce visée » (US 83)', () => {
 
     expect(env.page.querySelector('[role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(env.bouton());
+  });
+
+  it('given hors des heures légales, when je choisis une espèce (y compris pendant le chargement de la fédération), then l\'avertissement reste et le moteur n\'est pas appelé pour l\'espèce', async () => {
+    let fin!: () => void;
+    const env = await afficher(true, new Promise<undefined>((r) => (fin = () => r(undefined))));
+    env.bouton().click();
+    await env.stabiliser();
+    env.ligne('Sandre').click();
+    await env.stabiliser();
+    fin();
+    await env.stabiliser();
+    env.bouton().click();
+    await env.stabiliser();
+    env.ligne('Brochet').click();
+    await env.stabiliser();
+
+    expect(env.page.textContent).toContain('Hors des heures légales');
+    expect(env.page.textContent).not.toContain('Pour');
+    expect(env.appels).toEqual([]);
   });
 });
