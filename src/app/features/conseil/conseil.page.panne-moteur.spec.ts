@@ -94,7 +94,7 @@ async function afficher({ moteur, typesDeLeurres }: Pannes) {
 
 afterEach(() => vi.useRealTimers());
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s  ]/g, '');
+const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
 describe('ConseilPage : conseil indisponible (US 81, écart validé)', () => {
   const cas: [string, Pannes][] = [
