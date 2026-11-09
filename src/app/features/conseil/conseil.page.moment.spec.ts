@@ -81,10 +81,10 @@ const conditionsDe = (surcharge: Partial<Conditions>): Conditions => ({
   ...surcharge,
 });
 
-/** Les conditions « d'aujourd'hui » : eau 11,5 °C, vent 12 km/h. Celles de demain 7 h : eau 9,0 °C, vent 8 km/h. */
+/** Les conditions « d'aujourd'hui » : eau 11,5 °C, vent 12 km/h. Celles de demain 7 h : eau 9,2 °C, vent 8 km/h. */
 const RELEVE_MAINTENANT: ReleveActuel = { conditions: conditionsDe({}), pressionHpa: 1012, moinsPrecis: false };
 const RELEVE_DEMAIN_7H: ReleveActuel = {
-  conditions: conditionsDe({ tempEau: 9, vent: 8, nuages: 100 }),
+  conditions: conditionsDe({ tempEau: 9.2, vent: 8, nuages: 100 }),
   pressionHpa: 1016,
   moinsPrecis: false,
 };
@@ -306,7 +306,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
 
     const texte = compact(env.page.textContent);
     expect(texte).toContain(compact('Prévisions pour demain 7 h'));
-    expect(texte).toContain(compact("Température de l'eau : 9,0 °C"));
+    expect(texte).toContain(compact("Température de l'eau : 9,2 °C"));
     expect(texte).toContain(compact('Vent : 8 km/h'));
     expect(texte).not.toContain(compact("Température de l'eau : 11,5 °C"));
     expect(env.appelsReleve.at(-1)?.getTime()).toBe(DEMAIN_7H.getTime());
@@ -384,7 +384,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
       compact('Choisis un moment dans les 48 h à venir.'),
     );
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 7 h'));
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 9,0 °C"));
+    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 9,2 °C"));
     expect(env.appelsReleve).toHaveLength(appelsAvant);
   });
 
