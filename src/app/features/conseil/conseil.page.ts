@@ -1,7 +1,7 @@
 import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
-import { CatalogService, Federation } from '../../core/data/catalog.service';
+import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
@@ -19,6 +19,7 @@ import {
   formaterVent,
 } from './conditions-format';
 import { formaterTaille, libelleTaille, premierePhrase } from './conseil-format';
+import { ChoixEspece, EspeceFeuilleComponent } from './espece-feuille.component';
 import {
   JourMoment,
   jourEtHeure,
@@ -27,6 +28,7 @@ import {
   motDuJour,
 } from './moment-format';
 
+const TOUTES = 'Toutes les espèces';
 const UNE_HEURE_MS = 3600 * 1000;
 
 /** Le moment affiché ; `null` = « Maintenant ». Le libellé et la mention sont figés au choix. */
@@ -39,6 +41,13 @@ interface MomentChoisi {
 interface Lieu {
   latitude: number;
   longitude: number;
+}
+
+/** Ce que le choix d'une espèce relance : le relevé du moment affiché, tant que la pêche y est légale. */
+interface ConseilRelancable {
+  releve: ReleveActuel;
+  moment: Date;
+  limite: string | null;
 }
 
 /** Ce que la carte « Conditions » affiche, déjà formaté. */
@@ -82,9 +91,47 @@ type Etat =
 
 @Component({
   selector: 'app-conseil',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent, MomentFeuilleComponent],
+  imports: [
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    BandeauReglementationComponent,
+    MomentFeuilleComponent,
+    EspeceFeuilleComponent,
+  ],
   host: { class: 'ion-page' },
   styles: `
+    .selecteur {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      min-height: 48px;
+      margin: 0 0 12px;
+      padding: 8px 16px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 16px;
+      text-align: left;
+    }
+    .selecteur .lib {
+      display: block;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
+    .selecteur .val {
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .selecteur .chevron {
+      font-size: 22px;
+      color: var(--lr-primaire);
+    }
     .carte {
       background: var(--lr-surface);
       border: 1px solid var(--lr-bordure);
@@ -223,36 +270,6 @@ type Etat =
     .bouton-sortie[disabled] {
       opacity: 0.5;
     }
-    .selecteur {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      width: 100%;
-      min-height: 48px;
-      margin: 0 0 12px;
-      padding: 8px 16px;
-      border: 1px solid var(--lr-bordure);
-      border-radius: 12px;
-      background: var(--lr-surface);
-      color: var(--lr-texte);
-      font-family: inherit;
-      font-size: 16px;
-      text-align: left;
-    }
-    .selecteur .lib {
-      display: block;
-      font-size: 14px;
-      color: var(--lr-texte-secondaire);
-    }
-    .selecteur .val {
-      font-size: 17px;
-      font-weight: 700;
-    }
-    .selecteur .chevron {
-      font-size: 22px;
-      color: var(--lr-primaire);
-    }
     .lien-federation {
       display: flex;
       align-items: center;
@@ -281,6 +298,19 @@ type Etat =
         <span>
           <span class="lib">Moment</span>
           <span class="val">{{ libelleSelecteur() }}</span>
+        </span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
+      <button
+        #boutonEspece
+        type="button"
+        class="selecteur"
+        aria-haspopup="dialog"
+        (click)="ouvrirChoixEspece()"
+      >
+        <span>
+          <span class="lib">Espèce</span>
+          <span class="val">{{ nomEspece() }}</span>
         </span>
         <span class="chevron" aria-hidden="true">›</span>
       </button>
@@ -384,6 +414,11 @@ type Etat =
             @if (limiteLegale(); as limite) {
               <p class="message">{{ limite }}</p>
             }
+            @if (aucunConseil()) {
+              <section class="carte">
+                <p class="message">Aucun conseil pour cette espèce en ce moment.</p>
+              </section>
+            }
             @for (c of cartesConseil(); track c.rang) {
               <article class="carte conseil">
                 <div class="entete">
@@ -431,6 +466,14 @@ type Etat =
         (ferme)="fermerFeuille()"
       />
     }
+    @if (choixOuvert()) {
+      <app-espece-feuille
+        [choix]="choixEspeces()"
+        [choisie]="espece()?.code ?? null"
+        (choisir)="choisirEspece($event)"
+        (annuler)="fermerChoixEspece()"
+      />
+    }
   `,
 })
 export class ConseilPage implements OnInit {
@@ -454,9 +497,58 @@ export class ConseilPage implements OnInit {
   protected readonly jourBrouillon = signal<JourMoment>('aujourdhui');
   protected readonly heureBrouillon = signal(0);
 
+  /** L'espèce visée ; `null` pour « Toutes les espèces ». Gardée tant que la page vit, jamais mémorisée. */
+  protected readonly espece = signal<Espece | null>(null);
+  protected readonly choixOuvert = signal(false);
+  protected readonly choixEspeces = signal<ChoixEspece[]>([]);
+  private readonly bouton = viewChild.required<ElementRef<HTMLElement>>('boutonEspece');
+  private especes: Espece[] = [];
+
   private lieu: Lieu | null = null;
-  /** Numéro du dernier calcul demandé : un résultat plus ancien est ignoré. */
+  /**
+   * Le relevé du moment affiché, une fois la pêche reconnue légale : changer d'espèce ne relit pas les conditions.
+   * `null` hors des heures légales et tant que le moment se charge : une espèce choisie alors ne lance aucun calcul.
+   */
+  private relancable: ConseilRelancable | null = null;
+  /** Numéro du dernier calcul demandé (moment ou espèce) : un résultat plus ancien est ignoré. */
   private calcul = 0;
+
+  protected nomEspece(): string {
+    return this.espece()?.nom ?? TOUTES;
+  }
+
+  protected aucunConseil(): boolean {
+    return this.espece() !== null && this.cartesConseil().length === 0;
+  }
+
+  protected async ouvrirChoixEspece(): Promise<void> {
+    let especes: Espece[] = [];
+    try {
+      especes = await this.catalogue.especes();
+    } catch {
+      // Sans contenu, la liste ne propose que « Toutes les espèces ».
+    }
+    this.choixEspeces.set([
+      { code: null, nom: TOUTES },
+      ...especes.map((e) => ({ code: e.code, nom: e.nom })),
+    ]);
+    this.choixOuvert.set(true);
+    this.especes = especes;
+  }
+
+  protected fermerChoixEspece(): void {
+    this.choixOuvert.set(false);
+    this.bouton().nativeElement.focus();
+  }
+
+  protected choisirEspece(code: string | null): void {
+    const choisie = code === null ? null : (this.especes.find((e) => e.code === code) ?? null);
+    this.fermerChoixEspece();
+    if ((choisie?.code ?? null) === (this.espece()?.code ?? null)) return;
+    this.espece.set(choisie);
+    const courant = this.relancable;
+    if (courant) void this.chargerConseil(courant.releve, courant.moment, courant.limite);
+  }
 
   protected heuresDuJour(): string {
     const etat = this.conseil();
@@ -540,6 +632,7 @@ export class ConseilPage implements OnInit {
     if (!lieu) return;
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
+    this.relancable = null;
     this.moment.set(choisi);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
@@ -567,7 +660,8 @@ export class ConseilPage implements OnInit {
       return;
     }
     const limite = choisi && heures ? this.limiteDansLHeure(moment, heures) : null;
-    await this.chargerConseil(releve, moment, limite, perime);
+    this.relancable = { releve, moment, limite };
+    await this.chargerConseil(releve, moment, limite);
   }
 
   /**
@@ -597,11 +691,17 @@ export class ConseilPage implements OnInit {
     releve: ReleveActuel,
     moment: Date,
     limite: string | null,
-    perime: () => boolean,
   ): Promise<void> {
+    const numero = ++this.calcul;
+    const perime = () => numero !== this.calcul;
+    const cible = this.espece();
+    const conditions = { ...releve.conditions };
+    delete conditions.especeCible;
+    if (cible) conditions.especeCible = cible.code;
+    this.conseil.set({ type: 'calcul' });
     try {
       const [resultat, types, animations, couleurs] = await Promise.all([
-        this.moteur.conseiller(releve.conditions, moment),
+        this.moteur.conseiller(conditions, moment),
         this.catalogue.typesDeLeurres(),
         this.catalogue.animations(),
         this.catalogue.couleurs(),
