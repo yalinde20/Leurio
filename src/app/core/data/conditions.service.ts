@@ -71,16 +71,16 @@ async function ouNull<T>(source: Promise<T>): Promise<T | null> {
   }
 }
 
-/**
- * Assemble en un seul relevé `Conditions` la météo, l'eau, le moment de la journée, le département,
- * la saison, la catégorie, l'espèce visée et le niveau (PLAN §4, §8.1).
- */
 /** Le moment est-il après l'heure en cours ? Les moments passés ou de l'heure courante sont des relevés. */
 function estDansLeFutur(moment: Date): boolean {
   const debutHeureSuivante = (Math.floor(Date.now() / 3600000) + 1) * 3600000;
   return moment.getTime() >= debutHeureSuivante;
 }
 
+/**
+ * Assemble en un seul relevé `Conditions` la météo, l'eau, le moment de la journée, le département,
+ * la saison, la catégorie, l'espèce visée et le niveau (PLAN §4, §8.1).
+ */
 @Injectable({ providedIn: 'root' })
 export class ConditionsService {
   private readonly temperatureEau = inject(TemperatureEauService);
