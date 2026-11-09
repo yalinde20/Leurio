@@ -25,4 +25,13 @@ describe('composerReglementation', () => {
     ]);
     expect(lignes[1].alerte).toBe(true);
   });
+
+  it("given une espèce dont la fiche porte fermetureNationale2e pendant la fermeture du brochet, when on compose, then aucune alerte « probablement fermé » (sans le drapeau, l'alerte reste)", () => {
+    const date = new Date(2026, 1, 10);
+    const alertes = (espece: Parameters<typeof composerReglementation>[1]) =>
+      composerReglementation(2, null, date, [espece!]).filter((l) => l.alerte);
+
+    expect(alertes({ ...sandre, nom: 'Autre', fermetureNationale2e: true })).toEqual([]);
+    expect(alertes({ ...sandre, nom: 'Autre', fermetureNationale2e: false })).toHaveLength(1);
+  });
 });

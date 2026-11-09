@@ -48,15 +48,14 @@ function libelleQuota2e(): string {
   return q ? libelleQuota(q) : '';
 }
 
-type EspeceReglementee = Pick<Espece, 'nom' | 'tailleMinCm' | 'fermetureAvecBrochet' | 'verifDepartementPrintemps'>;
-
-/** Le brochet est fermé lui-même : la ligne de fermeture le dit, pas d'alerte « probablement fermé » en plus. */
-const NOM_BROCHET = 'Brochet';
+type EspeceReglementee = Pick<Espece, 'nom' | 'tailleMinCm' | 'fermetureAvecBrochet' | 'verifDepartementPrintemps'> &
+  Partial<Pick<Espece, 'fermetureNationale2e'>>;
 
 /** « Sandre probablement fermé, vérifie » ou « Black-bass : vérifie ton département » ; `null` sans avertissement. */
 function alerteEspece(espece: EspeceReglementee, date: Date): LigneReglementation | null {
   const avertissement = avertissementEspece(espece, date);
-  if (!avertissement || (espece.nom === NOM_BROCHET && avertissement === 'probablement-ferme')) return null;
+  // Une espèce dont la fermeture est la règle nationale de 2e catégorie est déjà couverte par la ligne de fermeture.
+  if (!avertissement || (espece.fermetureNationale2e && avertissement === 'probablement-ferme')) return null;
   const separateur = avertissement === 'probablement-ferme' ? ' ' : ' : ';
   return {
     libelle: '',

@@ -94,6 +94,10 @@
       "verifDepartementPrintemps": {
         "type": "boolean"
       },
+      "fermetureNationale2e": {
+        "type": "boolean",
+        "description": "Vrai quand la fermeture de l'espèce est la règle nationale de la 2e catégorie, déjà affichée par la ligne de fermeture du bandeau : pas d'avertissement « probablement fermé » en plus."
+      },
       "sources": {
         "type": "array",
         "minItems": 1,

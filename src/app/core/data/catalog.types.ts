@@ -21,6 +21,8 @@ export interface Espece extends Fiche {
   fermetureSpecifique?: string | null;
   /** Fermeture possible au printemps selon le département : avertir « vérifie ton département » du 1er mars au 31 mai (PLAN §6). */
   verifDepartementPrintemps: boolean;
+  /** Sa fermeture est la règle nationale de 2e catégorie, déjà affichée par la ligne de fermeture du bandeau (pas d'avertissement « probablement fermé »). */
+  fermetureNationale2e?: boolean;
 }
 
 /** Le schéma des types de leurres est ouvert : d'autres champs de contenu sont permis. */

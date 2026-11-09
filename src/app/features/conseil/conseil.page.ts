@@ -91,6 +91,9 @@ type Etat =
   | { type: 'position introuvable' }
   | { type: 'pret'; carte: CarteConditions };
 
+/** Une explication du moteur finit par un point, comme les phrases du pourquoi. */
+const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phrase : `${phrase}.`);
+
 @Component({
   selector: 'app-conseil',
   imports: [
@@ -736,7 +739,7 @@ export class ConseilPage implements OnInit {
           ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille) }
           : null,
         tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible) : null,
-        pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? [])].filter(Boolean).join(' '),
+        pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? []).map(finirParUnPoint)].filter(Boolean).join(' '),
       }));
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {
