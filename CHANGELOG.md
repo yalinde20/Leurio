@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.34.0](https://github.com/yalinde20/Leurio/compare/v1.33.0...v1.34.0) (2026-11-09)
+
+
+### Features
+
+* **US 82:** choisir le moment du conseil dans les 48 h à venir ([bf91043](https://github.com/yalinde20/Leurio/commit/bf9104342734e8f813167a353986b89495b48a9b))
+* **US 82:** dire où commence ou finit la pêche légale dans l'heure choisie ([b7fe1f5](https://github.com/yalinde20/Leurio/commit/b7fe1f5db0ed2c2db0e5507cc79afca25ebfc386))
+
+
+### Bug Fixes
+
+* **US 82:** cache des conditions, sélecteur inactif sans position, feuille accessible ([b07b2ac](https://github.com/yalinde20/Leurio/commit/b07b2ac220157aebc1c2dd5b2475989ab129dd47))
+
 ## [1.33.0](https://github.com/yalinde20/Leurio/compare/v1.32.0...v1.33.0) (2026-11-08)
 
 
