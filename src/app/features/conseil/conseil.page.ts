@@ -1,15 +1,17 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
-import { dansHeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
+import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
+import { MomentFeuilleComponent } from './moment-feuille.component';
 import {
   formaterCiel,
   formaterDebit,
+  formaterHeure,
   formaterHeuresLegales,
   formaterPression,
   formaterSourceTempEau,
@@ -17,10 +19,32 @@ import {
   formaterVent,
 } from './conditions-format';
 import { formaterTaille, libelleTaille, premierePhrase } from './conseil-format';
+import {
+  JourMoment,
+  jourEtHeure,
+  libelleMoment,
+  mentionMoment,
+  motDuJour,
+} from './moment-format';
+
+const UNE_HEURE_MS = 3600 * 1000;
+
+/** Le moment affiché ; `null` = « Maintenant ». Le libellé et la mention sont figés au choix. */
+interface MomentChoisi {
+  date: Date;
+  libelle: string;
+  mention: string;
+}
+
+interface Lieu {
+  latitude: number;
+  longitude: number;
+}
 
 /** Ce que la carte « Conditions » affiche, déjà formaté. */
 interface CarteConditions {
   mention?: string;
+  prevision?: string;
   moinsPrecis: boolean;
   eau: string;
   eauInconnue: boolean;
@@ -47,8 +71,8 @@ interface CarteConseil {
 
 type EtatConseil =
   | { type: 'calcul' }
-  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean }
-  | { type: 'hors heures'; heures: string }
+  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean; limite: string | null }
+  | { type: 'hors heures'; heures: string; jour: string }
   | { type: 'indisponible' };
 
 type Etat =
@@ -58,7 +82,7 @@ type Etat =
 
 @Component({
   selector: 'app-conseil',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent, MomentFeuilleComponent],
   host: { class: 'ion-page' },
   styles: `
     .carte {
@@ -199,6 +223,36 @@ type Etat =
     .bouton-sortie[disabled] {
       opacity: 0.5;
     }
+    .selecteur {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      min-height: 48px;
+      margin: 0 0 12px;
+      padding: 8px 16px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 16px;
+      text-align: left;
+    }
+    .selecteur .lib {
+      display: block;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
+    .selecteur .val {
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .selecteur .chevron {
+      font-size: 22px;
+      color: var(--lr-primaire);
+    }
     .lien-federation {
       display: flex;
       align-items: center;
@@ -216,6 +270,20 @@ type Etat =
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <button
+        #selecteur
+        type="button"
+        class="selecteur"
+        aria-haspopup="dialog"
+        [disabled]="!lieuPret()"
+        (click)="ouvrirFeuille()"
+      >
+        <span>
+          <span class="lib">Moment</span>
+          <span class="val">{{ libelleSelecteur() }}</span>
+        </span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
       <section class="carte">
         <h2>Conditions</h2>
         @switch (etat().type) {
@@ -231,6 +299,9 @@ type Etat =
             @if (carte(); as c) {
               @if (c.moinsPrecis) {
                 <p><span class="badge">Moins précis</span></p>
+              }
+              @if (c.prevision) {
+                <p class="mention">{{ c.prevision }}</p>
               }
               @if (c.mention) {
                 <p class="mention">{{ c.mention }}</p>
@@ -303,12 +374,15 @@ type Etat =
           @case ('hors heures') {
             <section class="carte avertissement">
               <p class="alerte">Hors des heures légales : pas de pêche aux carnassiers la nuit.</p>
-              <p class="message">Heures légales aujourd'hui : {{ heuresDuJour() }}</p>
+              <p class="message">Heures légales {{ jourHeuresLegales() }} : {{ heuresDuJour() }}</p>
             </section>
           }
           @default {
             @if (moinsPrecis()) {
               <p><span class="badge">Conseil moins précis</span></p>
+            }
+            @if (limiteLegale(); as limite) {
+              <p class="message">{{ limite }}</p>
             }
             @for (c of cartesConseil(); track c.rang) {
               <article class="carte conseil">
@@ -348,6 +422,15 @@ type Etat =
       }
       <button type="button" class="bouton-sortie" disabled>Préparer ma sortie</button>
     </ion-content>
+    @if (feuilleOuverte()) {
+      <app-moment-feuille
+        [jourInitial]="jourBrouillon()"
+        [heureInitiale]="heureBrouillon()"
+        (maintenant)="choisirMaintenant()"
+        (valide)="appliquerMoment($event)"
+        (ferme)="fermerFeuille()"
+      />
+    }
   `,
 })
 export class ConseilPage implements OnInit {
@@ -360,14 +443,39 @@ export class ConseilPage implements OnInit {
   protected readonly etat = signal<Etat>({ type: 'chargement' });
 
   protected readonly conseil = signal<EtatConseil>({ type: 'calcul' });
+
+  private readonly selecteur = viewChild<ElementRef<HTMLButtonElement>>('selecteur');
+  /** Vrai dès que la position est connue : avant, un moment choisi n'aurait aucun lieu où s'appliquer. */
+  protected readonly lieuPret = signal(false);
+  /** Le moment choisi ; `null` = « Maintenant ». État du composant, jamais mémorisé. */
+  private readonly moment = signal<MomentChoisi | null>(null);
+  protected readonly libelleSelecteur = computed(() => this.moment()?.libelle ?? 'Maintenant');
+  protected readonly feuilleOuverte = signal(false);
+  protected readonly jourBrouillon = signal<JourMoment>('aujourdhui');
+  protected readonly heureBrouillon = signal(0);
+
+  private lieu: Lieu | null = null;
+  /** Numéro du dernier calcul demandé : un résultat plus ancien est ignoré. */
+  private calcul = 0;
+
   protected heuresDuJour(): string {
     const etat = this.conseil();
     return etat.type === 'hors heures' ? etat.heures : '';
   }
 
+  protected jourHeuresLegales(): string {
+    const etat = this.conseil();
+    return etat.type === 'hors heures' ? etat.jour : '';
+  }
+
   protected moinsPrecis(): boolean {
     const etat = this.conseil();
     return etat.type === 'cartes' && etat.moinsPrecis;
+  }
+
+  protected limiteLegale(): string | null {
+    const etat = this.conseil();
+    return etat.type === 'cartes' ? etat.limite : null;
   }
 
   protected cartesConseil(): CarteConseil[] {
@@ -384,36 +492,113 @@ export class ConseilPage implements OnInit {
     void this.charger();
   }
 
-  /** Lieu = position GPS, moment = maintenant. */
+  protected ouvrirFeuille(): void {
+    const maintenant = new Date();
+    const courant = jourEtHeure(this.moment()?.date ?? maintenant, maintenant);
+    this.jourBrouillon.set(courant?.jour ?? 'aujourdhui');
+    this.heureBrouillon.set(courant?.heure ?? 0);
+    this.feuilleOuverte.set(true);
+  }
+
+  /** Ferme la feuille et rend le focus au sélecteur. */
+  protected fermerFeuille(): void {
+    this.feuilleOuverte.set(false);
+    this.selecteur()?.nativeElement.focus();
+  }
+
+  protected choisirMaintenant(): void {
+    this.fermerFeuille();
+    void this.chargerMoment(new Date(), null);
+  }
+
+  /** Le moment a déjà été validé (strictement futur, dans les 48 h) par la feuille. */
+  protected appliquerMoment(date: Date): void {
+    const maintenant = new Date();
+    this.fermerFeuille();
+    void this.chargerMoment(date, {
+      date,
+      libelle: libelleMoment(date, maintenant),
+      mention: mentionMoment(date, maintenant),
+    });
+  }
+
+  /** Lieu = position GPS (demandée une seule fois), moment = maintenant. */
   private async charger(): Promise<void> {
     const position = await this.position.positionGps();
     if (!position.disponible) {
       this.etat.set({ type: 'position introuvable' });
       return;
     }
-    const lieu = { latitude: position.latitude, longitude: position.longitude };
-    const maintenant = new Date();
-    const releve = await this.conditions.releve({ lieu, moment: maintenant });
-    const heures = heuresLegales(this.astro.soleil(lieu, maintenant));
+    this.lieuPret.set(true);
+    this.lieu = { latitude: position.latitude, longitude: position.longitude };
+    await this.chargerMoment(new Date(), null);
+  }
+
+  /** Recalcule conditions, heures légales et top 3 pour ce moment. Un choix plus récent l'emporte. */
+  private async chargerMoment(moment: Date, choisi: MomentChoisi | null): Promise<void> {
+    const lieu = this.lieu;
+    if (!lieu) return;
+    const numero = ++this.calcul;
+    const perime = () => numero !== this.calcul;
+    this.moment.set(choisi);
+    this.etat.set({ type: 'chargement' });
+    this.conseil.set({ type: 'calcul' });
+    const releve = await this.conditions.releve({ lieu, moment });
+    if (perime()) return;
+    const heures = heuresLegales(this.astro.soleil(lieu, moment));
     const federation = await this.catalogue.federation(releve.conditions.departement);
+    if (perime()) return;
     const texteHeures = heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible';
     this.etat.set({
       type: 'pret',
       carte: {
-        ...this.composer(releve, this.astro.lune(maintenant, lieu).phase, texteHeures),
+        ...this.composer(releve, this.astro.lune(moment, lieu).phase, texteHeures),
+        prevision: choisi ? `Prévisions pour ${choisi.mention}` : undefined,
         federation,
-        date: maintenant,
+        date: moment,
       },
     });
-    if (heures && !dansHeuresLegales(maintenant, heures)) {
-      this.conseil.set({ type: 'hors heures', heures: texteHeures });
+    if (heures && !this.pecheLegale(moment, heures, choisi !== null)) {
+      this.conseil.set({
+        type: 'hors heures',
+        heures: texteHeures,
+        jour: choisi ? motDuJour(moment, new Date()) : "aujourd'hui",
+      });
       return;
     }
-    await this.chargerConseil(releve, maintenant);
+    const limite = choisi && heures ? this.limiteDansLHeure(moment, heures) : null;
+    await this.chargerConseil(releve, moment, limite, perime);
+  }
+
+  /**
+   * Un moment choisi vaut pour toute son heure (choix « à l'heure près ») : « demain 7 h » est légal dès que
+   * l'heure 7 h – 8 h touche les heures légales (7 h 02 – 18 h 31). « Maintenant » reste exact à la minute.
+   */
+  private pecheLegale(moment: Date, heures: HeuresLegales, heureEntiere: boolean): boolean {
+    if (dansHeuresLegales(moment, heures)) return true;
+    return heureEntiere && dansHeuresLegales(new Date(moment.getTime() + UNE_HEURE_MS - 1), heures);
+  }
+
+  /** Pour un moment choisi : « Pêche légale à partir de 7 h 02 » ou « … jusqu'à 18 h 31 » quand une borne tombe dans son heure. */
+  private limiteDansLHeure(moment: Date, heures: HeuresLegales): string | null {
+    const debutHeure = moment.getTime();
+    const finHeure = debutHeure + UNE_HEURE_MS;
+    if (heures.debut.getTime() > debutHeure && heures.debut.getTime() < finHeure) {
+      return `Pêche légale à partir de ${formaterHeure(heures.debut)}`;
+    }
+    if (heures.fin.getTime() >= debutHeure && heures.fin.getTime() < finHeure) {
+      return `Pêche légale jusqu'à ${formaterHeure(heures.fin)}`;
+    }
+    return null;
   }
 
   /** Le top 3 du moteur. Une panne du moteur ou du contenu n'abîme ni la carte « Conditions » ni le bandeau. */
-  private async chargerConseil(releve: ReleveActuel, moment: Date): Promise<void> {
+  private async chargerConseil(
+    releve: ReleveActuel,
+    moment: Date,
+    limite: string | null,
+    perime: () => boolean,
+  ): Promise<void> {
     try {
       const [resultat, types, animations, couleurs] = await Promise.all([
         this.moteur.conseiller(releve.conditions, moment),
@@ -421,6 +606,7 @@ export class ConseilPage implements OnInit {
         this.catalogue.animations(),
         this.catalogue.couleurs(),
       ]);
+      if (perime()) return;
       const cartes = resultat.conseils.map((c, i): CarteConseil => ({
         rang: i + 1,
         type: types.find((t) => t.id === c.typeId)?.nom ?? c.typeId,
@@ -431,9 +617,9 @@ export class ConseilPage implements OnInit {
           : null,
         pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
       }));
-      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis });
+      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {
-      this.conseil.set({ type: 'indisponible' });
+      if (!perime()) this.conseil.set({ type: 'indisponible' });
     }
   }
 
@@ -441,7 +627,7 @@ export class ConseilPage implements OnInit {
     releve: ReleveActuel,
     lune: string,
     heures: string,
-  ): Omit<CarteConditions, 'federation' | 'date'> {
+  ): Omit<CarteConditions, 'federation' | 'date' | 'prevision'> {
     const { conditions } = releve;
     return {
       mention: releve.mention,
