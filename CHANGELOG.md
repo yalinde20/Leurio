@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.36.0](https://github.com/yalinde20/Leurio/compare/v1.35.0...v1.36.0) (2026-11-09)
+
+
+### Features
+
+* **US 85:** saisie de la température mesurée au thermomètre ([4e83bd3](https://github.com/yalinde20/Leurio/commit/4e83bd3da1f5ac05caa74cdad7fa9125f5bd17dc))
+
+
+### Bug Fixes
+
+* **US 85:** garder la mesure validée en mémoire, focus et accessibilité de la saisie ([a17af89](https://github.com/yalinde20/Leurio/commit/a17af898059ef0e3c63c2dfdb7964352afd31061))
+
 ## [1.35.0](https://github.com/yalinde20/Leurio/compare/v1.34.0...v1.35.0) (2026-11-09)
 
 
