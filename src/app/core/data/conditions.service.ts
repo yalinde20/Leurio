@@ -75,6 +75,12 @@ async function ouNull<T>(source: Promise<T>): Promise<T | null> {
  * Assemble en un seul relevé `Conditions` la météo, l'eau, le moment de la journée, le département,
  * la saison, la catégorie, l'espèce visée et le niveau (PLAN §4, §8.1).
  */
+/** Le moment est-il après l'heure en cours ? Les moments passés ou de l'heure courante sont des relevés. */
+function estDansLeFutur(moment: Date): boolean {
+  const debutHeureSuivante = (Math.floor(Date.now() / 3600000) + 1) * 3600000;
+  return moment.getTime() >= debutHeureSuivante;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ConditionsService {
   private readonly temperatureEau = inject(TemperatureEauService);
@@ -135,7 +141,10 @@ export class ConditionsService {
     if (debit?.statut !== 'tendance') origine.debitAbsent = debit?.statut === 'aucune station' ? 'aucune station' : "Hub'Eau indisponible";
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
-      await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
+      // Une prévision d'un moment futur ne doit jamais devenir le « dernier relevé » servi à « maintenant ».
+      if (!estDansLeFutur(moment)) {
+        await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
+      }
       return { conditions, pressionHpa, moinsPrecis: false, ...origine };
     }
     if (enCache) {

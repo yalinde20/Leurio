@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Federation } from '../../core/data/catalog.service';
@@ -7,6 +7,7 @@ import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
+import { MomentFeuilleComponent } from './moment-feuille.component';
 import {
   formaterCiel,
   formaterDebit,
@@ -18,19 +19,14 @@ import {
 } from './conditions-format';
 import { formaterTaille, libelleTaille, premierePhrase } from './conseil-format';
 import {
-  HEURES_MOMENT,
-  JOURS_MOMENT,
   JourMoment,
   jourEtHeure,
   libelleMoment,
   mentionMoment,
-  momentDe,
-  momentValide,
   motDuJour,
 } from './moment-format';
 
 const UNE_HEURE_MS = 3600 * 1000;
-const MESSAGE_MOMENT_REFUSE = 'Choisis un moment dans les 48 h à venir.';
 
 /** Le moment affiché ; `null` = « Maintenant ». Le libellé et la mention sont figés au choix. */
 interface MomentChoisi {
@@ -85,7 +81,7 @@ type Etat =
 
 @Component({
   selector: 'app-conseil',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BandeauReglementationComponent, MomentFeuilleComponent],
   host: { class: 'ion-page' },
   styles: `
     .carte {
@@ -256,111 +252,6 @@ type Etat =
       font-size: 22px;
       color: var(--lr-primaire);
     }
-    .voile {
-      position: absolute;
-      inset: 0;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      background: var(--lr-voile);
-    }
-    .feuille {
-      max-height: 100%;
-      overflow-y: auto;
-      padding: 8px 16px 34px;
-      border-top: 1px solid var(--lr-bordure);
-      border-radius: 16px 16px 0 0;
-      background: var(--lr-surface);
-      color: var(--lr-texte);
-    }
-    .poignee {
-      width: 36px;
-      height: 5px;
-      margin: 0 auto 12px;
-      border-radius: 3px;
-      background: var(--lr-bordure);
-    }
-    .feuille h2 {
-      margin: 0 0 12px;
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .btn-sec,
-    .btn-prim {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-height: 48px;
-      border-radius: 12px;
-      font-size: 17px;
-      font-weight: 600;
-      font-family: inherit;
-    }
-    .btn-sec {
-      border: 1px solid var(--lr-primaire);
-      background: transparent;
-      color: var(--lr-primaire);
-    }
-    .btn-prim {
-      border: none;
-      background: var(--lr-primaire);
-      color: var(--lr-sur-primaire);
-    }
-    .lbl {
-      display: block;
-      margin: 16px 0 6px;
-      font-size: 15px;
-      font-weight: 600;
-    }
-    .segments {
-      display: flex;
-      overflow: hidden;
-      border: 1px solid var(--lr-bordure);
-      border-radius: 12px;
-    }
-    .segment {
-      flex: 1;
-      min-height: 48px;
-      border: none;
-      border-left: 1px solid var(--lr-bordure);
-      background: transparent;
-      color: var(--lr-texte);
-      font-family: inherit;
-      font-size: 15px;
-    }
-    .segment:first-child {
-      border-left: none;
-    }
-    .segment[aria-checked='true'] {
-      background: var(--lr-primaire);
-      color: var(--lr-sur-primaire);
-      font-weight: 700;
-    }
-    .heure {
-      width: 100%;
-      min-height: 48px;
-      padding: 0 16px;
-      border: 1px solid var(--lr-bordure);
-      border-radius: 12px;
-      background: var(--lr-surface);
-      color: var(--lr-texte);
-      font-family: inherit;
-      font-size: 17px;
-      font-weight: 600;
-    }
-    .erreur {
-      margin: 12px 0 0;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--lr-danger);
-    }
-    .actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-    }
     .lien-federation {
       display: flex;
       align-items: center;
@@ -378,7 +269,14 @@ type Etat =
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
-      <button type="button" class="selecteur" (click)="ouvrirFeuille()">
+      <button
+        #selecteur
+        type="button"
+        class="selecteur"
+        aria-haspopup="dialog"
+        [disabled]="!lieuPret()"
+        (click)="ouvrirFeuille()"
+      >
         <span>
           <span class="lib">Moment</span>
           <span class="val">{{ libelleSelecteur() }}</span>
@@ -521,44 +419,13 @@ type Etat =
       <button type="button" class="bouton-sortie" disabled>Préparer ma sortie</button>
     </ion-content>
     @if (feuilleOuverte()) {
-      <div class="voile">
-        <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-moment">
-          <div class="poignee"></div>
-          <h2 id="titre-moment">Moment du conseil</h2>
-          <button type="button" class="btn-sec" (click)="choisirMaintenant()">Maintenant</button>
-          <span class="lbl" id="lbl-jour">Jour</span>
-          <div class="segments" role="radiogroup" aria-labelledby="lbl-jour">
-            @for (j of jours; track j.id) {
-              <button
-                type="button"
-                role="radio"
-                class="segment"
-                [attr.aria-checked]="jourBrouillon() === j.id"
-                (click)="jourBrouillon.set(j.id)"
-              >
-                {{ j.libelle }}
-              </button>
-            }
-          </div>
-          <label class="lbl" for="heure-moment">Heure</label>
-          <select
-            id="heure-moment"
-            class="heure"
-            (change)="heureBrouillon.set(+$any($event.target).value)"
-          >
-            @for (h of heures; track h) {
-              <option [value]="h" [selected]="h === heureBrouillon()">{{ h }} h</option>
-            }
-          </select>
-          @if (erreurMoment()) {
-            <p class="erreur" role="alert">{{ erreurMoment() }}</p>
-          }
-          <div class="actions">
-            <button type="button" class="btn-sec" (click)="fermerFeuille()">Annuler</button>
-            <button type="button" class="btn-prim" (click)="validerMoment()">Valider</button>
-          </div>
-        </div>
-      </div>
+      <app-moment-feuille
+        [jourInitial]="jourBrouillon()"
+        [heureInitiale]="heureBrouillon()"
+        (maintenant)="choisirMaintenant()"
+        (valide)="appliquerMoment($event)"
+        (ferme)="fermerFeuille()"
+      />
     }
   `,
 })
@@ -573,15 +440,15 @@ export class ConseilPage implements OnInit {
 
   protected readonly conseil = signal<EtatConseil>({ type: 'calcul' });
 
-  protected readonly jours = JOURS_MOMENT;
-  protected readonly heures = HEURES_MOMENT;
+  private readonly selecteur = viewChild<ElementRef<HTMLButtonElement>>('selecteur');
+  /** Vrai dès que la position est connue : avant, un moment choisi n'aurait aucun lieu où s'appliquer. */
+  protected readonly lieuPret = signal(false);
   /** Le moment choisi ; `null` = « Maintenant ». État du composant, jamais mémorisé. */
   private readonly moment = signal<MomentChoisi | null>(null);
   protected readonly libelleSelecteur = computed(() => this.moment()?.libelle ?? 'Maintenant');
   protected readonly feuilleOuverte = signal(false);
   protected readonly jourBrouillon = signal<JourMoment>('aujourdhui');
   protected readonly heureBrouillon = signal(0);
-  protected readonly erreurMoment = signal<string | null>(null);
 
   private lieu: Lieu | null = null;
   /** Numéro du dernier calcul demandé : un résultat plus ancien est ignoré. */
@@ -621,13 +488,13 @@ export class ConseilPage implements OnInit {
     const courant = jourEtHeure(this.moment()?.date ?? maintenant, maintenant);
     this.jourBrouillon.set(courant?.jour ?? 'aujourdhui');
     this.heureBrouillon.set(courant?.heure ?? 0);
-    this.erreurMoment.set(null);
     this.feuilleOuverte.set(true);
   }
 
+  /** Ferme la feuille et rend le focus au sélecteur. */
   protected fermerFeuille(): void {
     this.feuilleOuverte.set(false);
-    this.erreurMoment.set(null);
+    this.selecteur()?.nativeElement.focus();
   }
 
   protected choisirMaintenant(): void {
@@ -635,13 +502,9 @@ export class ConseilPage implements OnInit {
     void this.chargerMoment(new Date(), null);
   }
 
-  protected validerMoment(): void {
+  /** Le moment a déjà été validé (strictement futur, dans les 48 h) par la feuille. */
+  protected appliquerMoment(date: Date): void {
     const maintenant = new Date();
-    const date = momentDe(this.jourBrouillon(), this.heureBrouillon(), maintenant);
-    if (!momentValide(date, maintenant)) {
-      this.erreurMoment.set(MESSAGE_MOMENT_REFUSE);
-      return;
-    }
     this.fermerFeuille();
     void this.chargerMoment(date, {
       date,
@@ -657,6 +520,7 @@ export class ConseilPage implements OnInit {
       this.etat.set({ type: 'position introuvable' });
       return;
     }
+    this.lieuPret.set(true);
     this.lieu = { latitude: position.latitude, longitude: position.longitude };
     await this.chargerMoment(new Date(), null);
   }
