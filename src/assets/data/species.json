@@ -32,6 +32,7 @@
     "fermetureAvecBrochet": true,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": true,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BRO = Esox lucius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -71,6 +72,7 @@
     "fermetureAvecBrochet": true,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SAN = Sander lucioperca ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -112,6 +114,7 @@
     "fermetureAvecBrochet": false,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : PER = Perca fluviatilis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -153,6 +156,7 @@
     "fermetureAvecBrochet": false,
     "fermetureSpecifique": "Fermeture pendant la fraie, au printemps, dans certains départements : vérifie l'arrêté de ton département",
     "verifDepartementPrintemps": true,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BBG = Micropterus salmoides ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -195,6 +199,7 @@
     "fermetureAvecBrochet": false,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : CHE = Squalius cephalus ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -234,6 +239,7 @@
     "fermetureAvecBrochet": false,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : ASP = Leuciscus aspius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",
@@ -275,6 +281,7 @@
     "fermetureAvecBrochet": false,
     "fermetureSpecifique": null,
     "verifDepartementPrintemps": false,
+    "fermetureNationale2e": false,
     "sources": [
       "Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SIL = Silurus glanis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l'US 41 (référentiel inaccessible depuis l'environnement de développement)",
       "Code de l'environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l'app",

@@ -3,11 +3,6 @@ import type { Espece, Federation } from '../../core/data/catalog.types';
 import type { Categorie } from '../../core/regulation/calendar';
 import { composerReglementation } from './bandeau-reglementation-format';
 
-const FEDERATION_NATIONALE = {
-  nom: 'Fédération nationale de la pêche en France',
-  url: 'https://www.federationpeche.fr',
-};
-
 /** Bandeau « Réglementation » de l'écran Conseil (US 80, PLAN §6) : tout est calculé en local, sans réseau. */
 @Component({
   selector: 'app-bandeau-reglementation',
@@ -90,9 +85,11 @@ const FEDERATION_NATIONALE = {
         }
         <div class="ligne">
           <span class="mention">À vérifier dans l'arrêté de ton département</span>
-          <a class="lien-federation" [href]="lien().url" target="_blank" rel="noopener">{{
-            lien().nom
-          }}</a>
+          @if (federation(); as f) {
+            <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener"
+              >Voir la fédération de ton département</a
+            >
+          }
         </div>
       </dl>
     </section>
@@ -101,16 +98,12 @@ const FEDERATION_NATIONALE = {
 export class BandeauReglementationComponent {
   readonly categorie = input<Categorie | null>(null);
   readonly espece = input<Espece | null>(null);
+  /** Les fiches du contenu : « Toutes les espèces » (`espece` nul) en tire les alertes de chaque espèce. */
+  readonly especes = input<readonly Espece[]>([]);
   readonly date = input<Date>(new Date());
   readonly federation = input<Federation | undefined>(undefined);
 
   protected readonly lignes = computed(() =>
-    composerReglementation(this.categorie(), this.espece(), this.date()),
+    composerReglementation(this.categorie(), this.espece(), this.date(), this.especes()),
   );
-  protected readonly lien = computed(() => {
-    const f = this.federation();
-    return f
-      ? { nom: 'Fédération de pêche de ton département', url: f.url }
-      : FEDERATION_NATIONALE;
-  });
 }
