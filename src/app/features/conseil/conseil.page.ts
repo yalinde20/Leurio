@@ -11,6 +11,7 @@ import { MomentFeuilleComponent } from './moment-feuille.component';
 import {
   formaterCiel,
   formaterDebit,
+  formaterHeure,
   formaterHeuresLegales,
   formaterPression,
   formaterSourceTempEau,
@@ -70,7 +71,7 @@ interface CarteConseil {
 
 type EtatConseil =
   | { type: 'calcul' }
-  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean }
+  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean; limite: string | null }
   | { type: 'hors heures'; heures: string; jour: string }
   | { type: 'indisponible' };
 
@@ -380,6 +381,9 @@ type Etat =
             @if (moinsPrecis()) {
               <p><span class="badge">Conseil moins précis</span></p>
             }
+            @if (limiteLegale(); as limite) {
+              <p class="message">{{ limite }}</p>
+            }
             @for (c of cartesConseil(); track c.rang) {
               <article class="carte conseil">
                 <div class="entete">
@@ -467,6 +471,11 @@ export class ConseilPage implements OnInit {
   protected moinsPrecis(): boolean {
     const etat = this.conseil();
     return etat.type === 'cartes' && etat.moinsPrecis;
+  }
+
+  protected limiteLegale(): string | null {
+    const etat = this.conseil();
+    return etat.type === 'cartes' ? etat.limite : null;
   }
 
   protected cartesConseil(): CarteConseil[] {
@@ -557,7 +566,8 @@ export class ConseilPage implements OnInit {
       });
       return;
     }
-    await this.chargerConseil(releve, moment, perime);
+    const limite = choisi && heures ? this.limiteDansLHeure(moment, heures) : null;
+    await this.chargerConseil(releve, moment, limite, perime);
   }
 
   /**
@@ -569,10 +579,24 @@ export class ConseilPage implements OnInit {
     return heureEntiere && dansHeuresLegales(new Date(moment.getTime() + UNE_HEURE_MS - 1), heures);
   }
 
+  /** Pour un moment choisi : « Pêche légale à partir de 7 h 02 » ou « … jusqu'à 18 h 31 » quand une borne tombe dans son heure. */
+  private limiteDansLHeure(moment: Date, heures: HeuresLegales): string | null {
+    const debutHeure = moment.getTime();
+    const finHeure = debutHeure + UNE_HEURE_MS;
+    if (heures.debut.getTime() > debutHeure && heures.debut.getTime() < finHeure) {
+      return `Pêche légale à partir de ${formaterHeure(heures.debut)}`;
+    }
+    if (heures.fin.getTime() >= debutHeure && heures.fin.getTime() < finHeure) {
+      return `Pêche légale jusqu'à ${formaterHeure(heures.fin)}`;
+    }
+    return null;
+  }
+
   /** Le top 3 du moteur. Une panne du moteur ou du contenu n'abîme ni la carte « Conditions » ni le bandeau. */
   private async chargerConseil(
     releve: ReleveActuel,
     moment: Date,
+    limite: string | null,
     perime: () => boolean,
   ): Promise<void> {
     try {
@@ -593,7 +617,7 @@ export class ConseilPage implements OnInit {
           : null,
         pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
       }));
-      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis });
+      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {
       if (!perime()) this.conseil.set({ type: 'indisponible' });
     }
