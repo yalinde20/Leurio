@@ -1,7 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import type { Animation, Couleur, ElementKit, Espece, Federation, TypeLeurre } from './catalog.types';
+import type { PoidsMoteur } from '../engine/scorer';
+import type {
+  Animation,
+  Couleur,
+  ElementKit,
+  Espece,
+  Federation,
+  TypeLeurre,
+} from './catalog.types';
 
 export type * from './catalog.types';
 
@@ -27,6 +35,11 @@ export class CatalogService {
     return this.charger<Couleur>('couleurs');
   }
 
+  /** Poids du moteur (engine-weights.json, un objet et non une liste). */
+  poidsMoteur(): Promise<PoidsMoteur> {
+    return this.chargerFichier<PoidsMoteur>('engine-weights');
+  }
+
   kitDeDepart(): Promise<ElementKit[]> {
     return this.charger<ElementKit>('starter-kit');
   }
@@ -50,13 +63,17 @@ export class CatalogService {
   }
 
   private charger<T>(fichier: string): Promise<T[]> {
+    return this.chargerFichier<T[]>(fichier);
+  }
+
+  private chargerFichier<T>(fichier: string): Promise<T> {
     let promesse = this.cache.get(fichier);
     if (!promesse) {
-      promesse = firstValueFrom(this.http.get<T[]>(`assets/data/${fichier}.json`));
+      promesse = firstValueFrom(this.http.get<T>(`assets/data/${fichier}.json`));
       // Une erreur n'est pas mise en cache : le prochain appel réessaie.
       promesse.catch(() => this.cache.delete(fichier));
       this.cache.set(fichier, promesse);
     }
-    return promesse as Promise<T[]>;
+    return promesse as Promise<T>;
   }
 }
