@@ -90,7 +90,10 @@ interface Reglages {
   explications?: string[];
 }
 
-async function afficher({ maintenant = HORS_FERMETURE, especes = ESPECES, federation = FEDERATION_49, explications = [] }: Reglages = {}) {
+async function afficher(reglages: Reglages = {}) {
+  const { maintenant = HORS_FERMETURE, especes = ESPECES, explications = [] } = reglages;
+  // `federation: undefined` doit vraiment donner « aucune fédération connue » : pas de valeur par défaut dans ce cas.
+  const federation = 'federation' in reglages ? reglages.federation : FEDERATION_49;
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(maintenant);
   const demandesFederation: string[] = [];
