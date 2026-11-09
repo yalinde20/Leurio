@@ -17,13 +17,13 @@
   --lr-accent: #e8590c;
   --lr-sur-accent: #1a1206;
   --lr-danger: #b42318;
+  --lr-voile: rgb(0 0 0 / 35%);
   --lr-carte-eau: #9cc9d6;
   --lr-carte-terre: #e9e2cf;
   --lr-carte-marqueur: #e8590c;
   --lr-graphique-1: #0e6b5c;
   --lr-graphique-2: #e8590c;
   --lr-graphique-grille: #d9d0be;
-  --lr-voile: rgb(0 0 0 / 35%);
 }
 
 :root,
@@ -45,13 +45,13 @@ html[data-theme='clair'] {
   --lr-accent: #ff8a3d;
   --lr-sur-accent: #1a1206;
   --lr-danger: #f97066;
+  --lr-voile: rgb(0 0 0 / 55%);
   --lr-carte-eau: #123a44;
   --lr-carte-terre: #1b2622;
   --lr-carte-marqueur: #ff8a3d;
   --lr-graphique-1: #5cc8b0;
   --lr-graphique-2: #ff8a3d;
   --lr-graphique-grille: #2b3b36;
-  --lr-voile: rgb(0 0 0 / 60%);
 }
 
 @media (prefers-color-scheme: dark) {

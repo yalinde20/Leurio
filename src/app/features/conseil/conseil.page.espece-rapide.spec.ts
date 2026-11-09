@@ -62,7 +62,8 @@ async function afficher(nuit = false, federation: Promise<undefined> = Promise.r
   };
   await stabiliser();
   const page = fixture.nativeElement as HTMLElement;
-  const bouton = () => page.querySelector<HTMLElement>('button.selecteur')!;
+  const bouton = () =>
+    [...page.querySelectorAll<HTMLElement>('button.selecteur')].find((b) => b.textContent?.includes('Espèce'))!;
   const ligne = (nom: string) =>
     [...page.querySelectorAll<HTMLElement>('[role="radio"]')].find((l) => l.textContent?.includes(nom))!;
   return { page, attentes, appels,  stabiliser, bouton, ligne };
