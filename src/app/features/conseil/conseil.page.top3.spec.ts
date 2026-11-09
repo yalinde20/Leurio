@@ -138,7 +138,7 @@ async function afficher({ maintenant = DANS_LES_HEURES, releve = RELEVE, positio
 
 afterEach(() => vi.useRealTimers());
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s  ]/g, '');
+const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
 /** Les cartes de conseil : les `section`, `article` ou `ion-card` les plus internes dont le texte contient « Animation : ». */
 function cartesConseil(page: HTMLElement): HTMLElement[] {
