@@ -17,9 +17,11 @@ describe('composerReglementation', () => {
     const lignes = composerReglementation(2, sandre, new Date(2026, 1, 10));
     expect(lignes.map((l) => l.valeur)).toEqual([
       "Brochet fermé jusqu'au 24/04",
-      'Sandre : probablement fermé, vérifie',
+      // US 84 (maquette validée) : « Sandre probablement fermé, vérifie » (sans deux-points).
+      'Sandre probablement fermé, vérifie',
       'pas de taille minimale nationale',
-      '3 carnassiers par jour, dont 2 brochets maximum',
+      // US 84 (maquette validée) : quota « par pêcheur », « au maximum ».
+      '3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum',
     ]);
     expect(lignes[1].alerte).toBe(true);
   });

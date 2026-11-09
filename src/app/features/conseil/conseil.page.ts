@@ -6,6 +6,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
+import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import { MomentFeuilleComponent } from './moment-feuille.component';
 import {
@@ -75,6 +76,7 @@ interface CarteConseil {
   animation: string;
   couleur: string;
   taille: { libelle: string; valeur: string } | null;
+  tailleMinimale: string | null;
   pourquoi: string;
 }
 
@@ -440,6 +442,12 @@ type Etat =
                       <dd>{{ t.valeur }}</dd>
                     </div>
                   }
+                  @if (c.tailleMinimale; as m) {
+                    <div class="ligne">
+                      <dt>Taille minimale :</dt>
+                      <dd>{{ m }}</dd>
+                    </div>
+                  }
                 </dl>
                 <p class="pourquoi">{{ c.pourquoi }}</p>
               </article>
@@ -450,7 +458,8 @@ type Etat =
       @if (carte(); as c) {
         <app-bandeau-reglementation
           [categorie]="null"
-          [espece]="null"
+          [espece]="espece()"
+          [especes]="especes()"
           [date]="c.date"
           [federation]="c.federation"
         />
@@ -502,7 +511,8 @@ export class ConseilPage implements OnInit {
   protected readonly choixOuvert = signal(false);
   protected readonly choixEspeces = signal<ChoixEspece[]>([]);
   private readonly bouton = viewChild.required<ElementRef<HTMLElement>>('boutonEspece');
-  private especes: Espece[] = [];
+  /** Les fiches du contenu, lues au chargement d'un moment (bandeau « Toutes les espèces ») et à l'ouverture du choix. */
+  protected readonly especes = signal<Espece[]>([]);
 
   private lieu: Lieu | null = null;
   /**
@@ -533,7 +543,16 @@ export class ConseilPage implements OnInit {
       ...especes.map((e) => ({ code: e.code, nom: e.nom })),
     ]);
     this.choixOuvert.set(true);
-    this.especes = especes;
+    this.especes.set(especes);
+  }
+
+  /** Sans contenu des espèces (panne, double sans `especes`), le bandeau n'a simplement pas d'alerte d'espèce. */
+  private async chargerEspeces(): Promise<void> {
+    try {
+      this.especes.set(await this.catalogue.especes());
+    } catch {
+      // Le bandeau reste calculé sans alerte d'espèce.
+    }
   }
 
   protected fermerChoixEspece(): void {
@@ -542,7 +561,7 @@ export class ConseilPage implements OnInit {
   }
 
   protected choisirEspece(code: string | null): void {
-    const choisie = code === null ? null : (this.especes.find((e) => e.code === code) ?? null);
+    const choisie = code === null ? null : (this.especes().find((e) => e.code === code) ?? null);
     this.fermerChoixEspece();
     if ((choisie?.code ?? null) === (this.espece()?.code ?? null)) return;
     this.espece.set(choisie);
@@ -633,6 +652,7 @@ export class ConseilPage implements OnInit {
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
     this.relancable = null;
+    void this.chargerEspeces();
     this.moment.set(choisi);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
@@ -715,7 +735,8 @@ export class ConseilPage implements OnInit {
         taille: c.taille
           ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille) }
           : null,
-        pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
+        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible) : null,
+        pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? [])].filter(Boolean).join(' '),
       }));
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {

@@ -8,11 +8,11 @@ import {
   periodeFermetureBrochet,
   prochaineOuverture1reCategorie,
 } from '../../core/regulation/calendar';
-import { libelleTailleMinimale, quota } from '../../core/regulation/sizes';
+import { libelleQuota, libelleTailleMinimale, quota } from '../../core/regulation/sizes';
 
 /**
- * Une ligne du bandeau. `ferme` peint la valeur en rouge. Un avertissement d'espèce
- * (« Sandre : probablement fermé, vérifie ») est une ligne `alerte` sans libellé.
+ * Une ligne du bandeau. `ferme` peint la valeur en rouge. Une alerte (« Sandre probablement fermé, vérifie »,
+ * « Brochet fermé en 2e catégorie ») est une ligne `alerte` sans libellé.
  */
 export interface LigneReglementation {
   libelle: string;
@@ -45,39 +45,55 @@ function etat2e(date: Date): Pick<LigneReglementation, 'valeur' | 'ferme'> {
 /** Quota de la 2e catégorie, construit à partir des nombres de `quota(2)`. */
 function libelleQuota2e(): string {
   const q = quota(2);
-  return q ? `${q.carnassiersParJour} carnassiers par jour, dont ${q.brochetsParJour} brochets maximum` : '';
+  return q ? libelleQuota(q) : '';
 }
 
-/** Lignes du bandeau « Réglementation » pour une catégorie (ou inconnue), une espèce visée (ou toutes) et une date. */
+type EspeceReglementee = Pick<Espece, 'nom' | 'tailleMinCm' | 'fermetureAvecBrochet' | 'verifDepartementPrintemps'>;
+
+/** Le brochet est fermé lui-même : la ligne de fermeture le dit, pas d'alerte « probablement fermé » en plus. */
+const NOM_BROCHET = 'Brochet';
+
+/** « Sandre probablement fermé, vérifie » ou « Black-bass : vérifie ton département » ; `null` sans avertissement. */
+function alerteEspece(espece: EspeceReglementee, date: Date): LigneReglementation | null {
+  const avertissement = avertissementEspece(espece, date);
+  if (!avertissement || (espece.nom === NOM_BROCHET && avertissement === 'probablement-ferme')) return null;
+  const separateur = avertissement === 'probablement-ferme' ? ' ' : ' : ';
+  return {
+    libelle: '',
+    valeur: `${espece.nom}${separateur}${LIBELLES_AVERTISSEMENT[avertissement]}`,
+    ferme: true,
+    alerte: true,
+  };
+}
+
+/**
+ * Lignes du bandeau « Réglementation » pour une catégorie, une espèce visée et une date.
+ * Catégorie inconnue (`null`, position GPS) : les règles de la 2e catégorie s'appliquent.
+ * Espèce `null` (« Toutes les espèces ») : les alertes de chaque espèce de `especes` (lues dans le contenu).
+ */
 export function composerReglementation(
   categorie: Categorie | null,
-  espece: Pick<Espece, 'nom' | 'tailleMinCm' | 'fermetureAvecBrochet' | 'verifDepartementPrintemps'> | null,
+  espece: EspeceReglementee | null,
   date: Date,
+  especes: readonly EspeceReglementee[] = [],
 ): LigneReglementation[] {
   const lignes: LigneReglementation[] = [];
   if (categorie === null) {
-    lignes.push({ libelle: '1re catégorie', ...etat1re(date) }, { libelle: '2e catégorie', ...etat2e(date) });
+    if (etatBrochet(2, date) === 'ferme') {
+      lignes.push({ libelle: '', valeur: 'Brochet fermé en 2e catégorie', ferme: true, alerte: true });
+    } else {
+      lignes.push({ libelle: '2e catégorie', valeur: 'Ouvert', ferme: false });
+    }
   } else {
     lignes.push({ libelle: 'Pêche', ...(categorie === 1 ? etat1re(date) : etat2e(date)) });
   }
+  const alertes = (espece ? [espece] : especes).map((e) => alerteEspece(e, date));
+  for (const alerte of alertes) if (alerte) lignes.push(alerte);
   if (espece) {
-    const avertissement = avertissementEspece(espece, date);
-    if (avertissement) {
-      lignes.push({
-        libelle: '',
-        valeur: `${espece.nom} : ${LIBELLES_AVERTISSEMENT[avertissement]}`,
-        ferme: true,
-        alerte: true,
-      });
-    }
     lignes.push({ libelle: 'Taille minimale', valeur: libelleTailleMinimale(espece), ferme: false });
   }
   if (categorie !== 1) {
-    lignes.push({
-      libelle: categorie === null ? 'Quota en 2e catégorie' : 'Quota',
-      valeur: libelleQuota2e(),
-      ferme: false,
-    });
+    lignes.push({ libelle: 'Quota', valeur: libelleQuota2e(), ferme: false });
   }
   return lignes;
 }
