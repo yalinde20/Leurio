@@ -1,4 +1,4 @@
-import { formaterTaille, libelleTaille, premierePhrase } from './conseil-format';
+import { formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 
 describe('premierePhrase', () => {
   it('given plusieurs phrases, when on extrait, then seule la première reste', () => {
@@ -21,4 +21,25 @@ describe('taille du leurre', () => {
     expect(libelleTaille({ valeur: 10, unite: 'g' })).toBe('Poids');
     expect(formaterTaille({ valeur: 10, unite: 'g' })).toBe('10 g');
   });
+});
+
+describe('lireTempSaisie', () => {
+  it.each([
+    ['9', 9],
+    ['12,5', 12.5],
+    ['12.5', 12.5],
+    [' 7 ', 7],
+    ['0', 0],
+    ['35', 35],
+    ['-0', 0],
+  ])('given « %s », then %s', (texte, attendu) => {
+    expect(lireTempSaisie(texte)).toBe(attendu);
+  });
+
+  it.each([[''], ['   '], ['abc'], ['12abc'], ['1,2,3'], ['-0,5'], ['35,1'], ['42'], ['Infinity'], ['1e1']])(
+    'given « %s », then null',
+    (texte) => {
+      expect(lireTempSaisie(texte)).toBeNull();
+    },
+  );
 });

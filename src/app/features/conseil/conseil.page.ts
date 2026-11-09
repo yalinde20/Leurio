@@ -1,10 +1,11 @@
-import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
+import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
@@ -19,7 +20,7 @@ import {
   formaterTempEau,
   formaterVent,
 } from './conditions-format';
-import { formaterTaille, libelleTaille, premierePhrase } from './conseil-format';
+import { formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 import { ChoixEspece, EspeceFeuilleComponent } from './espece-feuille.component';
 import {
   JourMoment,
@@ -275,6 +276,74 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     .bouton-sortie[disabled] {
       opacity: 0.5;
     }
+    .bouton-mesure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 10px;
+      border: 1px solid var(--lr-primaire);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--lr-primaire);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .saisie {
+      margin-top: 10px;
+    }
+    .saisie label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .saisie .champ {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 48px;
+      padding: 8px 12px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-fond);
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 17px;
+    }
+    .saisie .champ.invalide {
+      border: 2px solid var(--lr-danger);
+    }
+    .saisie .erreur {
+      margin: 6px 0 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--lr-danger);
+    }
+    .saisie .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .saisie .actions button {
+      flex: 1;
+      min-height: 48px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .saisie .valider {
+      border: none;
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+    }
+    .saisie .annuler {
+      border: 1px solid var(--lr-bordure);
+      background: transparent;
+      color: var(--lr-texte);
+    }
     .lien-federation {
       display: flex;
       align-items: center;
@@ -352,6 +421,34 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                   }
                   @if (c.sourceEau) {
                     <span class="source">{{ c.sourceEau }}</span>
+                  }
+                  @if (saisieOuverte()) {
+                    <div class="saisie">
+                      <label for="temp-mesuree">Température de l'eau (°C)</label>
+                      <input
+                        #champTemp
+                        id="temp-mesuree"
+                        class="champ"
+                        [class.invalide]="saisieInvalide()"
+                        type="text"
+                        inputmode="decimal"
+                        placeholder="Ex. : 12,5"
+                        autocomplete="off"
+                        [value]="brouillonTemp()"
+                        (input)="brouillonTemp.set(champTemp.value)"
+                      />
+                      @if (saisieInvalide()) {
+                        <p class="erreur" role="alert">Entre une température entre 0 et 35 °C.</p>
+                      }
+                      <div class="actions">
+                        <button type="button" class="annuler" (click)="fermerSaisie()">Annuler</button>
+                        <button type="button" class="valider" (click)="validerSaisie()">Valider</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button type="button" class="bouton-mesure" (click)="ouvrirSaisie()">
+                      J'ai mesuré l'eau
+                    </button>
                   }
                 </div>
                 <div class="ligne">
@@ -494,6 +591,17 @@ export class ConseilPage implements OnInit {
   private readonly astro = inject(AstroService);
   private readonly catalogue = inject(CatalogService);
   private readonly moteur = inject(MoteurService);
+  private readonly saisieTempEau = inject(SaisieTempEauStore);
+
+  protected readonly saisieOuverte = signal(false);
+  protected readonly saisieInvalide = signal(false);
+  protected readonly brouillonTemp = signal('');
+  private readonly champTemp = viewChild<ElementRef<HTMLInputElement>>('champTemp');
+
+  constructor() {
+    // Le focus entre dans le champ dès qu'il s'ouvre.
+    effect(() => this.champTemp()?.nativeElement.focus());
+  }
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
 
@@ -614,6 +722,31 @@ export class ConseilPage implements OnInit {
     this.feuilleOuverte.set(true);
   }
 
+  protected ouvrirSaisie(): void {
+    this.brouillonTemp.set('');
+    this.saisieInvalide.set(false);
+    this.saisieOuverte.set(true);
+  }
+
+  protected fermerSaisie(): void {
+    this.saisieOuverte.set(false);
+    this.saisieInvalide.set(false);
+  }
+
+  /** Une température valide est gardée, puis le moment affiché est recalculé avec elle. */
+  protected validerSaisie(): void {
+    const valeurC = lireTempSaisie(this.brouillonTemp());
+    if (valeurC === null) {
+      this.saisieInvalide.set(true);
+      return;
+    }
+    const maintenant = new Date();
+    this.saisieTempEau.ecrire({ valeurC, mesureeA: maintenant });
+    this.fermerSaisie();
+    const choisi = this.moment();
+    void this.chargerMoment(choisi?.date ?? maintenant, choisi);
+  }
+
   /** Ferme la feuille et rend le focus au sélecteur. */
   protected fermerFeuille(): void {
     this.feuilleOuverte.set(false);
@@ -659,7 +792,11 @@ export class ConseilPage implements OnInit {
     this.moment.set(choisi);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
-    const releve = await this.conditions.releve({ lieu, moment });
+    const releve = await this.conditions.releve({
+      lieu,
+      moment,
+      saisieTempEau: this.saisieTempEau.lire() ?? undefined,
+    });
     if (perime()) return;
     const heures = heuresLegales(this.astro.soleil(lieu, moment));
     const federation = await this.catalogue.federation(releve.conditions.departement);

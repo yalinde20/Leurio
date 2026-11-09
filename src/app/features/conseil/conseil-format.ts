@@ -18,3 +18,14 @@ export function libelleTaille(taille: TailleLeurre): string {
 export function formaterTaille(taille: TailleLeurre): string {
   return `${nombre.format(taille.valeur)}${INSECABLE}${taille.unite}`;
 }
+
+export const TEMP_SAISIE_MIN_C = 0;
+export const TEMP_SAISIE_MAX_C = 35;
+
+/** Lit une température saisie (virgule ou point) ; `null` si vide, non numérique ou hors de 0 à 35 °C. */
+export function lireTempSaisie(texte: string): number | null {
+  const propre = texte.trim();
+  if (!/^[+-]?\d+([.,]\d+)?$/.test(propre)) return null;
+  const valeur = Number(propre.replace(',', '.')) + 0; // + 0 : jamais de −0
+  return valeur >= TEMP_SAISIE_MIN_C && valeur <= TEMP_SAISIE_MAX_C ? valeur : null;
+}
