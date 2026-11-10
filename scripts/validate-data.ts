@@ -120,7 +120,7 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
     for (const code of new Set((t['especes'] as string[]) ?? []))
       if (!especes.has(code)) messages.push(`${lieu} : espèce inconnue « ${code} » (absente de species.json)`);
-    for (const champ of ['tailleCm', 'poidsG']) {
+    for (const champ of ['tailleCm', 'poidsG', 'poidsTeteG']) {
       const gamme = t[champ] as [number, number] | undefined;
       if (gamme !== undefined && gamme[0] >= gamme[1])
         messages.push(`${lieu} : champ « ${champ} » invalide : le minimum doit être inférieur au maximum`);
