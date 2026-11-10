@@ -158,7 +158,7 @@
 </head>
 <body>
 <h1>US 86 — Ouvrir le détail d'un conseil</h1>
-<p class="note">iPhone, app installée (Safari et Capacitor iOS identiques ; Android : même écran, le bouton « retour » du téléphone fait comme « ‹ Conseil »). PLAN §3 (« Détail d'un conseil ») et §8.3. Chaque carte du top 3 devient touchable (toute la carte, avec une ligne « Voir le détail › » de 48 px). Le détail s'ouvre en plein écran, l'onglet « Conseil » reste actif. Il montre : le type, l'animation et l'espèce, la couleur, la taille ou le poids, le <b>poids de tête</b> (seulement pour les leurres montés sur tête plombée), <b>où le lancer</b> (les postes de l'espèce), puis <b>chaque phrase du pourquoi</b> (une par règle déclenchée, dans l'ordre du moteur), et le bouton « Voir l'animation ». Le leurre de ta boîte et « Il te manque » viendront avec l'US 105 : rien ici. Le détail ne demande aucun réseau : il fonctionne hors ligne (pas d'état réseau spécifique). Interrupteur ci-dessous pour voir chaque thème.</p>
+<p class="note">iPhone, app installée (Safari et Capacitor iOS identiques ; Android : même écran, le bouton « retour » du téléphone fait comme « ‹ Conseil »). Sous-titre « espèce : … » sans article (décision du propriétaire pendant le développement, pour la perche et l'aspe). PLAN §3 (« Détail d'un conseil ») et §8.3. Chaque carte du top 3 devient touchable (toute la carte, avec une ligne « Voir le détail › » de 48 px). Le détail s'ouvre en plein écran, l'onglet « Conseil » reste actif. Il montre : le type, l'animation et l'espèce, la couleur, la taille ou le poids, le <b>poids de tête</b> (seulement pour les leurres montés sur tête plombée), <b>où le lancer</b> (les postes de l'espèce), puis <b>chaque phrase du pourquoi</b> (une par règle déclenchée, dans l'ordre du moteur), et le bouton « Voir l'animation ». Le leurre de ta boîte et « Il te manque » viendront avec l'US 105 : rien ici. Le détail ne demande aucun réseau : il fonctionne hors ligne (pas d'état réseau spécifique). Interrupteur ci-dessous pour voir chaque thème.</p>
 
 <input type="radio" name="t" id="t-clair" class="radio" checked>
 <input type="radio" name="t" id="t-sombre" class="radio">
@@ -230,14 +230,14 @@
   </div>
 
   <h2>2. Détail d'un conseil : leurre souple sur tête plombée (critère 1)</h2>
-  <p class="note">Après un tap sur la carte n° 1. En haut à gauche, « ‹ Conseil » (48 × 48 px au moins) revient en arrière ; le geste de balayage iOS depuis le bord gauche fait de même. Le pourquoi liste toutes les phrases des règles déclenchées (6 ici). « Où le lancer » : les postes de l'espèce visée, lus dans le contenu.</p>
+  <p class="note">Après un tap sur la carte n° 1. En haut à gauche, « ‹ Conseil » (48 × 48 px au moins) revient en arrière. (Le retour par balayage depuis le bord gauche n'est pas dans cette story : décision du propriétaire, US 86.) Le pourquoi liste toutes les phrases des règles déclenchées (6 ici). « Où le lancer » : les postes de l'espèce visée, lus dans le contenu.</p>
   <div class="phone" style="height:auto">
     <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
     <div class="toolbar retour"><span class="btn-retour"><svg><use href="#i-retour"/></svg>Conseil</span><span class="title">Détail du conseil</span></div>
     <div class="content scroll">
       <section class="carte detail">
         <div class="entete"><span class="rang">1</span><h3>Shad</h3></div>
-        <p class="sous-titre">Animation : Tirée-relâchée · pour le sandre</p>
+        <p class="sous-titre">Animation : Tirée-relâchée · espèce : sandre</p>
         <dl>
           <div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div>
           <div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div>
@@ -274,7 +274,7 @@
     <div class="content scroll">
       <section class="carte detail">
         <div class="entete"><span class="rang">3</span><h3>Lipless (vibrant sans bavette)</h3></div>
-        <p class="sous-titre">Animation : Tirée-relâchée · pour le sandre</p>
+        <p class="sous-titre">Animation : Tirée-relâchée · espèce : sandre</p>
         <dl>
           <div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div>
           <div class="ligne"><dt>Poids :</dt> <dd>10 g</dd></div>
@@ -306,7 +306,7 @@
     <div class="content scroll">
       <section class="carte detail">
         <div class="entete"><span class="rang">2</span><h3>Minnow (jerkbait)</h3></div>
-        <p class="sous-titre">Animation : Twitching · pour le brochet (espèce choisie : toutes)</p>
+        <p class="sous-titre">Animation : Twitching · espèce : brochet (espèce choisie : toutes)</p>
         <dl>
           <div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div>
           <div class="ligne"><dt>Taille :</dt> <dd>11,5 cm</dd></div>
@@ -338,7 +338,7 @@
     <div class="content scroll">
       <section class="carte detail">
         <div class="entete"><span class="rang">1</span><h3>Shad</h3></div>
-        <p class="sous-titre">Animation : Linéaire · pour le sandre</p>
+        <p class="sous-titre">Animation : Linéaire · espèce : sandre</p>
         <dl>
           <div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div>
           <div class="ligne"><dt>Taille :</dt> <dd>9,5 cm</dd></div>
@@ -394,7 +394,7 @@
     <div class="content scroll">
       <section class="carte detail">
         <div class="entete"><span class="rang">1</span><h3>Shad</h3></div>
-        <p class="sous-titre">Animation : Tirée-relâchée · pour le sandre</p>
+        <p class="sous-titre">Animation : Tirée-relâchée · espèce : sandre</p>
         <dl>
           <div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div>
           <div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div>
@@ -424,7 +424,7 @@
   </div>
 
   <h2>7. Retour à l'écran « Conseil » (critère 3)</h2>
-  <p class="note">Après « ‹ Conseil » (ou le balayage, ou le retour Android) : exactement l'écran n° 1, sans nouveau calcul ni « Chargement… » : même lieu (Angers), même moment (demain 7 h), même espèce (sandre), même top 3 dans le même ordre, et la page revient à la carte touchée.</p>
+  <p class="note">Après « ‹ Conseil » (ou le retour Android, ou le retour du navigateur dans Safari) : exactement l'écran n° 1, sans nouveau calcul ni « Chargement… » : même lieu (Angers), même moment (demain 7 h), même espèce (sandre), même top 3 dans le même ordre, et la page revient à la carte touchée.</p>
   <div class="phone" style="height:auto">
     <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
     <div class="toolbar"><span class="title">Conseil</span></div>
