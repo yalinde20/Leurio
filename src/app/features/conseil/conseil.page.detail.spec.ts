@@ -156,7 +156,10 @@ async function ouvrirLApp() {
       await new Promise((r) => setTimeout(r, 0));
     }
   };
-  await TestBed.inject(Router).navigateByUrl('/conseil');
+  // Au démarrage de l'app, le routeur suit le retour du navigateur ; TestBed ne passe pas par cet amorçage.
+  const router = TestBed.inject(Router);
+  router.setUpLocationChangeListener();
+  await router.navigateByUrl('/conseil');
   await stabiliser();
   return { page, stabiliser, appelsMoteur, appelsReleve };
 }
@@ -239,7 +242,7 @@ describe('Détail d\'un conseil (US 86)', () => {
     const texte = compact(env.page.textContent);
     expect(texte).toContain(compact('Détail du conseil'));
     expect(texte).toContain(compact('Shad'));
-    expect(texte).toContain(compact('Animation : Tirée-relâchée · pour le sandre'));
+    expect(texte).toContain(compact('Animation : Tirée-relâchée · espèce : sandre'));
     expect(texte).toContain(compact('Couleur : Gardon'));
     expect(texte).toContain(compact('Taille : 8 cm'));
     expect(texte).toContain(compact('Poids de tête : 5 à 10 g'));
@@ -272,7 +275,7 @@ describe('Détail d\'un conseil (US 86)', () => {
     await ouvrirDetail(env, 3);
 
     const texte = compact(env.page.textContent);
-    expect(texte).toContain(compact('Animation : Twitching · pour le brochet'));
+    expect(texte).toContain(compact('Animation : Twitching · espèce : brochet'));
     expect(texte).toContain(compact('Où le lancer : herbiers, bordures, bois noyés, cassures'));
     expect(texte).toContain(compact('Taille : 11,5 cm'));
   });
@@ -367,5 +370,110 @@ describe('Détail d\'un conseil (US 86)', () => {
     expect(cartesConseil(env.page).map((c) => compact(c.textContent))).toEqual(avant);
     expect(env.appelsMoteur).toHaveLength(moteurAvant);
     expect(env.appelsReleve).toHaveLength(releveAvant);
+  });
+});
+
+/** Choisit une espèce dans la feuille « Espèce visée ». */
+async function choisirEspece(env: Env, nom: string): Promise<void> {
+  const ouvrir = boutons(env.page).find((e) => !e.closest('[role="dialog"]') && compact(e.textContent).startsWith(compact('Espèce')))!;
+  ouvrir.click();
+  await env.stabiliser();
+  const f = env.page.querySelector<HTMLElement>('[role="dialog"]')!;
+  [...f.querySelectorAll<HTMLElement>('button')].find((e) => compact(e.textContent).includes(compact(nom)))!.click();
+  await env.stabiliser();
+}
+const carteConditions = (page: HTMLElement): string =>
+  compact([...page.querySelectorAll<HTMLElement>('section')].find((e) => e.querySelector('h2')?.textContent?.trim() === 'Conditions')?.textContent);
+
+describe('Détail d\'un conseil, revue (US 86)', () => {
+  it("critère 3 : given une espèce choisie et un détail ouvert puis fermé, when je reviens, then la même espèce, le même top 3 et la même carte Conditions sont affichés sans nouveau calcul", async () => {
+    const env = await ouvrirLApp();
+    await choisirEspece(env, 'Sandre');
+    const avant = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const conditionsAvant = carteConditions(env.page);
+    expect(avant).toHaveLength(3);
+    expect(conditionsAvant).toContain(compact('Conditions'));
+    const moteurAvant = env.appelsMoteur.length;
+    const releveAvant = env.appelsReleve.length;
+
+    await ouvrirDetail(env, 1);
+    bouton(env.page, 'Conseil').click();
+    await env.stabiliser();
+
+    expect(detailOuvert(env.page)).toBe(false);
+    expect(compact(boutons(env.page).find((e) => compact(e.textContent).startsWith(compact('Espèce')))!.textContent)).toContain('Sandre');
+    expect(cartesConseil(env.page).map((c) => compact(c.textContent))).toEqual(avant);
+    expect(carteConditions(env.page)).toBe(conditionsAvant);
+    expect(env.appelsMoteur).toHaveLength(moteurAvant);
+    expect(env.appelsReleve).toHaveLength(releveAvant);
+  });
+
+  it("given un détail ouvert puis fermé, when je reviens, then le focus est sur le bouton « Voir le détail » de la carte ouverte", async () => {
+    const env = await ouvrirLApp();
+    await ouvrirDetail(env, 2);
+    bouton(env.page, 'Conseil').click();
+    await env.stabiliser();
+
+    const actif = document.activeElement as HTMLElement | null;
+    expect(actif).toBe(lienDetail(cartesConseil(env.page)[1]));
+  });
+
+  it("given trois cartes, when je lis les boutons « Voir le détail », then chacun est décrit par le titre de sa carte", () => {
+    return ouvrirLApp().then((env) => {
+      const decrits = cartesConseil(env.page).map((c) => {
+        const b = lienDetail(c);
+        return compact(c.querySelector(`#${b.getAttribute('aria-describedby')}`)?.textContent);
+      });
+      expect(decrits).toEqual([compact('Shad'), compact('Lipless (vibrant sans bavette)'), compact('Minnow (jerkbait)')]);
+    });
+  });
+
+  it("given « Toutes les espèces », when j'ouvre un détail, then le sous-titre se termine par « (espèce choisie : toutes) »", async () => {
+    const env = await ouvrirLApp();
+    await ouvrirDetail(env, 3);
+
+    expect(compact(env.page.textContent)).toContain(compact('Animation : Twitching · espèce : brochet (espèce choisie : toutes)'));
+  });
+
+  it("given une espèce choisie, when j'ouvre un détail, then « espèce choisie » n'apparaît pas", async () => {
+    const env = await ouvrirLApp();
+    await choisirEspece(env, 'Sandre');
+    await ouvrirDetail(env, 1);
+
+    expect(compact(env.page.textContent)).toContain(compact('Animation : Tirée-relâchée · espèce : sandre'));
+    expect(compact(env.page.textContent)).not.toContain(compact('espèce choisie'));
+  });
+
+  it("given un détail ouvert puis refermé, when je choisis un moment hors des heures légales et reviens en avant, then le détail redirige vers /conseil sans l'ancien conseil", async () => {
+    const env = await ouvrirLApp();
+    await ouvrirDetail(env, 1);
+    TestBed.inject(Location).back();
+    await new Promise((r) => setTimeout(r, 50));
+    await env.stabiliser();
+
+    // Demain 2 h : avant le lever du soleil (heures légales 7 h 02 – 18 h 31).
+    selecteurMoment(env.page).click();
+    await env.stabiliser();
+    const f = env.page.querySelector<HTMLElement>('[role="dialog"]')!;
+    const dans = (t: string) => [...f.querySelectorAll<HTMLElement>('button, ion-button, [role="radio"], label')].find((e) => compact(e.textContent) === compact(t))!;
+    dans('Demain').click();
+    await env.stabiliser();
+    const select = [...f.querySelectorAll<HTMLSelectElement>('select')][0];
+    select.value = [...select.options].find((o) => compact(o.textContent) === compact('2 h'))!.value;
+    select.dispatchEvent(new Event('input', { bubbles: true }));
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await env.stabiliser();
+    dans('Valider').click();
+    await env.stabiliser();
+    expect(compact(env.page.textContent)).toContain(compact('Hors des heures légales'));
+
+    TestBed.inject(Location).forward();
+    await new Promise((r) => setTimeout(r, 50));
+    await env.stabiliser();
+
+    expect(TestBed.inject(Router).url).toBe('/conseil');
+    expect(detailOuvert(env.page)).toBe(false);
+    expect(compact(env.page.textContent)).not.toContain(compact('Poids de tête'));
+    expect(compact(env.page.textContent)).not.toContain(compact('Pourquoi ce conseil'));
   });
 });

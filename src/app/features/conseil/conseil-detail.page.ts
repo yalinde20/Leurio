@@ -111,7 +111,7 @@ import { ConseilDetailStore } from './conseil-detail.store';
             <h2>{{ d.type }}</h2>
           </div>
           <p class="sous-titre">
-            Animation : {{ d.animation }}@if (d.espece; as e) { · pour le {{ e.toLowerCase() }}}
+            Animation : {{ d.animation }}@if (d.espece; as e) { · espèce : {{ e.toLowerCase() }}}@if (toutesEspeces()) { (espèce choisie : toutes)}
           </p>
           <dl>
             <div class="ligne">
@@ -157,6 +157,7 @@ export class ConseilDetailPage {
   private readonly store = inject(ConseilDetailStore);
 
   private readonly rang = Number(this.route.snapshot.paramMap.get('rang'));
+  protected readonly toutesEspeces = this.store.toutesEspeces;
   protected readonly detail = computed(() => this.store.details().find((d) => d.rang === this.rang) ?? null);
 
   constructor() {

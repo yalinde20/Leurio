@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -561,7 +561,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
               <article class="carte conseil touchable">
                 <div class="entete">
                   <span class="rang">{{ c.rang }}</span>
-                  <h3>{{ c.type }}</h3>
+                  <h3 [id]="'titre-conseil-' + c.rang">{{ c.type }}</h3>
                 </div>
                 <dl>
                   <div class="ligne">
@@ -586,7 +586,13 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                   }
                 </dl>
                 <p class="pourquoi">{{ c.pourquoi }}</p>
-                <button type="button" class="voir-detail" (click)="ouvrirDetail(c.rang)">
+                <button
+                  type="button"
+                  class="voir-detail"
+                  [id]="'voir-detail-' + c.rang"
+                  [attr.aria-describedby]="'titre-conseil-' + c.rang"
+                  (click)="ouvrirDetail(c.rang)"
+                >
                   Voir le détail
                   <span aria-hidden="true">›</span>
                 </button>
@@ -636,8 +642,9 @@ export class ConseilPage implements OnInit {
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
   private readonly router = inject(Router);
+  private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  /** Vrai quand le détail d'un conseil ou la fiche animation est ouvert : l'écran reste vivant mais se cache. */
+  /** Vrai quand le détail d'un conseil ou la fiche animation est ouvert : l'écran « Conseil » laisse la place à l'enfant, le top 3 reste dans le composant. */
   protected readonly enfantOuvert = toSignal(
     this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
@@ -656,8 +663,29 @@ export class ConseilPage implements OnInit {
   /** La dernière mesure validée, gardée en mémoire : elle compte même si le stockage du téléphone la refuse. */
   private saisieMemoire: SaisieTempEau | null = null;
   private focusSurBouton = false;
+  /** La carte dont le détail a été ouvert : son bouton « Voir le détail » reprend le focus au retour. */
+  private rangOuvert: number | null = null;
+  /** Le défilement de l'écran au moment d'ouvrir le détail, rendu au retour (l'écran est recréé). */
+  private defilement = 0;
+  private readonly contenu = viewChild(IonContent);
+  private readonly injector = inject(Injector);
 
   constructor() {
+    // Au retour du détail, le focus revient sur le bouton de la carte ouverte.
+    effect(() => {
+      if (this.enfantOuvert() || this.rangOuvert === null) return;
+      const rang = this.rangOuvert;
+      this.rangOuvert = null;
+      // L'écran est recréé : on attend son rendu avant de rendre le défilement et le focus.
+      afterNextRender(
+        () =>
+          setTimeout(() => {
+            this.hostEl.nativeElement.querySelector<HTMLElement>(`#voir-detail-${rang}`)?.focus({ preventScroll: true });
+            void this.contenu()?.scrollToPoint(0, this.defilement, 0)?.catch(() => undefined);
+          }),
+        { injector: this.injector },
+      );
+    });
     // Le focus entre dans le champ dès qu'il s'ouvre.
     effect(() => this.champTemp()?.nativeElement.focus());
     // Et revient au bouton « J'ai mesuré l'eau » quand la saisie se ferme par Annuler ou Valider.
@@ -760,8 +788,15 @@ export class ConseilPage implements OnInit {
     return this.router.url.split(/[?#]/)[0].startsWith('/conseil/');
   }
 
-  protected ouvrirDetail(rang: number): void {
-    void this.router.navigate(['/conseil', 'detail', rang]);
+  protected async ouvrirDetail(rang: number): Promise<void> {
+    this.rangOuvert = rang;
+    this.defilement = 0;
+    try {
+      this.defilement = (await this.contenu()?.getScrollElement())?.scrollTop ?? 0;
+    } catch {
+      // Sans position de défilement, l'écran se rouvre en haut.
+    }
+    await this.router.navigate(['/conseil', 'detail', rang]);
   }
 
   protected heuresDuJour(): string {
@@ -880,6 +915,8 @@ export class ConseilPage implements OnInit {
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
     this.relancable = null;
+    // Un nouveau calcul périme le top 3 : le détail ne doit plus l'ouvrir (hors heures, indisponible ou calcul en cours).
+    this.detailStore.details.set([]);
     this.fermerSaisieSansFocus();
     void this.chargerEspeces();
     this.moment.set(choisi);
@@ -951,6 +988,7 @@ export class ConseilPage implements OnInit {
     const conditions = { ...releve.conditions };
     delete conditions.especeCible;
     if (cible) conditions.especeCible = cible.code;
+    this.detailStore.details.set([]);
     this.conseil.set({ type: 'calcul' });
     try {
       const [resultat, types, animations, couleurs, especes] = await Promise.all([
@@ -964,6 +1002,7 @@ export class ConseilPage implements OnInit {
       this.detailStore.details.set(
         resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes })),
       );
+      this.detailStore.toutesEspeces.set(cible === null);
       const cartes = resultat.conseils.map((c, i): CarteConseil => ({
         rang: i + 1,
         type: types.find((t) => t.id === c.typeId)?.nom ?? c.typeId,

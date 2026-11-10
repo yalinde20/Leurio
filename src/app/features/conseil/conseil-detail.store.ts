@@ -25,4 +25,6 @@ export interface DetailConseil {
 @Injectable({ providedIn: 'root' })
 export class ConseilDetailStore {
   readonly details = signal<DetailConseil[]>([]);
+  /** Vrai quand le top 3 vient de « Toutes les espèces » : le détail le rappelle (maquette, état 4). */
+  readonly toutesEspeces = signal(false);
 }

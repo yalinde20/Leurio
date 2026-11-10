@@ -78,3 +78,12 @@ for (const [nom, valeur] of [
     assert.match(r.output, /poidsTeteG/);
   });
 }
+
+test('US 86 schéma : given un poidsTeteG dont le minimum n’est pas inférieur au maximum, when on valide, then l’échec nomme lure-types.json et poidsTeteG', () => {
+  for (const valeur of [[10, 5], [8, 8]]) {
+    const r = valider((l) => { l.find((t) => t.id === 'shad').poidsTeteG = valeur; });
+    assert.notEqual(r.status, 0, `la validation de ${JSON.stringify(valeur)} aurait dû échouer`);
+    assert.match(r.output, /lure-types\.json/);
+    assert.match(r.output, /poidsTeteG/);
+  }
+});
