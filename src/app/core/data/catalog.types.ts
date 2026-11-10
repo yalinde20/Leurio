@@ -41,6 +41,8 @@ export interface TypeLeurre extends Fiche {
   tailleCm?: [number, number];
   /** Gamme de poids en g [min, max] des leurres métalliques ou lestés ; exclusive avec `tailleCm` (PLAN §2.1). */
   poidsG?: [number, number];
+  /** Gamme de poids de la tête plombée en g [min, max], pour les leurres souples montés sur tête (PLAN §8.3). */
+  poidsTeteG?: [number, number];
   [champ: string]: unknown;
 }
 
