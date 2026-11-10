@@ -590,6 +590,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                   type="button"
                   class="voir-detail"
                   [id]="'voir-detail-' + c.rang"
+                  [attr.aria-labelledby]="'voir-detail-' + c.rang + ' titre-conseil-' + c.rang"
                   [attr.aria-describedby]="'titre-conseil-' + c.rang"
                   (click)="ouvrirDetail(c.rang)"
                 >

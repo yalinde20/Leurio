@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
@@ -157,8 +157,10 @@ export class ConseilDetailPage {
   private readonly store = inject(ConseilDetailStore);
 
   private readonly rang = Number(this.route.snapshot.paramMap.get('rang'));
-  protected readonly toutesEspeces = this.store.toutesEspeces;
-  protected readonly detail = computed(() => this.store.details().find((d) => d.rang === this.rang) ?? null);
+  // Figés à l'ouverture : un nouveau calcul de l'écran « Conseil » (onglet quitté puis retour) ne change pas
+  // sous les yeux du pêcheur le conseil qu'il est en train de lire.
+  protected readonly toutesEspeces = signal(this.store.toutesEspeces()).asReadonly();
+  protected readonly detail = signal(this.store.details().find((d) => d.rang === this.rang) ?? null).asReadonly();
 
   constructor() {
     // Rechargement ou lien direct : le top 3 n'existe plus, on retourne à l'écran « Conseil ».
