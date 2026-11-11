@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { lireThemes } from './tokens';
+import { onboardingTermine } from './onboarding-helpers';
+
+// US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
+test.beforeEach(async ({ page }) => onboardingTermine(page));
 
 function rgb(hex: string): string {
   const n = parseInt(hex.slice(1), 16);

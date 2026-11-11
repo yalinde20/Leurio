@@ -1,4 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { onboardingTermine } from './onboarding-helpers';
+
+// US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
+test.beforeEach(async ({ page }) => onboardingTermine(page));
 
 // US 86 : détail d'un conseil, fiche animation et retour, avec l'app réelle sur un téléphone (iPhone, 390 px).
 // Aucun service réel : position simulée, Hub'Eau répond par un faux relevé, Open-Meteo est coupé.

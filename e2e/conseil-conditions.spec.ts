@@ -1,4 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { onboardingTermine } from './onboarding-helpers';
+
+// US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
+test.beforeEach(async ({ page }) => onboardingTermine(page));
 
 // US 64, critère 7 : contraste des textes de la carte « Conditions » dans les deux thèmes (mesuré sur les styles calculés).
 // Aucun service réel : la position est simulée, Hub'Eau répond par un faux relevé, Open-Meteo est coupé.
