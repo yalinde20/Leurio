@@ -13,6 +13,19 @@ describe('composerReglementation', () => {
     ]);
   });
 
+  it("US 87 critère 5 : given une 1re catégorie hors saison le 11/11/2026, when on compose, then l'alerte « Fermé : 1re catégorie hors saison » vient avant « Pêche : Fermé jusqu'au 13/03 », sans quota", () => {
+    const lignes = composerReglementation(1, null, new Date(2026, 10, 11));
+    expect(lignes).toEqual([
+      { libelle: '', valeur: 'Fermé : 1re catégorie hors saison', ferme: true, alerte: true },
+      { libelle: 'Pêche', valeur: "Fermé jusqu'au 13/03", ferme: true },
+    ]);
+  });
+
+  it("US 87 critère 5 : given une 2e catégorie le 11/11/2026, when on compose, then aucune alerte « 1re catégorie hors saison »", () => {
+    const lignes = composerReglementation(2, null, new Date(2026, 10, 11));
+    expect(lignes.some((l) => l.valeur.includes('1re catégorie hors saison'))).toBe(false);
+  });
+
   it("given le sandre en 2e catégorie le 10/02/2026, when on compose, then l'alerte vient avant la taille et le quota", () => {
     const lignes = composerReglementation(2, sandre, new Date(2026, 1, 10));
     expect(lignes.map((l) => l.valeur)).toEqual([
