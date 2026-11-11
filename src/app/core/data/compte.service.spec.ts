@@ -4,7 +4,7 @@
  */
 import { TestBed } from '@angular/core/testing';
 import type { UserDoc } from '../firebase/user-doc';
-import { CompteService, SOURCE_COMPTE, SourceCompte } from './compte.service';
+import { CLE_PROFIL_ECRIT, CompteService, SOURCE_COMPTE, SourceCompte } from './compte.service';
 
 const CHOIX = { niveau: 'intermediaire' as const, especesFavorites: ['BRO', 'SAN'] };
 
@@ -40,7 +40,13 @@ const vider = async () => {
 };
 
 describe('CompteService (US 90)', () => {
-  afterEach(() => vi.restoreAllMocks());
+  beforeEach(() => localStorage.clear());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // Détruit le service (et ses écouteurs online/visibilitychange) : les tests ne dépendent pas de l'ordre.
+    TestBed.resetTestingModule();
+    localStorage.clear();
+  });
 
   it("critère 1 : given j'ai du réseau, when j'ai terminé l'onboarding, then un compte anonyme est créé et users/{uid} reçoit niveau, especesFavorites, consentements et createdAt", async () => {
     const { source, profils, appels } = creerSource();
@@ -158,5 +164,82 @@ describe('CompteService (US 90)', () => {
     expect(verifie).toHaveBeenCalledWith('uid-existant');
     expect(appels.ecritures).toBe(0);
     expect(profils.get('uid-existant')).toEqual(existant);
+  });
+
+  it("given la connexion a réussi mais l'écriture du profil échoue une fois, when le réseau revient, then il n'y a qu'une connexion et le profil est écrit sous le même uid", async () => {
+    let echec = true;
+    const { source, profils, appels } = creerSource({
+      ecrireProfil: async (uid, doc) => {
+        if (echec) {
+          echec = false;
+          throw new Error('unavailable');
+        }
+        appels.ecritures++;
+        profils.set(uid, doc);
+      },
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const compte = service(source);
+
+    await expect(compte.assurerCompte(CHOIX)).resolves.toBeUndefined();
+    window.dispatchEvent(new Event('online'));
+    await vider();
+
+    expect(appels.connexions).toBe(1);
+    expect(profils.get('uid-neuf')).toMatchObject({ niveau: 'intermediaire' });
+  });
+
+  it("given le profil est écrit, when l'app est relancée avec le même uid, then aucune lecture serveur n'a lieu", async () => {
+    const { source, appels } = creerSource({ uid: 'uid-existant' });
+    await service(source).assurerCompte(CHOIX);
+    expect(localStorage.getItem(CLE_PROFIL_ECRIT)).toBe('uid-existant');
+    TestBed.resetTestingModule();
+
+    const verifie = vi.spyOn(source, 'profilExiste');
+    await service(source).assurerCompte(CHOIX);
+
+    expect(verifie).not.toHaveBeenCalled();
+    expect(appels.ecritures).toBe(1);
+  });
+
+  it("given l'app revient au premier plan après un échec, when elle devient visible, then la création est retentée", async () => {
+    let casse = true;
+    const { source, profils } = creerSource({
+      connecterAnonymement: async () => {
+        if (casse) throw new Error('auth/network-request-failed');
+        return 'uid-neuf';
+      },
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await service(source).assurerCompte(CHOIX);
+    casse = false;
+
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vider();
+
+    expect(profils.has('uid-neuf')).toBe(true);
+  });
+
+  it("given une tentative qui ne répond jamais, when 20 s s'écoulent, then elle échoue sans rejeter et une nouvelle tentative reste possible", async () => {
+    vi.useFakeTimers();
+    try {
+      let bloque = true;
+      const { source, profils } = creerSource({
+        uidCourant: () => (bloque ? new Promise<string | null>(() => undefined) : Promise.resolve(null)),
+      });
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const compte = service(source);
+
+      const premiere = compte.assurerCompte(CHOIX);
+      await vi.advanceTimersByTimeAsync(20_000);
+      await expect(premiere).resolves.toBeUndefined();
+
+      bloque = false;
+      window.dispatchEvent(new Event('online'));
+      await vi.advanceTimersByTimeAsync(10);
+      expect(profils.has('uid-neuf')).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
