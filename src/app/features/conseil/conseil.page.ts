@@ -8,11 +8,13 @@ import { CatalogService, Espece, Federation } from '../../core/data/catalog.serv
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
+import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
+import { EtatSpots, LieuFeuilleComponent } from './lieu-feuille.component';
 import { MomentFeuilleComponent } from './moment-feuille.component';
 import {
   formaterCiel,
@@ -110,11 +112,13 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     BandeauReglementationComponent,
     MomentFeuilleComponent,
     EspeceFeuilleComponent,
+    LieuFeuilleComponent,
     RouterOutlet,
   ],
   host: { class: 'ion-page' },
   styles: `
-    .selecteur {
+    .selecteur,
+    .selecteur-lieu {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -131,16 +135,19 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-size: 16px;
       text-align: left;
     }
-    .selecteur .lib {
+    .selecteur .lib,
+    .selecteur-lieu .lib {
       display: block;
       font-size: 14px;
       color: var(--lr-texte-secondaire);
     }
-    .selecteur .val {
+    .selecteur .val,
+    .selecteur-lieu .val {
       font-size: 17px;
       font-weight: 700;
     }
-    .selecteur .chevron {
+    .selecteur .chevron,
+    .selecteur-lieu .chevron {
       font-size: 22px;
       color: var(--lr-primaire);
     }
@@ -396,6 +403,19 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     </ion-header>
     <ion-content class="ion-padding">
       <button
+        #boutonLieu
+        type="button"
+        class="selecteur-lieu"
+        aria-haspopup="dialog"
+        (click)="ouvrirChoixLieu()"
+      >
+        <span>
+          <span class="lib">Lieu</span>
+          <span class="val">{{ nomLieu() }}</span>
+        </span>
+        <span class="chevron" aria-hidden="true">›</span>
+      </button>
+      <button
         #selecteur
         type="button"
         class="selecteur"
@@ -604,7 +624,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       }
       @if (carte(); as c) {
         <app-bandeau-reglementation
-          [categorie]="null"
+          [categorie]="spotChoisi()?.categorie ?? null"
           [espece]="espece()"
           [especes]="especes()"
           [date]="c.date"
@@ -620,6 +640,15 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
         (maintenant)="choisirMaintenant()"
         (valide)="appliquerMoment($event)"
         (ferme)="fermerFeuille()"
+      />
+    }
+    @if (lieuOuvert()) {
+      <app-lieu-feuille
+        [spots]="spotsEnregistres()"
+        [etat]="etatSpots()"
+        [choisi]="spotChoisi()?.id ?? null"
+        (choisir)="choisirLieu($event)"
+        (annuler)="fermerChoixLieu()"
       />
     }
     @if (choixOuvert()) {
@@ -640,6 +669,7 @@ export class ConseilPage implements OnInit {
   private readonly astro = inject(AstroService);
   private readonly catalogue = inject(CatalogService);
   private readonly moteur = inject(MoteurService);
+  private readonly spots = inject(SpotsService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
   private readonly router = inject(Router);
@@ -722,6 +752,18 @@ export class ConseilPage implements OnInit {
   protected readonly especes = signal<Espece[]>([]);
 
   private lieu: Lieu | null = null;
+
+  /** Le spot qui sert de lieu ; `null` = « Ma position ». État du composant, jamais mémorisé. */
+  protected readonly spotChoisi = signal<SpotEnregistre | null>(null);
+  protected readonly lieuOuvert = signal(false);
+  protected readonly spotsEnregistres = signal<SpotEnregistre[]>([]);
+  protected readonly etatSpots = signal<EtatSpots>('chargement');
+  protected readonly nomLieu = computed(() => this.spotChoisi()?.nom ?? 'Ma position');
+  private readonly boutonLieu = viewChild<ElementRef<HTMLButtonElement>>('boutonLieu');
+  /** Numéro du dernier choix de lieu : une position obtenue pour un choix plus ancien est ignorée. */
+  private choixLieu = 0;
+  /** Numéro de la dernière lecture des spots. */
+  private lectureSpots = 0;
   /**
    * Le relevé du moment affiché, une fois la pêche reconnue légale : changer d'espèce ne relit pas les conditions.
    * `null` hors des heures légales et tant que le moment se charge : une espèce choisie alors ne lance aucun calcul.
@@ -769,6 +811,33 @@ export class ConseilPage implements OnInit {
     } catch {
       return [];
     }
+  }
+
+  protected async ouvrirChoixLieu(): Promise<void> {
+    const lecture = ++this.lectureSpots;
+    this.etatSpots.set('chargement');
+    this.spotsEnregistres.set([]);
+    this.lieuOuvert.set(true);
+    try {
+      const spots = await this.spots.mesSpots();
+      if (lecture !== this.lectureSpots) return;
+      this.spotsEnregistres.set(spots);
+      this.etatSpots.set('pret');
+    } catch {
+      if (lecture === this.lectureSpots) this.etatSpots.set('erreur');
+    }
+  }
+
+  protected fermerChoixLieu(): void {
+    this.lieuOuvert.set(false);
+    this.boutonLieu()?.nativeElement.focus();
+  }
+
+  protected choisirLieu(spot: SpotEnregistre | null): void {
+    this.fermerChoixLieu();
+    if ((spot?.id ?? null) === (this.spotChoisi()?.id ?? null)) return;
+    this.spotChoisi.set(spot);
+    void this.appliquerLieu(spot);
   }
 
   protected fermerChoixEspece(): void {
@@ -897,22 +966,41 @@ export class ConseilPage implements OnInit {
     });
   }
 
-  /** Lieu = position GPS (demandée une seule fois), moment = maintenant. */
+  /** Au départ : lieu = position GPS, moment = maintenant. */
   private async charger(): Promise<void> {
-    const position = await this.position.positionGps();
+    await this.appliquerLieu(null);
+  }
+
+  /**
+   * Lieu = position GPS (`spot` nul) ou spot enregistré (pas de GPS). Le moment choisi est gardé.
+   * Un choix plus récent l'emporte sur une position encore attendue.
+   */
+  private async appliquerLieu(spot: SpotEnregistre | null): Promise<void> {
+    const numero = ++this.choixLieu;
+    const position = spot ? await this.position.positionSpot(spot) : await this.position.positionGps();
+    if (numero !== this.choixLieu) return;
     if (!position.disponible) {
+      // Les calculs en cours sont périmés : ils ne doivent pas réafficher l'ancien lieu.
+      this.calcul++;
+      this.lieu = null;
+      this.lieuPret.set(false);
+      this.relancable = null;
+      this.detailStore.details.set([]);
+      this.fermerSaisieSansFocus();
       this.etat.set({ type: 'position introuvable' });
       return;
     }
     this.lieuPret.set(true);
     this.lieu = { latitude: position.latitude, longitude: position.longitude };
-    await this.chargerMoment(new Date(), null);
+    const choisi = this.moment();
+    await this.chargerMoment(choisi?.date ?? new Date(), choisi);
   }
 
   /** Recalcule conditions, heures légales et top 3 pour ce moment. Un choix plus récent l'emporte. */
   private async chargerMoment(moment: Date, choisi: MomentChoisi | null): Promise<void> {
     const lieu = this.lieu;
     if (!lieu) return;
+    const spot = this.spotChoisi();
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
     this.relancable = null;
@@ -926,6 +1014,7 @@ export class ConseilPage implements OnInit {
     const releve = await this.conditions.releve({
       lieu,
       moment,
+      ...(spot ? { spot: { categorie: spot.categorie, departement: spot.departement } } : {}),
       saisieTempEau: this.saisieMemoire ?? this.saisieTempEau.lire() ?? undefined,
     });
     if (perime()) return;
