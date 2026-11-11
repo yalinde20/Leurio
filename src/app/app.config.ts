@@ -4,6 +4,8 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
+import { CompteService } from './core/data/compte.service';
+import { OnboardingStore } from './core/data/onboarding.store';
 import { OpenMeteoService } from './core/data/open-meteo.service';
 import { WeatherProvider } from './core/data/weather-provider';
 import { ThemeService } from './shared/theme.service';
@@ -28,6 +30,12 @@ export const appConfig: ApplicationConfig = {
       import('./core/firebase/firebase.service')
         .then((m) => injector.get(m.FirebaseService).exposerPourLesTests())
         .catch((erreur) => console.error("Firebase n'a pas pu démarrer : l'app continue sans.", erreur));
+    }),
+    // Au lancement, un onboarding déjà fait garantit le compte anonyme en tâche de fond (reprise après un échec ou
+    // un lancement hors ligne). Un compte existant garde son uid. Ne bloque jamais le démarrage.
+    provideAppInitializer(() => {
+      const choix = inject(OnboardingStore).lire();
+      if (choix !== null) void inject(CompteService).assurerCompte(choix);
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
