@@ -1,4 +1,8 @@
 import { test, expect, type APIResponse, type Page } from '@playwright/test';
+import { onboardingTermine } from './onboarding-helpers';
+
+// US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
+test.beforeEach(async ({ page }) => onboardingTermine(page));
 
 function taillePng(octets: Buffer): { largeur: number; hauteur: number } {
   const signature = octets.subarray(0, 8).toString('hex');

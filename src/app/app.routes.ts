@@ -1,9 +1,16 @@
 import { Routes } from '@angular/router';
+import { onboardingAFaire, onboardingTermine } from './features/onboarding/onboarding.guards';
 
-// Les 4 onglets ; toute autre URL (y compris la racine) ouvre le Conseil.
+// L'onboarding (plein écran, au premier lancement), puis les 4 onglets ; toute autre URL (y compris la racine) ouvre le Conseil.
 export const routes: Routes = [
   {
+    path: 'onboarding',
+    canActivate: [onboardingAFaire],
+    loadComponent: () => import('./features/onboarding/onboarding.page').then((m) => m.OnboardingPage),
+  },
+  {
     path: '',
+    canActivate: [onboardingTermine],
     loadComponent: () => import('./shared/onglets/onglets.component').then((m) => m.OngletsComponent),
     children: [
       {

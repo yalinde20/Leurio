@@ -9,6 +9,10 @@ import { App } from './app';
 import { routes } from './app.routes';
 
 describe('App', () => {
+  // US 89 : l'onboarding est terminé (fixture), l'app s'ouvre sur le Conseil.
+  beforeEach(() => localStorage.setItem('leurio.onboarding', JSON.stringify({ niveau: 'debutant', especesFavorites: [] })));
+  afterEach(() => localStorage.clear());
+
   it('affiche les 4 onglets Conseil, Boîte, Spots, Compte et ouvre le Conseil', async () => {
     await TestBed.configureTestingModule({
       imports: [App],

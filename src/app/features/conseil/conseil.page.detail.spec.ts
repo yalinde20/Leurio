@@ -165,7 +165,12 @@ async function ouvrirLApp() {
 }
 type Env = Awaited<ReturnType<typeof ouvrirLApp>>;
 
-afterEach(() => vi.useRealTimers());
+// US 89 : l'onboarding est terminé (fixture), l'app s'ouvre sur le Conseil.
+beforeEach(() => localStorage.setItem('leurio.onboarding', JSON.stringify({ niveau: 'debutant', especesFavorites: [] })));
+afterEach(() => {
+  vi.useRealTimers();
+  localStorage.clear();
+});
 
 const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
 

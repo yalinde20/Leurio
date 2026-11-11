@@ -6,8 +6,9 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
+import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
-import { PositionService } from '../../core/data/position.service';
+import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
@@ -673,6 +674,7 @@ export class ConseilPage implements OnInit {
   private readonly astro = inject(AstroService);
   private readonly catalogue = inject(CatalogService);
   private readonly moteur = inject(MoteurService);
+  private readonly onboarding = inject(OnboardingStore);
   private readonly spots = inject(SpotsService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
@@ -973,7 +975,13 @@ export class ConseilPage implements OnInit {
 
   /** Au départ : lieu = position GPS, moment = maintenant. */
   private async charger(): Promise<void> {
-    await this.appliquerLieu(null);
+    // « Plus tard » à l'onboarding : pas de demande de localisation pour ce lancement.
+    if (this.onboarding.localisationDifferee) {
+      this.etat.set({ type: 'position introuvable' });
+      return;
+    }
+    // La réponse obtenue à la page 3 de l'onboarding sert une fois : le téléphone n'est pas sollicité deux fois.
+    await this.appliquerLieu(null, this.onboarding.prendrePosition());
   }
 
   /** Périme les calculs en cours et vide l'écran : plus rien de l'ancien lieu, ni moment ni espèce ne s'y applique. */
@@ -992,11 +1000,13 @@ export class ConseilPage implements OnInit {
    * Lieu = position GPS (`spot` nul) ou spot enregistré (pas de GPS). Le moment choisi est gardé.
    * Un choix plus récent l'emporte sur une position encore attendue.
    */
-  private async appliquerLieu(spot: SpotEnregistre | null): Promise<void> {
+  private async appliquerLieu(spot: SpotEnregistre | null, positionDonnee: ResultatPosition | null = null): Promise<void> {
     const numero = ++this.choixLieu;
     // L'écran ne montre plus l'ancien lieu pendant qu'on attend la position (le GPS peut être long).
     this.invaliderEcran();
-    const position = spot ? await this.position.positionSpot(spot) : await this.position.positionGps();
+    const position = spot
+      ? await this.position.positionSpot(spot)
+      : (positionDonnee ?? (await this.position.positionGps()));
     if (numero !== this.choixLieu) return;
     if (!position.disponible) {
       this.etat.set({ type: 'position introuvable' });
@@ -1027,6 +1037,7 @@ export class ConseilPage implements OnInit {
     const releve = await this.conditions.releve({
       lieu: coordonnees,
       moment,
+      niveau: this.onboarding.lire()?.niveau ?? 'debutant',
       ...(spot ? { spot: { categorie: spot.categorie, departement: spot.departement } } : {}),
       saisieTempEau: this.saisieMemoire ?? this.saisieTempEau.lire() ?? undefined,
     });

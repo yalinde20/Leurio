@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { onboardingTermine } from './onboarding-helpers';
 
 test('critère 4 : given le serveur de développement, when on ouvre l\'app, then aucun service worker n\'est enregistré', async ({ page }) => {
+  await onboardingTermine(page);
   // Compte les tentatives d'enregistrement : un 404 sur ngsw-worker.js ne doit pas masquer un register() appelé.
   await page.addInitScript(() => {
     const w = window as unknown as { __registerAppels: number };

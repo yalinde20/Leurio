@@ -1,4 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
+import { onboardingTermine } from './onboarding-helpers';
+
+// US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
+test.beforeEach(async ({ page }) => onboardingTermine(page));
 
 // US 33 sur le build de production : une adresse d'onglet ouverte directement affiche cet onglet,
 // y compris hors ligne une fois l'app en cache (fallback du serveur et du service worker).
