@@ -149,6 +149,8 @@ export class BoitePage implements OnInit {
   private declencheur: Element | null = null;
 
   async ngOnInit(): Promise<void> {
+    // Les onglets recréent la page à chaque visite : revenir sur la Boîte relit la boîte après une erreur.
+    this.boite.reessayer();
     try {
       this.typesDuContenu.set(await this.catalogue.typesDeLeurres());
     } catch {

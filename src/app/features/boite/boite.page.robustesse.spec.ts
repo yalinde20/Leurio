@@ -11,13 +11,17 @@ import { BoitePage } from './boite.page';
 const attendre = () => new Promise<void>((r) => setTimeout(r));
 const TYPES = [{ id: 'shad', nom: 'Shad' }] as TypeLeurre[];
 
-async function afficher(opts: { ajouter?: () => Promise<void>; erreurLecture?: boolean } = {}) {
+async function afficher(opts: { ajouter?: () => Promise<void>; erreurLecture?: boolean | 'au-retour' } = {}) {
   let ecritures = 0;
+  // 'au-retour' : les deux premières lectures échouent (la lecture initiale, puis la relecture que la première page fait
+  // en s'ouvrant, le service ayant déjà échoué à ce moment-là) ; la relecture à la visite suivante réussit.
+  let ecoutes = 0;
   const source = {
     uid: async () => 'u1',
     ecouter: (_u: string, ok: (d: never[]) => void, ko: (e: unknown) => void) => {
-      if (opts.erreurLecture) ko(new Error('lecture'));
+      if (opts.erreurLecture === true || (opts.erreurLecture === 'au-retour' && ecoutes < 2)) ko(new Error('lecture'));
       else ok([]);
+      ecoutes++;
       return () => undefined;
     },
     ajouter: async () => {
@@ -60,7 +64,7 @@ async function afficher(opts: { ajouter?: () => Promise<void>; erreurLecture?: b
     await stabiliser();
   };
   const enregistrer = () => dialogue()!.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-  return { page, stabiliser, dialogue, ouvrirEtRemplir, enregistrer, ecritures: () => ecritures };
+  return { fixture, page, stabiliser, dialogue, ouvrirEtRemplir, enregistrer, ecritures: () => ecritures };
 }
 
 describe('BoitePage : robustesse (US 99, revue)', () => {
@@ -105,5 +109,18 @@ describe('BoitePage : robustesse (US 99, revue)', () => {
     await env.ouvrirEtRemplir();
     const aide = (id: string) => env.page.querySelector<HTMLInputElement>(`#${id}`)!.placeholder;
     expect([aide('leurre-taille'), aide('leurre-poids'), aide('leurre-couleur')]).toEqual(['Ex. : 10', 'Ex. : 12', 'Ex. : gardon']);
+  });
+
+  it('given une erreur de lecture, when je reviens sur la page « Boîte », then la boîte est relue et la liste réapparaît', async () => {
+    const env = await afficher({ erreurLecture: 'au-retour' });
+    expect(env.page.textContent).toContain('Impossible de lire ta boîte.');
+    const retour = TestBed.createComponent(BoitePage);
+    await retour.whenStable();
+    retour.detectChanges();
+    await attendre();
+    retour.detectChanges();
+    const texte = (retour.nativeElement as HTMLElement).textContent ?? '';
+    expect(texte).not.toContain('Impossible de lire ta boîte.');
+    expect(texte).toContain('Ta boîte est vide.');
   });
 });

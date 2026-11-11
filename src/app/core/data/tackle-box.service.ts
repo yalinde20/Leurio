@@ -91,6 +91,14 @@ export class TackleBoxService {
     });
   }
 
+  /** Après une erreur de lecture, relit la boîte de l'utilisateur courant (la liste repasse en chargement). Sinon ne fait rien. */
+  reessayer(): void {
+    if (!this._erreur()) return;
+    if (this.uidCourant !== undefined) return this.ecouterPour(this.uidCourant);
+    // L'utilisateur n'a jamais été connu (erreur d'authentification) : on le relit.
+    this.source.uid().then((uid) => this.ecouterPour(uid), () => this._erreur.set(true));
+  }
+
   private async suivre(): Promise<void> {
     try {
       if (this.source.surUid) {
