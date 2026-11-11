@@ -63,3 +63,16 @@ describe('OnboardingStore (US 89)', () => {
     expect(localStorage.getItem('leurio.onboarding')).toBeNull();
   });
 });
+
+describe('OnboardingStore, position obtenue à la page 3 (US 89)', () => {
+  it("critère 5 : given une position obtenue à la page 3, when « Conseil » la prend, then il la reçoit une seule fois", () => {
+    const store = nouveauStore();
+    const position = { disponible: false, motif: 'position refusée' } as const;
+    expect(store.prendrePosition()).toBeNull();
+
+    store.garderPosition(position);
+
+    expect(store.prendrePosition()).toEqual(position);
+    expect(store.prendrePosition()).toBeNull();
+  });
+});

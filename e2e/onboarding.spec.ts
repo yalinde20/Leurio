@@ -213,7 +213,7 @@ test.describe('US 89 : onboarding', () => {
 
   test("critère 10 : given une page d'onboarding affichée sur un téléphone, when on mesure ses boutons, then chaque bouton mesure au moins 48 × 48 px", async ({ page }) => {
     await ouvrirLApp(page);
-    const cibles = page.locator('button:visible, a:visible, ion-button:visible, [role="button"]:visible');
+    const cibles = page.locator('button:visible, a:visible, ion-button:visible, [role="button"]:visible, [role="checkbox"]:visible, [role="radio"]:visible');
     const verifier = async (nomPage: string, minimum: number) => {
       const nombre = await cibles.count();
       expect(nombre, `cibles de ${nomPage}`).toBeGreaterThanOrEqual(minimum);
@@ -231,7 +231,7 @@ test.describe('US 89 : onboarding', () => {
     await verifier('page 1', 2); // « Suivant » et le lien cartedepeche.fr
     await suivant(page).click();
     await expect(titre(page, 'Tes espèces et ton niveau')).toBeVisible();
-    await verifier('page 2', 1);
+    await verifier('page 2', 10); // 7 espèces, 2 niveaux et « Suivant »
     await page.getByRole('radio', { name: /Débutant/ }).click();
     await suivant(page).click();
     await expect(titre(page, 'Pourquoi ta position ?')).toBeVisible();

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { onboardingAFaire, onboardingTermine } from './core/onboarding.guards';
+import { onboardingAFaire, onboardingTermine } from './features/onboarding/onboarding.guards';
 
 // L'onboarding (plein écran, au premier lancement), puis les 4 onglets ; toute autre URL (y compris la racine) ouvre le Conseil.
 export const routes: Routes = [

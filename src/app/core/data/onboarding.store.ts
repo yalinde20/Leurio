@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ResultatPosition } from './position.service';
 
 export interface ChoixOnboarding {
   niveau: 'debutant' | 'intermediaire';
@@ -24,6 +25,9 @@ export class OnboardingStore {
   /** « Plus tard » touché pendant ce lancement : en mémoire seulement, jamais gardé. */
   localisationDifferee = false;
 
+  /** La réponse du téléphone obtenue à la page 3, pour que « Conseil » ne redemande pas la position. Rendue une seule fois. */
+  private positionObtenue: ResultatPosition | null = null;
+
   // Copie en mémoire : si le stockage est inaccessible, l'onboarding terminé ne boucle pas pendant ce lancement.
   private choix: ChoixOnboarding | null = null;
 
@@ -38,6 +42,16 @@ export class OnboardingStore {
     } catch {
       return null;
     }
+  }
+
+  garderPosition(position: ResultatPosition): void {
+    this.positionObtenue = position;
+  }
+
+  prendrePosition(): ResultatPosition | null {
+    const position = this.positionObtenue;
+    this.positionObtenue = null;
+    return position;
   }
 
   terminer(choix: ChoixOnboarding): void {

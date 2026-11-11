@@ -220,7 +220,7 @@ const NIVEAUX: { valeur: Niveau; libelle: string; precision: string }[] = [
   `,
   template: `
     <div class="ob">
-      <div class="points" [attr.aria-label]="'Page ' + (page() + 1) + ' sur 3'">
+      <div class="points" role="img" [attr.aria-label]="'Page ' + (page() + 1) + ' sur 3'">
         @for (n of [0, 1, 2]; track n) {
           <span [class.on]="n === page()"></span>
         }
@@ -309,7 +309,9 @@ const NIVEAUX: { valeur: Niveau; libelle: string; precision: string }[] = [
           </ul>
           <p class="aide">Ta position n'est montrée à personne. Sans elle, tu peux choisir un de tes spots.</p>
           <div class="bas">
-            <button type="button" class="bouton" (click)="autoriser()">Autoriser la localisation</button>
+            <button type="button" class="bouton" [attr.aria-busy]="enCours()" (click)="autoriser()">
+              {{ enCours() ? 'Localisation…' : 'Autoriser la localisation' }}
+            </button>
             <button type="button" class="bouton-sec" (click)="plusTard()">Plus tard</button>
           </div>
         }
@@ -332,6 +334,7 @@ export class OnboardingPage implements OnInit {
   protected readonly especesCochees = signal<string[]>([]);
   protected readonly niveau = signal<Niveau | null>(null);
   protected readonly niveauManquant = signal(false);
+  protected readonly enCours = signal(false);
   private termine = false;
 
   ngOnInit(): void {
@@ -361,7 +364,9 @@ export class OnboardingPage implements OnInit {
   protected async autoriser(): Promise<void> {
     if (this.termine) return;
     this.termine = true;
-    await this.position.positionGps();
+    this.enCours.set(true);
+    // La réponse est transmise à « Conseil » : il ne redemande pas la position au téléphone.
+    this.store.garderPosition(await this.position.positionGps());
     this.terminer();
   }
 

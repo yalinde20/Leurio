@@ -906,7 +906,7 @@ export class ConseilPage implements OnInit {
       this.etat.set({ type: 'position introuvable' });
       return;
     }
-    const position = await this.position.positionGps();
+    const position = this.onboarding.prendrePosition() ?? (await this.position.positionGps());
     if (!position.disponible) {
       this.etat.set({ type: 'position introuvable' });
       return;
