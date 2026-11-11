@@ -120,14 +120,14 @@ export type EtatSpots = 'chargement' | 'pret' | 'erreur';
       </div>
       @switch (etat()) {
         @case ('chargement') {
-          <p class="message">Chargement des spots…</p>
+          <p class="message" role="status">Chargement des spots…</p>
         }
         @case ('erreur') {
-          <p class="message">Tes spots ne sont pas disponibles pour le moment.</p>
+          <p class="message" role="status">Tes spots ne sont pas disponibles pour le moment.</p>
         }
         @default {
           @if (spots().length === 0) {
-            <p class="message">Aucun spot enregistré</p>
+            <p class="message" role="status">Aucun spot enregistré</p>
           }
         }
       }

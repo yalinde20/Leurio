@@ -1,6 +1,5 @@
 import { inject, Injectable, InjectionToken, Injector } from '@angular/core';
-import { collection, getDocs } from 'firebase/firestore';
-import { FirebaseService } from '../firebase/firebase.service';
+import { creerSourceSpotsFirebase } from '../firebase/source-spots';
 
 /** Un spot enregistré, réduit à ce dont le conseil a besoin (PLAN §7 : `users/{uid}/spots`). */
 export interface SpotEnregistre {
@@ -21,25 +20,14 @@ export interface DocumentSpot {
 /** Ce que le service lit de Firebase (remplacé par un double dans les tests). */
 export interface SourceSpots {
   /** L'identifiant de l'utilisateur connecté, `null` sans compte. */
-  uid(): string | null;
+  uid(): Promise<string | null>;
   /** Les documents de `users/{uid}/spots`. */
   documents(uid: string): Promise<DocumentSpot[]>;
 }
 
 export const SOURCE_SPOTS = new InjectionToken<SourceSpots>('SOURCE_SPOTS', {
   providedIn: 'root',
-  factory: () => {
-    // Firebase ne s'initialise qu'à la première lecture : afficher la page ne le démarre pas.
-    const injector = inject(Injector);
-    const firebase = () => injector.get(FirebaseService);
-    return {
-      uid: () => firebase().auth.currentUser?.uid ?? null,
-      documents: async (uid) => {
-        const instantane = await getDocs(collection(firebase().db, 'users', uid, 'spots'));
-        return instantane.docs.map((d) => ({ id: d.id, data: d.data() }));
-      },
-    };
-  },
+  factory: () => creerSourceSpotsFirebase(inject(Injector)),
 });
 
 const estTexte = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
@@ -61,7 +49,7 @@ export class SpotsService {
 
   /** Sans utilisateur connecté, aucun spot. Une erreur de lecture est propagée à l'appelant. */
   async mesSpots(): Promise<SpotEnregistre[]> {
-    const uid = this.source.uid();
+    const uid = await this.source.uid();
     if (uid === null) return [];
     const documents = await this.source.documents(uid);
     return documents.map(enSpot).filter((s): s is SpotEnregistre => s !== null);

@@ -8,7 +8,7 @@ function service(uid: string | null, documents: DocumentSpot[] | Error) {
       {
         provide: SOURCE_SPOTS,
         useValue: {
-          uid: () => uid,
+          uid: async () => uid,
           documents: async (u: string) => {
             lectures.push(u);
             if (documents instanceof Error) throw documents;

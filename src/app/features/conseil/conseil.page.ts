@@ -47,9 +47,11 @@ interface MomentChoisi {
   mention: string;
 }
 
+/** Le lieu du conseil, avec le spot dont il vient (`null` = position GPS) : les deux vont ensemble. */
 interface Lieu {
   latitude: number;
   longitude: number;
+  spot: SpotEnregistre | null;
 }
 
 /** Ce que le choix d'une espèce relance : le relevé du moment affiché, tant que la pêche y est légale. */
@@ -75,6 +77,8 @@ interface CarteConditions {
   heuresLegales: string;
   federation?: Federation;
   date: Date;
+  /** Catégorie du spot du relevé affiché ; `null` pour la position GPS. */
+  categorie: 1 | 2 | null;
 }
 
 /** Une carte de conseil, déjà traduite en noms et formatée. */
@@ -118,6 +122,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
   host: { class: 'ion-page' },
   styles: `
     .selecteur,
+    /* Classe à part de .selecteur : des specs plus anciennes (US 82) cherchent le sélecteur « Moment » par button.selecteur, le premier. */
     .selecteur-lieu {
       display: flex;
       align-items: center;
@@ -624,7 +629,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       }
       @if (carte(); as c) {
         <app-bandeau-reglementation
-          [categorie]="spotChoisi()?.categorie ?? null"
+          [categorie]="c.categorie"
           [espece]="espece()"
           [especes]="especes()"
           [date]="c.date"
@@ -835,7 +840,8 @@ export class ConseilPage implements OnInit {
 
   protected choisirLieu(spot: SpotEnregistre | null): void {
     this.fermerChoixLieu();
-    if ((spot?.id ?? null) === (this.spotChoisi()?.id ?? null)) return;
+    // Même lieu : rien à refaire, sauf si la position manque encore (« Ma position » se redemande).
+    if ((spot?.id ?? null) === (this.spotChoisi()?.id ?? null) && this.etat().type !== 'position introuvable') return;
     this.spotChoisi.set(spot);
     void this.appliquerLieu(spot);
   }
@@ -971,27 +977,34 @@ export class ConseilPage implements OnInit {
     await this.appliquerLieu(null);
   }
 
+  /** Périme les calculs en cours et vide l'écran : plus rien de l'ancien lieu, ni moment ni espèce ne s'y applique. */
+  private invaliderEcran(): void {
+    this.calcul++;
+    this.lieu = null;
+    this.lieuPret.set(false);
+    this.relancable = null;
+    this.detailStore.details.set([]);
+    this.fermerSaisieSansFocus();
+    this.etat.set({ type: 'chargement' });
+    this.conseil.set({ type: 'calcul' });
+  }
+
   /**
    * Lieu = position GPS (`spot` nul) ou spot enregistré (pas de GPS). Le moment choisi est gardé.
    * Un choix plus récent l'emporte sur une position encore attendue.
    */
   private async appliquerLieu(spot: SpotEnregistre | null): Promise<void> {
     const numero = ++this.choixLieu;
+    // L'écran ne montre plus l'ancien lieu pendant qu'on attend la position (le GPS peut être long).
+    this.invaliderEcran();
     const position = spot ? await this.position.positionSpot(spot) : await this.position.positionGps();
     if (numero !== this.choixLieu) return;
     if (!position.disponible) {
-      // Les calculs en cours sont périmés : ils ne doivent pas réafficher l'ancien lieu.
-      this.calcul++;
-      this.lieu = null;
-      this.lieuPret.set(false);
-      this.relancable = null;
-      this.detailStore.details.set([]);
-      this.fermerSaisieSansFocus();
       this.etat.set({ type: 'position introuvable' });
       return;
     }
     this.lieuPret.set(true);
-    this.lieu = { latitude: position.latitude, longitude: position.longitude };
+    this.lieu = { latitude: position.latitude, longitude: position.longitude, spot };
     const choisi = this.moment();
     await this.chargerMoment(choisi?.date ?? new Date(), choisi);
   }
@@ -1000,7 +1013,8 @@ export class ConseilPage implements OnInit {
   private async chargerMoment(moment: Date, choisi: MomentChoisi | null): Promise<void> {
     const lieu = this.lieu;
     if (!lieu) return;
-    const spot = this.spotChoisi();
+    const { spot, latitude, longitude } = lieu;
+    const coordonnees = { latitude, longitude };
     const numero = ++this.calcul;
     const perime = () => numero !== this.calcul;
     this.relancable = null;
@@ -1012,23 +1026,24 @@ export class ConseilPage implements OnInit {
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
     const releve = await this.conditions.releve({
-      lieu,
+      lieu: coordonnees,
       moment,
       ...(spot ? { spot: { categorie: spot.categorie, departement: spot.departement } } : {}),
       saisieTempEau: this.saisieMemoire ?? this.saisieTempEau.lire() ?? undefined,
     });
     if (perime()) return;
-    const heures = heuresLegales(this.astro.soleil(lieu, moment));
+    const heures = heuresLegales(this.astro.soleil(coordonnees, moment));
     const federation = await this.catalogue.federation(releve.conditions.departement);
     if (perime()) return;
     const texteHeures = heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible';
     this.etat.set({
       type: 'pret',
       carte: {
-        ...this.composer(releve, this.astro.lune(moment, lieu).phase, texteHeures),
+        ...this.composer(releve, this.astro.lune(moment, coordonnees).phase, texteHeures),
         prevision: choisi ? `Prévisions pour ${choisi.mention}` : undefined,
         federation,
         date: moment,
+        categorie: spot?.categorie ?? null,
       },
     });
     if (heures && !this.pecheLegale(moment, heures, choisi !== null)) {
@@ -1114,7 +1129,7 @@ export class ConseilPage implements OnInit {
     releve: ReleveActuel,
     lune: string,
     heures: string,
-  ): Omit<CarteConditions, 'federation' | 'date' | 'prevision'> {
+  ): Omit<CarteConditions, 'federation' | 'date' | 'prevision' | 'categorie'> {
     const { conditions } = releve;
     return {
       mention: releve.mention,
