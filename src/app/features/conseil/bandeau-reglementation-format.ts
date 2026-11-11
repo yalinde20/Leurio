@@ -84,6 +84,9 @@ export function composerReglementation(
       lignes.push({ libelle: '2e catégorie', valeur: 'Ouvert', ferme: false });
     }
   } else {
+    if (categorie === 1 && etatOuverture(1, date) === 'ferme') {
+      lignes.push({ libelle: '', valeur: 'Fermé : 1re catégorie hors saison', ferme: true, alerte: true });
+    }
     lignes.push({ libelle: 'Pêche', ...(categorie === 1 ? etat1re(date) : etat2e(date)) });
   }
   const alertes = (espece ? [espece] : especes).map((e) => alerteEspece(e, date));
