@@ -14,6 +14,20 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
       await auth.authStateReady();
       return auth.currentUser?.uid ?? null;
     },
+    surUid(rappel) {
+      let arrete = false;
+      let desabonner: () => void = () => undefined;
+      void (async () => {
+        const { auth } = await firebase();
+        const { onAuthStateChanged } = await import('firebase/auth');
+        if (arrete) return;
+        desabonner = onAuthStateChanged(auth, (utilisateur) => rappel(utilisateur?.uid ?? null));
+      })();
+      return () => {
+        arrete = true;
+        desabonner();
+      };
+    },
     ecouter(uid, surChangement, surErreur) {
       let arrete = false;
       let desabonner: () => void = () => undefined;

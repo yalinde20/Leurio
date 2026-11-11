@@ -1,6 +1,6 @@
 // US 99 : ajouter un leurre à ma boîte, sur les émulateurs (PLAN §3, §4, §7 : users/{uid}/tackleBox).
 // Contrat du DOM : voir src/app/features/boite/boite.page.ajout.spec.ts (formulaire = [role="dialog"], champs par libellé).
-// Un utilisateur anonyme est connecté via window.leurioFirebase avant d'ouvrir l'onglet « Boîte ».
+// L'utilisateur anonyme est celui que l'app crée en silence (US 90) ; on attend son uid via window.leurioFirebase.
 import { test, expect, type Page } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
@@ -17,10 +17,10 @@ test.beforeEach(async ({ page }) => {
 async function ouvrirBoite(page: Page): Promise<string> {
   await page.goto('/');
   await attendreFirebase(page);
-  const uid = await page.evaluate(async () => {
-    const f = (window as any).leurioFirebase;
-    return (await f.sdk.auth.signInAnonymously(f.auth)).user.uid as string;
-  });
+  // Le compte anonyme est créé par l'app elle-même (US 90) : on l'attend au lieu d'en ouvrir un second.
+  const lireUid = () => page.evaluate(() => ((window as any).leurioFirebase.auth.currentUser?.uid ?? null) as string | null);
+  await expect.poll(lireUid, { timeout: 20_000 }).not.toBeNull();
+  const uid = (await lireUid())!;
   await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Boîte');
   return uid;
@@ -102,6 +102,7 @@ test('critère 6 : given je n\'ai pas de réseau, when j\'enregistre un leurre, 
 
 test('critère 8 : given l\'onglet « Boîte » ou le formulaire affiché, when on mesure ses boutons, then chaque bouton mesure au moins 48 × 48 px', async ({ page }) => {
   await ouvrirBoite(page);
+  await expect(page.getByText('Ta boîte est vide.')).toBeVisible();
   const mesurer = async (zone: ReturnType<Page['locator']>, contexte: string) => {
     const boutons = zone.getByRole('button');
     expect(await boutons.count(), `boutons (${contexte})`).toBeGreaterThan(0);
@@ -116,6 +117,7 @@ test('critère 8 : given l\'onglet « Boîte » ou le formulaire affiché, when 
   // Hors barre d'onglets (testée par l'US des onglets) : l'écran vide, la liste, puis le formulaire.
   await mesurer(page.locator('ion-content:visible'), 'boîte vide');
   await page.getByRole('button', { name: 'Ajouter un leurre', exact: true }).click();
+  await expect(formulaire(page)).toBeVisible();
   await mesurer(formulaire(page), 'formulaire');
   await remplir(page);
   await formulaire(page).getByRole('button', { name: 'Enregistrer', exact: true }).click();

@@ -33,6 +33,8 @@ export interface DocumentLeurre {
 export interface SourceTackleBox {
   /** L'identifiant de l'utilisateur connecté, `null` sans compte. */
   uid(): Promise<string | null>;
+  /** Prévient à chaque changement d'utilisateur connecté (le compte anonyme peut naître après l'ouverture de l'onglet). Facultatif. */
+  surUid?(rappel: (uid: string | null) => void): () => void;
   /** Appelle `surChangement` avec tous les documents de `users/{uid}/tackleBox` à chaque changement. Rend le désabonnement. */
   ecouter(uid: string, surChangement: (documents: DocumentLeurre[]) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Crée un document ; résout dès l'écriture locale, sans attendre le serveur. */
@@ -84,23 +86,37 @@ export class TackleBoxService {
   }
 
   private async suivre(): Promise<void> {
-    const vide = () => this._leurres.update((l) => l ?? []);
     try {
-      const uid = await this.source.uid();
-      if (uid === null) return vide();
-      this.source.ecouter(
-        uid,
-        (documents) =>
-          this._leurres.set(
-            documents
-              .map(enLeurre)
-              .filter((l): l is Leurre => l !== null)
-              .sort((a, b) => b.createdAt - a.createdAt),
-          ),
-        vide,
-      );
+      if (this.source.surUid) {
+        this.source.surUid((uid) => this.ecouterPour(uid));
+      } else {
+        this.ecouterPour(await this.source.uid());
+      }
     } catch {
-      vide();
+      this.ecouterPour(null);
     }
   }
+
+  /** (Ré)abonne la liste à la boîte de cet utilisateur ; sans utilisateur, la boîte est vide. */
+  private ecouterPour(uid: string | null): void {
+    this.arreter();
+    const vide = () => this._leurres.update((l) => l ?? []);
+    if (uid === null) {
+      this._leurres.set([]);
+      return;
+    }
+    this.arreter = this.source.ecouter(
+      uid,
+      (documents) =>
+        this._leurres.set(
+          documents
+            .map(enLeurre)
+            .filter((l): l is Leurre => l !== null)
+            .sort((a, b) => b.createdAt - a.createdAt),
+        ),
+      vide,
+    );
+  }
+
+  private arreter: () => void = () => undefined;
 }
