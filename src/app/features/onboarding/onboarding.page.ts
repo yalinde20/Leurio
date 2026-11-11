@@ -1,6 +1,7 @@
 import { afterNextRender, Component, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CatalogService, Espece } from '../../core/data/catalog.service';
+import { CompteService } from '../../core/data/compte.service';
 import { ChoixOnboarding, OnboardingStore } from '../../core/data/onboarding.store';
 import { PositionService } from '../../core/data/position.service';
 
@@ -323,6 +324,7 @@ export class OnboardingPage implements OnInit {
   private readonly catalogue = inject(CatalogService);
   private readonly position = inject(PositionService);
   private readonly store = inject(OnboardingStore);
+  private readonly compte = inject(CompteService);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly titre = viewChild.required<ElementRef<HTMLElement>>('titre');
@@ -385,7 +387,10 @@ export class OnboardingPage implements OnInit {
     const especesFavorites = this.especes()
       .map((e) => e.code)
       .filter((code) => this.especesCochees().includes(code));
-    this.store.terminer({ niveau, especesFavorites });
+    const choix = { niveau, especesFavorites };
+    this.store.terminer(choix);
+    // Compte anonyme en silence : on ne l'attend pas et on n'en dit rien (assurerCompte ne rejette pas).
+    void this.compte.assurerCompte(choix).catch(() => undefined);
     void this.router.navigateByUrl('/conseil', { replaceUrl: true });
   }
 }
