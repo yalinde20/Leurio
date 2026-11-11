@@ -121,9 +121,11 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
   ],
   host: { class: 'ion-page' },
   styles: `
-    .selecteur,
-    /* Classe à part de .selecteur : des specs plus anciennes (US 82) cherchent le sélecteur « Moment » par button.selecteur, le premier. */
-    .selecteur-lieu {
+    /*
+     * .selecteur et .selecteur-lieu ([class|=selecteur]). Classe à part pour « Lieu » : des specs plus anciennes (US 82)
+     * cherchent le sélecteur « Moment » par button.selecteur, le premier.
+     */
+    [class|=selecteur] {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -140,19 +142,16 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-size: 16px;
       text-align: left;
     }
-    .selecteur .lib,
-    .selecteur-lieu .lib {
+    .lib {
       display: block;
       font-size: 14px;
       color: var(--lr-texte-secondaire);
     }
-    .selecteur .val,
-    .selecteur-lieu .val {
+    .val {
       font-size: 17px;
       font-weight: 700;
     }
-    .selecteur .chevron,
-    .selecteur-lieu .chevron {
+    .chevron {
       font-size: 22px;
       color: var(--lr-primaire);
     }
