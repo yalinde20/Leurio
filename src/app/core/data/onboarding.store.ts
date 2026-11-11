@@ -5,16 +5,47 @@ export interface ChoixOnboarding {
   especesFavorites: string[];
 }
 
-// STUB vide (US 89, tests d'acceptation) : l'implémentation vient après les tests.
+/** Clé du localStorage où l'onboarding terminé est gardé (US 89). L'US 90 recopiera ces choix dans users/{uid}. */
+const CLE = 'leurio.onboarding';
+
+function estChoix(valeur: unknown): valeur is ChoixOnboarding {
+  if (typeof valeur !== 'object' || valeur === null) return false;
+  const { niveau, especesFavorites } = valeur as Record<string, unknown>;
+  return (
+    (niveau === 'debutant' || niveau === 'intermediaire') &&
+    Array.isArray(especesFavorites) &&
+    especesFavorites.every((code) => typeof code === 'string')
+  );
+}
+
+/** L'onboarding terminé (niveau et espèces favorites), gardé sur le téléphone. Ne lève jamais d'erreur. */
 @Injectable({ providedIn: 'root' })
 export class OnboardingStore {
+  /** « Plus tard » touché pendant ce lancement : en mémoire seulement, jamais gardé. */
   localisationDifferee = false;
 
+  // Copie en mémoire : si le stockage est inaccessible, l'onboarding terminé ne boucle pas pendant ce lancement.
+  private choix: ChoixOnboarding | null = null;
+
+  /** Les choix de l'onboarding terminé ; `null` s'il n'est pas terminé ou si le stockage est illisible. */
   lire(): ChoixOnboarding | null {
-    return null;
+    if (this.choix) return this.choix;
+    try {
+      const brut = localStorage.getItem(CLE);
+      if (brut === null) return null;
+      const valeur: unknown = JSON.parse(brut);
+      return estChoix(valeur) ? { niveau: valeur.niveau, especesFavorites: valeur.especesFavorites } : null;
+    } catch {
+      return null;
+    }
   }
 
   terminer(choix: ChoixOnboarding): void {
-    void choix;
+    this.choix = choix;
+    try {
+      localStorage.setItem(CLE, JSON.stringify({ niveau: choix.niveau, especesFavorites: choix.especesFavorites }));
+    } catch {
+      // Stockage plein ou inaccessible : l'onboarding sera remontré au prochain lancement.
+    }
   }
 }

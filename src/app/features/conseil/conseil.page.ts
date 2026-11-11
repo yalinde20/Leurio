@@ -6,6 +6,7 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
+import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
@@ -640,6 +641,7 @@ export class ConseilPage implements OnInit {
   private readonly astro = inject(AstroService);
   private readonly catalogue = inject(CatalogService);
   private readonly moteur = inject(MoteurService);
+  private readonly onboarding = inject(OnboardingStore);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
   private readonly router = inject(Router);
@@ -899,6 +901,11 @@ export class ConseilPage implements OnInit {
 
   /** Lieu = position GPS (demandée une seule fois), moment = maintenant. */
   private async charger(): Promise<void> {
+    // « Plus tard » à l'onboarding : pas de demande de localisation pour ce lancement.
+    if (this.onboarding.localisationDifferee) {
+      this.etat.set({ type: 'position introuvable' });
+      return;
+    }
     const position = await this.position.positionGps();
     if (!position.disponible) {
       this.etat.set({ type: 'position introuvable' });
@@ -926,6 +933,7 @@ export class ConseilPage implements OnInit {
     const releve = await this.conditions.releve({
       lieu,
       moment,
+      niveau: this.onboarding.lire()?.niveau ?? 'debutant',
       saisieTempEau: this.saisieMemoire ?? this.saisieTempEau.lire() ?? undefined,
     });
     if (perime()) return;
