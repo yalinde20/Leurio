@@ -135,7 +135,14 @@ test.describe('US 90 : compte anonyme en silence', () => {
 
     expect(await uidAnonyme(page)).toBe(uid);
     expect(inscriptions, 'une seule inscription sur les deux lancements').toHaveLength(1);
-    const comptes = await (await fetch(`http://127.0.0.1:${EMULATEURS.auth}/emulator/v1/projects/${PROJET}/accounts`)).json();
+    // Liste des comptes de l'émulateur Auth (API d'administration, jeton « owner » propre à l'émulateur).
+    const comptes = await (
+      await fetch(`http://127.0.0.1:${EMULATEURS.auth}/identitytoolkit.googleapis.com/v1/projects/${PROJET}/accounts:query`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+    ).json();
     const memeUid = (comptes.userInfo as { localId: string }[]).filter((u) => u.localId === uid);
     expect(memeUid).toHaveLength(1);
   });
