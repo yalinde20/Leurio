@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.39.0](https://github.com/yalinde20/Leurio/compare/v1.38.0...v1.39.0) (2026-11-11)
+
+
+### Features
+
+* **US 90:** créer le compte anonyme en silence à la fin de l'onboarding ([456b4b6](https://github.com/yalinde20/Leurio/commit/456b4b61fd505b6963e18133695d393ca1a4b4bf))
+* **US 90:** marqueur local, délai, reprise à la visibilité du compte anonyme ([929b011](https://github.com/yalinde20/Leurio/commit/929b011f12b03bf7818b7cbca1a2416fe577d7c2))
+
 ## [1.38.0](https://github.com/yalinde20/Leurio/compare/v1.37.0...v1.38.0) (2026-11-11)
 
 
