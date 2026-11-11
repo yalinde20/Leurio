@@ -71,7 +71,7 @@ async function versPage2(page: Page): Promise<void> {
   await expect(titre(page, 'Tes espèces et ton niveau')).toBeVisible();
 }
 
-async function versPage3(page: Page, niveau: RegExp = /Débutant/): Promise<void> {
+async function versPage3(page: Page, niveau = /Débutant/): Promise<void> {
   await versPage2(page);
   await page.getByRole('radio', { name: niveau }).click();
   await suivant(page).click();
