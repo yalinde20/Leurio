@@ -121,3 +121,16 @@ for (const [col, id] of [['autre', 'doc'], ['admin', 'config']]) {
     await assertFails(deleteDoc(ref));
   });
 }
+
+// US 90 : le profil écrit en silence à la fin de l'onboarding (forme de UserDoc) n'est accessible qu'à son propriétaire.
+const profilAnonyme = { ...profil, plan: 'free' };
+
+test('US 90 critère 6 : given les règles Firestore déployées et un profil users/A créé à l\'onboarding, when un autre utilisateur B tente de le lire ou de l\'écrire, then l\'opération est refusée', async () => {
+  await assertSucceeds(setDoc(doc(db(A), 'users', A), profilAnonyme));
+  const ref = doc(db(B), 'users', A);
+  await assertFails(getDoc(ref));
+  await assertFails(setDoc(ref, profilAnonyme));
+  await assertFails(setDoc(ref, { ...profilAnonyme, niveau: 'intermediaire' }));
+  await assertFails(updateDoc(ref, { plan: 'pro' }));
+  await assertFails(deleteDoc(ref));
+});
