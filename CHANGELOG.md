@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.38.0](https://github.com/yalinde20/Leurio/compare/v1.37.0...v1.38.0) (2026-11-11)
+
+
+### Features
+
+* **US 87:** choisir un spot enregistré comme lieu du conseil ([9d58dba](https://github.com/yalinde20/Leurio/commit/9d58dbae018fa24bc1aa15b4fc3c7811944a21b6))
+
+
+### Bug Fixes
+
+* **US 87:** vider l'écran pendant le choix du lieu, Firestore chargé à la demande ([6a16880](https://github.com/yalinde20/Leurio/commit/6a16880535d7046d40431871bf731eda02c6c1eb))
+
 ## [1.37.0](https://github.com/yalinde20/Leurio/compare/v1.36.0...v1.37.0) (2026-11-10)
 
 
