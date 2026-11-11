@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.37.0](https://github.com/yalinde20/Leurio/compare/v1.36.0...v1.37.0) (2026-11-10)
+
+
+### Features
+
+* **US 86:** détail d'un conseil et fiche animation simple ([fe458bd](https://github.com/yalinde20/Leurio/commit/fe458bdecadac3238a66f32cc176e8163e39c1fc))
+
+
+### Bug Fixes
+
+* **US 86:** corrections de la revue ([e5eb5b0](https://github.com/yalinde20/Leurio/commit/e5eb5b0346365b48e2b74beebe0bc91bcba428fa))
+* **US 86:** détail figé à l'ouverture et nom accessible distinct des boutons « Voir le détail » ([8b57660](https://github.com/yalinde20/Leurio/commit/8b5766071e0cef1a583f759ee67947e229d1823c))
+
 ## [1.36.0](https://github.com/yalinde20/Leurio/compare/v1.35.0...v1.36.0) (2026-11-09)
 
 
