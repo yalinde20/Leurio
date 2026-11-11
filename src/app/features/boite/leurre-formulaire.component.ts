@@ -102,6 +102,9 @@ export interface ChoixType {
       font-weight: 600;
       color: var(--lr-danger);
     }
+    .enregistrer:disabled {
+      opacity: 0.6;
+    }
     .enregistrer {
       display: flex;
       align-items: center;
@@ -152,6 +155,7 @@ export interface ChoixType {
               type="text"
               inputmode="decimal"
               autocomplete="off"
+              placeholder="Ex. : 10"
               [attr.aria-invalid]="erreurTaille() ? 'true' : null"
               [attr.aria-describedby]="erreurTaille() ? 'erreur-taille' : null"
               (input)="taille.set($any($event.target).value)"
@@ -168,6 +172,7 @@ export interface ChoixType {
               type="text"
               inputmode="decimal"
               autocomplete="off"
+              placeholder="Ex. : 12"
               [attr.aria-invalid]="erreurPoids() ? 'true' : null"
               [attr.aria-describedby]="erreurPoids() ? 'erreur-poids' : null"
               (input)="poids.set($any($event.target).value)"
@@ -184,6 +189,7 @@ export interface ChoixType {
             id="leurre-couleur"
             type="text"
             autocomplete="off"
+            placeholder="Ex. : gardon"
             [attr.aria-invalid]="erreurCouleur() ? 'true' : null"
             [attr.aria-describedby]="erreurCouleur() ? 'erreur-couleur' : null"
             (input)="couleur.set($any($event.target).value)"
@@ -207,7 +213,7 @@ export interface ChoixType {
         @if (echec()) {
           <p class="erreur" role="alert">Impossible d'enregistrer le leurre. Réessaie.</p>
         }
-        <button type="submit" class="enregistrer">Enregistrer</button>
+        <button type="submit" class="enregistrer" [disabled]="enCours()" [attr.aria-busy]="enCours() ? 'true' : null">Enregistrer</button>
       </form>
     </div>
   `,
@@ -216,6 +222,8 @@ export class LeurreFormulaireComponent implements AfterViewInit {
   readonly types = input.required<ChoixType[]>();
   /** Affiche un message d'échec d'enregistrement (la page le pilote). */
   readonly echec = input(false);
+  /** Un enregistrement est en cours : le bouton est désactivé pour éviter un double ajout. */
+  readonly enCours = input(false);
   readonly valide = output<SaisieLeurre>();
   readonly annuler = output<void>();
 

@@ -34,7 +34,7 @@ export interface SourceTackleBox {
   /** L'identifiant de l'utilisateur connecté, `null` sans compte. */
   uid(): Promise<string | null>;
   /** Prévient à chaque changement d'utilisateur connecté (le compte anonyme peut naître après l'ouverture de l'onglet). Facultatif. */
-  surUid?(rappel: (uid: string | null) => void): () => void;
+  surUid?(rappel: (uid: string | null) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Appelle `surChangement` avec tous les documents de `users/{uid}/tackleBox` à chaque changement. Rend le désabonnement. */
   ecouter(uid: string, surChangement: (documents: DocumentLeurre[]) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Crée un document ; résout dès l'écriture locale, sans attendre le serveur. */
@@ -67,6 +67,12 @@ export class TackleBoxService {
   /** `null` tant que le premier instantané n'est pas arrivé ; ensuite le plus récent d'abord. */
   readonly leurres = this._leurres.asReadonly();
 
+  private readonly _erreur = signal(false);
+  /** `true` quand la boîte n'a pas pu être lue ; revient à `false` au prochain instantané ou changement d'utilisateur. */
+  readonly erreur = this._erreur.asReadonly();
+
+  private uidCourant: string | null | undefined;
+
   constructor() {
     void this.suivre();
   }
@@ -88,33 +94,40 @@ export class TackleBoxService {
   private async suivre(): Promise<void> {
     try {
       if (this.source.surUid) {
-        this.source.surUid((uid) => this.ecouterPour(uid));
+        // Abonnement gardé pour toute la vie du service (singleton racine) : on ne le coupe jamais.
+        this.source.surUid((uid) => this.ecouterPour(uid), () => this._erreur.set(true));
       } else {
         this.ecouterPour(await this.source.uid());
       }
     } catch {
-      this.ecouterPour(null);
+      this._erreur.set(true);
     }
   }
 
   /** (Ré)abonne la liste à la boîte de cet utilisateur ; sans utilisateur, la boîte est vide. */
   private ecouterPour(uid: string | null): void {
     this.arreter();
-    const vide = () => this._leurres.update((l) => l ?? []);
+    this.arreter = () => undefined;
+    this._erreur.set(false);
+    // Autre compte : on repasse en chargement jusqu'au premier instantané. Sans compte, la boîte est vide.
+    if (uid !== null && this.uidCourant) this._leurres.set(null);
+    this.uidCourant = uid;
     if (uid === null) {
       this._leurres.set([]);
       return;
     }
     this.arreter = this.source.ecouter(
       uid,
-      (documents) =>
+      (documents) => {
+        this._erreur.set(false);
         this._leurres.set(
           documents
             .map(enLeurre)
             .filter((l): l is Leurre => l !== null)
             .sort((a, b) => b.createdAt - a.createdAt),
-        ),
-      vide,
+        );
+      },
+      () => this._erreur.set(true),
     );
   }
 

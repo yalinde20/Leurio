@@ -14,15 +14,15 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
       await auth.authStateReady();
       return auth.currentUser?.uid ?? null;
     },
-    surUid(rappel) {
+    surUid(rappel, surErreur) {
       let arrete = false;
       let desabonner: () => void = () => undefined;
       void (async () => {
         const { auth } = await firebase();
         const { onAuthStateChanged } = await import('firebase/auth');
         if (arrete) return;
-        desabonner = onAuthStateChanged(auth, (utilisateur) => rappel(utilisateur?.uid ?? null));
-      })();
+        desabonner = onAuthStateChanged(auth, (utilisateur) => rappel(utilisateur?.uid ?? null), surErreur);
+      })().catch(surErreur);
       return () => {
         arrete = true;
         desabonner();
@@ -55,7 +55,9 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
       const { collection, doc, setDoc } = await import('firebase/firestore');
       // Le setDoc ne se résout qu'à l'accusé du serveur, absent hors ligne : on ne l'attend pas. L'écriture locale est faite
       // (la liste la voit tout de suite) ; un refus du serveur la retire de la liste.
-      setDoc(doc(collection(db, 'users', uid, 'tackleBox')), data).catch(() => undefined);
+      setDoc(doc(collection(db, 'users', uid, 'tackleBox')), data).catch((erreur: unknown) =>
+        console.warn("Le leurre n'a pas pu être enregistré sur le serveur.", erreur),
+      );
     },
   };
 }

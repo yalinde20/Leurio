@@ -18,6 +18,13 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       font-size: 16px;
       color: var(--lr-texte-secondaire);
     }
+    .erreur-lecture {
+      margin: 0;
+      padding: 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--lr-danger);
+    }
     .vide {
       display: flex;
       flex-direction: column;
@@ -94,7 +101,9 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
     </ion-header>
     <ion-content>
       <div class="contenu">
-        @if (boite.leurres(); as leurres) {
+        @if (boite.erreur()) {
+          <p class="erreur-lecture" role="alert">Impossible de lire ta boîte. Réessaie plus tard.</p>
+        } @else if (boite.leurres(); as leurres) {
           @if (leurres.length === 0) {
             <div class="vide">
               <p>Ta boîte est vide.</p>
@@ -123,7 +132,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       </div>
     </ion-content>
     @if (formulaireOuvert()) {
-      <app-leurre-formulaire [types]="types()" [echec]="echec()" (valide)="enregistrer($event)" (annuler)="fermer()" />
+      <app-leurre-formulaire [types]="types()" [echec]="echec()" [enCours]="enCours()" (valide)="enregistrer($event)" (annuler)="fermer()" />
     }
   `,
 })
@@ -136,6 +145,8 @@ export class BoitePage implements OnInit {
   private readonly noms = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.nom])));
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
+  protected readonly enCours = signal(false);
+  private declencheur: Element | null = null;
 
   async ngOnInit(): Promise<void> {
     try {
@@ -151,19 +162,28 @@ export class BoitePage implements OnInit {
 
   protected ouvrir(): void {
     this.echec.set(false);
+    this.declencheur = document.activeElement;
     this.formulaireOuvert.set(true);
   }
 
   protected fermer(): void {
     this.formulaireOuvert.set(false);
+    // Le bouton d'ouverture est dans le DOM ; s'il a été remplacé (état vide -> liste), on ne rend pas le focus.
+    if (this.declencheur instanceof HTMLElement && this.declencheur.isConnected) this.declencheur.focus();
+    this.declencheur = null;
   }
 
   protected async enregistrer(saisie: SaisieLeurre): Promise<void> {
+    if (this.enCours()) return;
+    this.enCours.set(true);
+    this.echec.set(false);
     try {
       await this.boite.ajouter(saisie);
       this.fermer();
     } catch {
       this.echec.set(true);
+    } finally {
+      this.enCours.set(false);
     }
   }
 }

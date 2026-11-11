@@ -10,12 +10,15 @@ const doc = (id: string, createdAt: number): DocumentLeurre => ({
 
 function creer(boites: Record<string, DocumentLeurre[]>) {
   let rappelUid: (uid: string | null) => void = () => undefined;
+  let surErreurUid: (e: unknown) => void = () => undefined;
+  let surErreurLecture: (e: unknown) => void = () => undefined;
   const ecoutes: string[] = [];
   const arretees: string[] = [];
   const source: SourceTackleBox = {
     uid: async () => null,
-    surUid: (r) => ((rappelUid = r), () => undefined),
-    ecouter: (uid, ok) => {
+    surUid: (r, ko) => ((rappelUid = r), (surErreurUid = ko), () => undefined),
+    ecouter: (uid, ok, ko) => {
+      surErreurLecture = ko;
       ecoutes.push(uid);
       ok(boites[uid] ?? []);
       return () => void arretees.push(uid);
@@ -23,7 +26,9 @@ function creer(boites: Record<string, DocumentLeurre[]>) {
     ajouter: async () => undefined,
   };
   TestBed.configureTestingModule({ providers: [{ provide: SOURCE_TACKLE_BOX, useValue: source }] });
-  return { service: TestBed.inject(TackleBoxService), connecter: (uid: string | null) => rappelUid(uid), ecoutes, arretees };
+  return { service: TestBed.inject(TackleBoxService), connecter: (uid: string | null) => rappelUid(uid),
+    echecUid: () => surErreurUid(new Error('auth')),
+    echecLecture: () => surErreurLecture(new Error('lecture')), ecoutes, arretees };
 }
 
 describe('TackleBoxService : changement d\'utilisateur (US 99)', () => {
@@ -50,5 +55,21 @@ describe('TackleBoxService : changement d\'utilisateur (US 99)', () => {
     connecter('u1');
     connecter(null);
     expect(service.leurres()).toEqual([]);
+  });
+
+  it('given une erreur de lecture, when un nouvel instantané arrive après un changement d\'utilisateur, then l\'erreur disparaît', () => {
+    const { service, connecter, echecLecture } = creer({ u1: [doc('a', 1)], u2: [doc('b', 2)] });
+    connecter('u1');
+    echecLecture();
+    expect(service.erreur()).toBe(true);
+    connecter('u2');
+    expect(service.erreur()).toBe(false);
+    expect(service.leurres()!.map((l) => l.id)).toEqual(['b']);
+  });
+
+  it('given l\'abonnement à l\'utilisateur qui échoue, when il signale l\'erreur, then le service est en erreur', () => {
+    const { service, echecUid } = creer({});
+    echecUid();
+    expect(service.erreur()).toBe(true);
   });
 });
