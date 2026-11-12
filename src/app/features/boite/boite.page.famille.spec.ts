@@ -21,7 +21,7 @@ const TYPES = [
   { id: 'jig', nom: 'Jig à jupe', famille: 'À jupe' },
 ] as unknown as TypeLeurre[];
 
-const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s  ]/g, '');
+const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s     ]/g, '');
 const attendre = () => new Promise<void>((r) => setTimeout(r));
 const doc = (id: string, typeId: string, createdAt: number): DocumentLeurre => ({
   id,
