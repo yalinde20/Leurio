@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 100 : filtrer ma boîte par famille de leurres</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+
+  .filtre { display:flex; gap:8px; overflow-x:auto; margin: 0 -16px 12px; padding: 0 16px 4px; scrollbar-width:none; }
+  .puce { flex:none; min-height:48px; padding:0 16px; display:flex; align-items:center; border:1px solid var(--lr-bordure);
+    border-radius:24px; background:var(--lr-surface); color:var(--lr-texte); font-size:16px; font-weight:500; white-space:nowrap; }
+  .puce.on { background:var(--lr-primaire); border-color:var(--lr-primaire); color:var(--lr-sur-primaire); font-weight:600; }
+  .aucun { margin: 24px 0 0; text-align:center; font-size:17px; color: var(--lr-texte-secondaire); }
+  table.familles { border-collapse: collapse; font-size: 14px; max-width: 390px; background:#fff; }
+  table.familles td, table.familles th { border:1px solid #bbb; padding:6px 8px; text-align:left; vertical-align:top; }
+</style>
+</head>
+<body>
+<h1>US 100 — Filtrer ma boîte par famille de leurres</h1>
+<p class="note">iPhone, app installée. PLAN §3 (onglet Boîte : « Liste filtrable par famille ») et §7 (contenu en JSON). Tokens du projet uniquement, puces de 48 px. Android : même affichage.</p>
+<p class="note"><strong>À valider : les familles.</strong> <code>lure-types.json</code> n'a pas encore de champ « famille ». Je propose d'ajouter à chaque type un champ <code>famille</code> (texte, obligatoire dans le schéma) : ajouter ou renommer une famille ne demande alors que le JSON. Répartition proposée des 22 types :</p>
+<table class="familles"><tr><th>Famille</th><th>Types</th></tr>
+<tr><td>Souples</td><td>Shad, Ver souple finesse, Créature, Swimbait, Gros shad à silure, Micro-leurre souple</td></tr>
+<tr><td>Durs</td><td>Crankbait, Minnow (jerkbait), Lipless, Micro-crankbait</td></tr>
+<tr><td>Surface</td><td>Stickbait, Popper, Grenouille, Insecte de surface</td></tr>
+<tr><td>Métalliques</td><td>Cuillère tournante, Cuillère ondulante, Micro-cuillère tournante, Tailspinner, Jig métallique</td></tr>
+<tr><td>À jupe</td><td>Jig à jupe, Spinnerbait, Chatterbait</td></tr></table>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Ouverture de l'onglet « Boîte » : « Toutes » sélectionné</h2><p class="note">Critère 1. Sous « Ajouter un leurre », une rangée de puces : « Toutes » puis chaque famille du contenu, dans l'ordre du contenu (types de <code>lure-types.json</code>). « Toutes » est sélectionnée à chaque ouverture de l'onglet. La rangée défile horizontalement si elle dépasse l'écran. Puces de 48 px de haut ; pour VoiceOver, c'est un groupe de boutons radio « Famille ».</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><div class="filtre" role="radiogroup" aria-label="Famille"><span class="puce on" role="radio" aria-checked="true">Toutes</span><span class="puce" role="radio" aria-checked="false">Souples</span><span class="puce" role="radio" aria-checked="false">Durs</span><span class="puce" role="radio" aria-checked="false">Surface</span><span class="puce" role="radio" aria-checked="false">Métalliques</span><span class="puce" role="radio" aria-checked="false">À jupe</span></div><ul class="liste"><li class="leurre"><h3>Shad</h3><p class="details">10 cm · 12 g · gardon</p><p class="marque">Sakura</p></li><li class="leurre"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></li><li class="leurre"><h3>Crankbait</h3><p class="details">6 cm · 9 g · perche</p></li><li class="leurre"><h3>Popper</h3><p class="details">7 cm · 11 g · blanc</p></li><li class="leurre"><h3>Ver souple finesse</h3><p class="details">12 cm · 3 g · watermelon</p></li><li class="leurre"><h3>Cuillère ondulante</h3><p class="details">6 cm · 18 g · cuivre</p><p class="marque">Mepps</p></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>2. Une famille choisie : « Métalliques »</h2><p class="note">Critère 2. Seuls les leurres dont le type est de cette famille sont listés (ici les deux cuillères). La rangée a défilé pour montrer la puce choisie. Le filtre est local : il marche aussi hors ligne.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><div class="filtre" role="radiogroup" aria-label="Famille" style="margin-left:-216px"><span class="puce" role="radio" aria-checked="false">Toutes</span><span class="puce" role="radio" aria-checked="false">Souples</span><span class="puce" role="radio" aria-checked="false">Durs</span><span class="puce" role="radio" aria-checked="false">Surface</span><span class="puce on" role="radio" aria-checked="true">Métalliques</span><span class="puce" role="radio" aria-checked="false">À jupe</span></div><ul class="liste"><li class="leurre"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></li><li class="leurre"><h3>Cuillère ondulante</h3><p class="details">6 cm · 18 g · cuivre</p><p class="marque">Mepps</p></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>3. Famille sans leurre : « À jupe »</h2><p class="note">Critère 3. Le filtre reste affiché ; à la place de la liste, le message « Aucun leurre de cette famille. »</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><div class="filtre" role="radiogroup" aria-label="Famille" style="margin-left:-246px"><span class="puce" role="radio" aria-checked="false">Toutes</span><span class="puce" role="radio" aria-checked="false">Souples</span><span class="puce" role="radio" aria-checked="false">Durs</span><span class="puce" role="radio" aria-checked="false">Surface</span><span class="puce" role="radio" aria-checked="false">Métalliques</span><span class="puce on" role="radio" aria-checked="true">À jupe</span></div><p class="aucun">Aucun leurre de cette famille.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>4. Retour à « Toutes »</h2><p class="note">Critère 4. Toucher « Toutes » liste de nouveau tous les leurres : même écran que l'état 1.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><div class="filtre" role="radiogroup" aria-label="Famille"><span class="puce on" role="radio" aria-checked="true">Toutes</span><span class="puce" role="radio" aria-checked="false">Souples</span><span class="puce" role="radio" aria-checked="false">Durs</span><span class="puce" role="radio" aria-checked="false">Surface</span><span class="puce" role="radio" aria-checked="false">Métalliques</span><span class="puce" role="radio" aria-checked="false">À jupe</span></div><ul class="liste"><li class="leurre"><h3>Shad</h3><p class="details">10 cm · 12 g · gardon</p><p class="marque">Sakura</p></li><li class="leurre"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></li><li class="leurre"><h3>Crankbait</h3><p class="details">6 cm · 9 g · perche</p></li><li class="leurre"><h3>Popper</h3><p class="details">7 cm · 11 g · blanc</p></li><li class="leurre"><h3>Ver souple finesse</h3><p class="details">12 cm · 3 g · watermelon</p></li><li class="leurre"><h3>Cuillère ondulante</h3><p class="details">6 cm · 18 g · cuivre</p><p class="marque">Mepps</p></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>5. Boîte vide</h2><p class="note">Inchangé (US 99) : pas de filtre tant que la boîte est vide.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><div class="vide"><p>Ta boîte est vide.</p><button class="bouton">Ajouter un leurre</button></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>6. Contenu des types illisible</h2><p class="note">Si <code>lure-types.json</code> ne peut pas être lu, on ne connaît pas les familles : le filtre est masqué et la liste reste celle de l'US 99. Chargement, erreur de lecture et hors ligne : inchangés (US 99).</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre"><h3>shad</h3><p class="details">10 cm · 12 g · gardon</p><p class="marque">Sakura</p></li><li class="leurre"><h3>cuillere-tournante</h3><p class="details">4 cm · 5 g · argent</p></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+</div>
+</body>
+</html>
