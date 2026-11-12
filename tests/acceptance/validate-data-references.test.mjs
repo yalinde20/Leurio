@@ -27,7 +27,7 @@ const technique = (id, nom) => ({
 });
 
 const leurre = (id, nom, especes, extra = {}) => ({
-  id, nom, especes, zoneNage: 'mi-eau', interditFermetureBrochet: false,
+  id, nom, famille: 'Souples', especes, zoneNage: 'mi-eau', interditFermetureBrochet: false,
   sources: ['https://exemple.fr/leurre'], dateVerif: DATE, ...extra,
 });
 

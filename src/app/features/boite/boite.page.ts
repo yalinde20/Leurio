@@ -1,8 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, TypeLeurre } from '../../core/data/catalog.service';
-import { SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
+import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
 import { LeurreFormulaireComponent } from './leurre-formulaire.component';
+
+/** Familles distinctes du contenu, dans l'ordre de première apparition. */
+export function famillesDesTypes(types: readonly Pick<TypeLeurre, 'famille'>[]): string[] {
+  return [...new Set(types.map((t) => t.famille).filter((f): f is string => !!f))];
+}
 
 @Component({
   selector: 'app-boite',
@@ -87,6 +92,53 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       font-size: 15px;
       color: var(--lr-texte-secondaire);
     }
+    .filtre {
+      display: flex;
+      gap: 8px;
+      margin: 0 -16px 12px;
+      padding: 0 16px 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .puce {
+      position: relative;
+      flex: none;
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 999px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      font-size: 16px;
+      white-space: nowrap;
+    }
+    .puce.choisie {
+      border-color: var(--lr-primaire);
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+      font-weight: 600;
+    }
+    .puce input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .puce:has(input:focus-visible) {
+      outline: 2px solid var(--lr-primaire);
+      outline-offset: 2px;
+    }
+    .aucun {
+      margin: 24px 0 0;
+      text-align: center;
+      font-size: 17px;
+      color: var(--lr-texte-secondaire);
+    }
     .attente {
       margin-top: 6px !important;
       font-size: 14px;
@@ -111,20 +163,35 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
             </div>
           } @else {
             <button type="button" class="ajouter haut" (click)="ouvrir()">Ajouter un leurre</button>
-            <ul class="liste">
-              @for (leurre of leurres; track leurre.id) {
-                <li class="leurre">
-                  <h3>{{ nomDuType(leurre.typeId) }}</h3>
-                  <p class="details">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
-                  @if (leurre.marque) {
-                    <p class="marque">{{ leurre.marque }}</p>
-                  }
-                  @if (leurre.enAttente) {
-                    <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
-                  }
-                </li>
-              }
-            </ul>
+            @if (familles().length > 0) {
+              <div class="filtre" role="radiogroup" aria-label="Famille">
+                @for (famille of optionsFamille(); track famille ?? 'toutes') {
+                  <label class="puce" [class.choisie]="famille === familleChoisie()">
+                    <input type="radio" name="famille" [checked]="famille === familleChoisie()" (change)="familleChoisie.set(famille)" />
+                    {{ famille ?? 'Toutes' }}
+                  </label>
+                }
+              </div>
+            }
+            @let affiches = visibles(leurres);
+            @if (affiches.length > 0) {
+              <ul class="liste">
+                @for (leurre of affiches; track leurre.id) {
+                  <li class="leurre">
+                    <h3>{{ nomDuType(leurre.typeId) }}</h3>
+                    <p class="details">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
+                    @if (leurre.marque) {
+                      <p class="marque">{{ leurre.marque }}</p>
+                    }
+                    @if (leurre.enAttente) {
+                      <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
+                    }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="aucun">Aucun leurre de cette famille.</p>
+            }
           }
         } @else {
           <p class="chargement">Chargement de ta boîte…</p>
@@ -143,6 +210,11 @@ export class BoitePage implements OnInit {
   private readonly typesDuContenu = signal<TypeLeurre[]>([]);
   protected readonly types = computed(() => this.typesDuContenu().map(({ id, nom }) => ({ id, nom })));
   private readonly noms = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.nom])));
+  protected readonly familles = computed(() => famillesDesTypes(this.typesDuContenu()));
+  protected readonly optionsFamille = computed(() => [null, ...this.familles()]);
+  /** Famille choisie ; null = « Toutes ». Repart de « Toutes » à chaque ouverture de l'onglet. */
+  protected readonly familleChoisie = signal<string | null>(null);
+  private readonly famillesParType = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.famille])));
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
@@ -156,6 +228,12 @@ export class BoitePage implements OnInit {
     } catch {
       // Contenu illisible : la liste montre alors l'identifiant du type, et « Type » reste vide.
     }
+  }
+
+  protected visibles(leurres: Leurre[]): Leurre[] {
+    const famille = this.familleChoisie();
+    if (famille === null) return leurres;
+    return leurres.filter((l) => this.famillesParType().get(l.typeId) === famille);
   }
 
   protected nomDuType(id: string): string {

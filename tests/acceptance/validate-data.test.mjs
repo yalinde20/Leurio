@@ -22,7 +22,7 @@ const base = () => ({
     sources: ['https://exemple.fr/sandre'], dateVerif: '2026-10-28',
   }],
   'lure-types.json': [{
-    id: 'shad', nom: 'Shad', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
+    id: 'shad', nom: 'Shad', famille: 'Souples', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
     sources: ['https://exemple.fr/shad'], dateVerif: '2026-10-28',
   }],
   'techniques.json': [{

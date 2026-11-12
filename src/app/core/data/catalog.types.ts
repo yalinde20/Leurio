@@ -29,6 +29,8 @@ export interface Espece extends Fiche {
 export interface TypeLeurre extends Fiche {
   id: string;
   nom: string;
+  /** Famille de leurres (Souples, Durs…), qui sert de filtre dans la boîte (US 100). */
+  famille?: string;
   especes: string[];
   zoneNage: 'surface' | 'mi-eau' | 'fond';
   interditFermetureBrochet: boolean;
