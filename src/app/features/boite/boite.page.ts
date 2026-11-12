@@ -1,13 +1,8 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
-import { CatalogService, TypeLeurre } from '../../core/data/catalog.service';
+import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
 import { LeurreFormulaireComponent } from './leurre-formulaire.component';
-
-/** Familles distinctes du contenu, dans l'ordre de première apparition. */
-export function famillesDesTypes(types: readonly Pick<TypeLeurre, 'famille'>[]): string[] {
-  return [...new Set(types.map((t) => t.famille).filter((f): f is string => !!f))];
-}
 
 @Component({
   selector: 'app-boite',
@@ -163,12 +158,12 @@ export function famillesDesTypes(types: readonly Pick<TypeLeurre, 'famille'>[]):
             </div>
           } @else {
             <button type="button" class="ajouter haut" (click)="ouvrir()">Ajouter un leurre</button>
-            @if (familles().length > 0) {
+            @if (famillesDuContenu().length > 0) {
               <div class="filtre" role="radiogroup" aria-label="Famille">
-                @for (famille of optionsFamille(); track famille ?? 'toutes') {
-                  <label class="puce" [class.choisie]="famille === familleChoisie()">
-                    <input type="radio" name="famille" [checked]="famille === familleChoisie()" (change)="familleChoisie.set(famille)" />
-                    {{ famille ?? 'Toutes' }}
+                @for (famille of optionsFamille(); track famille?.id ?? 'toutes') {
+                  <label class="puce" [class.choisie]="(famille?.id ?? null) === familleChoisie()">
+                    <input type="radio" name="famille" [checked]="(famille?.id ?? null) === familleChoisie()" (change)="familleChoisie.set(famille?.id ?? null)" />
+                    {{ famille?.nom ?? 'Toutes' }}
                   </label>
                 }
               </div>
@@ -210,9 +205,10 @@ export class BoitePage implements OnInit {
   private readonly typesDuContenu = signal<TypeLeurre[]>([]);
   protected readonly types = computed(() => this.typesDuContenu().map(({ id, nom }) => ({ id, nom })));
   private readonly noms = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.nom])));
-  protected readonly familles = computed(() => famillesDesTypes(this.typesDuContenu()));
-  protected readonly optionsFamille = computed(() => [null, ...this.familles()]);
-  /** Famille choisie ; null = « Toutes ». Repart de « Toutes » à chaque ouverture de l'onglet. */
+  protected readonly famillesDuContenu = signal<FamilleLeurre[]>([]);
+  /** Puces du filtre : null = « Toutes », puis les familles dans l'ordre du contenu. */
+  protected readonly optionsFamille = computed<(FamilleLeurre | null)[]>(() => [null, ...this.famillesDuContenu()]);
+  /** Identifiant de la famille choisie ; null = « Toutes ». Repart de « Toutes » à chaque ouverture de l'onglet. */
   protected readonly familleChoisie = signal<string | null>(null);
   private readonly famillesParType = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.famille])));
   protected readonly formulaireOuvert = signal(false);
@@ -227,6 +223,12 @@ export class BoitePage implements OnInit {
       this.typesDuContenu.set(await this.catalogue.typesDeLeurres());
     } catch {
       // Contenu illisible : la liste montre alors l'identifiant du type, et « Type » reste vide.
+      return;
+    }
+    try {
+      this.famillesDuContenu.set(await this.catalogue.famillesDeLeurres());
+    } catch {
+      // Familles illisibles : le filtre est masqué, la liste reste celle de l'US 99.
     }
   }
 

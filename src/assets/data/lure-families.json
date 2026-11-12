@@ -1,0 +1,42 @@
+[
+  {
+    "id": "souples",
+    "nom": "Souples",
+    "sources": [
+      "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
+    ],
+    "dateVerif": "2026-11-12"
+  },
+  {
+    "id": "durs",
+    "nom": "Durs",
+    "sources": [
+      "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
+    ],
+    "dateVerif": "2026-11-12"
+  },
+  {
+    "id": "surface",
+    "nom": "Surface",
+    "sources": [
+      "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
+    ],
+    "dateVerif": "2026-11-12"
+  },
+  {
+    "id": "metalliques",
+    "nom": "Métalliques",
+    "sources": [
+      "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
+    ],
+    "dateVerif": "2026-11-12"
+  },
+  {
+    "id": "a-jupe",
+    "nom": "À jupe",
+    "sources": [
+      "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
+    ],
+    "dateVerif": "2026-11-12"
+  }
+]

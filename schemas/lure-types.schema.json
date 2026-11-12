@@ -33,7 +33,7 @@
       "famille": {
         "type": "string",
         "minLength": 1,
-        "description": "Famille de leurres (Souples, Durs…), utilisée pour filtrer la boîte."
+        "description": "Identifiant d'une famille de lure-families.json."
       },
       "especes": {
         "type": "array",
