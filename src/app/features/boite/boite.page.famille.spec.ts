@@ -14,12 +14,20 @@ import { DocumentLeurre, SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.se
 import { BoitePage } from './boite.page';
 
 const TYPES = [
-  { id: 'shad', nom: 'Shad', famille: 'Souples' },
-  { id: 'ver-finesse', nom: 'Ver finesse', famille: 'Souples' },
-  { id: 'crankbait', nom: 'Crankbait', famille: 'Durs' },
-  { id: 'popper', nom: 'Popper', famille: 'Surface' },
-  { id: 'jig', nom: 'Jig à jupe', famille: 'À jupe' },
+  { id: 'popper', nom: 'Popper', famille: 'surface' },
+  { id: 'jig', nom: 'Jig à jupe', famille: 'a-jupe' },
+  { id: 'crankbait', nom: 'Crankbait', famille: 'durs' },
+  { id: 'shad', nom: 'Shad', famille: 'souples' },
+  { id: 'ver-finesse', nom: 'Ver finesse', famille: 'souples' },
 ] as unknown as TypeLeurre[];
+
+// Volontairement dans un autre ordre que les types : l'ordre des puces vient de lure-families.json.
+const FAMILLES = [
+  { id: 'souples', nom: 'Souples' },
+  { id: 'durs', nom: 'Durs' },
+  { id: 'surface', nom: 'Surface' },
+  { id: 'a-jupe', nom: 'À jupe' },
+];
 
 const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s     ]/g, '');
 const attendre = () => new Promise<void>((r) => setTimeout(r));
@@ -30,7 +38,7 @@ const doc = (id: string, typeId: string, createdAt: number): DocumentLeurre => (
 });
 const BOITE = [doc('a', 'shad', 5), doc('b', 'crankbait', 4), doc('c', 'ver-finesse', 3), doc('d', 'popper', 2)];
 
-async function afficher(initiaux: DocumentLeurre[] = BOITE, typesLisibles = true) {
+async function afficher(initiaux: DocumentLeurre[] = BOITE, typesLisibles = true, famillesLisibles = true) {
   const source = {
     uid: async () => 'u1',
     ecouter: (_u: string, ok: (d: DocumentLeurre[]) => void) => {
@@ -46,7 +54,10 @@ async function afficher(initiaux: DocumentLeurre[] = BOITE, typesLisibles = true
       { provide: SOURCE_TACKLE_BOX, useValue: source },
       {
         provide: CatalogService,
-        useValue: { typesDeLeurres: async () => (typesLisibles ? TYPES : Promise.reject(new Error('illisible'))) },
+        useValue: {
+          typesDeLeurres: async () => (typesLisibles ? TYPES : Promise.reject(new Error('illisible'))),
+          famillesDeLeurres: async () => (famillesLisibles ? FAMILLES : Promise.reject(new Error('illisible'))),
+        },
       },
     ],
   }).compileComponents();
@@ -126,5 +137,11 @@ describe('BoitePage : filtrer par famille (US 100)', () => {
     const env = await afficher(BOITE, false);
     expect(groupe(env.page)).toBeNull();
     expect(noms(env.page)).toEqual(['shad', 'crankbait', 'ver-finesse', 'popper']);
+  });
+
+  it('given le contenu des familles est illisible, when j\'ouvre l\'onglet « Boîte », then le filtre est masqué et la liste est affichée comme avant', async () => {
+    const env = await afficher(BOITE, true, false);
+    expect(groupe(env.page)).toBeNull();
+    expect(noms(env.page)).toEqual(['Shad', 'Crankbait', 'Ver finesse', 'Popper']);
   });
 });
