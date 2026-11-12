@@ -9,6 +9,7 @@ import type {
   Espece,
   Federation,
   TypeLeurre,
+  FamilleLeurre,
 } from './catalog.types';
 
 export type * from './catalog.types';
@@ -25,6 +26,10 @@ export class CatalogService {
 
   typesDeLeurres(): Promise<TypeLeurre[]> {
     return this.charger<TypeLeurre>('lure-types');
+  }
+
+  famillesDeLeurres(): Promise<FamilleLeurre[]> {
+    return this.charger<FamilleLeurre>('lure-families');
   }
 
   animations(): Promise<Animation[]> {

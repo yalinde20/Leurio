@@ -29,6 +29,8 @@ export interface Espece extends Fiche {
 export interface TypeLeurre extends Fiche {
   id: string;
   nom: string;
+  /** Identifiant d'une famille de lure-families.json, qui sert de filtre dans la boîte (US 100). */
+  famille?: string;
   especes: string[];
   zoneNage: 'surface' | 'mi-eau' | 'fond';
   interditFermetureBrochet: boolean;
@@ -80,6 +82,12 @@ export interface Animation extends Fiche {
   videos: Video[];
   /** Saisons où l'animation est favorable (PLAN §8.3). */
   saisons?: Saison[];
+}
+
+/** Famille de leurres (Souples, Durs…) : une puce du filtre de la boîte, dans l'ordre du contenu (US 100). */
+export interface FamilleLeurre extends Fiche {
+  id: string;
+  nom: string;
 }
 
 /** Couleur de leurre (PLAN §8.3) : vive pour l'eau trouble, naturelle pour l'eau claire. La première du contenu est la couleur par défaut. */

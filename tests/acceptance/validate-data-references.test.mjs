@@ -27,7 +27,7 @@ const technique = (id, nom) => ({
 });
 
 const leurre = (id, nom, especes, extra = {}) => ({
-  id, nom, especes, zoneNage: 'mi-eau', interditFermetureBrochet: false,
+  id, nom, famille: 'souples', especes, zoneNage: 'mi-eau', interditFermetureBrochet: false,
   sources: ['https://exemple.fr/leurre'], dateVerif: DATE, ...extra,
 });
 
@@ -41,6 +41,7 @@ const base = () => ({
   ],
   'techniques.json': [technique('tiree-relachee', 'Tirée-relâchée'), technique('lineaire', 'Linéaire')],
   'starter-kit.json': [kit('shad'), kit('spinnerbait')],
+  'lure-families.json': [{ id: 'souples', nom: 'Souples', sources: ['https://exemple.fr/famille'], dateVerif: DATE }],
   'couleurs.json': [
     { id: 'naturelle-a', nom: 'Naturelle A', classe: 'naturelle', sources: ['https://exemple.fr/couleur'], dateVerif: DATE },
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: DATE },

@@ -23,6 +23,7 @@ interface Fichier {
 const FICHIERS: Fichier[] = [
   { nom: 'species', element: 'espèce', identifiants: ['code', 'nom'] },
   { nom: 'lure-types', element: 'type de leurre', identifiants: ['id', 'nom'] },
+  { nom: 'lure-families', element: 'famille de leurres', identifiants: ['id', 'nom'] },
   { nom: 'techniques', element: 'animation', identifiants: ['id', 'nom'] },
   { nom: 'starter-kit', element: 'kit de départ', identifiants: ['typeId'] },
   { nom: 'federations', element: 'fédération', identifiants: ['departement', 'nom'] },
@@ -102,9 +103,11 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
   const especes = codes('species', 'code');
   const animations = codes('techniques', 'id');
   const types = codes('lure-types', 'id');
+  const familles = codes('lure-families', 'id');
   const messages = [
     ...doublons('species.json', contenu['species'] ?? [], 'code'),
     ...doublons('lure-types.json', contenu['lure-types'] ?? [], 'id'),
+    ...doublons('lure-families.json', contenu['lure-families'] ?? [], 'id'),
     ...doublons('techniques.json', contenu['techniques'] ?? [], 'id'),
     ...doublons('couleurs.json', contenu['couleurs'] ?? [], 'id'),
     ...doublons(
@@ -120,6 +123,8 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     const lieu = `lure-types.json, type de leurre ${String(t['id'])}`;
     for (const code of new Set((t['especes'] as string[]) ?? []))
       if (!especes.has(code)) messages.push(`${lieu} : espèce inconnue « ${code} » (absente de species.json)`);
+    if (!familles.has(t['famille']))
+      messages.push(`${lieu} : famille inconnue « ${String(t['famille'])} » (absente de lure-families.json)`);
     for (const champ of ['tailleCm', 'poidsG', 'poidsTeteG']) {
       const gamme = t[champ] as [number, number] | undefined;
       if (gamme !== undefined && gamme[0] >= gamme[1])
@@ -144,6 +149,7 @@ if (structureValide) {
     ...verifierReferences({
       species: lire('species'),
       'lure-types': lire('lure-types'),
+      'lure-families': lire('lure-families'),
       techniques: lire('techniques'),
       couleurs: lire('couleurs'),
       'starter-kit': lire('starter-kit'),

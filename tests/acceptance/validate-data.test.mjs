@@ -7,7 +7,7 @@ import { ROOT, run, readPackageJson } from '../helpers/run.mjs';
 import { readWorkflowText, parseSteps, simulate } from '../helpers/workflow.mjs';
 
 const SCRIPT = 'scripts/validate-data.ts';
-const FICHIERS = ['species', 'lure-types', 'techniques', 'starter-kit', 'federations', 'engine-weights', 'couleurs'];
+const FICHIERS = ['species', 'lure-types', 'techniques', 'starter-kit', 'federations', 'engine-weights', 'couleurs', 'lure-families'];
 const POIDS = ['temperature', 'saison', 'clarte', 'luminosite', 'pression', 'lune', 'penaliteDifficulte'];
 const uid = `${process.pid}-${Date.now()}`;
 
@@ -22,7 +22,7 @@ const base = () => ({
     sources: ['https://exemple.fr/sandre'], dateVerif: '2026-10-28',
   }],
   'lure-types.json': [{
-    id: 'shad', nom: 'Shad', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
+    id: 'shad', nom: 'Shad', famille: 'souples', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
     sources: ['https://exemple.fr/shad'], dateVerif: '2026-10-28',
   }],
   'techniques.json': [{
@@ -35,6 +35,7 @@ const base = () => ({
     sources: ['https://exemple.fr/technique'], dateVerif: '2026-10-28',
   }],
   'starter-kit.json': [{ typeId: 'shad', raison: 'Polyvalent', sources: ['https://exemple.fr/kit'], dateVerif: '2026-10-28' }],
+  'lure-families.json': [{ id: 'souples', nom: 'Souples', sources: ['https://exemple.fr/famille'], dateVerif: '2026-10-28' }],
   'couleurs.json': [
     { id: 'naturelle-a', nom: 'Naturelle A', classe: 'naturelle', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
