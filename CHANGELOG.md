@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.40.0](https://github.com/yalinde20/Leurio/compare/v1.39.0...v1.40.0) (2026-11-12)
+
+
+### Features
+
+* **US 100:** familles de leurres dans lure-families.json, famille = id ([ae9173b](https://github.com/yalinde20/Leurio/commit/ae9173b7cb7eeb7c5c1c44f0a596f70c245f8caa))
+* **US 100:** filtrer la boîte par famille de leurres ([70e6465](https://github.com/yalinde20/Leurio/commit/70e64650d3d6bf6b0ffaff137edc81698ac88535))
+
 ## [1.39.0](https://github.com/yalinde20/Leurio/compare/v1.38.0...v1.39.0) (2026-11-11)
 
 
