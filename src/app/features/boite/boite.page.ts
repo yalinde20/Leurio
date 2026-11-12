@@ -107,6 +107,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       background: var(--lr-surface);
       color: var(--lr-texte);
       font-size: 16px;
+      font-weight: 500;
       white-space: nowrap;
     }
     .puce.choisie {

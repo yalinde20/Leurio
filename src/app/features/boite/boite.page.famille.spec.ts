@@ -2,8 +2,8 @@
  * US 100 : filtrer ma boîte par famille de leurres. Maquette : docs/maquettes/us-100-filtrer-par-famille.html.
  *
  * Contrat du DOM : sous « Ajouter un leurre », un `[role="radiogroup"]` libellé « Famille » (aria-label ou aria-labelledby) contient
- * des `[role="radio"]` (ou `input[type=radio]`) : « Toutes » puis chaque `famille` distincte du contenu, dans l'ordre de première
- * apparition. L'option choisie porte `aria-checked="true"` (ou `checked`). Famille sans leurre : le filtre reste et le texte
+ * des `[role="radio"]` (ou `input[type=radio]`) : « Toutes » puis chaque famille de lure-families.json, dans l'ordre de ce
+ * fichier, libellée par son `nom`. L'option choisie porte `aria-checked="true"` (ou `checked`). Famille sans leurre : le filtre reste et le texte
  * « Aucun leurre de cette famille. » remplace la liste. Boîte vide ou contenu illisible : pas de filtre.
  * Doubles : SOURCE_TACKLE_BOX (aucun appel Firebase) et CatalogService.
  */
