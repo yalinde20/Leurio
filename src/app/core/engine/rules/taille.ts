@@ -5,7 +5,7 @@ import { bandeDe } from './temperature';
 const NOMBRE = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 /** Gamme du type : sa taille en cm, sinon son poids en g ; null sans gamme dans le contenu. */
-function gammeDe(type: TypeLeurre): { min: number; max: number; unite: TailleLeurre['unite'] } | null {
+export function gammeDe(type: TypeLeurre): { min: number; max: number; unite: TailleLeurre['unite'] } | null {
   if (type.tailleCm) return { min: type.tailleCm[0], max: type.tailleCm[1], unite: 'cm' };
   if (type.poidsG) return { min: type.poidsG[0], max: type.poidsG[1], unite: 'g' };
   return null;
