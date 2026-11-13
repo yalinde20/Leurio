@@ -64,6 +64,11 @@ import { TackleBoxService } from '../../core/data/tackle-box.service';
     .intro {
       color: var(--lr-texte-secondaire);
     }
+    .corps .chargement {
+      padding: 8px 0;
+      margin: 0;
+      color: var(--lr-texte-secondaire);
+    }
     .bilan {
       font-weight: 600;
     }
@@ -126,6 +131,9 @@ import { TackleBoxService } from '../../core/data/tackle-box.service';
         @if (illisible()) {
           <p class="erreur" role="alert">Impossible d'afficher le kit de départ. Réessaie plus tard.</p>
         } @else if (kit(); as elements) {
+          @if (boite.leurres() === null) {
+            <p class="chargement">Chargement du kit…</p>
+          } @else {
           <p class="intro">Les leurres à acheter en premier, dans l’ordre.</p>
           <p class="bilan">{{ nombrePossedes() }} sur {{ elements.length }} dans ta boîte</p>
           <ul>
@@ -143,8 +151,9 @@ import { TackleBoxService } from '../../core/data/tackle-box.service';
               </li>
             }
           </ul>
+          }
         } @else {
-          <p class="intro">Chargement du kit…</p>
+          <p class="chargement">Chargement du kit…</p>
         }
       </div>
     </div>
@@ -152,7 +161,7 @@ import { TackleBoxService } from '../../core/data/tackle-box.service';
 })
 export class KitDepartComponent implements OnInit, AfterViewInit {
   private readonly catalogue = inject(CatalogService);
-  private readonly boite = inject(TackleBoxService);
+  protected readonly boite = inject(TackleBoxService);
 
   readonly fermer = output<void>();
 

@@ -194,7 +194,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
         <ion-title>Boîte</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content [attr.inert]="formulaireOuvert() || kitOuvert() ? '' : null">
       <div class="contenu">
         @if (boite.erreur()) {
           <p class="erreur-lecture" role="alert">Impossible de lire ta boîte. Réessaie plus tard.</p>
