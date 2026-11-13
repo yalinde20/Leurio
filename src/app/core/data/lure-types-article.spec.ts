@@ -20,7 +20,6 @@ describe('Contenu des types de leurres : article (US 105, A1)', () => {
       'cuillere-ondulante',
       'frog',
       'micro-cuillere',
-      'insecte-surface',
     ]) {
       expect(articles.get(id), id).toBe('une');
     }
@@ -33,6 +32,7 @@ describe('Contenu des types de leurres : article (US 105, A1)', () => {
       'popper',
       'swimbait',
       'micro-crankbait',
+      'insecte-surface',
     ]) {
       expect(articles.get(id), id).toBe('un');
     }
