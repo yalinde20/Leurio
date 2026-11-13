@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.42.0](https://github.com/yalinde20/Leurio/compare/v1.41.0...v1.42.0) (2026-11-13)
+
+
+### Features
+
+* **US 103:** voir le kit de départ conseillé ([f0dcdd3](https://github.com/yalinde20/Leurio/commit/f0dcdd3754fd2fc19393c7d456ca73f858e91179))
+
+
+### Bug Fixes
+
+* **US 103:** suites de la revue (chargement de la boîte, page inerte sous les feuilles, test de réactivité) ([dc93021](https://github.com/yalinde20/Leurio/commit/dc9302162efc51eb34195107327c702e053f4381))
+
 ## [1.41.0](https://github.com/yalinde20/Leurio/compare/v1.40.0...v1.41.0) (2026-11-13)
 
 
