@@ -59,6 +59,16 @@ test('given je n\'ai pas de réseau, when je supprime un leurre qui a une photo,
   await expect(page.locator('li')).toHaveCount(0, { timeout: 5_000 });
   await expect(formulaire(page)).toHaveCount(0, { timeout: 5_000 });
 
+  // Le réseau est toujours coupé : un nouveau leurre s'enregistre et le formulaire se ferme sans attendre la suppression du fichier.
+  await page.getByRole('button', { name: 'Ajouter un leurre', exact: true }).click();
+  await formulaire(page).getByLabel('Type').selectOption({ label: 'Shad' });
+  await formulaire(page).getByLabel('Taille (cm)').fill('8');
+  await formulaire(page).getByLabel('Poids (g)').fill('9');
+  await formulaire(page).getByLabel('Couleur').fill('perche');
+  await formulaire(page).getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await expect(formulaire(page)).toHaveCount(0, { timeout: 5_000 });
+  await expect(page.locator('li')).toHaveCount(1);
+
   await context.setOffline(false);
-  await expect.poll(async () => (await leurresSurEmulateur(uid)).length, { timeout: 30_000 }).toBe(0);
+  await expect.poll(async () => (await leurresSurEmulateur(uid)).length, { timeout: 30_000 }).toBe(1);
 });

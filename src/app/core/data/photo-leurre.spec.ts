@@ -24,7 +24,7 @@ describe('photo-leurre', () => {
 });
 
 describe('TackleBoxService : cas limites de la photo (US 102)', () => {
-  function creer(options: { echecEnvoi?: boolean; echecSuppressionPhoto?: boolean; echecEcriture?: boolean }) {
+  function creer(options: { echecEnvoi?: boolean; echecSuppressionPhoto?: boolean; echecEcriture?: boolean; suppressionSansFin?: boolean }) {
     const ajouts: Record<string, unknown>[] = [];
     const modifications: Record<string, unknown>[] = [];
     const supprimees: string[] = [];
@@ -53,6 +53,7 @@ describe('TackleBoxService : cas limites de la photo (US 102)', () => {
             },
             supprimerPhoto: async (url: string) => {
               supprimees.push(url);
+              if (options.suppressionSansFin) return new Promise<void>(() => undefined);
               if (options.echecSuppressionPhoto) throw new Error('réseau');
             },
           },
@@ -94,5 +95,12 @@ describe('TackleBoxService : cas limites de la photo (US 102)', () => {
     await t.service.modifier('a', { ...saisie, photo: null });
     expect(t.modifications[0]['photoUrl']).toBeNull();
     expect(t.supprimees).toEqual([URL_ANCIENNE]);
+  });
+
+  it('given la suppression du fichier ne répond jamais (hors ligne), when je supprime ou je retire la photo, then l\'opération se résout quand même', async () => {
+    const t = creer({ suppressionSansFin: true });
+    await attendre();
+    await expect(t.service.modifier('a', { ...saisie, photo: null })).resolves.toBeUndefined();
+    await expect(t.service.supprimer('a')).resolves.toBeUndefined();
   });
 });

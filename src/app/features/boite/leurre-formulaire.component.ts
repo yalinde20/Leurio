@@ -594,7 +594,9 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
   protected retirerPhoto(): void {
     this.messagePhoto.set(null);
     this.liberer();
-    this.photo.set(this.leurre()?.photoUrl ? null : undefined);
+    // Une nouvelle photo pas encore enregistrée est seule écartée : l'ancienne photo du leurre, s'il en a une, redevient celle d'origine.
+    const nouvelleEnAttente = this.photo() instanceof Blob;
+    this.photo.set(!nouvelleEnAttente && this.leurre()?.photoUrl ? null : undefined);
   }
 
   private garder(photo: Blob): void {
