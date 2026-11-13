@@ -1,6 +1,7 @@
 import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
+import { EchecEnvoiPhoto } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
 import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 
@@ -109,6 +110,24 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       outline: 2px solid var(--lr-primaire);
       outline-offset: 2px;
     }
+    .avec-photo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 40px 12px 12px;
+    }
+    .vignette {
+      flex: none;
+      width: 56px;
+      height: 56px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 10px;
+      object-fit: cover;
+    }
+    .corps {
+      flex: 1;
+      min-width: 0;
+    }
     .leurre h3 {
       margin: 0;
       font-size: 18px;
@@ -211,17 +230,22 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
             @if (affiches.length > 0) {
               <ul class="liste">
                 @for (leurre of affiches; track leurre.id) {
-                  <li class="leurre">
-                    <h3>
-                      <button type="button" class="toucher" [attr.aria-describedby]="'details-' + leurre.id" (click)="modifier(leurre)">{{ nomDuType(leurre.typeId) }}</button>
-                    </h3>
-                    <p class="details" [id]="'details-' + leurre.id">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
-                    @if (leurre.marque) {
-                      <p class="marque">{{ leurre.marque }}</p>
+                  <li class="leurre" [class.avec-photo]="leurre.photoUrl">
+                    @if (leurre.photoUrl) {
+                      <img class="vignette" [src]="leurre.photoUrl" alt="Photo du leurre" />
                     }
-                    @if (leurre.enAttente) {
-                      <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
-                    }
+                    <div class="corps">
+                      <h3>
+                        <button type="button" class="toucher" [attr.aria-describedby]="'details-' + leurre.id" (click)="modifier(leurre)">{{ nomDuType(leurre.typeId) }}</button>
+                      </h3>
+                      <p class="details" [id]="'details-' + leurre.id">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
+                      @if (leurre.marque) {
+                        <p class="marque">{{ leurre.marque }}</p>
+                      }
+                      @if (leurre.enAttente) {
+                        <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
+                      }
+                    </div>
                   </li>
                 }
               </ul>
@@ -240,6 +264,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
         [leurre]="leurreModifie()"
         [echec]="echec()"
         [echecSuppression]="echecSuppression()"
+        [echecPhoto]="echecPhoto()"
         [enCours]="enCours()"
         (valide)="enregistrer($event)"
         (supprimer)="supprimer()"
@@ -263,6 +288,7 @@ export class BoitePage implements OnInit {
   private readonly famillesParType = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.famille])));
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
+  protected readonly echecPhoto = signal(false);
   protected readonly enCours = signal(false);
   protected readonly echecSuppression = signal(false);
   /** Le leurre dont le formulaire est ouvert ; null = formulaire d'ajout. */
@@ -318,6 +344,7 @@ export class BoitePage implements OnInit {
 
   private ouvrirFormulaire(): void {
     this.echec.set(false);
+    this.echecPhoto.set(false);
     this.echecSuppression.set(false);
     this.declencheur = document.activeElement;
     this.formulaireOuvert.set(true);
@@ -342,13 +369,14 @@ export class BoitePage implements OnInit {
     if (this.enCours()) return;
     this.enCours.set(true);
     this.echec.set(false);
+    this.echecPhoto.set(false);
     this.echecSuppression.set(false);
     try {
       const leurre = this.leurreModifie();
       await (leurre ? this.boite.modifier(leurre.id, saisie) : this.boite.ajouter(saisie));
       this.fermer();
-    } catch {
-      this.echec.set(true);
+    } catch (erreur) {
+      (erreur instanceof EchecEnvoiPhoto ? this.echecPhoto : this.echec).set(true);
     } finally {
       this.enCours.set(false);
     }

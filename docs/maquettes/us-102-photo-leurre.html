@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 102 : ajouter une photo à un leurre</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+  .leurre.touchable { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+  .leurre.touchable .corps { flex: 1; min-width: 0; }
+  .leurre.touchable .fleche { color: var(--lr-texte-secondaire); font-size: 22px; }
+  .leurre.presse { background: var(--lr-sable); }
+  .supprimer {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid var(--lr-danger); border-radius: 12px; background: transparent; color: var(--lr-danger);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .alerte-zone { position: relative; }
+  .alerte-zone::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .alerte {
+    position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 280px; border-radius: 16px; overflow: hidden; background: var(--lr-surface); color: var(--lr-texte);
+    border: 1px solid var(--lr-bordure); text-align: center;
+  }
+  .alerte .q { padding: 18px 16px 14px; font-size: 17px; font-weight: 600; }
+  .alerte .q small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--lr-texte-secondaire); }
+  .alerte .actions { display: flex; border-top: 1px solid var(--lr-bordure); }
+  .alerte .actions span { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .alerte .actions span + span { border-left: 1px solid var(--lr-bordure); }
+  .alerte .annul { color: var(--lr-primaire); }
+  .alerte .suppr { color: var(--lr-danger); font-weight: 600; }
+
+  .photo-zone { margin-bottom: 14px; }
+  .photo-zone > label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .bouton-photo {
+    display:flex; align-items:center; justify-content:center; gap: 8px; width:100%; min-height:48px;
+    border: 1px dashed var(--lr-primaire); border-radius: 12px; background: transparent; color: var(--lr-primaire);
+    font: inherit; font-size: 17px; font-weight: 600;
+  }
+  .bouton-photo svg { width: 22px; height: 22px; }
+  .apercu { display:flex; align-items:center; gap: 12px; }
+  .apercu .img { width: 96px; height: 96px; border-radius: 12px; overflow:hidden; flex:none; border: 1px solid var(--lr-bordure); }
+  .apercu .img svg { width:100%; height:100%; display:block; }
+  .apercu .actions-photo { flex:1; display:flex; flex-direction:column; gap: 8px; }
+  .lien-photo { display:flex; align-items:center; min-height:48px; padding: 0 12px; border:1px solid var(--lr-bordure); border-radius:12px; color: var(--lr-primaire); font-size: 16px; font-weight:600; }
+  .lien-photo.retirer { color: var(--lr-danger); }
+  .info { margin: 6px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .vignette { width: 56px; height: 56px; border-radius: 10px; overflow:hidden; flex:none; border: 1px solid var(--lr-bordure); }
+  .vignette svg { width:100%; height:100%; display:block; }
+  .feuille-action { position:absolute; left: 8px; right: 8px; bottom: 34px; z-index: 2; display:flex; flex-direction:column; gap: 8px; }
+  .feuille-action .groupe-a { background: var(--lr-surface); border-radius: 14px; overflow:hidden; border: 1px solid var(--lr-bordure); }
+  .feuille-action .titre-a { padding: 12px 16px; text-align:center; font-size: 13px; color: var(--lr-texte-secondaire); border-bottom: 1px solid var(--lr-bordure); }
+  .feuille-action .opt { min-height: 56px; display:flex; align-items:center; justify-content:center; font-size: 19px; color: var(--lr-primaire); border-top: 1px solid var(--lr-bordure); }
+  .feuille-action .opt:first-of-type { border-top: none; }
+  .feuille-action .opt.gras { font-weight: 600; }
+  .bouton[aria-busy] { opacity: .6; }
+</style>
+</head>
+<body>
+<h1>US 102 — Ajouter une photo à un leurre</h1>
+<p class="note">iPhone, app installée. PLAN §2.3 (photo facultative), §4 (Capacitor Camera ; Storage, photo compressée à ~200 Ko dans l'app avant l'envoi) et §7 (<code>photoUrl?</code> dans <code>users/{uid}/tackleBox</code>). Même formulaire que les US 99 et 101 : seule la zone « Photo (facultatif) » est ajoutée, sous « Marque ». Tokens du projet uniquement, cibles de 48 px minimum. Android : feuille de choix Material en bas d'écran, mêmes options.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+<symbol id="img-shad" viewBox="0 0 96 96"><rect width="96" height="96" fill="#7aa6b3"/><rect y="62" width="96" height="34" fill="#c9b58c"/><path d="M14 50c10-14 34-18 52-12l10-8v28l-10-6c-18 8-42 6-52-2z" fill="#d7dde0" stroke="#5b6b72" stroke-width="2"/><circle cx="24" cy="47" r="3" fill="#1d2b30"/><path d="M40 42c6 2 12 2 18 0" stroke="#9aa7ad" stroke-width="2" fill="none"/></symbol>
+<symbol id="img-cuiller" viewBox="0 0 96 96"><rect width="96" height="96" fill="#8f8a7a"/><ellipse cx="50" cy="48" rx="16" ry="26" fill="#e3e3e3" stroke="#6b6b6b" stroke-width="2"/><path d="M50 10v12M50 74v12" stroke="#444" stroke-width="3"/></symbol>
+</defs>
+  </svg>
+<h2>1. Formulaire : bouton « Ajouter une photo »</h2><p class="note">Sous « Marque (facultatif) », une zone « Photo (facultatif) » avec un bouton de 48 px. Même chose dans « Modifier le leurre » (US 101) pour un leurre sans photo.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><button class="bouton-photo"><svg><use href="#i-photo"/></svg>Ajouter une photo</button></div><button class="bouton">Enregistrer</button></div></div></div><h2>2. Choix : appareil photo ou galerie</h2><p class="note">Au toucher : feuille d'actions iOS par-dessus le formulaire. « Prendre une photo » ouvre l'appareil photo, « Choisir dans la galerie » ouvre les photos du téléphone, « Annuler » ferme sans rien changer.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="alerte-zone" style="flex:1;display:flex;flex-direction:column;position:relative"><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><button class="bouton-photo"><svg><use href="#i-photo"/></svg>Ajouter une photo</button></div><button class="bouton">Enregistrer</button></div></div><div class="feuille-action"><div class="groupe-a"><div class="titre-a">Photo du leurre</div><div class="opt">Prendre une photo</div><div class="opt">Choisir dans la galerie</div></div><div class="groupe-a"><div class="opt gras">Annuler</div></div></div></div></div><h2>3. Photo choisie</h2><p class="note">L'aperçu (96 px) remplace le bouton. « Changer la photo » rouvre le choix ; « Retirer la photo » revient à l'état 1. La photo est réduite dans l'app (≈ 200 Ko au plus) ; rien n'est envoyé avant « Enregistrer ».</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><div class="apercu"><div class="img"><svg><use href="#img-shad"/></svg></div><div class="actions-photo"><span class="lien-photo">Changer la photo</span><span class="lien-photo retirer">Retirer la photo</span></div></div></div><button class="bouton">Enregistrer</button></div></div></div><h2>4. Enregistrement en cours</h2><p class="note">La photo est envoyée puis le leurre est écrit ; le bouton est désactivé et dit « Envoi de la photo… » pendant ce temps.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><div class="apercu"><div class="img"><svg><use href="#img-shad"/></svg></div><div class="actions-photo"><span class="lien-photo">Changer la photo</span><span class="lien-photo retirer">Retirer la photo</span></div></div></div><button class="bouton" aria-busy="true">Envoi de la photo…</button></div></div></div><h2>5. Liste avec vignettes</h2><p class="note">La feuille se ferme : le leurre montre sa photo en vignette de 56 px à gauche. Un leurre sans photo reste comme aujourd'hui, sans vignette ni case vide.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre touchable"><div class="vignette"><svg><use href="#img-shad"/></svg></div><div class="corps"><h3>Shad</h3><p class="details">10 cm · 12 g · gardon</p><p class="marque">Sakura</p></div><span class="fleche">›</span></li><li class="leurre touchable"><div class="vignette"><svg><use href="#img-cuiller"/></svg></div><div class="corps"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></div><span class="fleche">›</span></li><li class="leurre touchable"><div class="corps"><h3>Leurre de surface</h3><p class="details">9 cm · 10 g · blanc</p></div><span class="fleche">›</span></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>6. Modifier un leurre qui a une photo</h2><p class="note">Le formulaire de l'US 101 montre la photo actuelle, avec « Changer la photo » et « Retirer la photo ». Supprimer le leurre supprime aussi sa photo du stockage (rien de plus à l'écran que l'US 101).</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><div class="apercu"><div class="img"><svg><use href="#img-shad"/></svg></div><div class="actions-photo"><span class="lien-photo">Changer la photo</span><span class="lien-photo retirer">Retirer la photo</span></div></div></div><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div></div><h2>7. Accès à l'appareil photo refusé</h2><p class="note">Le pêcheur a refusé l'accès (ou le refuse à la demande d'iOS) : le message s'affiche sous le bouton, en rouge. La galerie reste possible en touchant de nouveau le bouton, et « Enregistrer » enregistre le leurre sans photo.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><button class="bouton-photo"><svg><use href="#i-photo"/></svg>Ajouter une photo</button><p class="erreur" role="alert">Accès à l'appareil photo refusé.</p></div><button class="bouton">Enregistrer</button></div></div></div><h2>8. Hors ligne</h2><p class="note">Mode avion : la photo ne peut pas être envoyée (le cache hors ligne ne couvre pas le stockage des photos). Au toucher de « Ajouter une photo », le message s'affiche à la place du choix ; le leurre reste enregistrable sans photo, comme à l'US 99.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>✈ 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><button class="bouton-photo"><svg><use href="#i-photo"/></svg>Ajouter une photo</button><p class="erreur" role="alert">Photo indisponible hors ligne : ajoute-la plus tard.</p></div><button class="bouton">Enregistrer</button></div></div></div><h2>9. Échec d'envoi de la photo</h2><p class="note">Rare (réseau coupé pendant l'envoi…) : le formulaire reste ouvert avec la photo et le message ; rien n'est écrit. « Retirer la photo » permet d'enregistrer sans elle.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Ajouter un leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><div class="photo-zone"><label>Photo (facultatif)</label><div class="apercu"><div class="img"><svg><use href="#img-shad"/></svg></div><div class="actions-photo"><span class="lien-photo">Changer la photo</span><span class="lien-photo retirer">Retirer la photo</span></div></div></div><p class="erreur" role="alert">Impossible d'envoyer la photo. Réessaie.</p><button class="bouton">Enregistrer</button></div></div></div>
+</div>
+</body>
+</html>

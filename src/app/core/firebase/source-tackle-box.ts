@@ -2,7 +2,7 @@ import type { Injector } from '@angular/core';
 import type { SourceTackleBox } from '../data/tackle-box.service';
 
 /**
- * Lecture et écriture de la boîte dans Firestore (`users/{uid}/tackleBox`, PLAN §7). `FirebaseService` et `firebase/firestore`
+ * Lecture et écriture de la boîte dans Firestore (`users/{uid}/tackleBox`, PLAN §7) et de ses photos dans Storage (`users/{uid}/lures/`, PLAN §4). `FirebaseService`, `firebase/firestore` et `firebase/storage`
  * ne se chargent qu'à la première utilisation (import dynamique) : l'écran « Conseil » ne les met pas dans son premier chunk.
  * Le cache local persistant de Firestore (PLAN §4) rend l'écriture et la lecture possibles hors ligne.
  */
@@ -61,9 +61,11 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
     },
     async modifier(uid, id, data) {
       const { db } = await firebase();
-      const { doc, updateDoc } = await import('firebase/firestore');
+      const { deleteField, doc, updateDoc } = await import('firebase/firestore');
+      // `null` retire le champ du document (la photo retirée) ; sinon il resterait vide dans Firestore.
+      const champs = Object.fromEntries(Object.entries(data).map(([nom, valeur]) => [nom, valeur === null ? deleteField() : valeur]));
       // Comme `ajouter` : la promesse ne se résout qu'à l'accusé du serveur, on ne l'attend pas.
-      updateDoc(doc(db, 'users', uid, 'tackleBox', id), data).catch((erreur: unknown) =>
+      updateDoc(doc(db, 'users', uid, 'tackleBox', id), champs).catch((erreur: unknown) =>
         console.warn("La modification du leurre n'a pas pu être enregistrée sur le serveur.", erreur),
       );
     },
@@ -73,6 +75,18 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
       deleteDoc(doc(db, 'users', uid, 'tackleBox', id)).catch((erreur: unknown) =>
         console.warn("La suppression du leurre n'a pas pu être enregistrée sur le serveur.", erreur),
       );
+    },
+    async envoyerPhoto(uid, photo) {
+      const { storage } = await firebase();
+      const { getDownloadURL, ref, uploadBytes } = await import('firebase/storage');
+      const fichier = ref(storage, `users/${uid}/lures/${crypto.randomUUID()}.jpg`);
+      await uploadBytes(fichier, photo, { contentType: photo.type || 'image/jpeg' });
+      return getDownloadURL(fichier);
+    },
+    async supprimerPhoto(url) {
+      const { storage } = await firebase();
+      const { deleteObject, ref } = await import('firebase/storage');
+      await deleteObject(ref(storage, url));
     },
   };
 }

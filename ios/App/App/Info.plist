@@ -24,8 +24,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Leurio utilise l'appareil photo pour prendre une photo de ton leurre.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Leurio utilise ta position pour donner les conditions de l'endroit où tu pêches.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Leurio utilise tes photos pour choisir celle de ton leurre.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

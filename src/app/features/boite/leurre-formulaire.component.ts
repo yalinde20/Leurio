@@ -1,4 +1,5 @@
-import { AfterViewInit, Component, ElementRef, OnInit, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, Injector, afterNextRender, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { AccesPhotoRefuse, OriginePhoto, SOURCE_PHOTO } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre } from '../../core/data/tackle-box.service';
 import { erreurNombre, erreurTexte, nombrePositif } from './saisie-leurre';
 
@@ -12,6 +13,7 @@ export interface ChoixType {
  * Le formulaire « Ajouter un leurre » (US 99) : une feuille plein écran dans la page (pas d'ion-modal), comme les feuilles des US 83 et 87.
  * Il valide la saisie et rend un leurre prêt à écrire ; l'enregistrement est l'affaire de la page.
  * Avec `leurre`, c'est « Modifier le leurre » (US 101) : prérempli, avec un bouton « Supprimer » et sa confirmation.
+ * La photo (US 102) est choisie ici mais envoyée par le service à l'enregistrement : `valide` porte la photo à envoyer (`Blob`) ou à retirer (`null`).
  */
 @Component({
   selector: 'app-leurre-formulaire',
@@ -75,7 +77,8 @@ export interface ChoixType {
       flex: 1;
       min-width: 0;
     }
-    label {
+    label,
+    .etiquette {
       display: block;
       margin-bottom: 6px;
       font-size: 15px;
@@ -163,6 +166,103 @@ export interface ChoixType {
     }
     .actions .confirmer {
       color: var(--lr-danger);
+      font-weight: 600;
+    }
+    .bouton-photo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      border: 1px dashed var(--lr-primaire);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--lr-primaire);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .bouton-photo svg {
+      width: 22px;
+      height: 22px;
+    }
+    .apercu {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    img {
+      flex: none;
+      width: 96px;
+      height: 96px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      object-fit: cover;
+    }
+    .actions-photo {
+      flex: 1;
+      display: grid;
+      gap: 8px;
+    }
+    .lien-photo {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 12px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--lr-primaire);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .lien-photo.retirer {
+      color: var(--lr-danger);
+    }
+    .choix {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 8px 8px max(16px, env(safe-area-inset-bottom));
+      background: var(--lr-voile);
+      outline: none;
+    }
+    .choix-groupe {
+      overflow: hidden;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 14px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+    }
+    .choix h3 {
+      margin: 0;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 400;
+      text-align: center;
+      color: var(--lr-texte-secondaire);
+    }
+    .choix button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 56px;
+      border: none;
+      border-top: 1px solid var(--lr-bordure);
+      background: transparent;
+      color: var(--lr-primaire);
+      font-family: inherit;
+      font-size: 19px;
+    }
+    .choix .annuler-choix {
+      border-top: none;
       font-weight: 600;
     }
     .enregistrer:disabled {
@@ -277,18 +377,65 @@ export interface ChoixType {
             (change)="marque.set($any($event.target).value)"
           />
         </div>
+        <div class="groupe" role="group" aria-labelledby="etiquette-photo">
+          <span id="etiquette-photo" class="etiquette">Photo (facultatif)</span>
+          @if (apercu(); as source) {
+            <div class="apercu">
+              <img [src]="source" alt="Photo du leurre" />
+              <div class="actions-photo">
+                <button #changer type="button" class="lien-photo" (click)="ouvrirChoix()">Changer la photo</button>
+                <button type="button" class="lien-photo retirer" (click)="retirerPhoto()">Retirer la photo</button>
+              </div>
+            </div>
+          } @else {
+            <button type="button" class="bouton-photo" (click)="ouvrirChoix()">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                <circle cx="12" cy="13" r="3.3" fill="none" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+              Ajouter une photo
+            </button>
+          }
+          @if (messagePhoto(); as message) {
+            <p class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
         @if (echec()) {
           <p class="erreur" role="alert">Impossible d'enregistrer le leurre. Réessaie.</p>
+        }
+        @if (echecPhoto()) {
+          <p class="erreur" role="alert">Impossible d'envoyer la photo. Réessaie.</p>
         }
         @if (echecSuppression()) {
           <p class="erreur" role="alert">Impossible de supprimer le leurre. Réessaie.</p>
         }
-        <button type="submit" class="enregistrer" [disabled]="enCours()" [attr.aria-busy]="enCours() ? 'true' : null">Enregistrer</button>
+        <button type="submit" class="enregistrer" [disabled]="enCours()" [attr.aria-busy]="enCours() ? 'true' : null">{{ enCours() && envoiPhoto() ? 'Envoi de la photo…' : 'Enregistrer' }}</button>
         @if (leurre()) {
           <button #supprimer type="button" class="supprimer" [disabled]="enCours()" (click)="confirmer.set(true)">Supprimer</button>
         }
       </form>
     </div>
+    @if (choixPhoto()) {
+      <div
+        #choix
+        class="choix"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titre-photo"
+        tabindex="-1"
+        (keydown.escape)="$event.stopPropagation(); fermerChoix()"
+        (keydown.tab)="pieger($event)"
+      >
+        <div class="choix-groupe">
+          <h3 id="titre-photo">Photo du leurre</h3>
+          <button type="button" (click)="choisirPhoto('camera')">Prendre une photo</button>
+          <button type="button" (click)="choisirPhoto('galerie')">Choisir dans la galerie</button>
+        </div>
+        <div class="choix-groupe">
+          <button type="button" class="annuler-choix" (click)="fermerChoix()">Annuler</button>
+        </div>
+      </div>
+    }
     @if (confirmer()) {
       <div class="voile">
         <div
@@ -311,7 +458,7 @@ export interface ChoixType {
     }
   `,
 })
-export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
+export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly types = input.required<ChoixType[]>();
   /** Affiche un message d'échec d'enregistrement (la page le pilote). */
   readonly echec = input(false);
@@ -321,6 +468,8 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
   readonly leurre = input<Leurre | null>(null);
   /** Affiche un message d'échec de suppression (la page le pilote). */
   readonly echecSuppression = input(false);
+  /** L'envoi de la photo a échoué à l'enregistrement (la page le pilote) : le formulaire reste ouvert avec la photo. */
+  readonly echecPhoto = input(false);
   readonly valide = output<SaisieLeurre>();
   readonly supprimer = output<void>();
   readonly annuler = output<void>();
@@ -331,6 +480,21 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
   protected readonly couleur = signal('');
   protected readonly marque = signal('');
   protected readonly confirmer = signal(false);
+  /** La feuille « Photo du leurre » est ouverte. */
+  protected readonly choixPhoto = signal(false);
+  /** Refus d'accès ou hors ligne, à afficher sous le bouton de la photo. */
+  protected readonly messagePhoto = signal<string | null>(null);
+  /** Choix du pêcheur : `undefined` = photo actuelle gardée, `Blob` = nouvelle photo, `null` = photo retirée. */
+  private readonly photo = signal<Blob | null | undefined>(undefined);
+  private readonly urlNouvellePhoto = signal<string | null>(null);
+  /** Ce que l'aperçu montre : la nouvelle photo, sinon la photo actuelle du leurre (sauf si elle est retirée). */
+  protected readonly apercu = computed(() => {
+    const photo = this.photo();
+    if (photo === undefined) return this.leurre()?.photoUrl ?? null;
+    return photo === null ? null : this.urlNouvellePhoto();
+  });
+  /** Une nouvelle photo part avec l'enregistrement : le bouton le dit pendant l'envoi. */
+  protected readonly envoiPhoto = computed(() => this.photo() instanceof Blob);
   /** Les erreurs n'apparaissent qu'après un premier essai d'enregistrement. */
   private readonly tente = signal(false);
 
@@ -343,13 +507,21 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
 
   private readonly boutonSupprimer = viewChild<ElementRef<HTMLElement>>('supprimer');
   private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
+  private readonly choix = viewChild<ElementRef<HTMLElement>>('choix');
+  private readonly changer = viewChild<ElementRef<HTMLElement>>('changer');
+  private readonly injector = inject(Injector);
   private readonly boutonRefuser = viewChild<ElementRef<HTMLElement>>('refuser');
   /** La confirmation vient d'être acceptée : le focus revient sur « Supprimer » quand la suppression est finie (échec compris). */
   private focusSupprimerApres = false;
+  private readonly sourcePhoto = inject(SOURCE_PHOTO);
+  /** Le bouton qui a ouvert la feuille de choix, pour lui rendre le focus à sa fermeture sans choix. */
+  private declencheurPhoto: Element | null = null;
 
   constructor() {
     // Le focus passe à la confirmation quand elle s'ouvre.
     effect(() => this.boutonRefuser()?.nativeElement.focus());
+    // Le focus passe au premier bouton de la feuille de choix de la photo quand elle s'ouvre (Maj+Tab reste piégé dans la feuille).
+    effect(() => this.choix()?.nativeElement.querySelector('button')?.focus());
     // La confirmation s'est fermée en emportant le focus : on le rend à « Supprimer » dès qu'il est de nouveau actif.
     effect(() => {
       const bouton = this.boutonSupprimer();
@@ -374,6 +546,71 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
     this.dialogue().nativeElement.focus();
   }
 
+  ngOnDestroy(): void {
+    this.liberer();
+  }
+
+  /** Hors ligne, le stockage des photos n'est pas disponible (PLAN §4) : on le dit au lieu d'ouvrir le choix. */
+  protected ouvrirChoix(): void {
+    if (!this.sourcePhoto.enLigne()) {
+      this.messagePhoto.set('Photo indisponible hors ligne : ajoute-la plus tard.');
+      return;
+    }
+    this.messagePhoto.set(null);
+    this.declencheurPhoto = document.activeElement;
+    this.choixPhoto.set(true);
+  }
+
+  protected fermerChoix(): void {
+    this.choixPhoto.set(false);
+    if (this.declencheurPhoto instanceof HTMLElement) {
+      const declencheur = this.declencheurPhoto;
+      queueMicrotask(() => declencheur.focus());
+    }
+    this.declencheurPhoto = null;
+  }
+
+  protected async choisirPhoto(origine: OriginePhoto): Promise<void> {
+    this.choixPhoto.set(false);
+    const declencheur = this.declencheurPhoto;
+    this.declencheurPhoto = null;
+    let choisie = false;
+    try {
+      // Appelé sans attendre dans le geste du toucher : Safari exige que le sélecteur de fichier s'ouvre pendant ce geste.
+      const photo = await this.sourcePhoto.choisir(origine);
+      if (photo) {
+        this.garder(photo);
+        choisie = true;
+      }
+    } catch (erreur) {
+      if (erreur instanceof AccesPhotoRefuse) this.messagePhoto.set("Accès à l'appareil photo refusé.");
+      else console.warn("La photo n'a pas pu être récupérée.", erreur);
+    }
+    // La feuille s'est fermée en emportant le focus : « Changer la photo » le reprend si une photo est choisie, sinon le bouton d'origine.
+    if (choisie) afterNextRender(() => this.changer()?.nativeElement.focus(), { injector: this.injector });
+    else if (declencheur instanceof HTMLElement && declencheur.isConnected) declencheur.focus();
+  }
+
+  protected retirerPhoto(): void {
+    this.messagePhoto.set(null);
+    this.liberer();
+    // Une nouvelle photo pas encore enregistrée est seule écartée : l'ancienne photo du leurre, s'il en a une, redevient celle d'origine.
+    const nouvelleEnAttente = this.photo() instanceof Blob;
+    this.photo.set(!nouvelleEnAttente && this.leurre()?.photoUrl ? null : undefined);
+  }
+
+  private garder(photo: Blob): void {
+    this.liberer();
+    this.urlNouvellePhoto.set(URL.createObjectURL(photo));
+    this.photo.set(photo);
+  }
+
+  private liberer(): void {
+    const url = this.urlNouvellePhoto();
+    if (url) URL.revokeObjectURL(url);
+    this.urlNouvellePhoto.set(null);
+  }
+
   protected fermerConfirmation(): void {
     this.confirmer.set(false);
     // Le bouton « Supprimer » du formulaire reprend le focus.
@@ -386,9 +623,9 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
     this.supprimer.emit();
   }
 
-  /** Garde le focus clavier dans la confirmation (dialogue modal). */
+  /** Garde le focus clavier dans la confirmation ou la feuille de choix (dialogue modal). */
   protected pieger(evenement: Event): void {
-    const boutons = [...(this.alerte()?.nativeElement.querySelectorAll('button') ?? [])];
+    const boutons = [...(evenement.currentTarget as HTMLElement).querySelectorAll('button')];
     const premier = boutons[0];
     const dernier = boutons[boutons.length - 1];
     const maj = (evenement as KeyboardEvent).shiftKey;
@@ -407,12 +644,18 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
     const tailleCm = nombrePositif(this.taille());
     const poidsG = nombrePositif(this.poids());
     if (erreurTexte(this.typeId()) || tailleCm === null || poidsG === null || erreurTexte(this.couleur())) return;
+    // Le réseau a pu tomber depuis le choix de la photo : on ne lance pas un envoi qui réessaierait longtemps (PLAN §4).
+    if (this.photo() instanceof Blob && !this.sourcePhoto.enLigne()) {
+      this.messagePhoto.set('Photo indisponible hors ligne : ajoute-la plus tard.');
+      return;
+    }
     this.valide.emit({
       typeId: this.typeId(),
       tailleCm,
       poidsG,
       couleur: this.couleur().trim(),
       marque: this.marque().trim(),
+      ...(this.photo() === undefined ? {} : { photo: this.photo() }),
     });
   }
 }
