@@ -13,7 +13,7 @@ export interface Leurre {
   enAttente: boolean;
 }
 
-/** Ce que le pêcheur saisit pour un nouveau leurre. */
+/** Ce que le pêcheur saisit pour un leurre, à l'ajout comme à la modification. */
 export interface SaisieLeurre {
   typeId: string;
   tailleCm: number;

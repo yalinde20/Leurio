@@ -125,7 +125,7 @@ export interface ChoixType {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.35);
+      background: var(--lr-voile);
     }
     .alerte {
       width: 280px;
@@ -344,18 +344,28 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
   private readonly boutonSupprimer = viewChild<ElementRef<HTMLElement>>('supprimer');
   private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
   private readonly boutonRefuser = viewChild<ElementRef<HTMLElement>>('refuser');
+  /** La confirmation vient d'être acceptée : le focus revient sur « Supprimer » quand la suppression est finie (échec compris). */
+  private focusSupprimerApres = false;
 
   constructor() {
     // Le focus passe à la confirmation quand elle s'ouvre.
     effect(() => this.boutonRefuser()?.nativeElement.focus());
+    // La confirmation s'est fermée en emportant le focus : on le rend à « Supprimer » dès qu'il est de nouveau actif.
+    effect(() => {
+      const bouton = this.boutonSupprimer();
+      if (this.focusSupprimerApres && !this.enCours() && bouton) {
+        this.focusSupprimerApres = false;
+        bouton.nativeElement.focus();
+      }
+    });
   }
 
   ngOnInit(): void {
     const l = this.leurre();
     if (!l) return;
     this.typeId.set(l.typeId);
-    this.taille.set(String(l.tailleCm));
-    this.poids.set(String(l.poidsG));
+    this.taille.set(String(l.tailleCm).replace('.', ','));
+    this.poids.set(String(l.poidsG).replace('.', ','));
     this.couleur.set(l.couleur);
     this.marque.set(l.marque ?? '');
   }
@@ -372,6 +382,7 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
 
   protected confirmerSuppression(): void {
     this.confirmer.set(false);
+    this.focusSupprimerApres = true;
     this.supprimer.emit();
   }
 
