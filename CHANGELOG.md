@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.41.0](https://github.com/yalinde20/Leurio/compare/v1.40.0...v1.41.0) (2026-11-13)
+
+
+### Features
+
+* **US 101:** modifier ou supprimer un leurre de ma boîte ([544bc65](https://github.com/yalinde20/Leurio/commit/544bc651e0c502fba3a67930e555815d95b6b8ac))
+
+
+### Bug Fixes
+
+* **US 101:** suites de la revue (token du voile, bouton dans le titre, focus, fermeture si le leurre disparaît, virgule) ([66cd4af](https://github.com/yalinde20/Leurio/commit/66cd4afe49009542f62602e95458d9b5a589ea8c))
+
 ## [1.40.0](https://github.com/yalinde20/Leurio/compare/v1.39.0...v1.40.0) (2026-11-12)
 
 
