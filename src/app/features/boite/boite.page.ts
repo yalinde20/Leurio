@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
@@ -65,14 +65,52 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       list-style: none;
     }
     .leurre {
-      padding: 12px 16px;
+      position: relative;
+      padding: 0 40px 12px 16px;
       border: 1px solid var(--lr-bordure);
       border-radius: 16px;
       background: var(--lr-surface);
       color: var(--lr-texte);
     }
+    .leurre:has(.toucher:active) {
+      background: var(--lr-sable);
+    }
+    .leurre::after {
+      content: '›';
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      font-size: 22px;
+      color: var(--lr-texte-secondaire);
+    }
+    .toucher {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 48px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+    }
+    .toucher::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+    }
+    .toucher:focus-visible {
+      outline: none;
+    }
+    .toucher:focus-visible::after {
+      outline: 2px solid var(--lr-primaire);
+      outline-offset: 2px;
+    }
     .leurre h3 {
-      margin: 0 0 4px;
+      margin: 0;
       font-size: 18px;
       font-weight: 700;
     }
@@ -155,10 +193,10 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
           @if (leurres.length === 0) {
             <div class="vide">
               <p>Ta boîte est vide.</p>
-              <button type="button" class="ajouter" (click)="ouvrir()">Ajouter un leurre</button>
+              <button #ajouter type="button" class="ajouter" (click)="ouvrir()">Ajouter un leurre</button>
             </div>
           } @else {
-            <button type="button" class="ajouter haut" (click)="ouvrir()">Ajouter un leurre</button>
+            <button #ajouter type="button" class="ajouter haut" (click)="ouvrir()">Ajouter un leurre</button>
             @if (famillesDuContenu().length > 0) {
               <div class="filtre" role="radiogroup" aria-label="Famille">
                 @for (famille of optionsFamille(); track famille?.id ?? 'toutes') {
@@ -174,8 +212,10 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
               <ul class="liste">
                 @for (leurre of affiches; track leurre.id) {
                   <li class="leurre">
-                    <h3>{{ nomDuType(leurre.typeId) }}</h3>
-                    <p class="details">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
+                    <h3>
+                      <button type="button" class="toucher" [attr.aria-describedby]="'details-' + leurre.id" (click)="modifier(leurre)">{{ nomDuType(leurre.typeId) }}</button>
+                    </h3>
+                    <p class="details" [id]="'details-' + leurre.id">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
                     @if (leurre.marque) {
                       <p class="marque">{{ leurre.marque }}</p>
                     }
@@ -195,7 +235,16 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       </div>
     </ion-content>
     @if (formulaireOuvert()) {
-      <app-leurre-formulaire [types]="types()" [echec]="echec()" [enCours]="enCours()" (valide)="enregistrer($event)" (annuler)="fermer()" />
+      <app-leurre-formulaire
+        [types]="types()"
+        [leurre]="leurreModifie()"
+        [echec]="echec()"
+        [echecSuppression]="echecSuppression()"
+        [enCours]="enCours()"
+        (valide)="enregistrer($event)"
+        (supprimer)="supprimer()"
+        (annuler)="fermer()"
+      />
     }
   `,
 })
@@ -215,7 +264,21 @@ export class BoitePage implements OnInit {
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
+  protected readonly echecSuppression = signal(false);
+  /** Le leurre dont le formulaire est ouvert ; null = formulaire d'ajout. */
+  protected readonly leurreModifie = signal<Leurre | null>(null);
   private declencheur: Element | null = null;
+  private readonly injector = inject(Injector);
+  private readonly boutonAjouter = viewChild<ElementRef<HTMLElement>>('ajouter');
+
+  constructor() {
+    // Un leurre supprimé ailleurs pendant qu'on le modifie : on ferme le formulaire plutôt que d'écrire dans un document absent.
+    effect(() => {
+      const leurre = this.leurreModifie();
+      const leurres = this.boite.leurres();
+      if (this.formulaireOuvert() && leurre && leurres && !leurres.some((l) => l.id === leurre.id)) this.fermerApresSuppression();
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     // Les onglets recréent la page à chaque visite : revenir sur la Boîte relit la boîte après une erreur.
@@ -244,7 +307,18 @@ export class BoitePage implements OnInit {
   }
 
   protected ouvrir(): void {
+    this.leurreModifie.set(null);
+    this.ouvrirFormulaire();
+  }
+
+  protected modifier(leurre: Leurre): void {
+    this.leurreModifie.set(leurre);
+    this.ouvrirFormulaire();
+  }
+
+  private ouvrirFormulaire(): void {
     this.echec.set(false);
+    this.echecSuppression.set(false);
     this.declencheur = document.activeElement;
     this.formulaireOuvert.set(true);
   }
@@ -256,15 +330,41 @@ export class BoitePage implements OnInit {
     this.declencheur = null;
   }
 
+  /** La ligne du leurre n'existe plus : le focus va sur « Ajouter un leurre » (présent à l'état vide comme dans la liste). */
+  private fermerApresSuppression(): void {
+    if (!this.formulaireOuvert()) return;
+    this.formulaireOuvert.set(false);
+    this.declencheur = null;
+    afterNextRender(() => this.boutonAjouter()?.nativeElement.focus(), { injector: this.injector });
+  }
+
   protected async enregistrer(saisie: SaisieLeurre): Promise<void> {
     if (this.enCours()) return;
     this.enCours.set(true);
     this.echec.set(false);
+    this.echecSuppression.set(false);
     try {
-      await this.boite.ajouter(saisie);
+      const leurre = this.leurreModifie();
+      await (leurre ? this.boite.modifier(leurre.id, saisie) : this.boite.ajouter(saisie));
       this.fermer();
     } catch {
       this.echec.set(true);
+    } finally {
+      this.enCours.set(false);
+    }
+  }
+
+  protected async supprimer(): Promise<void> {
+    const leurre = this.leurreModifie();
+    if (!leurre || this.enCours()) return;
+    this.enCours.set(true);
+    this.echec.set(false);
+    this.echecSuppression.set(false);
+    try {
+      await this.boite.supprimer(leurre.id);
+      this.fermerApresSuppression();
+    } catch {
+      this.echecSuppression.set(true);
     } finally {
       this.enCours.set(false);
     }

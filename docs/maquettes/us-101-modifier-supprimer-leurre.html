@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 101 : modifier ou supprimer un leurre de ma boîte</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+  .leurre.touchable { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+  .leurre.touchable .corps { flex: 1; min-width: 0; }
+  .leurre.touchable .fleche { color: var(--lr-texte-secondaire); font-size: 22px; }
+  .leurre.presse { background: var(--lr-sable); }
+  .supprimer {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid var(--lr-danger); border-radius: 12px; background: transparent; color: var(--lr-danger);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .alerte-zone { position: relative; }
+  .alerte-zone::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .alerte {
+    position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 280px; border-radius: 16px; overflow: hidden; background: var(--lr-surface); color: var(--lr-texte);
+    border: 1px solid var(--lr-bordure); text-align: center;
+  }
+  .alerte .q { padding: 18px 16px 14px; font-size: 17px; font-weight: 600; }
+  .alerte .q small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--lr-texte-secondaire); }
+  .alerte .actions { display: flex; border-top: 1px solid var(--lr-bordure); }
+  .alerte .actions span { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .alerte .actions span + span { border-left: 1px solid var(--lr-bordure); }
+  .alerte .annul { color: var(--lr-primaire); }
+  .alerte .suppr { color: var(--lr-danger); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>US 101 — Modifier ou supprimer un leurre de ma boîte</h1>
+<p class="note">iPhone, app installée. PLAN §2.3 (boîte à leurres), §3 (onglet Boîte), §4 (cache Firestore hors ligne) et §7 (<code>users/{uid}/tackleBox</code>). Même formulaire que l'ajout (US 99), mêmes règles de validation. Tokens du projet uniquement, cibles de 48 px minimum. Android : même affichage (boîte de dialogue Material pour la confirmation).</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Liste : chaque leurre se touche</h2><p class="note">Chaque ligne du leurre (48 px minimum) ouvre son formulaire ; le chevron montre qu'elle se touche. Au toucher, la ligne s'éclaire un instant. Le filtre par famille (US 100) reste au-dessus, inchangé, et n'est pas redessiné ici.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre touchable presse"><div class="corps"><h3>Shad</h3><p class="details">10 cm · 12 g · gardon</p><p class="marque">Sakura</p></div><span class="fleche">›</span></li><li class="leurre touchable "><div class="corps"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></div><span class="fleche">›</span></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>2. Formulaire prérempli</h2><p class="note">Même feuille plein écran que l'ajout, titrée « Modifier le leurre », préremplie avec les valeurs du leurre. « Enregistrer » en haut, « Supprimer » en dessous, en rouge sur fond transparent. « Annuler » ferme sans rien changer.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div></div><h2>3. Taille changée</h2><p class="note">Le pêcheur passe la taille de 10 à 12 cm, puis touche « Enregistrer ».</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>12</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div></div><h2>4. Liste après l'enregistrement</h2><p class="note">La feuille se ferme : la ligne montre la nouvelle taille, à la même place (l'ordre reste celui de l'ajout).</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre touchable "><div class="corps"><h3>Shad</h3><p class="details">12 cm · 12 g · gardon</p><p class="marque">Sakura</p></div><span class="fleche">›</span></li><li class="leurre touchable "><div class="corps"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></div><span class="fleche">›</span></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>5. Saisie invalide</h2><p class="note">Mêmes règles que l'ajout : taille vidée ou à 0, rien n'est enregistré et le message s'affiche sous le champ.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ invalide"><span>0</span></div><p class="erreur" role="alert">Entre un nombre supérieur à 0.</p></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div></div><h2>6. Confirmation de suppression</h2><p class="note">Au toucher de « Supprimer » : boîte de dialogue iOS par-dessus le formulaire. « Annuler » la ferme et laisse le formulaire ouvert ; « Supprimer » (rouge) retire le leurre.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="alerte-zone" style="flex:1;display:flex;flex-direction:column"><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>10</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div><div class="alerte" role="alertdialog"><div class="q">Supprimer ce leurre ?</div><div class="actions"><span class="annul">Annuler</span><span class="suppr">Supprimer</span></div></div></div></div><h2>7. Liste après la suppression</h2><p class="note">La boîte de dialogue et la feuille se ferment ; le leurre n'est plus dans la liste. Si c'était le dernier, l'état « Ta boîte est vide. » de l'US 99 s'affiche.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre touchable "><div class="corps"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></div><span class="fleche">›</span></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>8. Échec d'écriture</h2><p class="note">Rare (compte perdu…) : le formulaire reste ouvert avec le message, comme à l'ajout. Pour une suppression : « Impossible de supprimer le leurre. Réessaie. ».</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar modal"><span class="lien">Annuler</span><span class="title">Modifier le leurre</span><span class="vide-droite"></span></div><div class="content" style="flex:1"><div class="form"><div class="groupe"><label>Type</label><div class="champ"><span>Shad</span><span class="chevron">›</span></div></div><div class="deux"><div class="groupe"><label>Taille (cm)</label><div class="champ"><span>12</span></div></div><div class="groupe"><label>Poids (g)</label><div class="champ"><span>12</span></div></div></div><div class="groupe"><label>Couleur</label><div class="champ"><span>gardon</span></div></div><div class="groupe"><label>Marque (facultatif)</label><div class="champ"><span>Sakura</span></div></div><p class="erreur" role="alert">Impossible d'enregistrer le leurre. Réessaie.</p><button class="bouton">Enregistrer</button><button class="supprimer">Supprimer</button></div></div></div><h2>9. Hors ligne</h2><p class="note">Mode avion : la liste change tout de suite. Le leurre modifié montre la mention de l'US 99 jusqu'à la synchronisation ; un leurre supprimé disparaît aussitôt et sera supprimé du serveur au retour du réseau.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>✈ 100 %</span></div><div class="toolbar"><span class="title">Boîte</span></div><div class="content" style="flex:1"><button class="bouton haut">Ajouter un leurre</button><ul class="liste"><li class="leurre touchable "><div class="corps"><h3>Shad</h3><p class="details">12 cm · 12 g · gardon</p><p class="marque">Sakura</p><p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p></div><span class="fleche">›</span></li><li class="leurre touchable "><div class="corps"><h3>Cuillère tournante</h3><p class="details">4 cm · 5 g · argent</p></div><span class="fleche">›</span></li></ul></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab on"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+</div>
+</body>
+</html>

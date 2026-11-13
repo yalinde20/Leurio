@@ -59,5 +59,20 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
         console.warn("Le leurre n'a pas pu être enregistré sur le serveur.", erreur),
       );
     },
+    async modifier(uid, id, data) {
+      const { db } = await firebase();
+      const { doc, updateDoc } = await import('firebase/firestore');
+      // Comme `ajouter` : la promesse ne se résout qu'à l'accusé du serveur, on ne l'attend pas.
+      updateDoc(doc(db, 'users', uid, 'tackleBox', id), data).catch((erreur: unknown) =>
+        console.warn("La modification du leurre n'a pas pu être enregistrée sur le serveur.", erreur),
+      );
+    },
+    async supprimer(uid, id) {
+      const { db } = await firebase();
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      deleteDoc(doc(db, 'users', uid, 'tackleBox', id)).catch((erreur: unknown) =>
+        console.warn("La suppression du leurre n'a pas pu être enregistrée sur le serveur.", erreur),
+      );
+    },
   };
 }
