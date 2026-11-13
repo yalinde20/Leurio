@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, Injector, afterNextRender, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { AccesPhotoRefuse, OriginePhoto, SOURCE_PHOTO } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre } from '../../core/data/tackle-box.service';
 import { erreurNombre, erreurTexte, nombrePositif } from './saisie-leurre';
@@ -172,6 +172,7 @@ export interface ChoixType {
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       width: 100%;
       min-height: 48px;
       border: 1px dashed var(--lr-primaire);
@@ -181,6 +182,10 @@ export interface ChoixType {
       font-family: inherit;
       font-size: 17px;
       font-weight: 600;
+    }
+    .bouton-photo svg {
+      width: 22px;
+      height: 22px;
     }
     .apercu {
       display: flex;
@@ -378,12 +383,18 @@ export interface ChoixType {
             <div class="apercu">
               <img [src]="source" alt="Photo du leurre" />
               <div class="actions-photo">
-                <button type="button" class="lien-photo" (click)="ouvrirChoix()">Changer la photo</button>
+                <button #changer type="button" class="lien-photo" (click)="ouvrirChoix()">Changer la photo</button>
                 <button type="button" class="lien-photo retirer" (click)="retirerPhoto()">Retirer la photo</button>
               </div>
             </div>
           } @else {
-            <button type="button" class="bouton-photo" (click)="ouvrirChoix()">Ajouter une photo</button>
+            <button type="button" class="bouton-photo" (click)="ouvrirChoix()">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                <circle cx="12" cy="13" r="3.3" fill="none" stroke="currentColor" stroke-width="1.8" />
+              </svg>
+              Ajouter une photo
+            </button>
           }
           @if (messagePhoto(); as message) {
             <p class="erreur" role="alert">{{ message }}</p>
@@ -497,6 +508,8 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
   private readonly boutonSupprimer = viewChild<ElementRef<HTMLElement>>('supprimer');
   private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
   private readonly choix = viewChild<ElementRef<HTMLElement>>('choix');
+  private readonly changer = viewChild<ElementRef<HTMLElement>>('changer');
+  private readonly injector = inject(Injector);
   private readonly boutonRefuser = viewChild<ElementRef<HTMLElement>>('refuser');
   /** La confirmation vient d'être acceptée : le focus revient sur « Supprimer » quand la suppression est finie (échec compris). */
   private focusSupprimerApres = false;
@@ -507,8 +520,8 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
   constructor() {
     // Le focus passe à la confirmation quand elle s'ouvre.
     effect(() => this.boutonRefuser()?.nativeElement.focus());
-    // Le focus passe à la feuille de choix de la photo quand elle s'ouvre.
-    effect(() => this.choix()?.nativeElement.focus());
+    // Le focus passe au premier bouton de la feuille de choix de la photo quand elle s'ouvre (Maj+Tab reste piégé dans la feuille).
+    effect(() => this.choix()?.nativeElement.querySelector('button')?.focus());
     // La confirmation s'est fermée en emportant le focus : on le rend à « Supprimer » dès qu'il est de nouveau actif.
     effect(() => {
       const bouton = this.boutonSupprimer();
@@ -559,18 +572,27 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
 
   protected async choisirPhoto(origine: OriginePhoto): Promise<void> {
     this.choixPhoto.set(false);
+    const declencheur = this.declencheurPhoto;
     this.declencheurPhoto = null;
+    let choisie = false;
     try {
       // Appelé sans attendre dans le geste du toucher : Safari exige que le sélecteur de fichier s'ouvre pendant ce geste.
       const photo = await this.sourcePhoto.choisir(origine);
-      if (photo) this.garder(photo);
+      if (photo) {
+        this.garder(photo);
+        choisie = true;
+      }
     } catch (erreur) {
       if (erreur instanceof AccesPhotoRefuse) this.messagePhoto.set("Accès à l'appareil photo refusé.");
       else console.warn("La photo n'a pas pu être récupérée.", erreur);
     }
+    // La feuille s'est fermée en emportant le focus : « Changer la photo » le reprend si une photo est choisie, sinon le bouton d'origine.
+    if (choisie) afterNextRender(() => this.changer()?.nativeElement.focus(), { injector: this.injector });
+    else if (declencheur instanceof HTMLElement && declencheur.isConnected) declencheur.focus();
   }
 
   protected retirerPhoto(): void {
+    this.messagePhoto.set(null);
     this.liberer();
     this.photo.set(this.leurre()?.photoUrl ? null : undefined);
   }
@@ -620,6 +642,11 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
     const tailleCm = nombrePositif(this.taille());
     const poidsG = nombrePositif(this.poids());
     if (erreurTexte(this.typeId()) || tailleCm === null || poidsG === null || erreurTexte(this.couleur())) return;
+    // Le réseau a pu tomber depuis le choix de la photo : on ne lance pas un envoi qui réessaierait longtemps (PLAN §4).
+    if (this.photo() instanceof Blob && !this.sourcePhoto.enLigne()) {
+      this.messagePhoto.set('Photo indisponible hors ligne : ajoute-la plus tard.');
+      return;
+    }
     this.valide.emit({
       typeId: this.typeId(),
       tailleCm,

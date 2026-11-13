@@ -61,9 +61,11 @@ export function creerSourceTackleBoxFirebase(injector: Injector): SourceTackleBo
     },
     async modifier(uid, id, data) {
       const { db } = await firebase();
-      const { doc, updateDoc } = await import('firebase/firestore');
+      const { deleteField, doc, updateDoc } = await import('firebase/firestore');
+      // `null` retire le champ du document (la photo retirée) ; sinon il resterait vide dans Firestore.
+      const champs = Object.fromEntries(Object.entries(data).map(([nom, valeur]) => [nom, valeur === null ? deleteField() : valeur]));
       // Comme `ajouter` : la promesse ne se résout qu'à l'accusé du serveur, on ne l'attend pas.
-      updateDoc(doc(db, 'users', uid, 'tackleBox', id), data).catch((erreur: unknown) =>
+      updateDoc(doc(db, 'users', uid, 'tackleBox', id), champs).catch((erreur: unknown) =>
         console.warn("La modification du leurre n'a pas pu être enregistrée sur le serveur.", erreur),
       );
     },

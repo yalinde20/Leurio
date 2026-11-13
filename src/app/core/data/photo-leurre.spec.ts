@@ -24,8 +24,10 @@ describe('photo-leurre', () => {
 });
 
 describe('TackleBoxService : cas limites de la photo (US 102)', () => {
-  function creer(options: { echecEnvoi?: boolean; echecSuppressionPhoto?: boolean }) {
+  function creer(options: { echecEnvoi?: boolean; echecSuppressionPhoto?: boolean; echecEcriture?: boolean }) {
     const ajouts: Record<string, unknown>[] = [];
+    const modifications: Record<string, unknown>[] = [];
+    const supprimees: string[] = [];
     const docs: DocumentLeurre[] = [
       { id: 'a', enAttente: false, data: { typeId: 'shad', tailleCm: 10, poidsG: 12, couleur: 'gardon', createdAt: 1, photoUrl: URL_ANCIENNE } },
     ];
@@ -36,21 +38,28 @@ describe('TackleBoxService : cas limites de la photo (US 102)', () => {
           useValue: {
             uid: async () => 'u1',
             ecouter: (_u: string, ok: (d: DocumentLeurre[]) => void) => (ok(docs), () => undefined),
-            ajouter: async (_u: string, data: Record<string, unknown>) => void ajouts.push(data),
-            modifier: async () => undefined,
+            ajouter: async (_u: string, data: Record<string, unknown>) => {
+              if (options.echecEcriture) throw new Error('refusé');
+              ajouts.push(data);
+            },
+            modifier: async (_u: string, _id: string, data: Record<string, unknown>) => {
+              if (options.echecEcriture) throw new Error('refusé');
+              modifications.push(data);
+            },
             supprimer: async () => undefined,
             envoyerPhoto: async () => {
               if (options.echecEnvoi) throw new Error('réseau');
               return 'https://stockage.test/nouvelle.jpg';
             },
-            supprimerPhoto: async () => {
+            supprimerPhoto: async (url: string) => {
+              supprimees.push(url);
               if (options.echecSuppressionPhoto) throw new Error('réseau');
             },
           },
         },
       ],
     });
-    return { service: TestBed.inject(TackleBoxService), ajouts };
+    return { service: TestBed.inject(TackleBoxService), ajouts, modifications, supprimees };
   }
   const saisie = { typeId: 'shad', tailleCm: 10, poidsG: 12, couleur: 'gardon' };
 
@@ -66,7 +75,24 @@ describe('TackleBoxService : cas limites de la photo (US 102)', () => {
     const avertir = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     await expect(t.service.supprimer('a')).resolves.toBeUndefined();
     await expect(t.service.modifier('a', { ...saisie, photo: null })).resolves.toBeUndefined();
+    await attendre();
     expect(avertir).toHaveBeenCalledTimes(2);
     avertir.mockRestore();
+  });
+
+  it('given l\'écriture du document est refusée après l\'envoi, when j\'ajoute ou je modifie avec photo, then le fichier envoyé est supprimé', async () => {
+    const t = creer({ echecEcriture: true });
+    await attendre();
+    await expect(t.service.ajouter({ ...saisie, photo: photo() })).rejects.toThrow('refusé');
+    await expect(t.service.modifier('a', { ...saisie, photo: photo() })).rejects.toThrow('refusé');
+    expect(t.supprimees).toEqual(['https://stockage.test/nouvelle.jpg', 'https://stockage.test/nouvelle.jpg']);
+  });
+
+  it('given un leurre avec photo, when je la retire, then photoUrl est écrit à null (la source retire le champ) et on n\'attend pas la suppression du fichier', async () => {
+    const t = creer({});
+    await attendre();
+    await t.service.modifier('a', { ...saisie, photo: null });
+    expect(t.modifications[0]['photoUrl']).toBeNull();
+    expect(t.supprimees).toEqual([URL_ANCIENNE]);
   });
 });

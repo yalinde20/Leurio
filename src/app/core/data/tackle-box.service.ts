@@ -44,7 +44,7 @@ export interface SourceTackleBox {
   ecouter(uid: string, surChangement: (documents: DocumentLeurre[]) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Crée un document ; résout dès l'écriture locale, sans attendre le serveur. */
   ajouter(uid: string, data: Record<string, unknown>): Promise<void>;
-  /** Met à jour les champs donnés d'un document ; résout dès l'écriture locale, sans attendre le serveur. */
+  /** Met à jour les champs donnés d'un document (un champ à `null` est retiré du document) ; résout dès l'écriture locale, sans attendre le serveur. */
   modifier(uid: string, id: string, data: Record<string, unknown>): Promise<void>;
   /** Supprime un document ; résout dès l'écriture locale, sans attendre le serveur. */
   supprimer(uid: string, id: string): Promise<void>;
@@ -99,44 +99,53 @@ export class TackleBoxService {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
     const photoUrl = saisie.photo ? await this.envoyerPhoto(uid, saisie.photo) : undefined;
-    await this.source.ajouter(uid, {
-      typeId: saisie.typeId,
-      tailleCm: saisie.tailleCm,
-      poidsG: saisie.poidsG,
-      couleur: saisie.couleur.trim(),
-      marque: (saisie.marque ?? '').trim(),
-      ...(photoUrl ? { photoUrl } : {}),
-      createdAt: Date.now(),
-    });
+    await this.ecrire(
+      () =>
+        this.source.ajouter(uid, {
+          typeId: saisie.typeId,
+          tailleCm: saisie.tailleCm,
+          poidsG: saisie.poidsG,
+          couleur: saisie.couleur.trim(),
+          marque: (saisie.marque ?? '').trim(),
+          ...(photoUrl ? { photoUrl } : {}),
+          createdAt: Date.now(),
+        }),
+      photoUrl,
+    );
   }
 
   /**
    * Met à jour un leurre (jamais `createdAt` : l'ordre de la liste ne bouge pas). Mêmes règles d'écriture que `ajouter`.
-   * Une photo remplacée ou retirée voit son ancien fichier supprimé après l'écriture ; un échec de cette suppression est ignoré.
+   * Une photo remplacée ou retirée voit son ancien fichier supprimé après l'écriture, sans l'attendre (hors ligne, Storage réessaie
+   * longtemps) ; un échec de cette suppression est seulement journalisé. `photo: null` écrit `photoUrl: null` : la source retire le champ.
    */
   async modifier(id: string, saisie: SaisieLeurre): Promise<void> {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
     const anciennePhoto = this._leurres()?.find((l) => l.id === id)?.photoUrl;
-    const photoUrl = saisie.photo ? await this.envoyerPhoto(uid, saisie.photo) : saisie.photo === null ? '' : undefined;
-    await this.source.modifier(uid, id, {
-      typeId: saisie.typeId,
-      tailleCm: saisie.tailleCm,
-      poidsG: saisie.poidsG,
-      couleur: saisie.couleur.trim(),
-      marque: (saisie.marque ?? '').trim(),
-      ...(photoUrl === undefined ? {} : { photoUrl }),
-    });
-    if (anciennePhoto && photoUrl !== undefined) await this.supprimerPhoto(anciennePhoto);
+    const photoUrl = saisie.photo ? await this.envoyerPhoto(uid, saisie.photo) : saisie.photo === null ? null : undefined;
+    await this.ecrire(
+      () =>
+        this.source.modifier(uid, id, {
+          typeId: saisie.typeId,
+          tailleCm: saisie.tailleCm,
+          poidsG: saisie.poidsG,
+          couleur: saisie.couleur.trim(),
+          marque: (saisie.marque ?? '').trim(),
+          ...(photoUrl === undefined ? {} : { photoUrl }),
+        }),
+      photoUrl,
+    );
+    if (anciennePhoto && photoUrl !== undefined) void this.supprimerPhoto(anciennePhoto);
   }
 
-  /** Supprime un leurre et, s'il en avait une, sa photo. Rejette sans utilisateur connecté ; résout dès l'écriture locale. */
+  /** Supprime un leurre et, s'il en avait une, sa photo (sans attendre la suppression du fichier). Rejette sans utilisateur connecté ; résout dès l'écriture locale. */
   async supprimer(id: string): Promise<void> {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
     const photoUrl = this._leurres()?.find((l) => l.id === id)?.photoUrl;
     await this.source.supprimer(uid, id);
-    if (photoUrl) await this.supprimerPhoto(photoUrl);
+    if (photoUrl) void this.supprimerPhoto(photoUrl);
   }
 
   /** Après une erreur de lecture, relit la boîte de l'utilisateur courant (la liste repasse en chargement). Sinon ne fait rien. */
@@ -152,6 +161,16 @@ export class TackleBoxService {
       return await this.source.envoyerPhoto(uid, await compresserPhoto(photo));
     } catch (erreur) {
       throw new EchecEnvoiPhoto(erreur);
+    }
+  }
+
+  /** Écrit le document ; s'il est refusé, la photo qu'on vient d'envoyer n'est plus référencée : on la supprime. */
+  private async ecrire(ecriture: () => Promise<void>, photoEnvoyee: string | null | undefined): Promise<void> {
+    try {
+      await ecriture();
+    } catch (erreur) {
+      if (photoEnvoyee) void this.supprimerPhoto(photoEnvoyee);
+      throw erreur;
     }
   }
 

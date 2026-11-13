@@ -14,6 +14,9 @@ import { config, emulateurs } from './config';
 import { EMULATEURS } from './emulateurs';
 import { exposerPourLesTests } from './hook-test';
 
+/** Durée maximale des nouvelles tentatives de Storage (envoi et suppression d'une photo), en millisecondes. */
+const DELAI_MAX_STORAGE_MS = 20_000;
+
 /**
  * Seul point d'entrée de Firebase dans l'app (PLAN §4, §5) : Auth, Firestore, Storage et App Check.
  * Firestore garde un cache local persistant (IndexedDB) pour lire et écrire hors ligne (PLAN §4).
@@ -36,6 +39,9 @@ export class FirebaseService {
       connectFirestoreEmulator(this.db, hote, EMULATEURS.firestore);
       connectStorageEmulator(this.storage, hote, EMULATEURS.storage);
     }
+    // Sans réseau, Storage réessaie 2 à 10 minutes par défaut : on abandonne vite pour que l'écran réponde.
+    this.storage.maxUploadRetryTime = DELAI_MAX_STORAGE_MS;
+    this.storage.maxOperationRetryTime = DELAI_MAX_STORAGE_MS;
   }
 
   /** Expose les instances aux tests e2e, sur les émulateurs seulement. */
