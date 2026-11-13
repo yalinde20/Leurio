@@ -7,6 +7,7 @@ import { ConditionsService } from './core/data/conditions.service';
 import { PositionService } from './core/data/position.service';
 import { App } from './app';
 import { routes } from './app.routes';
+import { SOURCE_TACKLE_BOX } from './core/data/tackle-box.service';
 
 describe('App', () => {
   // US 89 : l'onboarding est terminé (fixture), l'app s'ouvre sur le Conseil.
@@ -18,6 +19,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideIonicAngular(),
+        { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
         provideRouter(routes),
         { provide: PositionService, useValue: { positionGps: () => new Promise(() => undefined) } },
         { provide: ConditionsService, useValue: {} },

@@ -23,6 +23,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import especesReelles from '../../../assets/data/species.json';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -119,6 +120,7 @@ async function afficher({ especes = ESPECES_REELLES, resultatPour }: Reglages = 
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => ANGERS } },
       {
         provide: CatalogService,

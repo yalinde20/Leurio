@@ -28,6 +28,7 @@ import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 const LEVER = new Date('2026-11-09T06:32:00Z');
@@ -114,6 +115,7 @@ async function ouvrirLApp() {
     imports: [App],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       provideRouter(routes),
       { provide: PositionService, useValue: { positionGps: async () => ANGERS } },
       {

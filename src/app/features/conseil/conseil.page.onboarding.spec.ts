@@ -12,6 +12,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 const SOLEIL: SoleilDuJour = { lever: new Date('2026-11-06T06:32:00Z'), coucher: new Date('2026-11-06T17:01:00Z') };
@@ -42,6 +43,7 @@ async function afficher(avant: (store: OnboardingStore) => void) {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       {
         provide: PositionService,
         useValue: {

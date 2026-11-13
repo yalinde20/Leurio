@@ -12,6 +12,7 @@ import { routes } from './app.routes';
 import { CatalogService } from './core/data/catalog.service';
 import { ConditionsService } from './core/data/conditions.service';
 import { PositionService } from './core/data/position.service';
+import { SOURCE_TACKLE_BOX } from './core/data/tackle-box.service';
 
 async function ouvrir(url: string, onboarding: string | null) {
   localStorage.clear();
@@ -20,6 +21,7 @@ async function ouvrir(url: string, onboarding: string | null) {
     imports: [App],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       provideRouter(routes),
       { provide: PositionService, useValue: { positionGps: () => new Promise(() => undefined) } },
       { provide: ConditionsService, useValue: {} },

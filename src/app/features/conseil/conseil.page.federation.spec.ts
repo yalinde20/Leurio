@@ -10,6 +10,7 @@ import { CatalogService } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const RELEVE: ReleveActuel = {
   conditions: {
@@ -35,6 +36,7 @@ async function afficher(federation: (departement: string) => Promise<unknown>) {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       {
         provide: PositionService,
         useValue: {

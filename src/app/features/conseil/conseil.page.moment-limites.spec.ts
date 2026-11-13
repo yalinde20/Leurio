@@ -11,6 +11,7 @@ import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const JOUR_MS = 24 * 3600 * 1000;
 const compact = (t: string | null | undefined) => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
@@ -24,6 +25,7 @@ async function afficher() {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       {
         provide: PositionService,
         useValue: { positionGps: async () => ({ disponible: true, source: 'gps', latitude: 47, longitude: -0.5, precisionM: 10, departement: '49' }) },

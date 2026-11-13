@@ -9,6 +9,7 @@ import { PositionService } from '../../core/data/position.service';
 import { Conditions } from '../../core/engine/conditions';
 import { ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const CONDITIONS = {
   tempEau: 11.5, sourceTempEau: 'capteur', debitTendance: 'normal', pressionTendance48h: 0, nuages: 10, vent: 5,
@@ -32,6 +33,7 @@ async function afficher(nuit = false, federation: Promise<undefined> = Promise.r
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => ({ disponible: true, source: 'gps', latitude: 47, longitude: -0.5, precisionM: 1, departement: '49' }) } },
       { provide: CatalogService, useValue: {
         federation: () => federation,

@@ -23,6 +23,7 @@ import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const NANTES: ResultatPosition = {
   disponible: true,
@@ -108,6 +109,7 @@ async function afficher({ position = NANTES, mesSpots = async () => SPOTS }: Reg
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: SpotsService, useValue: { mesSpots } },
       {
         provide: PositionService,

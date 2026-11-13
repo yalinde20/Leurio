@@ -20,6 +20,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -102,6 +103,7 @@ async function afficher({ maintenant = DANS_LES_HEURES, releve = RELEVE, positio
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => position } },
       {
         provide: CatalogService,
@@ -304,6 +306,7 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
       imports: [ConseilPage],
       providers: [
         provideIonicAngular(),
+        { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
         { provide: PositionService, useValue: { positionGps: async () => ANGERS } },
         { provide: CatalogService, useValue: { federation: async () => undefined, typesDeLeurres: async () => TYPES, animations: async () => ANIMATIONS, couleurs: async () => COULEURS } },
         { provide: ConditionsService, useValue: { releve: async () => RELEVE } },

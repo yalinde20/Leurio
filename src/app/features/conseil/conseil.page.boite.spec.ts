@@ -228,7 +228,7 @@ describe('Conseil : le leurre de ma boîte sur les cartes (US 105)', () => {
   it("critère 2 : given le matcher rend une substitution (pas de minnow, un crankbait de la même zone de nage), when l'écran s'affiche, then la carte affiche « À la place, dans ta boîte : Crankbait 6 cm perche »", async () => {
     const { page } = await afficher(
       [SHAD_GARDON, CRANK_PERCHE],
-      resultat(conseil({}), conseil({ typeId: 'minnow', taille: { valeur: 10, unite: 'cm' } })),
+      resultat(conseil({}), conseil({ typeId: 'minnow', taille: { valeur: 5, unite: 'cm' } })),
     );
 
     const [carteShad, carteMinnow] = cartes(page);

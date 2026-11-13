@@ -88,7 +88,7 @@ const conseil = (surcharge: Partial<Conseil>): Conseil => ({
 const TOP3: ResultatConseil = {
   conseils: [
     conseil({ score: 9 }),
-    conseil({ typeId: 'minnow', score: 7, taille: { valeur: 10, unite: 'cm' } }),
+    conseil({ typeId: 'minnow', score: 7, taille: { valeur: 5, unite: 'cm' } }),
     conseil({ typeId: 'cuiller', score: 5, taille: { valeur: 5, unite: 'g' } }),
   ],
   explications: [],

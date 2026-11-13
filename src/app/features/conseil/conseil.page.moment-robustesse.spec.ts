@@ -11,6 +11,7 @@ import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { Conditions } from '../../core/engine/conditions';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -49,6 +50,7 @@ async function afficher(position: Promise<ResultatPosition> | ResultatPosition, 
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: () => Promise.resolve(position) } },
       {
         provide: CatalogService,

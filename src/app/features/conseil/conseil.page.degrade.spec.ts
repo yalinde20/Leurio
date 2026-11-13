@@ -26,6 +26,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { Lieu } from '../../core/data/weather-provider';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 type ReleveCarte = ReleveActuel & {
   stationEau?: { nom: string; distanceKm: number };
@@ -86,6 +87,7 @@ async function afficher({ releve: relevé = releve(), position = ANGERS, lune = 
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => position } },
       { provide: CatalogService, useValue: { federation: async () => undefined } },
       {
