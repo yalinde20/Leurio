@@ -17,11 +17,11 @@ import { SOURCE_COMPTE, SourceCompte } from '../../core/data/compte.service';
 export const CONTENU: Record<string, unknown> = {
   // Doublon « S1 commune » entre deux fiches, URL seule, `sources` imbriquées dans un objet.
   species: [
-    { code: 'SAN', nom: 'Sandre', sources: ['S1 commune', 'https://exemple.test/sandre'] },
-    { code: 'BRO', nom: 'Brochet', sources: ['S1 commune', 'S2 brochet'], details: { zones: [{ sources: ['S3 imbriquée'] }] } },
+    { code: 'ESP1', nom: 'Espèce un', sources: ['S1 commune', 'https://exemple.test/sandre'] },
+    { code: 'ESP2', nom: 'Espèce deux', sources: ['S1 commune', 'S2 brochet'], details: { zones: [{ sources: ['S3 imbriquée'] }] } },
   ],
   // Une URL au milieu d'une phrase.
-  'lure-types': [{ id: 'shad', sources: ['Guide des shads : https://exemple.test/shads (consulté en 2026)'] }],
+  'lure-types': [{ id: 'type-test', sources: ['Guide des shads : https://exemple.test/shads (consulté en 2026)'] }],
   // Fichier sans aucune source : ignoré.
   'lure-families': [{ id: 'souples', nom: 'Souples' }],
   techniques: [{ id: 'tiree', sources: ['A1 tirée', 'A2 twitching'] }],
