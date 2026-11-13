@@ -2,11 +2,12 @@ import { afterNextRender, Component, computed, effect, ElementRef, inject, Injec
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
+import { KitDepartComponent } from './kit-depart.component';
 import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 
 @Component({
   selector: 'app-boite',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent, KitDepartComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -55,6 +56,14 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
     .ajouter.haut {
       width: 100%;
       margin-bottom: 16px;
+    }
+    .ajouter.kit {
+      border: 1px solid var(--lr-primaire);
+      background: transparent;
+      color: var(--lr-primaire);
+    }
+    .ajouter.kit.haut {
+      margin-top: -8px;
     }
     .liste {
       display: flex;
@@ -194,9 +203,11 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
             <div class="vide">
               <p>Ta boîte est vide.</p>
               <button #ajouter type="button" class="ajouter" (click)="ouvrir()">Ajouter un leurre</button>
+              <button type="button" class="ajouter kit" (click)="ouvrirKit($event)">Kit de départ conseillé</button>
             </div>
           } @else {
             <button #ajouter type="button" class="ajouter haut" (click)="ouvrir()">Ajouter un leurre</button>
+            <button type="button" class="ajouter kit haut" (click)="ouvrirKit($event)">Kit de départ conseillé</button>
             @if (famillesDuContenu().length > 0) {
               <div class="filtre" role="radiogroup" aria-label="Famille">
                 @for (famille of optionsFamille(); track famille?.id ?? 'toutes') {
@@ -246,6 +257,9 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
         (annuler)="fermer()"
       />
     }
+    @if (kitOuvert()) {
+      <app-kit-depart (fermer)="fermerKit()" />
+    }
   `,
 })
 export class BoitePage implements OnInit {
@@ -268,6 +282,8 @@ export class BoitePage implements OnInit {
   /** Le leurre dont le formulaire est ouvert ; null = formulaire d'ajout. */
   protected readonly leurreModifie = signal<Leurre | null>(null);
   private declencheur: Element | null = null;
+  protected readonly kitOuvert = signal(false);
+  private declencheurKit: HTMLElement | null = null;
   private readonly injector = inject(Injector);
   private readonly boutonAjouter = viewChild<ElementRef<HTMLElement>>('ajouter');
 
@@ -309,6 +325,17 @@ export class BoitePage implements OnInit {
   protected ouvrir(): void {
     this.leurreModifie.set(null);
     this.ouvrirFormulaire();
+  }
+
+  protected ouvrirKit(evenement: Event): void {
+    this.declencheurKit = evenement.currentTarget as HTMLElement;
+    this.kitOuvert.set(true);
+  }
+
+  protected fermerKit(): void {
+    this.kitOuvert.set(false);
+    if (this.declencheurKit?.isConnected) this.declencheurKit.focus();
+    this.declencheurKit = null;
   }
 
   protected modifier(leurre: Leurre): void {
