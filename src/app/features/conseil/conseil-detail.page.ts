@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 import { ConseilDetailStore } from './conseil-detail.store';
+import { LigneBoiteComponent } from './ligne-boite.component';
 
 /** Le détail d'un conseil du top 3 (US 86) : tout vient du top 3 déjà calculé, rien n'est recalculé. */
 @Component({
   selector: 'app-conseil-detail',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BoutonRetourComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BoutonRetourComponent, LigneBoiteComponent],
   host: { class: 'ion-page' },
   styles: `
     .carte {
@@ -137,6 +138,9 @@ import { ConseilDetailStore } from './conseil-detail.store';
               </div>
             }
           </dl>
+          @if (ligne(); as l) {
+            <app-ligne-boite [ligne]="l" />
+          }
         </section>
         <section class="carte">
           <h3>Pourquoi ce conseil</h3>
@@ -161,6 +165,8 @@ export class ConseilDetailPage {
   // sous les yeux du pêcheur le conseil qu'il est en train de lire.
   protected readonly toutesEspeces = signal(this.store.toutesEspeces()).asReadonly();
   protected readonly detail = signal(this.store.details().find((d) => d.rang === this.rang) ?? null).asReadonly();
+  /** La ligne de la boîte de ce conseil : suit la boîte, contrairement au reste du détail. */
+  protected readonly ligne = computed(() => this.store.lignes()[this.rang - 1] ?? null);
 
   constructor() {
     // Rechargement ou lien direct : le top 3 n'existe plus, on retourne à l'écran « Conseil ».

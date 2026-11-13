@@ -2,6 +2,7 @@
   {
     "id": "shad",
     "nom": "Shad",
+    "article": "un",
     "famille": "souples",
     "especes": [
       "SAN",
@@ -36,6 +37,7 @@
   {
     "id": "ver-finesse",
     "nom": "Ver souple finesse",
+    "article": "un",
     "famille": "souples",
     "especes": [
       "PER",
@@ -70,6 +72,7 @@
   {
     "id": "creature",
     "nom": "Créature",
+    "article": "une",
     "famille": "souples",
     "especes": [
       "BBG",
@@ -103,6 +106,7 @@
   {
     "id": "jig",
     "nom": "Jig à jupe",
+    "article": "un",
     "famille": "a-jupe",
     "especes": [
       "BBG",
@@ -130,6 +134,7 @@
   {
     "id": "spinnerbait",
     "nom": "Spinnerbait",
+    "article": "un",
     "famille": "a-jupe",
     "especes": [
       "BRO",
@@ -157,6 +162,7 @@
   {
     "id": "chatterbait",
     "nom": "Chatterbait",
+    "article": "un",
     "famille": "a-jupe",
     "especes": [
       "BBG",
@@ -183,6 +189,7 @@
   {
     "id": "cuillere-tournante",
     "nom": "Cuillère tournante",
+    "article": "une",
     "famille": "metalliques",
     "especes": [
       "PER",
@@ -210,6 +217,7 @@
   {
     "id": "cuillere-ondulante",
     "nom": "Cuillère ondulante",
+    "article": "une",
     "famille": "metalliques",
     "especes": [
       "BRO",
@@ -237,6 +245,7 @@
   {
     "id": "crankbait",
     "nom": "Crankbait",
+    "article": "un",
     "famille": "durs",
     "especes": [
       "BBG",
@@ -264,6 +273,7 @@
   {
     "id": "jerkbait-minnow",
     "nom": "Minnow (jerkbait)",
+    "article": "un",
     "famille": "durs",
     "especes": [
       "BRO",
@@ -294,6 +304,7 @@
   {
     "id": "lipless",
     "nom": "Lipless (vibrant sans bavette)",
+    "article": "un",
     "famille": "durs",
     "especes": [
       "BBG",
@@ -322,6 +333,7 @@
   {
     "id": "stickbait",
     "nom": "Stickbait",
+    "article": "un",
     "famille": "surface",
     "faibleLumiere": true,
     "especes": [
@@ -352,6 +364,7 @@
   {
     "id": "popper",
     "nom": "Popper",
+    "article": "un",
     "famille": "surface",
     "faibleLumiere": true,
     "especes": [
@@ -381,6 +394,7 @@
   {
     "id": "frog",
     "nom": "Grenouille",
+    "article": "une",
     "famille": "surface",
     "faibleLumiere": true,
     "especes": [
@@ -409,6 +423,7 @@
   {
     "id": "swimbait",
     "nom": "Swimbait",
+    "article": "un",
     "famille": "souples",
     "especes": [
       "BRO",
@@ -437,6 +452,7 @@
   {
     "id": "tailspinner",
     "nom": "Tailspinner",
+    "article": "un",
     "famille": "metalliques",
     "especes": [
       "SAN",
@@ -466,6 +482,7 @@
   {
     "id": "jig-metal",
     "nom": "Jig métallique",
+    "article": "un",
     "famille": "metalliques",
     "especes": [
       "ASP",
@@ -493,6 +510,7 @@
   {
     "id": "shad-silure",
     "nom": "Gros shad à silure",
+    "article": "un",
     "famille": "souples",
     "especes": [
       "SIL",
@@ -525,6 +543,7 @@
   {
     "id": "micro-leurre-souple",
     "nom": "Micro-leurre souple",
+    "article": "un",
     "famille": "souples",
     "especes": [
       "PER",
@@ -557,6 +576,7 @@
   {
     "id": "micro-cuillere",
     "nom": "Micro-cuillère tournante (n°0 à 1)",
+    "article": "une",
     "famille": "metalliques",
     "especes": [
       "PER",
@@ -583,6 +603,7 @@
   {
     "id": "micro-crankbait",
     "nom": "Micro-crankbait",
+    "article": "un",
     "famille": "durs",
     "especes": [
       "CHE",
@@ -609,6 +630,7 @@
   {
     "id": "insecte-surface",
     "nom": "Insecte de surface",
+    "article": "un",
     "famille": "surface",
     "faibleLumiere": true,
     "especes": [

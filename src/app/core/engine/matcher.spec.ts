@@ -12,6 +12,7 @@ const FICHE = { sources: ['test'], dateVerif: '2026-11-07' };
 const type = (id: string, zoneNage: TypeLeurre['zoneNage'], gamme: Partial<TypeLeurre> = {}): TypeLeurre => ({
   id,
   nom: id,
+  article: 'un',
   especes: ['SAN'],
   techniques: [],
   zoneNage,

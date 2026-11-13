@@ -29,6 +29,7 @@ import {
 } from './conditions-format';
 import { ConseilDetailStore } from './conseil-detail.store';
 import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
+import { LigneBoiteComponent } from './ligne-boite.component';
 import { ChoixEspece, EspeceFeuilleComponent } from './espece-feuille.component';
 import {
   JourMoment,
@@ -115,6 +116,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     IonTitle,
     IonContent,
     BandeauReglementationComponent,
+    LigneBoiteComponent,
     MomentFeuilleComponent,
     EspeceFeuilleComponent,
     LieuFeuilleComponent,
@@ -611,6 +613,9 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                   }
                 </dl>
                 <p class="pourquoi">{{ c.pourquoi }}</p>
+                @if (lignes()[$index]; as ligne) {
+                  <app-ligne-boite [ligne]="ligne" />
+                }
                 <button
                   type="button"
                   class="voir-detail"
@@ -896,6 +901,8 @@ export class ConseilPage implements OnInit {
     return etat.type === 'cartes' ? etat.limite : null;
   }
 
+  protected readonly lignes = this.detailStore.lignes;
+
   protected cartesConseil(): CarteConseil[] {
     const etat = this.conseil();
     return etat.type === 'cartes' ? etat.cartes : [];
@@ -991,6 +998,7 @@ export class ConseilPage implements OnInit {
     this.lieuPret.set(false);
     this.relancable = null;
     this.detailStore.details.set([]);
+    this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
@@ -1029,6 +1037,7 @@ export class ConseilPage implements OnInit {
     this.relancable = null;
     // Un nouveau calcul périme le top 3 : le détail ne doit plus l'ouvrir (hors heures, indisponible ou calcul en cours).
     this.detailStore.details.set([]);
+    this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
     void this.chargerEspeces();
     this.moment.set(choisi);
@@ -1104,6 +1113,7 @@ export class ConseilPage implements OnInit {
     delete conditions.especeCible;
     if (cible) conditions.especeCible = cible.code;
     this.detailStore.details.set([]);
+    this.detailStore.pourLaBoite.set(null);
     this.conseil.set({ type: 'calcul' });
     try {
       const [resultat, types, animations, couleurs, especes] = await Promise.all([
@@ -1118,6 +1128,7 @@ export class ConseilPage implements OnInit {
         resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes })),
       );
       this.detailStore.toutesEspeces.set(cible === null);
+      this.detailStore.pourLaBoite.set({ conseils: resultat.conseils, types, couleurs });
       const cartes = resultat.conseils.map((c, i): CarteConseil => ({
         rang: i + 1,
         type: types.find((t) => t.id === c.typeId)?.nom ?? c.typeId,

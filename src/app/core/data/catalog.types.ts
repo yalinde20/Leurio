@@ -29,6 +29,8 @@ export interface Espece extends Fiche {
 export interface TypeLeurre extends Fiche {
   id: string;
   nom: string;
+  /** Article indéfini du nom : « un shad », « une cuillère tournante » (US 105). */
+  article: 'un' | 'une';
   /** Identifiant d'une famille de lure-families.json, qui sert de filtre dans la boîte (US 100). */
   famille?: string;
   especes: string[];

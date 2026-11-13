@@ -22,6 +22,7 @@ const sandre: Espece = {
 const type: TypeLeurre = {
   id: 't',
   nom: 't',
+  article: 'un',
   especes: ['SAN'],
   techniques: ['a'],
   zoneNage: 'fond',

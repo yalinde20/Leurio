@@ -25,6 +25,7 @@ const sandre: Espece = {
 const type = (id: string, techniques: string[], saisons?: Saison[]): TypeLeurre => ({
   id,
   nom: id,
+  article: 'un',
   especes: ['SAN'],
   techniques,
   zoneNage: 'fond',
