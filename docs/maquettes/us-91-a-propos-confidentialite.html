@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 91 : À propos, sources et confidentialité</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+  .leurre.touchable { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+  .leurre.touchable .corps { flex: 1; min-width: 0; }
+  .leurre.touchable .fleche { color: var(--lr-texte-secondaire); font-size: 22px; }
+  .leurre.presse { background: var(--lr-sable); }
+  .supprimer {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid var(--lr-danger); border-radius: 12px; background: transparent; color: var(--lr-danger);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .alerte-zone { position: relative; }
+  .alerte-zone::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .alerte {
+    position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 280px; border-radius: 16px; overflow: hidden; background: var(--lr-surface); color: var(--lr-texte);
+    border: 1px solid var(--lr-bordure); text-align: center;
+  }
+  .alerte .q { padding: 18px 16px 14px; font-size: 17px; font-weight: 600; }
+  .alerte .q small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--lr-texte-secondaire); }
+  .alerte .actions { display: flex; border-top: 1px solid var(--lr-bordure); }
+  .alerte .actions span { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .alerte .actions span + span { border-left: 1px solid var(--lr-bordure); }
+  .alerte .annul { color: var(--lr-primaire); }
+  .alerte .suppr { color: var(--lr-danger); font-weight: 600; }
+
+  .groupe-liste { margin: 0 0 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .rangee { display:flex; align-items:center; justify-content:space-between; gap: 12px; min-height:52px; padding: 10px 16px; box-sizing: border-box; font-size:17px; border-top:1px solid var(--lr-bordure); color: var(--lr-texte); }
+  .rangee:first-child { border-top:none; }
+  .rangee .chev { color: var(--lr-texte-secondaire); font-size:22px; }
+  .rangee .ext { flex: none; white-space: nowrap; color: var(--lr-primaire); font-size:15px; font-weight:600; }
+  .rangee .sous { display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .titre-groupe { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .toolbar.retour { justify-content: flex-start; position: relative; }
+  .toolbar.retour .lien { position:absolute; left: 8px; }
+  .toolbar.retour .title { margin: 0 auto; }
+  .texte { font-size: 16px; line-height: 1.45; }
+  .texte h3 { font-size: 18px; margin: 18px 0 6px; }
+  .texte h3:first-child { margin-top: 0; }
+  .texte p, .texte ul { margin: 0 0 10px; }
+  .texte ul { padding-left: 20px; }
+  .texte a, .src a { color: var(--lr-primaire); }
+  .bloc { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 14px 16px; margin: 0 0 12px; }
+  .bloc h4 { margin: 0 0 4px; font-size: 17px; }
+  .bloc p { margin: 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .repli { display:flex; justify-content:space-between; align-items:center; min-height:52px; padding: 0 16px; font-size:17px; font-weight:600; border-top:1px solid var(--lr-bordure); }
+  .repli:first-child { border-top: none; }
+  .repli .nb { font-weight: 400; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .src { list-style: none; margin: 0; padding: 0 16px 12px; font-size: 14px; line-height: 1.4; }
+  .src li { padding: 8px 0; border-top: 1px solid var(--lr-bordure); overflow-wrap: anywhere; }
+  .brouillon { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--lr-danger); color: var(--lr-danger); font-size: 14px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>US 91 — Consulter À propos, sources et confidentialité dans Compte</h1>
+<p class="note">iPhone, app installée ; Android : même écran (retour du téléphone = « ‹ Compte »). PLAN §3 (Compte : « À propos et sources, confidentialité »), §6 (lien cartedepeche.fr dans le Compte) et §9. Les sources du contenu sont lues dans les champs <code>sources</code> des fichiers JSON (dédoublonnées, dans l’ordre des fichiers), jamais écrites dans le code ; les adresses web y deviennent des liens. Les deux pages sont embarquées : elles marchent hors ligne. Le lien cartedepeche.fr ouvre le navigateur (Safari, ou le navigateur intégré dans l’app installée) et demande le réseau. Les autres rubriques du Compte (connexion, préférences, export, suppression) viendront avec leurs stories : rien ici. Tokens du projet uniquement, cibles de 48 px minimum.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Onglet Compte (critère 1)</h2><p class="note">Deux rangées qui ouvrent une page (chevron) et le lien externe « cartedepeche.fr ↗ » (rangée entière touchable, 52 px). Les rubriques des autres stories s’ajouteront au-dessus.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>2. À propos et sources (critère 2)</h2><p class="note">Page poussée, « ‹ Compte » revient. Hub’Eau, Open-Meteo et OpenStreetMap en premier, puis les sources du contenu, regroupées par fichier, repliées avec leur nombre.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">À propos et sources</span></div><div class="content" style="flex:1"><p class="texte" style="margin:0 0 14px">Leurio conseille un leurre et une animation selon l’eau, la météo et la saison. Voici d’où viennent ses données.</p><p class="titre-groupe">Données en direct</p><div class="bloc"><h4>Hub’Eau</h4><p>Température et débit des rivières (Office français de la biodiversité, BRGM). <a href="#" style="color:var(--lr-primaire)">hubeau.eaufrance.fr</a></p></div><div class="bloc"><h4>Open-Meteo</h4><p>Météo : pression, nuages, vent, températures de l’air. <a href="#" style="color:var(--lr-primaire)">open-meteo.com</a></p></div><div class="bloc"><h4>OpenStreetMap</h4><p>Fond de la carte des spots. © les contributrices et contributeurs d’OpenStreetMap. <a href="#" style="color:var(--lr-primaire)">openstreetmap.org</a></p></div><p class="titre-groupe" style="margin-top:16px">Contenu de l’app (leurres, animations, espèces, réglementation)</p><div class="groupe-liste"><div class="repli"><span>Espèces</span><span class="nb">14 sources ⌄</span></div><div class="repli"><span>Types de leurres</span><span class="nb">11 sources ⌄</span></div><div class="repli"><span>Familles de leurres</span><span class="nb">1 source ⌄</span></div><div class="repli"><span>Animations</span><span class="nb">7 sources ⌄</span></div><div class="repli"><span>Couleurs</span><span class="nb">1 source ⌄</span></div><div class="repli"><span>Kit de départ</span><span class="nb">5 sources ⌄</span></div><div class="repli"><span>Fédérations de pêche</span><span class="nb">28 sources ⌄</span></div><div class="repli"><span>Départements</span><span class="nb">3 sources ⌄</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>3. Un groupe déplié</h2><p class="note">Au toucher d’un groupe, ses sources s’affichent telles qu’écrites dans le contenu ; les adresses web sont des liens qui ouvrent le navigateur.</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">À propos et sources</span></div><div class="content" style="flex:1"><p class="texte" style="margin:0 0 14px">Leurio conseille un leurre et une animation selon l’eau, la météo et la saison. Voici d’où viennent ses données.</p><p class="titre-groupe">Données en direct</p><div class="bloc"><h4>Hub’Eau</h4><p>Température et débit des rivières (Office français de la biodiversité, BRGM). <a href="#" style="color:var(--lr-primaire)">hubeau.eaufrance.fr</a></p></div><div class="bloc"><h4>Open-Meteo</h4><p>Météo : pression, nuages, vent, températures de l’air. <a href="#" style="color:var(--lr-primaire)">open-meteo.com</a></p></div><div class="bloc"><h4>OpenStreetMap</h4><p>Fond de la carte des spots. © les contributrices et contributeurs d’OpenStreetMap. <a href="#" style="color:var(--lr-primaire)">openstreetmap.org</a></p></div><p class="titre-groupe" style="margin-top:16px">Contenu de l’app (leurres, animations, espèces, réglementation)</p><div class="groupe-liste"><div class="repli"><span>Espèces</span><span class="nb">14 sources ⌃</span></div><ul class="src"><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BRO = Esox lucius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>Code de l&#x27;environnement, art. R436-18 et suivants (Légifrance) ; décision du propriétaire (US 41) : aucune taille minimale retenue dans l&#x27;app</li><li>Fédération nationale pour la pêche en France, fiches espèces (federationpeche.fr) : postes, proies et activité selon la température de l&#x27;eau ; site non consulté en ligne pendant l&#x27;US 41 (inaccessible depuis l&#x27;environnement de développement), valeurs à vérifier</li><li>docs/PLAN.md §6 : fermeture en 2e catégorie du dernier lundi de janvier au vendredi avant le dernier samedi d&#x27;avril</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SAN = Sander lucioperca ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>docs/PLAN.md §6 : souvent fermé en même temps que le brochet (arrêtés départementaux)</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : PER = Perca fluviatilis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>docs/PLAN.md §6 : aucune fermeture nationale propre à l&#x27;espèce ni liée au brochet (fermetureAvecBrochet faux) ; pendant la fermeture du brochet, les leurres concernés sont exclus par interditFermetureBrochet des types de leurres</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : BBG = Micropterus salmoides ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>docs/PLAN.md §6 : fermeture spécifique dans certains départements (période de fraie)</li><li>Décision du propriétaire (US 75) : verifDepartementPrintemps vrai, avertissement « vérifie ton département » du 1er mars au 31 mai inclus (docs/PLAN.md §6)</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : CHE = Squalius cephalus ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : ASP = Leuciscus aspius ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li><li>Référentiel Sandre (OFB), codes taxons poissons à 3 lettres : SIL = Silurus glanis ; code repris de docs/PLAN.md §7, non revérifié en ligne pendant l&#x27;US 41 (référentiel inaccessible depuis l&#x27;environnement de développement)</li></ul><div class="repli"><span>Types de leurres</span><span class="nb">11 sources ⌄</span></div><div class="repli"><span>Familles de leurres</span><span class="nb">1 source ⌄</span></div><div class="repli"><span>Animations</span><span class="nb">7 sources ⌄</span></div><div class="repli"><span>Couleurs</span><span class="nb">1 source ⌄</span></div><div class="repli"><span>Kit de départ</span><span class="nb">5 sources ⌄</span></div><div class="repli"><span>Fédérations de pêche</span><span class="nb">28 sources ⌄</span></div><div class="repli"><span>Départements</span><span class="nb">3 sources ⌄</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>4. Confidentialité (critère 3)</h2><p class="note">Page poussée, texte statique. Ci-dessous un BROUILLON tiré du plan (§4, §7) pour montrer la mise en page : le texte définitif est le tien (voir la question).</p><div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">Confidentialité</span></div><div class="content" style="flex:1"><div class="brouillon">Brouillon à remplacer par ton texte (story : « le texte de confidentialité est fourni par le propriétaire »).</div><div class="texte"><h3>Ce que Leurio garde</h3><ul><li>Un compte anonyme, créé sans e-mail, pour retrouver tes données.</li><li>Tes préférences : espèces favorites et niveau.</li><li>Ta boîte à leurres et ses photos.</li><li>Tes spots, privés : personne d’autre ne les voit.</li></ul><h3>Où elles sont</h3><p>Chez Firebase (Google), dans l’Union européenne. Seul ton compte peut les lire et les modifier.</p><h3>Ce qui part de ton téléphone</h3><ul><li>Ta position, arrondie, vers Open-Meteo et Hub’Eau, pour les conditions du moment.</li><li>Ton avis 👍 / 👎 sur un conseil, sans ton compte ni ta position exacte.</li><li>Les rapports de plantage, pour corriger l’app.</li><li>Les statistiques d’usage, seulement si tu les acceptes.</li></ul><h3>Tes droits</h3><p>Tu peux exporter ou supprimer ton compte et toutes ses données depuis l’onglet Compte.</p><h3>Contact</h3><p>[adresse de contact à fournir]</p></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>5. cartedepeche.fr (critère 4)</h2><p class="note">Au toucher : le site https://www.cartedepeche.fr s’ouvre dans le navigateur (nouvel onglet en PWA, navigateur intégré dans l’app installée). Rien d’autre à dessiner.</p>
+</div>
+</body>
+</html>
