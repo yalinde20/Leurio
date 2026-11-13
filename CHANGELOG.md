@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.43.0](https://github.com/yalinde20/Leurio/compare/v1.42.0...v1.43.0) (2026-11-13)
+
+
+### Features
+
+* **US 105:** le leurre de ma boîte sur les cartes et le détail du conseil ([30412a1](https://github.com/yalinde20/Leurio/commit/30412a16c1accaf6774dc0d1416d31e7ef498a95))
+
+
+### Bug Fixes
+
+* **US 105:** suites de la revue (article dans les fixtures de contenu valide, commentaires sans contenu en dur) ([bab0b48](https://github.com/yalinde20/Leurio/commit/bab0b488ea84413596f067cc8a7ab98555856795))
+
 ## [1.42.0](https://github.com/yalinde20/Leurio/compare/v1.41.0...v1.42.0) (2026-11-13)
 
 
