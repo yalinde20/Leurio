@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 105 : le leurre de ma boîte sur les conseils</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-accent: #e8590c;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-accent: #ff8a3d;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte « Conditions ». */
+  .carte {
+    background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px;
+    padding: 16px; color: var(--lr-texte);
+  }
+  .carte h3 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+  .carte .mention { margin: -6px 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .carte dl { margin: 0; }
+  .ligne { padding: 10px 0; border-top: 1px solid var(--lr-bordure); }
+  .ligne:first-child { border-top: none; padding-top: 0; }
+  .ligne dt { display: inline; font-size: 16px; font-weight: 600; }
+  .ligne dd { display: inline; margin: 0; font-size: 16px; }
+  .ligne .source { display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ligne.eau dd { font-size: 22px; font-weight: 700; }
+  .lien-fede {
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
+
+  /* Le bandeau « Réglementation » : même gabarit que la carte « Conditions ». */
+  .bandeau .ligne dd.ferme, .bandeau .alerte { color: var(--lr-danger); font-weight: 700; }
+  .bandeau .alerte { display: block; font-size: 16px; }
+  .resume { font-size: 14px; color: var(--lr-texte-secondaire); margin: 0 0 12px; }
+
+  /* Les cartes de conseil (US 81). */
+  .section-titre { margin: 20px 0 8px; font-size: 20px; font-weight: 700; }
+  .badge {
+    display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+    background: var(--lr-sable); color: var(--lr-texte); font-size: 14px; font-weight: 600;
+  }
+  .conseil { margin-bottom: 12px; }
+  .conseil .entete { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rang {
+    flex: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--lr-primaire); color: var(--lr-sur-primaire); font-weight: 700; font-size: 16px;
+  }
+  .conseil h4 { margin: 0; font-size: 20px; font-weight: 700; }
+  .conseil .ligne { padding: 6px 0; }
+  .pourquoi { margin: 8px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .avertissement { border-color: var(--lr-danger); }
+  .avertissement .alerte { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--lr-danger); }
+  .message { margin: 0; font-size: 16px; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .bouton[disabled] { opacity: .5; }
+  .content.scroll { overflow: visible; }
+
+  /* US 86 : carte de conseil touchable et détail d'un conseil. */
+  .conseil.touchable { display: block; position: relative; }
+  .voir-detail {
+    display: flex; align-items: center; justify-content: space-between; min-height: 48px; margin: 8px -16px -16px;
+    padding: 0 16px; border-top: 1px solid var(--lr-bordure); font-size: 16px; font-weight: 600; color: var(--lr-primaire);
+  }
+  .toolbar.retour { justify-content: flex-start; position: relative; }
+  .toolbar.retour .title { position: absolute; left: 0; right: 0; text-align: center; pointer-events: none; }
+  .btn-retour {
+    display: flex; align-items: center; gap: 2px; min-width: 48px; min-height: 48px; padding: 0 8px;
+    font-size: 17px; color: var(--lr-primaire);
+  }
+  .btn-retour svg { width: 22px; height: 22px; }
+  .detail .entete { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .detail h3 { margin: 0; font-size: 22px; }
+  .detail .sous-titre { margin: 0 0 12px; font-size: 16px; color: var(--lr-texte-secondaire); }
+  .titre-bloc { margin: 0 0 8px; font-size: 18px; font-weight: 700; }
+  .pourquoi-complet { margin: 0; padding-left: 20px; }
+  .pourquoi-complet li { margin: 0 0 8px; font-size: 16px; line-height: 1.4; }
+  .bloc { margin-top: 12px; }
+  .bouton.secondaire { background: transparent; color: var(--lr-primaire); border: 2px solid var(--lr-primaire); }
+  .fiche p { margin: 0 0 8px; font-size: 16px; line-height: 1.4; }
+  .fiche .ligne dt { display: block; }
+  .fiche .ligne dd { display: block; margin-top: 2px; }
+  .video-attente {
+    display: flex; align-items: center; justify-content: center; height: 180px; border-radius: 12px;
+    background: var(--lr-sable); color: var(--lr-texte-secondaire); font-size: 15px; text-align: center; padding: 16px;
+  }
+  .variante { display: inline-block; padding: 2px 8px; border-radius: 6px; background: #222; color: #fff; font-size: 13px; }
+
+  .boite { display:flex; gap:8px; align-items:flex-start; margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 16px; line-height: 1.35; }
+  .boite svg { flex:none; width:20px; height:20px; margin-top:1px; color: var(--lr-primaire); }
+  .boite b { font-weight: 700; }
+  .boite.manque { background: transparent; border: 1px dashed var(--lr-accent); }
+  .boite.manque svg { color: var(--lr-accent); }
+</style>
+</head>
+<body>
+<h1>US 105 — Le leurre de ma boîte sur les cartes et le détail du conseil</h1>
+<p class="note">iPhone, app installée ; Android : même écran. PLAN §2.1 (« Dans ta boîte : Shad 10 cm gardon », ou « Il te manque : un shad 7–10 cm couleur naturelle »), §3 et §8.5 (matcher de l’US 104). Sur chaque carte du top 3, une ligne de plus sous le pourquoi, au-dessus de « Voir le détail › » ; le détail montre la même ligne dans la carte du leurre conseillé. Trois cas : le leurre de ta boîte (fond sable, icône boîte), une substitution de la même zone de nage (« À la place, dans ta boîte : », même style), ou « Il te manque » (cadre pointillé orange, pour donner envie de compléter la boîte). La taille du leurre de la boîte suit l’unité de son type : cm pour les leurres souples et durs, g pour les cuillères, jigs et lipless. La couleur est celle saisie pour le leurre ; pour « Il te manque », la couleur conseillée et la plage du contenu. Tokens du projet uniquement. Interrupteur ci-dessous pour voir chaque thème.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-retour" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-b" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol></defs>
+  </svg>
+
+  <h2>1. Les trois cas sur les cartes (critères 1, 2, 3)</h2><p class="note">Carte 1 : le shad 10 cm gardon de la boîte. Carte 2 : pas de minnow dans la boîte ; le matcher de l’US 104 propose « À la place » le leurre de la même zone de nage (mi-eau) le plus proche de la taille conseillée, ici le crankbait 6 cm perche (avec un conseil plus petit que le shad de la boîte : décision du propriétaire pendant le développement). Carte 3 : le matcher de l’US 104 rendrait ici le crankbait (mi-eau aussi) ; la carte est montée sur « Il te manque » pour montrer ce cas, avec la plage du contenu et la couleur conseillée.</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">1</span><h4>Shad</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>Dans ta boîte :</b> Shad 10 cm gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">2</span><h4>Minnow (jerkbait)</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>10 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>À la place, dans ta boîte :</b> Crankbait 6 cm perche</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">3</span><h4>Lipless (vibrant sans bavette)</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>10 g</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite manque"><svg aria-hidden="true"><use href="#i-plus"/></svg><span><b>Il te manque :</b> un lipless (vibrant sans bavette) 7–21 g couleur gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>2. Détail du conseil : la même ligne (critère 4)</h2><p class="note">Dans la carte du leurre conseillé, sous ses caractéristiques, la même ligne que sur la carte du top 3, dans les trois cas (substitution et « Il te manque » compris).</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="btn-retour"><svg><use href="#i-retour"/></svg>Conseil</span><span class="title">Détail du conseil</span></div><div class="content scroll"><section class="carte detail"><div class="entete"><span class="rang">1</span><h3>Shad</h3></div><p class="sous-titre">Animation : Tirée-relâchée · espèce : sandre</p><dl><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div><div class="ligne"><dt>Poids de tête :</dt> <dd>5 à 10 g</dd></div><div class="ligne"><dt>Où le lancer :</dt> <dd>cassures, fond, piles de pont</dd></div></dl><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>Dans ta boîte :</b> Shad 10 cm gardon</span></p></section><section class="carte bloc"><h4 class="titre-bloc">Pourquoi ce conseil</h4><ul class="pourquoi-complet"><li>À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</li><li>…</li></ul></section><button class="bouton">Voir l’animation</button></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>3. Boîte vide</h2><p class="note">Les trois cartes affichent « Il te manque ».</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">1</span><h4>Shad</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite manque"><svg aria-hidden="true"><use href="#i-plus"/></svg><span><b>Il te manque :</b> un shad 7–12 cm couleur gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">2</span><h4>Minnow (jerkbait)</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>10 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite manque"><svg aria-hidden="true"><use href="#i-plus"/></svg><span><b>Il te manque :</b> un minnow (jerkbait) 7–13 cm couleur gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">3</span><h4>Lipless (vibrant sans bavette)</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>10 g</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite manque"><svg aria-hidden="true"><use href="#i-plus"/></svg><span><b>Il te manque :</b> un lipless (vibrant sans bavette) 7–21 g couleur gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>4. Après l’ajout d’un leurre (critère 5)</h2><p class="note">Le pêcheur ajoute un shad 10 cm gardon dans l’onglet Boîte puis revient sur « Conseil » : la carte 1 passe de « Il te manque » à « Dans ta boîte ». Rien d’autre ne bouge.</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">1</span><h4>Shad</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>Dans ta boîte :</b> Shad 10 cm gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>5. Hors ligne (critère 6)</h2><p class="note">Mode avion : les lignes sont calculées depuis la boîte en cache, sans message de plus. Si la boîte n’a jamais pu être lue (ou en cas d’erreur de lecture), la ligne n’apparaît pas et la carte reste celle de l’US 86.</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>✈ 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">1</span><h4>Shad</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>Dans ta boîte :</b> Shad 10 cm gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">2</span><h4>Minnow (jerkbait)</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>10 cm</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite"><svg aria-hidden="true"><use href="#i-b"/></svg><span><b>À la place, dans ta boîte :</b> Crankbait 6 cm perche</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>6. Article du type (question au propriétaire)</h2><p class="note">« un » ou « une » selon le type : « Il te manque : une cuillère tournante 3–10 g couleur gardon ». Le contenu ne donne pas le genre des types ; proposition : un champ <code>article</code> (« un » / « une ») dans lure-types.json, validé par son schéma.</p><div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil touchable" style="margin-bottom:12px"><div class="entete"><span class="rang">1</span><h4>Cuillère tournante</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>5 g</dd></div></dl><p class="pourquoi">À 11,5 °C, l’activité du poisson (sandre) est ralentie : une animation lente lui convient.</p><p class="boite manque"><svg aria-hidden="true"><use href="#i-plus"/></svg><span><b>Il te manque :</b> une cuillère tournante 3–10 g couleur gardon</span></p><div class="voir-detail"><span>Voir le détail</span><span aria-hidden="true">›</span></div></article></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+</div>
+</body>
+</html>

@@ -12,6 +12,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -57,6 +58,7 @@ async function afficher({ moteur, typesDeLeurres }: Pannes) {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => ANGERS } },
       {
         provide: CatalogService,

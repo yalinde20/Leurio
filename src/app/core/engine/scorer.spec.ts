@@ -31,6 +31,7 @@ const animation = (id: string, rythme: 'lent' | 'moyen' | 'rapide', difficulte: 
 const type = (id: string, especes: string[], techniques: string[]): TypeLeurre => ({
   id,
   nom: id,
+  article: 'un',
   especes,
   techniques,
   zoneNage: 'mi-eau',

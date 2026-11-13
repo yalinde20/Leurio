@@ -61,6 +61,7 @@ const animation = (id: string): Animation =>
 const type = (id: string, interdit: boolean): TypeLeurre => ({
   id,
   nom: id,
+  article: 'un',
   especes: ['BRO'],
   techniques: ['lineaire'],
   zoneNage: 'mi-eau',

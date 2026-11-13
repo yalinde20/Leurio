@@ -10,6 +10,7 @@ import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const NANTES: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.22, longitude: -1.55, precisionM: 10, departement: '44' };
 const REFUSEE: ResultatPosition = { disponible: false, motif: 'position refusée' };
@@ -43,6 +44,7 @@ async function afficher(gps: (ResultatPosition | 'attente')[]) {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: SpotsService, useValue: { mesSpots: async () => [SEVRE] } },
       {
         provide: PositionService,

@@ -22,6 +22,7 @@ const sandre: Espece = {
 const type = (id: string, gamme: Partial<Pick<TypeLeurre, 'tailleCm' | 'poidsG'>>): TypeLeurre => ({
   id,
   nom: id,
+  article: 'un',
   especes: ['SAN'],
   techniques: ['a'],
   zoneNage: 'fond',

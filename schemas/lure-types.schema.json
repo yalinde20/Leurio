@@ -7,6 +7,7 @@
     "required": [
       "id",
       "nom",
+      "article",
       "famille",
       "especes",
       "zoneNage",
@@ -29,6 +30,13 @@
       "nom": {
         "type": "string",
         "minLength": 1
+      },
+      "article": {
+        "enum": [
+          "un",
+          "une"
+        ],
+        "description": "Article indéfini du nom du type (« un shad », « une cuillère tournante »), pour les phrases de l'app."
       },
       "famille": {
         "type": "string",
