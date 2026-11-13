@@ -37,7 +37,7 @@ interface GroupeSources {
       background: var(--lr-surface);
       color: var(--lr-texte);
     }
-    h2 {
+    .bloc h3 {
       margin: 0 0 4px;
       font-size: 17px;
     }
@@ -79,6 +79,15 @@ interface GroupeSources {
       font-size: 15px;
       font-weight: 400;
       color: var(--lr-texte-secondaire);
+    }
+    .indicateur {
+      margin-left: 6px;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
+    }
+    details[open] .indicateur {
+      display: inline-block;
+      transform: rotate(180deg);
     }
     ul {
       margin: 0;
@@ -132,7 +141,9 @@ interface GroupeSources {
           <details>
             <summary>
               <span>{{ groupe.libelle }}</span>
-              <span class="nombre">{{ groupe.sources.length }} {{ groupe.sources.length > 1 ? 'sources' : 'source' }}</span>
+              <span class="nombre"
+                >{{ groupe.sources.length }} {{ groupe.sources.length > 1 ? 'sources' : 'source' }}<span class="indicateur" aria-hidden="true">⌄</span></span
+              >
             </summary>
             <ul>
               @for (source of groupe.sources; track $index) {
