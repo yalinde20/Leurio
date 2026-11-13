@@ -28,6 +28,8 @@ function creer(boites: Record<string, DocumentLeurre[]>, instantane = true) {
     ajouter: async () => undefined,
     modifier: async () => undefined,
     supprimer: async () => undefined,
+    envoyerPhoto: async () => 'https://stockage.test/photo.jpg',
+    supprimerPhoto: async () => undefined,
   };
   TestBed.configureTestingModule({ providers: [{ provide: SOURCE_TACKLE_BOX, useValue: source }] });
   return { service: TestBed.inject(TackleBoxService), connecter: (uid: string | null) => rappelUid(uid),

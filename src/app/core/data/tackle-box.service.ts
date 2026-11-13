@@ -1,5 +1,6 @@
 import { inject, Injectable, InjectionToken, Injector, signal } from '@angular/core';
 import { creerSourceTackleBoxFirebase } from '../firebase/source-tackle-box';
+import { compresserPhoto, EchecEnvoiPhoto } from './photo-leurre';
 
 /** Un leurre de la boîte (PLAN §7 : `users/{uid}/tackleBox`). `enAttente` : écrit en local, pas encore confirmé par le serveur. */
 export interface Leurre {
@@ -9,6 +10,8 @@ export interface Leurre {
   poidsG: number;
   couleur: string;
   marque?: string;
+  /** Adresse de la photo dans Storage (`users/{uid}/lures/`), absente sans photo. */
+  photoUrl?: string;
   createdAt: number;
   enAttente: boolean;
 }
@@ -20,6 +23,8 @@ export interface SaisieLeurre {
   poidsG: number;
   couleur: string;
   marque?: string;
+  /** `undefined` : garder la photo actuelle ; un `Blob` : nouvelle photo à envoyer ; `null` : retirer la photo. */
+  photo?: Blob | null;
 }
 
 /** Un document Firestore lu tel quel. */
@@ -43,6 +48,10 @@ export interface SourceTackleBox {
   modifier(uid: string, id: string, data: Record<string, unknown>): Promise<void>;
   /** Supprime un document ; résout dès l'écriture locale, sans attendre le serveur. */
   supprimer(uid: string, id: string): Promise<void>;
+  /** Envoie une photo dans `users/{uid}/lures/` de Storage et rend son adresse de téléchargement. Sans cache hors ligne. */
+  envoyerPhoto(uid: string, photo: Blob): Promise<string>;
+  /** Supprime de Storage la photo qui a cette adresse de téléchargement. */
+  supprimerPhoto(url: string): Promise<void>;
 }
 
 export const SOURCE_TACKLE_BOX = new InjectionToken<SourceTackleBox>('SOURCE_TACKLE_BOX', {
@@ -55,10 +64,11 @@ const estNombre = (v: unknown): v is number => typeof v === 'number' && Number.i
 
 /** Un document mal formé (champ manquant ou d'un autre type) est ignoré. */
 function enLeurre({ id, data, enAttente }: DocumentLeurre): Leurre | null {
-  const { typeId, tailleCm, poidsG, couleur, marque, createdAt } = (data ?? {}) as Record<string, unknown>;
+  const { typeId, tailleCm, poidsG, couleur, marque, photoUrl, createdAt } = (data ?? {}) as Record<string, unknown>;
   if (!estTexte(typeId) || !estNombre(tailleCm) || !estNombre(poidsG) || !estTexte(couleur) || !estNombre(createdAt)) return null;
   const leurre: Leurre = { id, typeId, tailleCm, poidsG, couleur, createdAt, enAttente };
   if (estTexte(marque)) leurre.marque = marque;
+  if (estTexte(photoUrl)) leurre.photoUrl = photoUrl;
   return leurre;
 }
 
@@ -81,38 +91,52 @@ export class TackleBoxService {
     void this.suivre();
   }
 
-  /** Rejette sans utilisateur connecté. Résout dès l'écriture locale : hors ligne, le serveur confirmera plus tard. */
+  /**
+   * Rejette sans utilisateur connecté. Résout dès l'écriture locale : hors ligne, le serveur confirmera plus tard.
+   * Une photo est compressée puis envoyée avant l'écriture : si l'envoi échoue, rien n'est écrit.
+   */
   async ajouter(saisie: SaisieLeurre): Promise<void> {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
+    const photoUrl = saisie.photo ? await this.envoyerPhoto(uid, saisie.photo) : undefined;
     await this.source.ajouter(uid, {
       typeId: saisie.typeId,
       tailleCm: saisie.tailleCm,
       poidsG: saisie.poidsG,
       couleur: saisie.couleur.trim(),
       marque: (saisie.marque ?? '').trim(),
+      ...(photoUrl ? { photoUrl } : {}),
       createdAt: Date.now(),
     });
   }
 
-  /** Met à jour un leurre (jamais `createdAt` : l'ordre de la liste ne bouge pas). Mêmes règles d'écriture que `ajouter`. */
+  /**
+   * Met à jour un leurre (jamais `createdAt` : l'ordre de la liste ne bouge pas). Mêmes règles d'écriture que `ajouter`.
+   * Une photo remplacée ou retirée voit son ancien fichier supprimé après l'écriture ; un échec de cette suppression est ignoré.
+   */
   async modifier(id: string, saisie: SaisieLeurre): Promise<void> {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
+    const anciennePhoto = this._leurres()?.find((l) => l.id === id)?.photoUrl;
+    const photoUrl = saisie.photo ? await this.envoyerPhoto(uid, saisie.photo) : saisie.photo === null ? '' : undefined;
     await this.source.modifier(uid, id, {
       typeId: saisie.typeId,
       tailleCm: saisie.tailleCm,
       poidsG: saisie.poidsG,
       couleur: saisie.couleur.trim(),
       marque: (saisie.marque ?? '').trim(),
+      ...(photoUrl === undefined ? {} : { photoUrl }),
     });
+    if (anciennePhoto && photoUrl !== undefined) await this.supprimerPhoto(anciennePhoto);
   }
 
-  /** Supprime un leurre. Rejette sans utilisateur connecté ; résout dès l'écriture locale. */
+  /** Supprime un leurre et, s'il en avait une, sa photo. Rejette sans utilisateur connecté ; résout dès l'écriture locale. */
   async supprimer(id: string): Promise<void> {
     const uid = await this.source.uid();
     if (uid === null) throw new Error('Aucun utilisateur connecté');
+    const photoUrl = this._leurres()?.find((l) => l.id === id)?.photoUrl;
     await this.source.supprimer(uid, id);
+    if (photoUrl) await this.supprimerPhoto(photoUrl);
   }
 
   /** Après une erreur de lecture, relit la boîte de l'utilisateur courant (la liste repasse en chargement). Sinon ne fait rien. */
@@ -121,6 +145,23 @@ export class TackleBoxService {
     if (this.uidCourant !== undefined) return this.ecouterPour(this.uidCourant);
     // L'utilisateur n'a jamais été connu (erreur d'authentification) : on le relit.
     this.source.uid().then((uid) => this.ecouterPour(uid), () => this._erreur.set(true));
+  }
+
+  private async envoyerPhoto(uid: string, photo: Blob): Promise<string> {
+    try {
+      return await this.source.envoyerPhoto(uid, await compresserPhoto(photo));
+    } catch (erreur) {
+      throw new EchecEnvoiPhoto(erreur);
+    }
+  }
+
+  /** Le fichier n'est plus référencé : un échec de suppression (réseau coupé) ne doit pas faire échouer l'opération. */
+  private async supprimerPhoto(url: string): Promise<void> {
+    try {
+      await this.source.supprimerPhoto(url);
+    } catch (erreur) {
+      console.warn("La photo du leurre n'a pas pu être supprimée du stockage.", erreur);
+    }
   }
 
   private async suivre(): Promise<void> {

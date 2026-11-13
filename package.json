@@ -29,6 +29,7 @@
     "@angular/router": "^22.2.0",
     "@angular/service-worker": "^22.2.4",
     "@capacitor/android": "^8.6.0",
+    "@capacitor/camera": "^8.2.6",
     "@capacitor/core": "^8.6.0",
     "@capacitor/geolocation": "^8.2.4",
     "@capacitor/ios": "^8.6.0",
