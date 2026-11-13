@@ -26,6 +26,8 @@ function creer(boites: Record<string, DocumentLeurre[]>, instantane = true) {
       return () => void arretees.push(uid);
     },
     ajouter: async () => undefined,
+    modifier: async () => undefined,
+    supprimer: async () => undefined,
   };
   TestBed.configureTestingModule({ providers: [{ provide: SOURCE_TACKLE_BOX, useValue: source }] });
   return { service: TestBed.inject(TackleBoxService), connecter: (uid: string | null) => rappelUid(uid),

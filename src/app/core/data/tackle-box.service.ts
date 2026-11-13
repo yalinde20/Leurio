@@ -39,6 +39,10 @@ export interface SourceTackleBox {
   ecouter(uid: string, surChangement: (documents: DocumentLeurre[]) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Crée un document ; résout dès l'écriture locale, sans attendre le serveur. */
   ajouter(uid: string, data: Record<string, unknown>): Promise<void>;
+  /** Met à jour les champs donnés d'un document ; résout dès l'écriture locale, sans attendre le serveur. */
+  modifier(uid: string, id: string, data: Record<string, unknown>): Promise<void>;
+  /** Supprime un document ; résout dès l'écriture locale, sans attendre le serveur. */
+  supprimer(uid: string, id: string): Promise<void>;
 }
 
 export const SOURCE_TACKLE_BOX = new InjectionToken<SourceTackleBox>('SOURCE_TACKLE_BOX', {
@@ -89,6 +93,26 @@ export class TackleBoxService {
       marque: (saisie.marque ?? '').trim(),
       createdAt: Date.now(),
     });
+  }
+
+  /** Met à jour un leurre (jamais `createdAt` : l'ordre de la liste ne bouge pas). Mêmes règles d'écriture que `ajouter`. */
+  async modifier(id: string, saisie: SaisieLeurre): Promise<void> {
+    const uid = await this.source.uid();
+    if (uid === null) throw new Error('Aucun utilisateur connecté');
+    await this.source.modifier(uid, id, {
+      typeId: saisie.typeId,
+      tailleCm: saisie.tailleCm,
+      poidsG: saisie.poidsG,
+      couleur: saisie.couleur.trim(),
+      marque: (saisie.marque ?? '').trim(),
+    });
+  }
+
+  /** Supprime un leurre. Rejette sans utilisateur connecté ; résout dès l'écriture locale. */
+  async supprimer(id: string): Promise<void> {
+    const uid = await this.source.uid();
+    if (uid === null) throw new Error('Aucun utilisateur connecté');
+    await this.source.supprimer(uid, id);
   }
 
   /** Après une erreur de lecture, relit la boîte de l'utilisateur courant (la liste repasse en chargement). Sinon ne fait rien. */

@@ -65,11 +65,36 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       list-style: none;
     }
     .leurre {
-      padding: 12px 16px;
       border: 1px solid var(--lr-bordure);
       border-radius: 16px;
       background: var(--lr-surface);
       color: var(--lr-texte);
+    }
+    .leurre:has(.toucher:active) {
+      background: var(--lr-sable);
+    }
+    .toucher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 16px;
+      background: transparent;
+      color: inherit;
+      font-family: inherit;
+      text-align: left;
+    }
+    .corps {
+      flex: 1;
+      min-width: 0;
+    }
+    .fleche::after {
+      content: '›';
+      font-size: 22px;
+      color: var(--lr-texte-secondaire);
     }
     .leurre h3 {
       margin: 0 0 4px;
@@ -174,14 +199,19 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
               <ul class="liste">
                 @for (leurre of affiches; track leurre.id) {
                   <li class="leurre">
-                    <h3>{{ nomDuType(leurre.typeId) }}</h3>
-                    <p class="details">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
-                    @if (leurre.marque) {
-                      <p class="marque">{{ leurre.marque }}</p>
-                    }
-                    @if (leurre.enAttente) {
-                      <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
-                    }
+                    <button type="button" class="toucher" (click)="modifier(leurre)">
+                      <span class="corps">
+                        <h3>{{ nomDuType(leurre.typeId) }}</h3>
+                        <p class="details">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
+                        @if (leurre.marque) {
+                          <p class="marque">{{ leurre.marque }}</p>
+                        }
+                        @if (leurre.enAttente) {
+                          <p class="attente">Pas encore synchronisé : il le sera au retour du réseau.</p>
+                        }
+                      </span>
+                      <span class="fleche" aria-hidden="true"></span>
+                    </button>
                   </li>
                 }
               </ul>
@@ -195,7 +225,16 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       </div>
     </ion-content>
     @if (formulaireOuvert()) {
-      <app-leurre-formulaire [types]="types()" [echec]="echec()" [enCours]="enCours()" (valide)="enregistrer($event)" (annuler)="fermer()" />
+      <app-leurre-formulaire
+        [types]="types()"
+        [leurre]="leurreModifie()"
+        [echec]="echec()"
+        [echecSuppression]="echecSuppression()"
+        [enCours]="enCours()"
+        (valide)="enregistrer($event)"
+        (supprimer)="supprimer()"
+        (annuler)="fermer()"
+      />
     }
   `,
 })
@@ -215,6 +254,9 @@ export class BoitePage implements OnInit {
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
+  protected readonly echecSuppression = signal(false);
+  /** Le leurre dont le formulaire est ouvert ; null = formulaire d'ajout. */
+  protected readonly leurreModifie = signal<Leurre | null>(null);
   private declencheur: Element | null = null;
 
   async ngOnInit(): Promise<void> {
@@ -244,7 +286,18 @@ export class BoitePage implements OnInit {
   }
 
   protected ouvrir(): void {
+    this.leurreModifie.set(null);
+    this.ouvrirFormulaire();
+  }
+
+  protected modifier(leurre: Leurre): void {
+    this.leurreModifie.set(leurre);
+    this.ouvrirFormulaire();
+  }
+
+  private ouvrirFormulaire(): void {
     this.echec.set(false);
+    this.echecSuppression.set(false);
     this.declencheur = document.activeElement;
     this.formulaireOuvert.set(true);
   }
@@ -260,11 +313,29 @@ export class BoitePage implements OnInit {
     if (this.enCours()) return;
     this.enCours.set(true);
     this.echec.set(false);
+    this.echecSuppression.set(false);
     try {
-      await this.boite.ajouter(saisie);
+      const leurre = this.leurreModifie();
+      await (leurre ? this.boite.modifier(leurre.id, saisie) : this.boite.ajouter(saisie));
       this.fermer();
     } catch {
       this.echec.set(true);
+    } finally {
+      this.enCours.set(false);
+    }
+  }
+
+  protected async supprimer(): Promise<void> {
+    const leurre = this.leurreModifie();
+    if (!leurre || this.enCours()) return;
+    this.enCours.set(true);
+    this.echec.set(false);
+    this.echecSuppression.set(false);
+    try {
+      await this.boite.supprimer(leurre.id);
+      this.fermer();
+    } catch {
+      this.echecSuppression.set(true);
     } finally {
       this.enCours.set(false);
     }

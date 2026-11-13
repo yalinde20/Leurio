@@ -1,5 +1,5 @@
-import { AfterViewInit, Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
-import { SaisieLeurre } from '../../core/data/tackle-box.service';
+import { AfterViewInit, Component, ElementRef, OnInit, computed, effect, input, output, signal, viewChild } from '@angular/core';
+import { Leurre, SaisieLeurre } from '../../core/data/tackle-box.service';
 import { erreurNombre, erreurTexte, nombrePositif } from './saisie-leurre';
 
 /** Un type de leurre proposé dans « Type » : le contenu le fournit, la page le transmet. */
@@ -11,6 +11,7 @@ export interface ChoixType {
 /**
  * Le formulaire « Ajouter un leurre » (US 99) : une feuille plein écran dans la page (pas d'ion-modal), comme les feuilles des US 83 et 87.
  * Il valide la saisie et rend un leurre prêt à écrire ; l'enregistrement est l'affaire de la page.
+ * Avec `leurre`, c'est « Modifier le leurre » (US 101) : prérempli, avec un bouton « Supprimer » et sa confirmation.
  */
 @Component({
   selector: 'app-leurre-formulaire',
@@ -102,6 +103,68 @@ export interface ChoixType {
       font-weight: 600;
       color: var(--lr-danger);
     }
+    .supprimer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 12px;
+      border: 1px solid var(--lr-danger);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--lr-danger);
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .voile {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .alerte {
+      width: 280px;
+      max-width: calc(100% - 32px);
+      overflow: hidden;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 16px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      text-align: center;
+    }
+    .alerte h3 {
+      margin: 0;
+      padding: 18px 16px 14px;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      border-top: 1px solid var(--lr-bordure);
+    }
+    .actions button {
+      flex: 1;
+      min-height: 48px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 17px;
+    }
+    .actions button + button {
+      border-left: 1px solid var(--lr-bordure);
+    }
+    .actions .refuser {
+      color: var(--lr-primaire);
+    }
+    .actions .confirmer {
+      color: var(--lr-danger);
+      font-weight: 600;
+    }
     .enregistrer:disabled {
       opacity: 0.6;
     }
@@ -125,7 +188,7 @@ export interface ChoixType {
     <div #dialogue tabindex="-1" class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-leurre">
       <div class="barre">
         <button type="button" class="annuler" (click)="annuler.emit()">Annuler</button>
-        <h2 id="titre-leurre">Ajouter un leurre</h2>
+        <h2 id="titre-leurre">{{ leurre() ? 'Modifier le leurre' : 'Ajouter un leurre' }}</h2>
         <span class="cale"></span>
       </div>
       <form novalidate (submit)="enregistrer($event)">
@@ -138,9 +201,9 @@ export interface ChoixType {
             (change)="typeId.set($any($event.target).value)"
             (input)="typeId.set($any($event.target).value)"
           >
-            <option value="">Choisis un type</option>
+            <option value="" [selected]="typeId() === ''">Choisis un type</option>
             @for (type of types(); track type.id) {
-              <option [value]="type.id">{{ type.nom }}</option>
+              <option [value]="type.id" [selected]="type.id === typeId()">{{ type.nom }}</option>
             }
           </select>
           @if (erreurType(); as message) {
@@ -156,6 +219,7 @@ export interface ChoixType {
               inputmode="decimal"
               autocomplete="off"
               placeholder="Ex. : 10"
+              [value]="taille()"
               [attr.aria-invalid]="erreurTaille() ? 'true' : null"
               [attr.aria-describedby]="erreurTaille() ? 'erreur-taille' : null"
               (input)="taille.set($any($event.target).value)"
@@ -173,6 +237,7 @@ export interface ChoixType {
               inputmode="decimal"
               autocomplete="off"
               placeholder="Ex. : 12"
+              [value]="poids()"
               [attr.aria-invalid]="erreurPoids() ? 'true' : null"
               [attr.aria-describedby]="erreurPoids() ? 'erreur-poids' : null"
               (input)="poids.set($any($event.target).value)"
@@ -190,6 +255,7 @@ export interface ChoixType {
             type="text"
             autocomplete="off"
             placeholder="Ex. : gardon"
+            [value]="couleur()"
             [attr.aria-invalid]="erreurCouleur() ? 'true' : null"
             [attr.aria-describedby]="erreurCouleur() ? 'erreur-couleur' : null"
             (input)="couleur.set($any($event.target).value)"
@@ -206,6 +272,7 @@ export interface ChoixType {
             type="text"
             autocomplete="off"
             placeholder="Ex. : Sakura"
+            [value]="marque()"
             (input)="marque.set($any($event.target).value)"
             (change)="marque.set($any($event.target).value)"
           />
@@ -213,18 +280,49 @@ export interface ChoixType {
         @if (echec()) {
           <p class="erreur" role="alert">Impossible d'enregistrer le leurre. Réessaie.</p>
         }
+        @if (echecSuppression()) {
+          <p class="erreur" role="alert">Impossible de supprimer le leurre. Réessaie.</p>
+        }
         <button type="submit" class="enregistrer" [disabled]="enCours()" [attr.aria-busy]="enCours() ? 'true' : null">Enregistrer</button>
+        @if (leurre()) {
+          <button #supprimer type="button" class="supprimer" [disabled]="enCours()" (click)="confirmer.set(true)">Supprimer</button>
+        }
       </form>
     </div>
+    @if (confirmer()) {
+      <div class="voile">
+        <div
+          #alerte
+          class="alerte"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="titre-confirmation"
+          tabindex="-1"
+          (keydown.escape)="$event.stopPropagation(); fermerConfirmation()"
+          (keydown.tab)="pieger($event)"
+        >
+          <h3 id="titre-confirmation">Supprimer ce leurre ?</h3>
+          <div class="actions">
+            <button #refuser type="button" class="refuser" (click)="fermerConfirmation()">Annuler</button>
+            <button type="button" class="confirmer" (click)="confirmerSuppression()">Supprimer</button>
+          </div>
+        </div>
+      </div>
+    }
   `,
 })
-export class LeurreFormulaireComponent implements AfterViewInit {
+export class LeurreFormulaireComponent implements OnInit, AfterViewInit {
   readonly types = input.required<ChoixType[]>();
   /** Affiche un message d'échec d'enregistrement (la page le pilote). */
   readonly echec = input(false);
   /** Un enregistrement est en cours : le bouton est désactivé pour éviter un double ajout. */
   readonly enCours = input(false);
+  /** Le leurre à modifier ; absent, le formulaire ajoute un leurre. */
+  readonly leurre = input<Leurre | null>(null);
+  /** Affiche un message d'échec de suppression (la page le pilote). */
+  readonly echecSuppression = input(false);
   readonly valide = output<SaisieLeurre>();
+  readonly supprimer = output<void>();
   readonly annuler = output<void>();
 
   protected readonly typeId = signal('');
@@ -232,6 +330,7 @@ export class LeurreFormulaireComponent implements AfterViewInit {
   protected readonly poids = signal('');
   protected readonly couleur = signal('');
   protected readonly marque = signal('');
+  protected readonly confirmer = signal(false);
   /** Les erreurs n'apparaissent qu'après un premier essai d'enregistrement. */
   private readonly tente = signal(false);
 
@@ -242,8 +341,53 @@ export class LeurreFormulaireComponent implements AfterViewInit {
 
   private readonly dialogue = viewChild.required<ElementRef<HTMLElement>>('dialogue');
 
+  private readonly boutonSupprimer = viewChild<ElementRef<HTMLElement>>('supprimer');
+  private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
+  private readonly boutonRefuser = viewChild<ElementRef<HTMLElement>>('refuser');
+
+  constructor() {
+    // Le focus passe à la confirmation quand elle s'ouvre.
+    effect(() => this.boutonRefuser()?.nativeElement.focus());
+  }
+
+  ngOnInit(): void {
+    const l = this.leurre();
+    if (!l) return;
+    this.typeId.set(l.typeId);
+    this.taille.set(String(l.tailleCm));
+    this.poids.set(String(l.poidsG));
+    this.couleur.set(l.couleur);
+    this.marque.set(l.marque ?? '');
+  }
+
   ngAfterViewInit(): void {
     this.dialogue().nativeElement.focus();
+  }
+
+  protected fermerConfirmation(): void {
+    this.confirmer.set(false);
+    // Le bouton « Supprimer » du formulaire reprend le focus.
+    queueMicrotask(() => this.boutonSupprimer()?.nativeElement.focus());
+  }
+
+  protected confirmerSuppression(): void {
+    this.confirmer.set(false);
+    this.supprimer.emit();
+  }
+
+  /** Garde le focus clavier dans la confirmation (dialogue modal). */
+  protected pieger(evenement: Event): void {
+    const boutons = [...(this.alerte()?.nativeElement.querySelectorAll('button') ?? [])];
+    const premier = boutons[0];
+    const dernier = boutons[boutons.length - 1];
+    const maj = (evenement as KeyboardEvent).shiftKey;
+    if (maj && document.activeElement === premier) {
+      evenement.preventDefault();
+      dernier?.focus();
+    } else if (!maj && document.activeElement === dernier) {
+      evenement.preventDefault();
+      premier?.focus();
+    }
   }
 
   protected enregistrer(evenement: Event): void {
