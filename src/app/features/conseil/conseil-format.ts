@@ -77,14 +77,14 @@ const LIBELLE_IL_TE_MANQUE = 'Il te manque :';
 
 const minusculeInitiale = (texte: string): string => texte.charAt(0).toLowerCase() + texte.slice(1);
 
-/** « Shad 10 cm gardon » (espaces simples : la ligne passe à la ligne comme une phrase) : le type, la taille dans l'unité de son type (cm par défaut) et la couleur saisie. */
+/** « {nom du type} {taille} {couleur} » (espaces simples : la ligne passe à la ligne comme une phrase) : le type, la taille dans l'unité de son type (cm par défaut) et la couleur saisie. */
 function formaterLeurreDeBoite(leurre: LeurreDeBoite, types: TypeLeurre[]): string {
   const type = types.find((t) => t.id === leurre.typeId);
   const taille = type?.poidsG && !type.tailleCm ? { valeur: leurre.poidsG, unite: 'g' as const } : { valeur: leurre.tailleCm, unite: 'cm' as const };
   return `${type?.nom ?? leurre.typeId} ${nombre.format(taille.valeur)} ${taille.unite} ${leurre.couleur}`;
 }
 
-/** « un shad 7–12 cm couleur gardon » ; sans plage dans le contenu : « un shad couleur gardon ». */
+/** « {article} {nom du type} {min}–{max} {unité} couleur {couleur} » ; sans plage dans le contenu, sans la plage. */
 function formaterLeurreManquant(
   correspondance: Extract<Correspondance, { statut: 'il-te-manque' }>,
   types: TypeLeurre[],

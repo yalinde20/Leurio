@@ -166,6 +166,7 @@ export class ConseilDetailPage {
   protected readonly toutesEspeces = signal(this.store.toutesEspeces()).asReadonly();
   protected readonly detail = signal(this.store.details().find((d) => d.rang === this.rang) ?? null).asReadonly();
   /** La ligne de la boîte de ce conseil : suit la boîte, contrairement au reste du détail. */
+  // Les lignes suivent l'ordre des conseils : la ligne du rang n est à l'indice n - 1.
   protected readonly ligne = computed(() => this.store.lignes()[this.rang - 1] ?? null);
 
   constructor() {

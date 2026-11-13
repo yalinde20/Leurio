@@ -22,7 +22,7 @@ const base = () => ({
     sources: ['https://exemple.fr/sandre'], dateVerif: '2026-10-28',
   }],
   'lure-types.json': [{
-    id: 'shad', nom: 'Shad', famille: 'souples', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
+    id: 'shad', nom: 'Shad', article: 'un', famille: 'souples', especes: ['SAN'], zoneNage: 'mi-eau', interditFermetureBrochet: false,
     sources: ['https://exemple.fr/shad'], dateVerif: '2026-10-28',
   }],
   'techniques.json': [{
@@ -148,7 +148,7 @@ for (const plage of ['active', 'ralentie', 'quasiNulle']) {
 
 // ---------- critère 3 : type de leurre ----------
 
-for (const champ of ['especes', 'zoneNage', 'interditFermetureBrochet', 'sources', 'dateVerif']) {
+for (const champ of ['article', 'especes', 'zoneNage', 'interditFermetureBrochet', 'sources', 'dateVerif']) {
   test(`critère 3 : given un type de leurre sans ${champ}, when on valide, then l'échec nomme lure-types.json, shad et ${champ}`, () => {
     refuse((d) => sans(d['lure-types.json'][0], champ), [champ, 'shad'], { fichier: 'lure-types.json' });
   });
