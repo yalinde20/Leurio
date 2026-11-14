@@ -1,14 +1,18 @@
-import { Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
-import { filter, map, startWith } from 'rxjs';
+import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
 @Component({
   selector: 'app-compte',
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet],
   host: { class: 'ion-page' },
   styles: `
+    /* Dès que la page enfant est dans le DOM (avant le prochain passage de détection de changements), l'écran « Compte » lui laisse la place. */
+    :host:has(> router-outlet + *) > ion-header,
+    :host:has(> router-outlet + *) > ion-content {
+      display: none;
+    }
     .titre-groupe {
       margin: 0 0 6px 4px;
       font-size: 13px;
@@ -43,6 +47,11 @@ import { filter, map, startWith } from 'rxjs';
       font-size: 22px;
       color: var(--lr-texte-secondaire);
     }
+    .valeur {
+      margin-left: auto;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
+    }
     .sous {
       display: block;
       font-size: 14px;
@@ -64,6 +73,14 @@ import { filter, map, startWith } from 'rxjs';
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
+        <h2 class="titre-groupe">Affichage</h2>
+        <div class="groupe">
+          <a class="rangee" [routerLink]="['/compte', 'theme']">
+            <span>Thème</span>
+            <span class="valeur">{{ libelleTheme() }}</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </a>
+        </div>
         <h2 class="titre-groupe">Informations</h2>
         <div class="groupe">
           <a class="rangee" [routerLink]="['/compte', 'a-propos']">
@@ -87,23 +104,18 @@ import { filter, map, startWith } from 'rxjs';
         </div>
       </ion-content>
     }
-    <router-outlet />
+    <router-outlet (activate)="enfantOuvert.set(true)" (deactivate)="enfantOuvert.set(false)" />
   `,
 })
 export class ComptePage {
   private readonly router = inject(Router);
+  private readonly theme = inject(ThemeService);
 
-  /** Vrai quand « À propos et sources » ou « Confidentialité » est ouverte : l'écran « Compte » leur laisse la place. */
-  protected readonly enfantOuvert = toSignal(
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      map(() => this.urlEnfant()),
-      startWith(this.urlEnfant()),
-    ),
-    { requireSync: true },
-  );
+  protected readonly libelleTheme = computed(() => CHOIX_THEME.find((c) => c.valeur === this.theme.choix())?.libelle);
 
-  private urlEnfant(): boolean {
-    return this.router.url.split(/[?#]/)[0].startsWith('/compte/');
-  }
+  /**
+   * Vrai quand une page enfant (Thème, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
+   * Piloté par l'activation de la sortie, pour masquer l'en-tête dans le même passage que l'apparition de l'enfant.
+   */
+  protected readonly enfantOuvert = signal(this.router.url.split(/[?#]/)[0].startsWith('/compte/'));
 }
