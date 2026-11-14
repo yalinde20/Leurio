@@ -1,7 +1,7 @@
 import { DestroyRef, inject, Injectable, InjectionToken, Injector } from '@angular/core';
 import { creerSourceCompteFirebase } from '../firebase/source-compte';
 import type { UserDoc } from '../firebase/user-doc';
-import type { ChoixOnboarding } from './onboarding.store';
+import { ChoixOnboarding, OnboardingStore } from './onboarding.store';
 
 /** Ce que le service lit et écrit dans Firebase (remplacé par un double dans les tests). */
 export interface SourceCompte {
@@ -34,6 +34,7 @@ export const CLE_PROFIL_ECRIT = 'leurio.compte';
 @Injectable({ providedIn: 'root' })
 export class CompteService {
   private readonly source = inject(SOURCE_COMPTE);
+  private readonly onboarding = inject(OnboardingStore);
   private choix: ChoixOnboarding | null = null;
   private uidConnecte: string | null = null;
   private enCours: Promise<void> | null = null;
@@ -81,9 +82,11 @@ export class CompteService {
       return;
     }
     if (!(await this.source.profilExiste(uid))) {
+      // Les préférences ont pu changer depuis la fin de l'onboarding (US 93) : on écrit celles de l'appareil, pas celles du départ.
+      const actuel = this.onboarding.lire() ?? choix;
       await this.source.ecrireProfil(uid, {
-        niveau: choix.niveau,
-        especesFavorites: choix.especesFavorites,
+        niveau: actuel.niveau,
+        especesFavorites: actuel.especesFavorites,
         consentements: { analytics: false, video: false },
         createdAt: Date.now(),
         plan: 'free',

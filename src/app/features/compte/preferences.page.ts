@@ -2,17 +2,12 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, Espece } from '../../core/data/catalog.service';
 import { SOURCE_COMPTE } from '../../core/data/compte.service';
-import { ChoixOnboarding, OnboardingStore } from '../../core/data/onboarding.store';
+import { ChoixOnboarding, NIVEAUX, OnboardingStore } from '../../core/data/onboarding.store';
 import { SOURCE_PROFIL } from '../../core/data/profil.service';
 import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 import { CHOIX_UNITES, UnitesService } from '../../shared/unites.service';
 
 type Niveau = ChoixOnboarding['niveau'];
-
-const NIVEAUX: { valeur: Niveau; libelle: string; precision: string }[] = [
-  { valeur: 'debutant', libelle: 'Débutant', precision: 'Je débute au leurre' },
-  { valeur: 'intermediaire', libelle: 'Intermédiaire', precision: "J'ai déjà pris des carnassiers au leurre" },
-];
 
 /**
  * « Préférences » (US 93, PLAN §3, §4, §7) : espèces favorites, niveau et unités. Chaque choix s'applique tout de suite : la copie de
@@ -118,7 +113,7 @@ const NIVEAUX: { valeur: Niveau; libelle: string; precision: string }[] = [
     </ion-header>
     <ion-content class="ion-padding">
       <h2 class="titre-groupe">Tes espèces préférées</h2>
-      <div class="groupe">
+      <div class="groupe" role="group" aria-label="Tes espèces préférées">
         @for (e of especes(); track e.code) {
           <label>
             <input type="checkbox" [checked]="choix().especesFavorites.includes(e.code)" (change)="basculerEspece(e.code)" />
