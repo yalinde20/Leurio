@@ -6,7 +6,7 @@
  * Fichiers et classes attendus (à créer) :
  *  - src/app/features/compte/theme.page.ts : `ThemePage`, route enfant de l'onglet Compte : `compte/theme`
  *    (déclarée dans src/app/app.routes.ts comme `a-propos`).
- *  - src/app/features/compte/compte.page.ts : nouveau premier groupe « Affichage » avec la ligne « Thème »
+ *  - src/app/features/compte/compte.page.ts : nouveau premier groupe « Réglages » avec la ligne « Thème »
  *    (lien vers `/compte/theme`) qui affiche à droite le libellé du choix courant.
  * Contrat du DOM de ThemePage : trois radios dans un `role="radiogroup"` (`<input type="radio">` ou `role="radio"` + `aria-checked`),
  * nommés « Suivre le téléphone », « Clair », « Sombre » (par leur label ou aria-label), puis le texte d'aide de la maquette.
@@ -121,13 +121,13 @@ afterEach(() => {
 });
 
 describe('US 92 : le thème dans Compte', () => {
-  it('critère 1 : given je n\'ai jamais changé le thème, when je regarde l\'onglet Compte, then le groupe « Affichage » (avant « Informations ») a une ligne « Thème » qui affiche « Suivre le téléphone »', async () => {
+  it('critère 1 : given je n\'ai jamais changé le thème, when je regarde l\'onglet Compte, then le groupe « Réglages » (avant « Informations ») a une ligne « Thème » qui affiche « Suivre le téléphone »', async () => {
     const { page } = await ouvrir();
     const contenu = page.querySelector('ion-content') as HTMLElement;
     const texte = compact(contenu.textContent);
 
-    expect(texte).toContain(compact('Affichage'));
-    expect(texte.indexOf(compact('Affichage'))).toBeLessThan(texte.indexOf(compact('Informations')));
+    expect(texte).toContain(compact('Réglages'));
+    expect(texte.indexOf(compact('Réglages'))).toBeLessThan(texte.indexOf(compact('Informations')));
     const ligne = ligneTheme(page);
     expect(ligne, 'ligne « Thème » touchable').toBeTruthy();
     expect(compact(ligne!.textContent)).toContain(compact('Suivre le téléphone'));

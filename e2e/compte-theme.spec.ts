@@ -35,7 +35,7 @@ async function ouvrirTheme(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Compte', exact: true }).click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Compte');
-  await expect(page.getByText('Affichage', { exact: true })).toBeVisible();
+  await expect(page.getByText('Réglages', { exact: true })).toBeVisible();
   await page.getByText('Thème', { exact: true }).first().click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Thème');
 }
