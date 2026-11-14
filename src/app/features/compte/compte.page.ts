@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { filter, map, startWith } from 'rxjs';
+import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
 @Component({
   selector: 'app-compte',
@@ -43,6 +44,11 @@ import { filter, map, startWith } from 'rxjs';
       font-size: 22px;
       color: var(--lr-texte-secondaire);
     }
+    .valeur {
+      margin-left: auto;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
+    }
     .sous {
       display: block;
       font-size: 14px;
@@ -64,6 +70,14 @@ import { filter, map, startWith } from 'rxjs';
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
+        <h2 class="titre-groupe">Affichage</h2>
+        <div class="groupe">
+          <a class="rangee" [routerLink]="['/compte', 'theme']">
+            <span>Thème</span>
+            <span class="valeur">{{ libelleTheme() }}</span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </a>
+        </div>
         <h2 class="titre-groupe">Informations</h2>
         <div class="groupe">
           <a class="rangee" [routerLink]="['/compte', 'a-propos']">
@@ -92,6 +106,9 @@ import { filter, map, startWith } from 'rxjs';
 })
 export class ComptePage {
   private readonly router = inject(Router);
+  private readonly theme = inject(ThemeService);
+
+  protected readonly libelleTheme = computed(() => CHOIX_THEME.find((c) => c.valeur === this.theme.choix())?.libelle);
 
   /** Vrai quand « À propos et sources » ou « Confidentialité » est ouverte : l'écran « Compte » leur laisse la place. */
   protected readonly enfantOuvert = toSignal(

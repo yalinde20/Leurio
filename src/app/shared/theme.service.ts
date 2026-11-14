@@ -3,6 +3,13 @@ import { Injectable, inject, signal } from '@angular/core';
 
 export type ChoixTheme = 'systeme' | 'clair' | 'sombre';
 
+/** Les choix proposés dans Compte, dans l'ordre d'affichage. */
+export const CHOIX_THEME: { valeur: ChoixTheme; libelle: string }[] = [
+  { valeur: 'systeme', libelle: 'Suivre le téléphone' },
+  { valeur: 'clair', libelle: 'Clair' },
+  { valeur: 'sombre', libelle: 'Sombre' },
+];
+
 const CLE = 'leurio.theme';
 
 /**
