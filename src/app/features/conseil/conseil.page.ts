@@ -1,4 +1,4 @@
-import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -14,6 +14,8 @@ import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
+import type { Unites } from '../../shared/unites';
+import { UnitesService } from '../../shared/unites.service';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import { EtatSpots, LieuFeuilleComponent } from './lieu-feuille.component';
 import { MomentFeuilleComponent } from './moment-feuille.component';
@@ -683,6 +685,7 @@ export class ConseilPage implements OnInit {
   private readonly spots = inject(SpotsService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
+  private readonly unites = inject(UnitesService);
   private readonly router = inject(Router);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -728,6 +731,11 @@ export class ConseilPage implements OnInit {
         { injector: this.injector },
       );
     });
+    // Un changement d'unités (dans « Préférences ») met l'affichage à jour sans recharger l'écran : tout est déjà en mémoire.
+    effect(() => {
+      const unites = this.unites.choix();
+      untracked(() => this.reafficherUnites(unites));
+    });
     // Le focus entre dans le champ dès qu'il s'ouvre.
     effect(() => this.champTemp()?.nativeElement.focus());
     // Et revient au bouton « J'ai mesuré l'eau » quand la saisie se ferme par Annuler ou Valider.
@@ -741,6 +749,10 @@ export class ConseilPage implements OnInit {
   }
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
+  /** Le relevé de la carte « Conditions » affichée, gardé pour la reformater quand les unités changent. */
+  private releveAffiche: ReleveActuel | null = null;
+  /** Les unités du dernier affichage : un effet qui se relance sans changement d'unités ne recalcule rien. */
+  private unitesAffichees = this.unites.choix();
 
   protected readonly conseil = signal<EtatConseil>({ type: 'calcul' });
 
@@ -1043,6 +1055,7 @@ export class ConseilPage implements OnInit {
     this.moment.set(choisi);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
+    this.releveAffiche = null;
     const releve = await this.conditions.releve({
       lieu: coordonnees,
       moment,
@@ -1055,6 +1068,7 @@ export class ConseilPage implements OnInit {
     const federation = await this.catalogue.federation(releve.conditions.departement);
     if (perime()) return;
     const texteHeures = heures ? formaterHeuresLegales(heures.debut, heures.fin) : 'Indisponible';
+    this.releveAffiche = releve;
     this.etat.set({
       type: 'pret',
       carte: {
@@ -1112,6 +1126,10 @@ export class ConseilPage implements OnInit {
     const conditions = { ...releve.conditions };
     delete conditions.especeCible;
     if (cible) conditions.especeCible = cible.code;
+    // Le moteur n'a l'entrée « unites » qu'en impérial : en métrique les conditions restent celles du relevé.
+    const unites = this.unites.choix();
+    if (unites === 'imperiales') conditions.unites = unites;
+    this.unitesAffichees = unites;
     this.detailStore.details.set([]);
     this.detailStore.pourLaBoite.set(null);
     this.conseil.set({ type: 'calcul' });
@@ -1125,7 +1143,7 @@ export class ConseilPage implements OnInit {
       ]);
       if (perime()) return;
       this.detailStore.details.set(
-        resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes })),
+        resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes }, unites)),
       );
       this.detailStore.toutesEspeces.set(cible === null);
       this.detailStore.pourLaBoite.set({ conseils: resultat.conseils, types, couleurs });
@@ -1135,15 +1153,27 @@ export class ConseilPage implements OnInit {
         animation: animations.find((a) => a.id === c.techniqueId)?.nom ?? c.techniqueId,
         couleur: couleurs.find((x) => x.id === c.couleur)?.nom ?? c.couleur,
         taille: c.taille
-          ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille) }
+          ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille, unites) }
           : null,
-        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible) : null,
+        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
         pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? []).map(finirParUnPoint)].filter(Boolean).join(' '),
       }));
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {
       if (!perime()) this.conseil.set({ type: 'indisponible' });
     }
+  }
+
+  /** Les unités ont changé : la carte « Conditions » est reformatée et le top 3 recalculé (le moteur est local, aucun réseau). */
+  private reafficherUnites(unites: Unites): void {
+    if (unites === this.unitesAffichees) return;
+    this.unitesAffichees = unites;
+    const etat = this.etat();
+    if (etat.type === 'pret' && this.releveAffiche) {
+      this.etat.set({ type: 'pret', carte: { ...etat.carte, eau: formaterTempEau(this.releveAffiche.conditions.tempEau, unites) } });
+    }
+    const courant = this.relancable;
+    if (courant) void this.chargerConseil(courant.releve, courant.moment, courant.limite);
   }
 
   private composer(
@@ -1156,7 +1186,7 @@ export class ConseilPage implements OnInit {
       mention: releve.mention,
       moinsPrecis: releve.moinsPrecis,
       eauInconnue: conditions.tempEau === null,
-      eau: formaterTempEau(conditions.tempEau),
+      eau: formaterTempEau(conditions.tempEau, this.unites.choix()),
       sourceEau: formaterSourceTempEau(releve),
       debit: formaterDebit(releve),
       pression: formaterPression(releve.pressionHpa, conditions.pressionTendance48h),

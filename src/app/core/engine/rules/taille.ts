@@ -1,8 +1,7 @@
 import { TypeLeurre } from '../../data/catalog.types';
+import { formaterLongueur, formaterPoids } from '../../../shared/unites';
 import { Regle, TailleLeurre } from './regle';
 import { bandeDe } from './temperature';
-
-const NOMBRE = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 /** Gamme du type : sa taille en cm, sinon son poids en g ; null sans gamme dans le contenu. */
 export function gammeDe(type: TypeLeurre): { min: number; max: number; unite: TailleLeurre['unite'] } | null {
@@ -36,7 +35,8 @@ export const regleTaille: Regle = ({ conditions, espece, type }) => {
   const valeur = froide
     ? borner(arrondiAuDemi(min + (max - min) / 4), min, milieu)
     : borner(arrondiAuDemi(min + (3 * (max - min)) / 4), milieu, max);
-  const chiffre = `${NOMBRE.format(valeur)} ${unite}`.replace(/\s/g, '\u00a0');
+  const unites = conditions.unites ?? 'metriques';
+  const chiffre = (unite === 'cm' ? formaterLongueur(valeur, unites) : formaterPoids(valeur, unites)).replace(/\s/g, '\u00a0');
   const phrase = froide
     ? `Par eau froide, prends un modèle plutôt ${unite === 'cm' ? 'petit' : 'léger'}, autour de ${chiffre}.`
     : `Le poisson est actif : un modèle plus ${unite === 'cm' ? 'gros' : 'lourd'}, autour de ${chiffre}, attire mieux.`;

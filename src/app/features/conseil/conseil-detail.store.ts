@@ -3,6 +3,7 @@ import { Couleur, TypeLeurre } from '../../core/data/catalog.types';
 import { TackleBoxService } from '../../core/data/tackle-box.service';
 import { trouverDansLaBoite } from '../../core/engine/matcher';
 import { Conseil } from '../../core/engine/scorer';
+import { UnitesService } from '../../shared/unites.service';
 import { LigneBoite, ligneDeLaBoite } from './conseil-format';
 
 /** Un conseil du top 3, déjà traduit en noms et formaté pour l'écran de détail (US 86). */
@@ -37,6 +38,7 @@ export class ConseilDetailStore {
   readonly pourLaBoite = signal<{ conseils: Conseil[]; types: TypeLeurre[]; couleurs: Couleur[] } | null>(null);
 
   private readonly boite = inject(TackleBoxService);
+  private readonly unites = inject(UnitesService);
 
   /**
    * Une ligne par conseil du top 3 (même ordre), recalculée à chaque instantané de la boîte, cache Firestore compris.
@@ -46,6 +48,6 @@ export class ConseilDetailStore {
     const contenu = this.pourLaBoite();
     const leurres = this.boite.leurres();
     if (contenu === null || leurres === null || this.boite.erreur()) return [];
-    return trouverDansLaBoite(contenu.conseils, leurres, contenu.types).map((c) => ligneDeLaBoite(c, contenu));
+    return trouverDansLaBoite(contenu.conseils, leurres, contenu.types).map((c) => ligneDeLaBoite(c, contenu, this.unites.choix()));
   });
 }

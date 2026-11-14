@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import type { Espece, Federation } from '../../core/data/catalog.types';
 import type { Categorie } from '../../core/regulation/calendar';
+import { UnitesService } from '../../shared/unites.service';
 import { composerReglementation } from './bandeau-reglementation-format';
 
 /** Bandeau « Réglementation » de l'écran Conseil (US 80, PLAN §6) : tout est calculé en local, sans réseau. */
@@ -103,7 +104,9 @@ export class BandeauReglementationComponent {
   readonly date = input<Date>(new Date());
   readonly federation = input<Federation | undefined>(undefined);
 
+  private readonly unites = inject(UnitesService);
+
   protected readonly lignes = computed(() =>
-    composerReglementation(this.categorie(), this.espece(), this.date(), this.especes()),
+    composerReglementation(this.categorie(), this.espece(), this.date(), this.especes(), this.unites.choix()),
   );
 }

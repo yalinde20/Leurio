@@ -1,4 +1,5 @@
 import { Saison } from '../data/catalog.types';
+import type { Unites } from '../../shared/unites';
 import { SourceTempEau } from './temperature-eau';
 
 // La saison est définie avec les types du contenu (qui l'utilisent aussi) ; le moteur la réexporte.
@@ -41,4 +42,6 @@ export interface Conditions {
   /** Code de l'espèce visée ; absent quand on les vise toutes. */
   especeCible?: string;
   niveau: 'debutant' | 'intermediaire';
+  /** Système d'unités des phrases du « pourquoi » (US 93) ; absent = métrique. Les données restent en °C, cm et g. */
+  unites?: Unites;
 }

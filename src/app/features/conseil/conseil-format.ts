@@ -3,10 +3,8 @@ import { Animation, Couleur, Espece, TypeLeurre } from '../../core/data/catalog.
 import { Correspondance, LeurreDeBoite } from '../../core/engine/matcher';
 import { Conseil } from '../../core/engine/scorer';
 import { TailleLeurre } from '../../core/engine/rules/regle';
+import { formaterLongueur, formaterPlage, formaterPoids, Unites } from '../../shared/unites';
 import { DetailConseil } from './conseil-detail.store';
-
-const INSECABLE = String.fromCharCode(0xa0);
-const nombre = new Intl.NumberFormat('fr-FR');
 
 /** Première phrase d'un pourquoi du moteur ; le texte entier s'il n'y a qu'une phrase. */
 export function premierePhrase(texte: string): string {
@@ -19,9 +17,9 @@ export function libelleTaille(taille: TailleLeurre): string {
   return taille.unite === 'cm' ? 'Taille' : 'Poids';
 }
 
-/** Le texte d'une taille ou d'un poids avec une espace insécable avant l'unité (8 cm, 10 g). */
-export function formaterTaille(taille: TailleLeurre): string {
-  return `${nombre.format(taille.valeur)}${INSECABLE}${taille.unite}`;
+/** Le texte d'une taille ou d'un poids avec une espace insécable avant l'unité (8 cm, 10 g ; 3,1 po, 0,35 oz en impérial). */
+export function formaterTaille(taille: TailleLeurre, unites: Unites = 'metriques'): string {
+  return taille.unite === 'cm' ? formaterLongueur(taille.valeur, unites) : formaterPoids(taille.valeur, unites);
 }
 
 /** Lit une température saisie (virgule ou point) ; `null` si vide, non numérique ou hors de 0 à 35 °C. */
@@ -36,9 +34,9 @@ export function lireTempSaisie(texte: string): number | null {
 export const AUCUNE_REGLE =
   "Aucune règle particulière ne s'applique dans ces conditions : c'est le meilleur choix par défaut pour ton espèce.";
 
-/** « 5 à 10 g » : la gamme de poids de la tête plombée. */
-export function formaterPoidsTete([min, max]: [number, number]): string {
-  return `${nombre.format(min)} à ${nombre.format(max)}${INSECABLE}g`;
+/** « 5 à 10 g » (« 0,18 à 0,35 oz » en impérial) : la gamme de poids de la tête plombée. */
+export function formaterPoidsTete([min, max]: [number, number], unites: Unites = 'metriques'): string {
+  return formaterPlage(min, max, 'poids', unites);
 }
 
 /** Le détail d'un conseil du moteur, traduit en noms avec les fiches du contenu. */
@@ -46,6 +44,7 @@ export function detailDuConseil(
   rang: number,
   conseil: Conseil,
   contenu: { types: TypeLeurre[]; animations: Animation[]; couleurs: Couleur[]; especes: Espece[] },
+  unites: Unites = 'metriques',
 ): DetailConseil {
   const type = contenu.types.find((t) => t.id === conseil.typeId);
   const espece = contenu.especes.find((e) => e.code === conseil.especeCode);
@@ -56,8 +55,8 @@ export function detailDuConseil(
     animation: contenu.animations.find((a) => a.id === conseil.techniqueId)?.nom ?? conseil.techniqueId,
     espece: espece?.nom ?? null,
     couleur: contenu.couleurs.find((c) => c.id === conseil.couleur)?.nom ?? conseil.couleur,
-    taille: conseil.taille ? { libelle: libelleTaille(conseil.taille), valeur: formaterTaille(conseil.taille) } : null,
-    poidsTete: type?.poidsTeteG ? formaterPoidsTete(type.poidsTeteG) : null,
+    taille: conseil.taille ? { libelle: libelleTaille(conseil.taille), valeur: formaterTaille(conseil.taille, unites) } : null,
+    poidsTete: type?.poidsTeteG ? formaterPoidsTete(type.poidsTeteG, unites) : null,
     postes: espece && espece.postes.length > 0 ? espece.postes.join(', ') : null,
     pourquoi: conseil.pourquoi.length > 0 ? conseil.pourquoi : [AUCUNE_REGLE],
   };
@@ -75,13 +74,14 @@ const LIBELLE_DANS_LA_BOITE = 'Dans ta boîte :';
 const LIBELLE_A_LA_PLACE = 'À la place, dans ta boîte :';
 const LIBELLE_IL_TE_MANQUE = 'Il te manque :';
 
+const espacesSimples = (texte: string): string => texte.replace(/\s/g, ' ');
 const minusculeInitiale = (texte: string): string => texte.charAt(0).toLowerCase() + texte.slice(1);
 
 /** « {nom du type} {taille} {couleur} » (espaces simples : la ligne passe à la ligne comme une phrase) : le type, la taille dans l'unité de son type (cm par défaut) et la couleur saisie. */
-function formaterLeurreDeBoite(leurre: LeurreDeBoite, types: TypeLeurre[]): string {
+function formaterLeurreDeBoite(leurre: LeurreDeBoite, types: TypeLeurre[], unites: Unites): string {
   const type = types.find((t) => t.id === leurre.typeId);
   const taille = type?.poidsG && !type.tailleCm ? { valeur: leurre.poidsG, unite: 'g' as const } : { valeur: leurre.tailleCm, unite: 'cm' as const };
-  return `${type?.nom ?? leurre.typeId} ${nombre.format(taille.valeur)} ${taille.unite} ${leurre.couleur}`;
+  return `${type?.nom ?? leurre.typeId} ${espacesSimples(formaterTaille(taille, unites))} ${leurre.couleur}`;
 }
 
 /** « {article} {nom du type} {min}–{max} {unité} couleur {couleur} » ; sans plage dans le contenu, sans la plage. */
@@ -89,22 +89,25 @@ function formaterLeurreManquant(
   correspondance: Extract<Correspondance, { statut: 'il-te-manque' }>,
   types: TypeLeurre[],
   couleurs: Couleur[],
+  unites: Unites,
 ): string {
   const type = types.find((t) => t.id === correspondance.typeId);
   const { plage } = correspondance;
   const couleur = couleurs.find((c) => c.id === correspondance.couleur)?.nom ?? correspondance.couleur;
-  const intervalle = plage ? ` ${nombre.format(plage.min)}–${nombre.format(plage.max)} ${plage.unite}` : '';
+  const intervalle = plage ? ` ${espacesSimples(formaterPlage(plage.min, plage.max, plage.unite === 'cm' ? 'longueur' : 'poids', unites, '–'))}` : '';
   return `${type?.article ?? 'un'} ${minusculeInitiale(type?.nom ?? correspondance.typeId)}${intervalle} couleur ${couleur.toLowerCase()}`;
 }
 
 /** La ligne de la boîte pour la correspondance que le matcher a trouvée à un conseil. */
-export function ligneDeLaBoite(correspondance: Correspondance, contenu: { types: TypeLeurre[]; couleurs: Couleur[] }): LigneBoite {
+export function ligneDeLaBoite(correspondance: Correspondance, contenu: { types: TypeLeurre[]; couleurs: Couleur[] },
+  unites: Unites = 'metriques',
+): LigneBoite {
   if (correspondance.statut === 'il-te-manque') {
-    return { manque: true, libelle: LIBELLE_IL_TE_MANQUE, texte: formaterLeurreManquant(correspondance, contenu.types, contenu.couleurs) };
+    return { manque: true, libelle: LIBELLE_IL_TE_MANQUE, texte: formaterLeurreManquant(correspondance, contenu.types, contenu.couleurs, unites) };
   }
   return {
     manque: false,
     libelle: correspondance.statut === 'substitution' ? LIBELLE_A_LA_PLACE : LIBELLE_DANS_LA_BOITE,
-    texte: formaterLeurreDeBoite(correspondance.leurre, contenu.types),
+    texte: formaterLeurreDeBoite(correspondance.leurre, contenu.types, unites),
   };
 }
