@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.43.1](https://github.com/yalinde20/Leurio/compare/v1.43.0...v1.43.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* **US 91:** indicateur des groupes repliables, titres des blocs ([4de401d](https://github.com/yalinde20/Leurio/commit/4de401d4b218578f2760efb8012d988963a6343f))
+
 ## [1.43.0](https://github.com/yalinde20/Leurio/compare/v1.42.0...v1.43.0) (2026-11-13)
 
 
