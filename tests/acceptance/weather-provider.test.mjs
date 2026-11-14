@@ -6,7 +6,15 @@ import { join } from 'node:path';
 import { ROOT } from '../helpers/run.mjs';
 
 const IMPLEMENTATION = 'src/app/core/data/open-meteo.service.ts';
-const AUTORISES = [IMPLEMENTATION, 'src/app/core/data/open-meteo.service.spec.ts'];
+const AUTORISES = [
+  IMPLEMENTATION,
+  'src/app/core/data/open-meteo.service.spec.ts',
+  // US 91 (décision du propriétaire) : texte d'interface qui cite la source des données météo, pas du code qui en dépend.
+  'src/app/features/compte/a-propos.page.ts',
+  'src/app/features/compte/a-propos.page.spec.ts',
+  'src/app/features/compte/confidentialite.page.ts',
+  'src/app/features/compte/confidentialite.page.spec.ts',
+];
 const MENTION = /open[-_ ]?meteo/i;
 // Seules lignes tolérées dans app.config.ts : l'import de la classe et son câblage sur WeatherProvider.
 const CABLAGE = [
