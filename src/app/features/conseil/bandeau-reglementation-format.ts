@@ -8,6 +8,7 @@ import {
   periodeFermetureBrochet,
   prochaineOuverture1reCategorie,
 } from '../../core/regulation/calendar';
+import type { Unites } from '../../shared/unites';
 import { libelleQuota, libelleTailleMinimale, quota } from '../../core/regulation/sizes';
 
 /**
@@ -75,6 +76,7 @@ export function composerReglementation(
   espece: EspeceReglementee | null,
   date: Date,
   especes: readonly EspeceReglementee[] = [],
+  unites: Unites = 'metriques',
 ): LigneReglementation[] {
   const lignes: LigneReglementation[] = [];
   if (categorie === null) {
@@ -92,7 +94,7 @@ export function composerReglementation(
   const alertes = (espece ? [espece] : especes).map((e) => alerteEspece(e, date));
   for (const alerte of alertes) if (alerte) lignes.push(alerte);
   if (espece) {
-    lignes.push({ libelle: 'Taille minimale', valeur: libelleTailleMinimale(espece), ferme: false });
+    lignes.push({ libelle: 'Taille minimale', valeur: libelleTailleMinimale(espece, unites), ferme: false });
   }
   if (categorie !== 1) {
     lignes.push({ libelle: 'Quota', valeur: libelleQuota2e(), ferme: false });

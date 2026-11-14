@@ -1,5 +1,6 @@
 import { Conditions } from '../../core/engine/conditions';
 import { ReleveActuel } from '../../core/data/conditions.service';
+import { formaterTemperature, Unites } from '../../shared/unites';
 
 const INCONNUE = 'Inconnue';
 const INDISPONIBLE = 'Indisponible';
@@ -20,9 +21,9 @@ export function formaterHeure(date: Date): string {
   return `${Number(valeur('hour'))} h ${valeur('minute')}`;
 }
 
-/** « 11,5 °C » ou « Inconnue ». */
-export function formaterTempEau(tempEau: number | null): string {
-  return tempEau === null ? INCONNUE : `${nombre.format(tempEau)} °C`;
+/** « 11,5 °C » (« 52,7 °F » en impérial) ou « Inconnue ». */
+export function formaterTempEau(tempEau: number | null, unites: Unites = 'metriques'): string {
+  return tempEau === null ? INCONNUE : formaterTemperature(tempEau, unites).replace(/\s/g, ' ');
 }
 
 /** La source de la température de l'eau, ou `null` quand il n'y a rien à dire. */

@@ -1,4 +1,5 @@
 import { Animation, Espece } from '../../data/catalog.types';
+import { formaterTemperature } from '../../../shared/unites';
 import { Regle } from './regle';
 
 export type Bande = 'active' | 'ralentie' | 'quasiNulle';
@@ -12,8 +13,6 @@ const POINTS: Record<Bande, Record<Rythme, number>> = {
   ralentie: { lent: 1, moyen: 0.5, rapide: 0 },
   quasiNulle: { lent: 1, moyen: 0.5, rapide: 0 },
 };
-
-const TEMPERATURE = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
 
 export function bandeDe(espece: Espece, temperature: number): Bande | null {
   return (
@@ -48,7 +47,7 @@ export const regleTemperature: Regle = ({ conditions, espece, animation }) => {
   if (conditions.tempEau === null) return null;
   const bande = bandeDe(espece, conditions.tempEau);
   if (bande === null) return null;
-  const degres = `${TEMPERATURE.format(conditions.tempEau)} °C`.replace(/\s/g, ' ');
+  const degres = formaterTemperature(conditions.tempEau, conditions.unites ?? 'metriques').replace(/\s/g, ' ');
   return {
     facteur: 'temperature',
     points: POINTS[bande][animation.rythme],

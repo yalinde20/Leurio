@@ -4,6 +4,7 @@
  */
 import { TestBed } from '@angular/core/testing';
 import type { UserDoc } from '../firebase/user-doc';
+import { OnboardingStore } from './onboarding.store';
 import { CLE_PROFIL_ECRIT, CompteService, SOURCE_COMPTE, SourceCompte } from './compte.service';
 
 const CHOIX = { niveau: 'intermediaire' as const, especesFavorites: ['BRO', 'SAN'] };
@@ -96,6 +97,26 @@ describe('CompteService (US 90)', () => {
 
     expect(profils.get('uid-neuf')).toMatchObject({ niveau: 'intermediaire', especesFavorites: ['BRO', 'SAN'], plan: 'free' });
     expect(appels.ecritures).toBe(1);
+  });
+
+  it("given la création du compte échoue puis je change mes préférences (US 93), when le réseau revient, then users/{uid} est créé avec les préférences actuelles et non celles de l'onboarding", async () => {
+    let enLigne = false;
+    const { source, profils } = creerSource({
+      connecterAnonymement: async () => {
+        if (!enLigne) throw new Error('auth/network-request-failed');
+        return 'uid-neuf';
+      },
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const compte = service(source);
+
+    await compte.assurerCompte(CHOIX);
+    TestBed.inject(OnboardingStore).terminer({ niveau: 'debutant', especesFavorites: ['PER'] });
+    enLigne = true;
+    window.dispatchEvent(new Event('online'));
+    await vider();
+
+    expect(profils.get('uid-neuf')).toMatchObject({ niveau: 'debutant', especesFavorites: ['PER'] });
   });
 
   it("critère 4 : given la création du compte échoue, when je termine l'onboarding, then assurerCompte tente la connexion, ne rejette pas (aucun message bloquant) et l'échec n'est écrit que dans la console", async () => {

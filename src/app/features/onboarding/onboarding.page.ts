@@ -2,17 +2,12 @@ import { afterNextRender, Component, ElementRef, inject, Injector, OnInit, signa
 import { Router } from '@angular/router';
 import { CatalogService, Espece } from '../../core/data/catalog.service';
 import { CompteService } from '../../core/data/compte.service';
-import { ChoixOnboarding, OnboardingStore } from '../../core/data/onboarding.store';
+import { ChoixOnboarding, NIVEAUX, OnboardingStore } from '../../core/data/onboarding.store';
 import { PositionService } from '../../core/data/position.service';
 
 type Niveau = ChoixOnboarding['niveau'];
 
 const TITRES = ['Leurio, ton conseil de pêche au leurre', 'Tes espèces et ton niveau', 'Pourquoi ta position ?'];
-const NIVEAUX: { valeur: Niveau; libelle: string; precision: string }[] = [
-  { valeur: 'debutant', libelle: 'Débutant', precision: 'Je débute au leurre' },
-  { valeur: 'intermediaire', libelle: 'Intermédiaire', precision: "J'ai déjà pris des carnassiers au leurre" },
-];
-
 /** L'onboarding en 3 pages, plein écran, au premier lancement (PLAN §3). Les choix ne sont gardés qu'à la fin de la page 3. */
 @Component({
   selector: 'app-onboarding',

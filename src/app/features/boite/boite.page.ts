@@ -3,6 +3,8 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { EchecEnvoiPhoto } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
+import { formaterLongueur, formaterPoids } from '../../shared/unites';
+import { UnitesService } from '../../shared/unites.service';
 import { KitDepartComponent } from './kit-depart.component';
 import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 
@@ -249,7 +251,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
                       <h3>
                         <button type="button" class="toucher" [attr.aria-describedby]="'details-' + leurre.id" (click)="modifier(leurre)">{{ nomDuType(leurre.typeId) }}</button>
                       </h3>
-                      <p class="details" [id]="'details-' + leurre.id">{{ leurre.tailleCm }} cm · {{ leurre.poidsG }} g · {{ leurre.couleur }}</p>
+                      <p class="details" [id]="'details-' + leurre.id">{{ taille(leurre.tailleCm) }} · {{ poids(leurre.poidsG) }} · {{ leurre.couleur }}</p>
                       @if (leurre.marque) {
                         <p class="marque">{{ leurre.marque }}</p>
                       }
@@ -290,6 +292,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 export class BoitePage implements OnInit {
   protected readonly boite = inject(TackleBoxService);
   private readonly catalogue = inject(CatalogService);
+  private readonly unites = inject(UnitesService);
 
   private readonly typesDuContenu = signal<TypeLeurre[]>([]);
   protected readonly types = computed(() => this.typesDuContenu().map(({ id, nom }) => ({ id, nom })));
@@ -342,6 +345,14 @@ export class BoitePage implements OnInit {
     const famille = this.familleChoisie();
     if (famille === null) return leurres;
     return leurres.filter((l) => this.famillesParType().get(l.typeId) === famille);
+  }
+
+  protected taille(cm: number): string {
+    return formaterLongueur(cm, this.unites.choix()).replace(/\s/g, ' ');
+  }
+
+  protected poids(g: number): string {
+    return formaterPoids(g, this.unites.choix()).replace(/\s/g, ' ');
   }
 
   protected nomDuType(id: string): string {

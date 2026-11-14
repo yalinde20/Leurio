@@ -1,4 +1,5 @@
 import type { Espece } from '../data/catalog.types';
+import { formaterLongueur, type Unites } from '../../shared/unites';
 import type { Categorie } from './calendar';
 
 /** Libellé quand la fiche n'a pas de taille minimale nationale (`tailleMinCm` null, PLAN §6). */
@@ -9,10 +10,10 @@ export function tailleMinimale(espece: Pick<Espece, 'tailleMinCm'>): number | nu
   return espece.tailleMinCm ?? null;
 }
 
-/** Taille minimale prête à afficher : « 50 cm » ou « pas de taille minimale nationale ». */
-export function libelleTailleMinimale(espece: Pick<Espece, 'tailleMinCm'>): string {
+/** Taille minimale prête à afficher : « 50 cm » (« 19,7 po » en impérial) ou « pas de taille minimale nationale ». */
+export function libelleTailleMinimale(espece: Pick<Espece, 'tailleMinCm'>, unites: Unites = 'metriques'): string {
   const taille = tailleMinimale(espece);
-  return taille === null ? LIBELLE_SANS_TAILLE : `${taille} cm`;
+  return taille === null ? LIBELLE_SANS_TAILLE : formaterLongueur(taille, unites).replace(/\s/g, ' ');
 }
 
 /** Quota de capture par pêcheur et par jour (PLAN §6). */

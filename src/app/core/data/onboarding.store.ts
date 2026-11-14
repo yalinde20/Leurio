@@ -6,6 +6,12 @@ export interface ChoixOnboarding {
   especesFavorites: string[];
 }
 
+/** Les niveaux proposés (onboarding et « Préférences »), dans l'ordre d'affichage. */
+export const NIVEAUX: { valeur: ChoixOnboarding['niveau']; libelle: string; precision: string }[] = [
+  { valeur: 'debutant', libelle: 'Débutant', precision: 'Je débute au leurre' },
+  { valeur: 'intermediaire', libelle: 'Intermédiaire', precision: "J'ai déjà pris des carnassiers au leurre" },
+];
+
 /** Clé du localStorage où l'onboarding terminé est gardé (US 89). L'US 90 recopiera ces choix dans users/{uid}. */
 const CLE = 'leurio.onboarding';
 

@@ -14,6 +14,7 @@ import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
+import { UnitesService } from '../../shared/unites.service';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import { EtatSpots, LieuFeuilleComponent } from './lieu-feuille.component';
 import { MomentFeuilleComponent } from './moment-feuille.component';
@@ -683,6 +684,7 @@ export class ConseilPage implements OnInit {
   private readonly spots = inject(SpotsService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
   private readonly detailStore = inject(ConseilDetailStore);
+  private readonly unites = inject(UnitesService);
   private readonly router = inject(Router);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -1112,6 +1114,9 @@ export class ConseilPage implements OnInit {
     const conditions = { ...releve.conditions };
     delete conditions.especeCible;
     if (cible) conditions.especeCible = cible.code;
+    // Le moteur n'a l'entrée « unites » qu'en impérial : en métrique les conditions restent celles du relevé.
+    const unites = this.unites.choix();
+    if (unites === 'imperiales') conditions.unites = unites;
     this.detailStore.details.set([]);
     this.detailStore.pourLaBoite.set(null);
     this.conseil.set({ type: 'calcul' });
@@ -1125,7 +1130,7 @@ export class ConseilPage implements OnInit {
       ]);
       if (perime()) return;
       this.detailStore.details.set(
-        resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes })),
+        resultat.conseils.map((c, i) => detailDuConseil(i + 1, c, { types, animations, couleurs, especes }, unites)),
       );
       this.detailStore.toutesEspeces.set(cible === null);
       this.detailStore.pourLaBoite.set({ conseils: resultat.conseils, types, couleurs });
@@ -1135,9 +1140,9 @@ export class ConseilPage implements OnInit {
         animation: animations.find((a) => a.id === c.techniqueId)?.nom ?? c.techniqueId,
         couleur: couleurs.find((x) => x.id === c.couleur)?.nom ?? c.couleur,
         taille: c.taille
-          ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille) }
+          ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille, unites) }
           : null,
-        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible) : null,
+        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
         pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? []).map(finirParUnPoint)].filter(Boolean).join(' '),
       }));
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
@@ -1156,7 +1161,7 @@ export class ConseilPage implements OnInit {
       mention: releve.mention,
       moinsPrecis: releve.moinsPrecis,
       eauInconnue: conditions.tempEau === null,
-      eau: formaterTempEau(conditions.tempEau),
+      eau: formaterTempEau(conditions.tempEau, this.unites.choix()),
       sourceEau: formaterSourceTempEau(releve),
       debit: formaterDebit(releve),
       pression: formaterPression(releve.pressionHpa, conditions.pressionTendance48h),

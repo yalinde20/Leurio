@@ -73,8 +73,15 @@ import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
-        <h2 class="titre-groupe">Affichage</h2>
+        <h2 class="titre-groupe">Réglages</h2>
         <div class="groupe">
+          <a class="rangee" [routerLink]="['/compte', 'preferences']">
+            <span>
+              Préférences
+              <span class="sous">Espèces, niveau, unités</span>
+            </span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </a>
           <a class="rangee" [routerLink]="['/compte', 'theme']">
             <span>Thème</span>
             <span class="valeur">{{ libelleTheme() }}</span>
@@ -114,7 +121,7 @@ export class ComptePage {
   protected readonly libelleTheme = computed(() => CHOIX_THEME.find((c) => c.valeur === this.theme.choix())?.libelle);
 
   /**
-   * Vrai quand une page enfant (Thème, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
+   * Vrai quand une page enfant (Préférences, Thème, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
    * Piloté par l'activation de la sortie, pour masquer l'en-tête dans le même passage que l'apparition de l'enfant.
    */
   protected readonly enfantOuvert = signal(this.router.url.split(/[?#]/)[0].startsWith('/compte/'));
