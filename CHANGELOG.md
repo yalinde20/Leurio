@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.43.2](https://github.com/yalinde20/Leurio/compare/v1.43.1...v1.43.2) (2026-11-14)
+
+
+### Bug Fixes
+
+* **US 92:** en-tête de Compte masqué dès l'activation de la page enfant, radios touchables ([1fafc25](https://github.com/yalinde20/Leurio/commit/1fafc257fd293adb487a4c636e3435c78ba825f0))
+
 ## [1.43.1](https://github.com/yalinde20/Leurio/compare/v1.43.0...v1.43.1) (2026-11-14)
 
 
