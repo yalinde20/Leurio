@@ -30,7 +30,18 @@ export const routes: Routes = [
       },
       { path: 'boite', loadComponent: () => import('./features/boite/boite.page').then((m) => m.BoitePage) },
       { path: 'spots', loadComponent: () => import('./features/spots/spots.page').then((m) => m.SpotsPage) },
-      { path: 'compte', loadComponent: () => import('./features/compte/compte.page').then((m) => m.ComptePage) },
+      {
+        path: 'compte',
+        loadComponent: () => import('./features/compte/compte.page').then((m) => m.ComptePage),
+        // « À propos et sources » et « Confidentialité » s'ouvrent dans l'écran « Compte », comme le détail dans « Conseil ».
+        children: [
+          { path: 'a-propos', loadComponent: () => import('./features/compte/a-propos.page').then((m) => m.AProposPage) },
+          {
+            path: 'confidentialite',
+            loadComponent: () => import('./features/compte/confidentialite.page').then((m) => m.ConfidentialitePage),
+          },
+        ],
+      },
       { path: '', pathMatch: 'full', redirectTo: 'conseil' },
     ],
   },

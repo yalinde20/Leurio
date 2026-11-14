@@ -40,6 +40,11 @@ export class CatalogService {
     return this.charger<Couleur>('couleurs');
   }
 
+  /** Un fichier de assets/data tel quel (liste ou objet), par son nom sans extension : pour lire ses `sources`. */
+  contenuBrut(fichier: string): Promise<unknown> {
+    return this.chargerFichier<unknown>(fichier);
+  }
+
   /** Poids du moteur (engine-weights.json, un objet et non une liste). */
   poidsMoteur(): Promise<PoidsMoteur> {
     return this.chargerFichier<PoidsMoteur>('engine-weights');
