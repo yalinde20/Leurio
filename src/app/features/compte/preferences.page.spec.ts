@@ -90,6 +90,9 @@ interface Options {
 }
 
 async function ouvrir(url: string, { uid = 'uid-test-123', enAttente = false, niveau = 'debutant', especesFavorites = ['AA2'], unites }: Options = {}) {
+  // Le moment est fixé (9 novembre 2026, 13 h à Paris) : le conseil ne dépend pas de l'heure réelle (heures légales du double AstroService).
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-11-09T12:00:00Z'));
   localStorage.clear();
   localStorage.setItem('leurio.onboarding', JSON.stringify({ niveau, especesFavorites }));
   if (unites) localStorage.setItem('leurio.unites', unites);
@@ -199,6 +202,7 @@ async function toucher(page: HTMLElement, type: 'checkbox' | 'radio', nom: strin
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   TestBed.resetTestingModule();
   localStorage.clear();
 });

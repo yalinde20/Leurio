@@ -69,11 +69,9 @@ async function creerProfilSurEmulateur(uid: string): Promise<void> {
 async function avecProfil(page: Page): Promise<string> {
   await page.goto('/');
   await attendreFirebase(page);
-  const uid = await page.evaluate(async () => {
-    const f = (window as any).leurioFirebase;
-    await f.auth.authStateReady();
-    return (f.auth.currentUser?.uid ?? (await f.sdk.auth.signInAnonymously(f.auth)).user.uid) as string;
-  });
+  // On attend le compte que l'app crée elle-même au lancement (marqueur `leurio.compte` écrit une fois le profil en place) : c'est son uid qui sert.
+  await page.waitForFunction(() => !!localStorage.getItem('leurio.compte'), undefined, { timeout: 30_000 });
+  const uid = await page.evaluate(() => localStorage.getItem('leurio.compte') as string);
   await creerProfilSurEmulateur(uid);
   return uid;
 }
