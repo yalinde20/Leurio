@@ -33,7 +33,7 @@ export const routes: Routes = [
       {
         path: 'compte',
         loadComponent: () => import('./features/compte/compte.page').then((m) => m.ComptePage),
-        // « À propos et sources » et « Confidentialité » s'ouvrent dans l'écran « Compte », comme le détail dans « Conseil ».
+        // « Thème », « À propos et sources » et « Confidentialité » s'ouvrent dans l'écran « Compte », comme le détail dans « Conseil ».
         children: [
           { path: 'theme', loadComponent: () => import('./features/compte/theme.page').then((m) => m.ThemePage) },
           { path: 'a-propos', loadComponent: () => import('./features/compte/a-propos.page').then((m) => m.AProposPage) },

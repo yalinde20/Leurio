@@ -1,8 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
-import { filter, map, startWith } from 'rxjs';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
 @Component({
@@ -10,6 +8,11 @@ import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet],
   host: { class: 'ion-page' },
   styles: `
+    /* Dès que la page enfant est dans le DOM (avant le prochain passage de détection de changements), l'écran « Compte » lui laisse la place. */
+    :host:has(> router-outlet + *) > ion-header,
+    :host:has(> router-outlet + *) > ion-content {
+      display: none;
+    }
     .titre-groupe {
       margin: 0 0 6px 4px;
       font-size: 13px;
@@ -101,7 +104,7 @@ import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
         </div>
       </ion-content>
     }
-    <router-outlet />
+    <router-outlet (activate)="enfantOuvert.set(true)" (deactivate)="enfantOuvert.set(false)" />
   `,
 })
 export class ComptePage {
@@ -110,17 +113,9 @@ export class ComptePage {
 
   protected readonly libelleTheme = computed(() => CHOIX_THEME.find((c) => c.valeur === this.theme.choix())?.libelle);
 
-  /** Vrai quand « À propos et sources » ou « Confidentialité » est ouverte : l'écran « Compte » leur laisse la place. */
-  protected readonly enfantOuvert = toSignal(
-    this.router.events.pipe(
-      filter((e) => e instanceof NavigationEnd),
-      map(() => this.urlEnfant()),
-      startWith(this.urlEnfant()),
-    ),
-    { requireSync: true },
-  );
-
-  private urlEnfant(): boolean {
-    return this.router.url.split(/[?#]/)[0].startsWith('/compte/');
-  }
+  /**
+   * Vrai quand une page enfant (Thème, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
+   * Piloté par l'activation de la sortie, pour masquer l'en-tête dans le même passage que l'apparition de l'enfant.
+   */
+  protected readonly enfantOuvert = signal(this.router.url.split(/[?#]/)[0].startsWith('/compte/'));
 }

@@ -33,7 +33,6 @@ import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
     input {
       position: absolute;
       opacity: 0;
-      pointer-events: none;
     }
     label:has(input:focus-visible) {
       outline: 2px solid var(--lr-primaire);
