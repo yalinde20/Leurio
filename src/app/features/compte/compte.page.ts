@@ -280,7 +280,7 @@ export class ComptePage {
         // Le compte est déjà lié à ce fournisseur : on montre l'état lié au lieu d'une erreur.
         this.compteLie.set(await this.liaison.compteLie().catch(() => null));
       } else {
-      this.message.set(messagePourErreur(code));
+        this.message.set(messagePourErreur(code));
       }
     } finally {
       this.enCours.set(false);
