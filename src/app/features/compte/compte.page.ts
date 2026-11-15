@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
@@ -152,6 +153,7 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
+        @if (!natif) {
         <h2 class="titre-groupe">Ton compte</h2>
         <div class="compte">
           @if (compteLie(); as lie) {
@@ -183,6 +185,7 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
             }
           }
         </div>
+        }
         <h2 class="titre-groupe">Réglages</h2>
         <div class="groupe">
           <a class="rangee" [routerLink]="['/compte', 'preferences']">
@@ -243,7 +246,14 @@ export class ComptePage {
   protected readonly enCours = signal(false);
   protected readonly message = signal<MessageLiaison | null>(null);
 
+  /**
+   * Décision du propriétaire (US 95, réponse B) : la connexion se fait dans une fenêtre web ; la connexion native
+   * (plugin Capacitor) n'existe pas encore, donc le groupe « Ton compte » est masqué dans les apps iOS et Android.
+   */
+  protected readonly natif = Capacitor.isNativePlatform();
+
   constructor() {
+    if (this.natif) return;
     // Lecture seule : une erreur de lecture laisse l'écran à l'état anonyme.
     this.liaison
       .compteLie()

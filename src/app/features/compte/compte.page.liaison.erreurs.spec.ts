@@ -3,10 +3,13 @@
  * aucun compte anonyme à lier. Complète compte.page.liaison.spec.ts (critères) avec des doubles de SOURCE_LIAISON.
  */
 import { TestBed } from '@angular/core/testing';
+import { Capacitor } from '@capacitor/core';
 import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 import { CompteLie, SOURCE_LIAISON, SourceLiaison } from '../../core/data/liaison-compte';
 import { ComptePage } from './compte.page';
+
+afterEach(() => vi.restoreAllMocks());
 
 const erreur = (code: string) => Object.assign(new Error(code), { code });
 const boutons = (page: HTMLElement) => Array.from(page.querySelectorAll('button')).map((b) => b.textContent?.trim());
@@ -75,5 +78,19 @@ describe('US 95 : cas limites de la liaison du compte', () => {
     await stabiliser();
     expect(page.querySelector('[role="alert"]')?.textContent?.trim()).toBe('La connexion n’a pas abouti. Réessaie.');
     expect(Array.from(page.querySelectorAll('button')).every((b) => !b.disabled)).toBe(true);
+  });
+});
+
+describe('US 95 : app native (décision du propriétaire, réponse B)', () => {
+  it('given l\'app native, when j\'ouvre Compte, then ni le groupe « Ton compte » ni les boutons « Continuer avec … » ne s\'affichent et le compte n\'est pas lu', async () => {
+    vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(true);
+    const compteLie = vi.fn(async () => null);
+    const { page } = await ouvrir({ compteLie, lier: async () => Promise.reject(new Error('non prévu')) });
+
+    expect(page.textContent).not.toContain('Ton compte');
+    expect(page.textContent).not.toContain('Continuer avec');
+    expect(page.querySelectorAll('button')).toHaveLength(0);
+    expect(page.textContent).toContain('Réglages');
+    expect(compteLie).not.toHaveBeenCalled();
   });
 });
