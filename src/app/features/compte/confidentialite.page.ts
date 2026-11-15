@@ -73,9 +73,9 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
         <h2>Ce que Leurio garde en ligne</h2>
         <ul>
           <li>
-            Ton niveau, tes espèces favorites, la date de création du compte et deux réglages internes (ton offre, gratuite, et tes
-            consentements, sur « non » par défaut, modifiables dans Compte › Consentements).
+            Ton niveau, tes espèces favorites, la date de création du compte et un réglage interne (ton offre, gratuite).
           </li>
+          <li>Tes consentements (mesure d’audience, lecteurs vidéo tiers) : sur « non » par défaut, modifiables dans Compte › Consentements.</li>
           <li>
             Ta boîte à leurres : le type, la taille, le poids, la couleur, la marque si tu l’indiques, la date d’ajout, et la photo si
             tu en ajoutes une. Une photo de plus de 200 Ko est réduite avant l’envoi.

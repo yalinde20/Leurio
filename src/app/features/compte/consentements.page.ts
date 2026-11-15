@@ -15,8 +15,8 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
   styles: `
     .aide {
       margin: 0 4px 16px;
-      font-size: 15px;
-      line-height: 1.45;
+      font-size: 14px;
+      line-height: 1.4;
       color: var(--lr-texte-secondaire);
     }
     .aide a {
@@ -108,7 +108,7 @@ export class ConsentementsPage implements OnInit {
   }
 
   protected async changer(consentement: Consentement, accepte: boolean): Promise<void> {
-    // Ionic émet aussi `ionChange` quand la valeur est posée par le code : on ignore ce qui ne change rien.
+    // Un événement qui ne change pas la valeur déjà appliquée n'a rien à écrire.
     if (this.consentements[consentement]() === accepte) return;
     this.enAttente.update((n) => n + 1);
     try {

@@ -146,3 +146,97 @@ describe('US 94 : ConsentementsService', () => {
     expect(ecritures).toEqual([]);
   });
 });
+
+describe('US 94 : ConsentementsService, lecture et écriture concurrentes', () => {
+  function preparerDifferee(stocke: Consentements) {
+    const ecritures: unknown[] = [];
+    let lectures = 0;
+    let finir!: () => void;
+    const attente = new Promise<void>((r) => (finir = r));
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: SOURCE_COMPTE,
+          useValue: { uidCourant: async () => 'uid-test-123', connecterAnonymement: async () => 'uid-test-123', profilExiste: async () => true, ecrireProfil: async () => undefined },
+        },
+        {
+          provide: SOURCE_PROFIL,
+          useValue: {
+            mettreAJour: async (_u: string, champs: unknown) => void ecritures.push(champs),
+            lireConsentements: async () => {
+              lectures++;
+              await attente;
+              return stocke;
+            },
+          },
+        },
+      ],
+    });
+    return { service: TestBed.inject(ConsentementsService), ecritures, finir, lectures: () => lectures };
+  }
+
+  it('given users/{uid} vaut {vrai, vrai} et la lecture n\'est pas finie, when je change « video », then le signal montre mon choix et l\'écriture garde analytics vrai', async () => {
+    const { service, ecritures, finir } = preparerDifferee({ analytics: true, video: true });
+
+    const fin = service.modifier('video', false);
+    expect(service.video()).toBe(false);
+    expect(ecritures).toEqual([]);
+    finir();
+    await fin;
+
+    expect(ecritures).toEqual([{ consentements: { analytics: true, video: false } }]);
+    expect(service.analytics()).toBe(true);
+    expect(service.video()).toBe(false);
+  });
+
+  it('given je change « analytics » pendant la lecture, when la lecture se termine, then elle n\'écrase pas mon choix', async () => {
+    const { service, finir } = preparerDifferee({ analytics: true, video: true });
+
+    const lecture = service.charger();
+    void service.modifier('analytics', false);
+    finir();
+    await lecture;
+
+    expect(service.analytics()).toBe(false);
+    expect(service.video()).toBe(true);
+  });
+
+  it('given la lecture, when charger() est appelé deux fois, then users/{uid} n\'est lu qu\'une fois et charge() passe à vrai à la fin', async () => {
+    const { service, finir, lectures } = preparerDifferee({ analytics: true, video: false });
+    expect(service.charge()).toBe(false);
+
+    const a = service.charger();
+    const b = service.charger();
+    finir();
+    await Promise.all([a, b]);
+    await service.charger();
+
+    expect(lectures()).toBe(1);
+    expect(service.charge()).toBe(true);
+  });
+
+  it('given le compte change, when charger() est rappelé, then users/{uid} est relu pour ce compte', async () => {
+    let uid: string | null = 'a';
+    const lus: string[] = [];
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: SOURCE_COMPTE, useValue: { uidCourant: async () => uid, connecterAnonymement: async () => 'a', profilExiste: async () => true, ecrireProfil: async () => undefined } },
+        { provide: SOURCE_PROFIL, useValue: { mettreAJour: async () => undefined, lireConsentements: async (u: string) => (lus.push(u), { analytics: false, video: false }) } },
+      ],
+    });
+    const service = TestBed.inject(ConsentementsService);
+
+    await service.charger();
+    uid = 'b';
+    await service.charger();
+
+    expect(lus).toEqual(['a', 'b']);
+  });
+
+  it('given je n\'ai pas de compte, when la lecture est faite, then charge() vaut vrai et tout reste refusé', async () => {
+    const { service } = preparer({ uid: null });
+    await service.charger();
+    expect(service.charge()).toBe(true);
+    expect(service.analytics()).toBe(false);
+  });
+});
