@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.45.0](https://github.com/yalinde20/Leurio/compare/v1.44.0...v1.45.0) (2026-11-15)
+
+
+### Features
+
+* **compte:** lier le compte anonyme à Google ou Apple (US 95) ([c79ea9c](https://github.com/yalinde20/Leurio/commit/c79ea9c3d17255921ea8194d8753327b6e28d6ca))
+* **compte:** masquer « Ton compte » dans les apps natives (US 95, décision B) ([0a3b91d](https://github.com/yalinde20/Leurio/commit/0a3b91d58a8ec925a05d392394425d92354fb4ce))
+
+
+### Bug Fixes
+
+* **compte:** corrections de revue de l'US 95 ([f08fdd2](https://github.com/yalinde20/Leurio/commit/f08fdd2eb6e9b0976ed14b76f50cdc7422107938))
+
 ## [1.44.0](https://github.com/yalinde20/Leurio/compare/v1.43.2...v1.44.0) (2026-11-15)
 
 
