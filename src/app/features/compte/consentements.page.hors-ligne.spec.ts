@@ -1,5 +1,5 @@
 /*
- * US 94 : hors ligne sans cache, la lecture de users/{uid} reste en attente. Un retrait de consentement fait entre-temps garde la mention
+ * US 94 : hors ligne sans cache, la lecture de users/{uid} reste en attente. Un changement de consentement fait entre-temps garde la mention
  * « Pas encore synchronisé » et s'écrit au retour du réseau.
  */
 import { HttpInterceptorFn, provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 describe('US 94 : Consentements hors ligne sans cache', () => {
-  it('given la lecture est en attente, when je retire Analytics, then la mention reste affichée, rien n\'est écrit, puis l\'écriture {faux, faux} part au retour du réseau et la mention disparaît', async () => {
+  it('given la lecture est en attente, when j\'active Analytics, then la mention reste affichée, rien n\'est écrit, puis l\'écriture {vrai, vrai} (mon choix et la vidéo enregistrée) part au retour du réseau et la mention disparaît', async () => {
     localStorage.clear();
     localStorage.setItem('leurio.onboarding', JSON.stringify({ niveau: 'debutant', especesFavorites: [] }));
     const ecritures: unknown[] = [];
@@ -39,7 +39,7 @@ describe('US 94 : Consentements hors ligne sans cache', () => {
         {
           provide: SOURCE_PROFIL,
           useValue: {
-            lireConsentements: () => new Promise((r) => (arriver = () => r({ analytics: true, video: false }))),
+            lireConsentements: () => new Promise((r) => (arriver = () => r({ analytics: false, video: true }))),
             mettreAJour: async (_u: string, champs: unknown) => void ecritures.push(champs),
           },
         },
@@ -71,7 +71,7 @@ describe('US 94 : Consentements hors ligne sans cache', () => {
     arriver();
     await stabiliser();
 
-    expect(ecritures).toEqual([{ consentements: { analytics: true, video: false } }]);
+    expect(ecritures).toEqual([{ consentements: { analytics: true, video: true } }]);
     expect(compact(page.textContent)).not.toContain(compact(MENTION));
   });
 });
