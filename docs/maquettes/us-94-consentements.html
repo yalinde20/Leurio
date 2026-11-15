@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 94 : mes consentements</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+  .leurre.touchable { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+  .leurre.touchable .corps { flex: 1; min-width: 0; }
+  .leurre.touchable .fleche { color: var(--lr-texte-secondaire); font-size: 22px; }
+  .leurre.presse { background: var(--lr-sable); }
+  .supprimer {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid var(--lr-danger); border-radius: 12px; background: transparent; color: var(--lr-danger);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .alerte-zone { position: relative; }
+  .alerte-zone::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .alerte {
+    position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 280px; border-radius: 16px; overflow: hidden; background: var(--lr-surface); color: var(--lr-texte);
+    border: 1px solid var(--lr-bordure); text-align: center;
+  }
+  .alerte .q { padding: 18px 16px 14px; font-size: 17px; font-weight: 600; }
+  .alerte .q small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--lr-texte-secondaire); }
+  .alerte .actions { display: flex; border-top: 1px solid var(--lr-bordure); }
+  .alerte .actions span { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .alerte .actions span + span { border-left: 1px solid var(--lr-bordure); }
+  .alerte .annul { color: var(--lr-primaire); }
+  .alerte .suppr { color: var(--lr-danger); font-weight: 600; }
+
+  .groupe-liste { margin: 0 0 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .rangee { display:flex; align-items:center; justify-content:space-between; gap: 12px; min-height:52px; padding: 10px 16px; box-sizing: border-box; font-size:17px; border-top:1px solid var(--lr-bordure); color: var(--lr-texte); }
+  .rangee:first-child { border-top:none; }
+  .rangee .chev { color: var(--lr-texte-secondaire); font-size:22px; }
+  .rangee .ext { flex: none; white-space: nowrap; color: var(--lr-primaire); font-size:15px; font-weight:600; }
+  .rangee .sous { display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .titre-groupe { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .toolbar.retour { justify-content: flex-start; position: relative; }
+  .toolbar.retour .lien { position:absolute; left: 8px; }
+  .toolbar.retour .title { margin: 0 auto; }
+  .texte { font-size: 16px; line-height: 1.45; }
+  .texte h3 { font-size: 18px; margin: 18px 0 6px; }
+  .texte h3:first-child { margin-top: 0; }
+  .texte p, .texte ul { margin: 0 0 10px; }
+  .texte ul { padding-left: 20px; }
+  .texte a, .src a { color: var(--lr-primaire); }
+  .bloc { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 14px 16px; margin: 0 0 12px; }
+  .bloc h4 { margin: 0 0 4px; font-size: 17px; }
+  .bloc p { margin: 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .repli { display:flex; justify-content:space-between; align-items:center; min-height:52px; padding: 0 16px; font-size:17px; font-weight:600; border-top:1px solid var(--lr-bordure); }
+  .repli:first-child { border-top: none; }
+  .repli .nb { font-weight: 400; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .src { list-style: none; margin: 0; padding: 0 16px 12px; font-size: 14px; line-height: 1.4; }
+  .src li { padding: 8px 0; border-top: 1px solid var(--lr-bordure); overflow-wrap: anywhere; }
+  .brouillon { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--lr-danger); color: var(--lr-danger); font-size: 14px; font-weight: 600; }
+
+  .choix .rangee { cursor: default; }
+  .coche { color: var(--lr-primaire); font-size: 20px; font-weight: 700; }
+  .rangee .valeur { color: var(--lr-texte-secondaire); font-size: 16px; margin-left: auto; margin-right: 8px; }
+  .aide { margin: -8px 4px 16px; font-size: 14px; color: var(--lr-texte-secondaire); }
+
+  .leg { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .case { display:flex; align-items:center; gap: 12px; min-height: 52px; padding: 8px 16px; border-top: 1px solid var(--lr-bordure); font-size: 17px; box-sizing: border-box; }
+  .case:first-child { border-top: none; }
+  .box { flex:none; width: 24px; height: 24px; border: 2px solid var(--lr-bordure); border-radius: 6px; display:flex; align-items:center; justify-content:center; font-size: 15px; font-weight: 700; }
+  .box.on { background: var(--lr-primaire); border-color: var(--lr-primaire); color: var(--lr-sur-primaire); }
+  .box.rond { border-radius: 50%; }
+  .box.rond.on { background: transparent; color: var(--lr-primaire); }
+  .box.rond.on::after { content:''; width: 12px; height: 12px; border-radius: 50%; background: var(--lr-primaire); }
+  .sous2 { display:block; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .attente { margin: -8px 4px 16px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ex { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; margin: 0 0 12px; font-size: 16px; line-height: 1.5; }
+  .ex b { font-weight: 700; }
+
+  .inter { display:flex; align-items:center; gap: 12px; min-height: 64px; padding: 10px 16px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .inter:first-child { border-top: none; }
+  .inter .txt { flex: 1; min-width: 0; }
+  .inter .txt .sous { display:block; margin-top: 2px; font-size: 14px; line-height: 1.35; color: var(--lr-texte-secondaire); }
+  .sw { flex:none; width: 51px; height: 31px; border-radius: 16px; background: var(--lr-bordure); position: relative; }
+  .sw::after { content:''; position:absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: var(--lr-surface); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .sw.on { background: var(--lr-primaire); }
+  .sw.on::after { left: 22px; }
+  .cible { flex:none; min-width: 48px; min-height: 48px; display:flex; align-items:center; justify-content:flex-end; }
+  .aide2 { margin: 0 4px 16px; font-size: 14px; line-height: 1.4; color: var(--lr-texte-secondaire); }
+  .aide2 a { color: var(--lr-primaire); }
+  .boucle { position: relative; display:flex; align-items:flex-end; min-height: 180px; margin: 0 0 12px; border-radius: 12px; background: var(--lr-sable); color: var(--lr-texte-secondaire); font-size: 14px; padding: 10px 12px; }
+  .boucle .ic { position:absolute; inset: 0; display:flex; align-items:center; justify-content:center; font-size: 40px; opacity: .5; }
+  .tiers { margin: 0 0 12px; padding: 14px 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .tiers p { margin: 0 0 4px; font-size: 16px; }
+  .tiers .sous { font-size: 14px; color: var(--lr-texte-secondaire); }
+  .bouton2 { display:flex; align-items:center; justify-content:center; min-height: 48px; margin-top: 10px; border: 1px solid var(--lr-primaire); border-radius: 12px; color: var(--lr-primaire); font-size: 16px; font-weight: 600; }
+  .lecteur { position: relative; height: 200px; margin: 0 0 6px; border-radius: 12px; background: #000; display:flex; align-items:center; justify-content:center; color: #fff; font-size: 14px; }
+  .credit { margin: 0 0 12px 4px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .credit a { color: var(--lr-primaire); }
+  .carte-a { margin-bottom: 12px; padding: 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .carte-a h3 { margin: 0 0 8px; font-size: 22px; } .carte-a h4 { margin: 8px 0 2px; font-size: 16px; } .carte-a p { margin: 0; font-size: 16px; }
+
+</style>
+</head>
+<body>
+<h1>US 94 — Modifier mes consentements</h1>
+<p class="note">iPhone, app installée ; Android : même écran (l’interrupteur prend l’aspect Android, c’est un <code>ion-toggle</code>). PLAN §4 (Analytics seulement si accepté), §7 (<code>users/{uid}.consentements{analytics, video}</code>) et §9 bis (le lecteur tiers demande le consentement). Chaque changement s’applique tout de suite, sans bouton « Enregistrer », comme les Préférences ; hors ligne, il est gardé et envoyé au retour du réseau. Tokens du projet uniquement, cibles de 48 px minimum.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+
+<h2>1. Compte : rangée « Consentements »</h2><p class="note">Elle s’ajoute dans « Réglages », sous « Thème ».</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>2. Consentements, après l’onboarding (critère 1)</h2><p class="note">Les deux sont refusés par défaut (valeurs créées à l’onboarding). Les interrupteurs montrent les choix lus dans <code>users/{uid}</code>.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">Consentements</span></div><div class="content" style="flex:1"><p class="aide2">Rien n’est chargé sans ton accord. Tu peux changer d’avis à tout moment ; ton choix vaut sur tous tes appareils.</p><div class="groupe-liste"><div class="inter"><span class="txt">Mesure d’audience (Analytics)<span class="sous">Des statistiques d’usage, envoyées à Google Analytics, pour améliorer l’app. Jamais ta position exacte.</span></span><span class="cible"><span class="sw" role="switch" aria-checked="false"></span></span></div><div class="inter"><span class="txt">Lecteurs vidéo tiers<span class="sous">Les vidéos complètes de YouTube, Vimeo ou Dailymotion. Ces plateformes voient ton adresse IP et peuvent déposer des cookies. Les boucles courtes marchent sans.</span></span><span class="cible"><span class="sw" role="switch" aria-checked="false"></span></span></div></div><p class="aide2">Le détail est dans <a>Confidentialité</a>.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>3. Consentements acceptés (critères 1, 3 et 5)</h2><p class="note">Après avoir activé les deux : <code>consentements.analytics</code> et <code>consentements.video</code> valent vrai dans <code>users/{uid}</code>. Analytics se charge à ce moment-là.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">Consentements</span></div><div class="content" style="flex:1"><p class="aide2">Rien n’est chargé sans ton accord. Tu peux changer d’avis à tout moment ; ton choix vaut sur tous tes appareils.</p><div class="groupe-liste"><div class="inter"><span class="txt">Mesure d’audience (Analytics)<span class="sous">Des statistiques d’usage, envoyées à Google Analytics, pour améliorer l’app. Jamais ta position exacte.</span></span><span class="cible"><span class="sw on" role="switch" aria-checked="true"></span></span></div><div class="inter"><span class="txt">Lecteurs vidéo tiers<span class="sous">Les vidéos complètes de YouTube, Vimeo ou Dailymotion. Ces plateformes voient ton adresse IP et peuvent déposer des cookies. Les boucles courtes marchent sans.</span></span><span class="cible"><span class="sw on" role="switch" aria-checked="true"></span></span></div></div><p class="aide2">Le détail est dans <a>Confidentialité</a>.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>4. Hors ligne</h2><p class="note">Le choix vaut tout de suite sur l’appareil ; le même message que dans Préférences tant que le serveur n’a pas reçu l’écriture.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Compte</span><span class="title">Consentements</span></div><div class="content" style="flex:1"><p class="aide2">Rien n’est chargé sans ton accord. Tu peux changer d’avis à tout moment ; ton choix vaut sur tous tes appareils.</p><div class="groupe-liste"><div class="inter"><span class="txt">Mesure d’audience (Analytics)<span class="sous">Des statistiques d’usage, envoyées à Google Analytics, pour améliorer l’app. Jamais ta position exacte.</span></span><span class="cible"><span class="sw on" role="switch" aria-checked="true"></span></span></div><div class="inter"><span class="txt">Lecteurs vidéo tiers<span class="sous">Les vidéos complètes de YouTube, Vimeo ou Dailymotion. Ces plateformes voient ton adresse IP et peuvent déposer des cookies. Les boucles courtes marchent sans.</span></span><span class="cible"><span class="sw" role="switch" aria-checked="false"></span></span></div></div><p class="aide2">Le détail est dans <a>Confidentialité</a>.</p><p class="aide2">Pas encore synchronisé : ce sera fait au retour du réseau.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>5. Fiche animation, « Lecteurs vidéo tiers » désactivé (critère 4)</h2><p class="note">Aucun lecteur YouTube, Vimeo ou Dailymotion n’est chargé. La boucle courte reste lue. Le bouton ouvre Compte › Consentements. <b>Cet écran relève des US 9 et 10 (non faites) : voir la question posée.</b></p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Détail</span><span class="title">Animation</span></div><div class="content" style="flex:1"><section class="carte-a"><h3>Linéaire</h3><h4>Le geste</h4><p>Lance, laisse couler le leurre jusqu'à la profondeur voulue, puis mouline à vitesse régulière. Le leurre nage seul, sans coup de canne.</p><h4>La vitesse</h4><p>lente à moyenne, régulière</p><h4>L'erreur à éviter</h4><p>Mouliner trop vite : le leurre remonte et passe au-dessus des poissons.</p></section><div class="boucle"><span class="ic">▶︎</span>Boucle courte · lue en boucle, sans son</div><div class="tiers"><p>La vidéo complète est hébergée par YouTube.</p><span class="sous">Lecteurs vidéo tiers désactivés : rien n’est chargé.</span><div class="bouton2">Changer dans Consentements</div></div></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>6. Fiche animation, « Lecteurs vidéo tiers » activé (critère 5)</h2><p class="note">Le lecteur officiel se charge sans redemander, sous la boucle courte, avec le crédit de l’auteur (US 10).</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar retour"><span class="lien">‹ Détail</span><span class="title">Animation</span></div><div class="content" style="flex:1"><section class="carte-a"><h3>Linéaire</h3><h4>Le geste</h4><p>Lance, laisse couler le leurre jusqu'à la profondeur voulue, puis mouline à vitesse régulière. Le leurre nage seul, sans coup de canne.</p><h4>La vitesse</h4><p>lente à moyenne, régulière</p><h4>L'erreur à éviter</h4><p>Mouliner trop vite : le leurre remonte et passe au-dessus des poissons.</p></section><div class="boucle"><span class="ic">▶︎</span>Boucle courte · lue en boucle, sans son</div><div class="lecteur">Lecteur YouTube officiel · démarre au début</div><p class="credit">Vidéo : La Pêche et les poissons (La Minute Carna)</p></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+</div>
+</body>
+</html>
