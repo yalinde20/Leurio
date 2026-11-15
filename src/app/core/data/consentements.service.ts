@@ -34,6 +34,8 @@ export class ConsentementsService {
     const uid = await this.compte.uidCourant();
     if (this.lecture?.uid !== uid) {
       this._charge.set(false);
+      // Un autre compte : les choix locaux faits pour le précédent ne valent plus.
+      if (this.lecture !== null) this.modifies.clear();
       const promesse = this.lire(uid);
       const lecture = { uid, promesse };
       this.lecture = lecture;

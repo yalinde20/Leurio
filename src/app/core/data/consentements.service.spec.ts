@@ -240,3 +240,80 @@ describe('US 94 : ConsentementsService, lecture et écriture concurrentes', () =
     expect(service.analytics()).toBe(false);
   });
 });
+
+describe('US 94 : ConsentementsService, hors ligne sans cache', () => {
+  it('given la lecture reste en attente (hors ligne, pas de cache), when je retire Analytics puis que la lecture arrive {vrai, faux}, then rien n\'est écrit avant, et l\'écriture est {faux, faux} (mon choix l\'emporte)', async () => {
+    const ecritures: unknown[] = [];
+    let arriver!: (c: Consentements) => void;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: SOURCE_COMPTE, useValue: { uidCourant: async () => 'u', connecterAnonymement: async () => 'u', profilExiste: async () => true, ecrireProfil: async () => undefined } },
+        {
+          provide: SOURCE_PROFIL,
+          useValue: {
+            mettreAJour: async (_u: string, champs: unknown) => void ecritures.push(champs),
+            lireConsentements: () => new Promise<Consentements>((r) => (arriver = r)),
+          },
+        },
+      ],
+    });
+    const service = TestBed.inject(ConsentementsService);
+
+    const fin = service.modifier('analytics', false);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(service.analytics()).toBe(false);
+    expect(ecritures).toEqual([]);
+
+    arriver({ analytics: true, video: false });
+    await fin;
+
+    expect(ecritures).toEqual([{ consentements: { analytics: false, video: false } }]);
+  });
+
+  it('given une lecture en échec, when elle échoue, then charge() reste faux et charger() peut être rappelé', async () => {
+    let appels = 0;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: SOURCE_COMPTE, useValue: { uidCourant: async () => 'u', connecterAnonymement: async () => 'u', profilExiste: async () => true, ecrireProfil: async () => undefined } },
+        {
+          provide: SOURCE_PROFIL,
+          useValue: {
+            mettreAJour: async () => undefined,
+            lireConsentements: async () => {
+              if (++appels === 1) throw new Error('hors ligne');
+              return { analytics: true, video: false };
+            },
+          },
+        },
+      ],
+    });
+    const service = TestBed.inject(ConsentementsService);
+
+    await expect(service.charger()).rejects.toThrow('hors ligne');
+    expect(service.charge()).toBe(false);
+    await service.charger();
+
+    expect(appels).toBe(2);
+    expect(service.charge()).toBe(true);
+    expect(service.analytics()).toBe(true);
+  });
+
+  it('given j\'ai changé un choix avec le compte « a », when le compte devient « b », then la lecture de « b » s\'applique en entier', async () => {
+    let uid = 'a';
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: SOURCE_COMPTE, useValue: { uidCourant: async () => uid, connecterAnonymement: async () => uid, profilExiste: async () => true, ecrireProfil: async () => undefined } },
+        { provide: SOURCE_PROFIL, useValue: { mettreAJour: async () => undefined, lireConsentements: async () => ({ analytics: true, video: true }) } },
+      ],
+    });
+    const service = TestBed.inject(ConsentementsService);
+    await service.modifier('analytics', false);
+    expect(service.analytics()).toBe(false);
+
+    uid = 'b';
+    await service.charger();
+
+    expect(service.analytics()).toBe(true);
+    expect(service.video()).toBe(true);
+  });
+});
