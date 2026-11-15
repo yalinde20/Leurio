@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.44.0](https://github.com/yalinde20/Leurio/compare/v1.43.2...v1.44.0) (2026-11-15)
+
+
+### Features
+
+* **US 93:** modifier mes espèces favorites, mon niveau et mes unités ([373cafb](https://github.com/yalinde20/Leurio/commit/373cafbbe54face88c193e607ec19ac53c39beb7))
+* **US 94:** modifier mes consentements ([7268252](https://github.com/yalinde20/Leurio/commit/7268252780271a8ece6f1b9b02eca4331ee33a69))
+
+
+### Bug Fixes
+
+* **US 93:** profil créé avec les préférences actuelles, nettoyage (suites de la revue) ([95f41f7](https://github.com/yalinde20/Leurio/commit/95f41f7f6cdd7eebfda65d5c6aaea783e1b67f61))
+* **US 94:** consentements sans écrasement avant chargement, contrat du service (suites de la revue) ([037a51e](https://github.com/yalinde20/Leurio/commit/037a51e1094951e8fd81aa810a0d6332385c9ae6))
+* **US 94:** retrait de consentement envoyé au retour du réseau même sans cache ([2dcd986](https://github.com/yalinde20/Leurio/commit/2dcd986d076ad2ef52c56d4f2f17908e68bf7699))
+
 ## [1.43.2](https://github.com/yalinde20/Leurio/compare/v1.43.1...v1.43.2) (2026-11-14)
 
 
