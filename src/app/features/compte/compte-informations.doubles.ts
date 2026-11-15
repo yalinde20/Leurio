@@ -12,6 +12,7 @@ import { of, throwError } from 'rxjs';
 import { App } from '../../app';
 import { routes } from '../../app.routes';
 import { SOURCE_COMPTE, SourceCompte } from '../../core/data/compte.service';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 /** Contenu double : chaque fichier de assets/data est servi par ce double (jamais le vrai contenu). */
 export const CONTENU: Record<string, unknown> = {
@@ -58,6 +59,7 @@ export async function ouvrirCompte(options: OptionsApp = {}) {
     provideRouter(routes),
     provideHttpClient(withInterceptors([interception])),
     { provide: SOURCE_COMPTE, useValue: source },
+    { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
   ];
   await TestBed.configureTestingModule({ imports: [App], providers }).compileComponents();
   const fixture = TestBed.createComponent(App);

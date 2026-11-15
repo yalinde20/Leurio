@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 95 : lier mon compte à Google ou Apple</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .titre-groupe { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .groupe-liste { margin: 0 0 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .rangee { display:flex; align-items:center; justify-content:space-between; gap: 12px; min-height:52px; padding: 10px 16px; font-size:17px; border-top:1px solid var(--lr-bordure); }
+  .rangee:first-child { border-top:none; }
+  .rangee .chev { color: var(--lr-texte-secondaire); font-size:22px; }
+  .rangee .ext { flex: none; white-space: nowrap; color: var(--lr-primaire); font-size:15px; font-weight:600; }
+  .rangee .sous, .sous { display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .rangee .valeur { color: var(--lr-texte-secondaire); font-size: 15px; margin-left: auto; }
+  .compte { margin: 0 0 16px; padding: 14px 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .compte h3 { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+  .compte p { margin: 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .compte p.adresse { margin-top: 2px; font-size: 16px; color: var(--lr-texte); overflow-wrap: anywhere; }
+  .fournisseur {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border-radius: 12px; font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .fournisseur.apple { background: var(--lr-texte); color: var(--lr-fond); border: 1px solid var(--lr-texte); }
+  .fournisseur.google { background: var(--lr-surface); color: var(--lr-texte); border: 1px solid var(--lr-bordure); }
+  .fournisseur.inactif { opacity: .5; }
+  .en-cours { margin: 10px 0 0 !important; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .erreur { margin: 10px 0 0 !important; font-size: 15px !important; font-weight: 600; color: var(--lr-danger) !important; }
+  .info { margin: 10px 0 0 !important; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px !important; color: var(--lr-texte) !important; }
+  .feuille-sys { margin: 0 0 16px; padding: 16px; border-radius: 16px; border: 1px dashed var(--lr-texte-secondaire); font-size: 15px; color: var(--lr-texte-secondaire); text-align: center; }
+</style>
+</head>
+<body>
+<h1>US 95 — Convertir mon compte anonyme avec Google ou Apple</h1>
+<p class="note">iPhone, app installée ; Android : même écran (sur Android, l’ordre des boutons reste le même). PLAN §2.5, §4 (Apple livré avec Google), §7. La connexion se fait dans la fenêtre système de Google ou d’Apple (non dessinée ici). Le champ <code>plan</code> de <code>users/{uid}</code> vaut « free » pour tous ; aucun écran ne montre de fonctionnalité payante (critère 6, rien à afficher). Tokens du projet uniquement, cibles de 48 px minimum.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Compte anonyme (état de départ, et après une annulation : critère 4)</h2><p class="note">Nouvelle rubrique « Ton compte » en haut de l’écran Compte. iPhone d’abord : « Continuer avec Apple » en premier (Apple l’exige au moins aussi visible que Google, PLAN §4). Si tu fermes la fenêtre de connexion, l’écran revient tel quel, sans message. Pas de bouton de déconnexion.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Compte anonyme</h3><p>Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.</p><div class="fournisseur apple">Continuer avec Apple</div><div class="fournisseur google">Continuer avec Google</div></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>2. Connexion en cours</h2><p class="note">Après avoir touché un bouton, le temps que la fenêtre Google ou Apple s’ouvre puis se ferme : les deux boutons sont inactifs.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Compte anonyme</h3><p>Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.</p><div class="fournisseur apple inactif">Continuer avec Apple</div><div class="fournisseur google inactif">Continuer avec Google</div><p class="en-cours">Connexion en cours…</p></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>3. Connecté avec Google (critère 1)</h2><p class="note">Le compte anonyme devient le compte Google : même uid, donc ta boîte et tes spots ne bougent pas. L’adresse du compte Google s’affiche.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Connecté avec Google</h3><p class="adresse">camille.martin@gmail.com</p><p style="margin-top:6px">Ta boîte et tes spots sont liés à ce compte.</p></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>4. Connecté avec Apple (critère 2)</h2><p class="note">Même chose avec Apple. Si tu as choisi « Masquer mon adresse », c’est l’adresse relais d’Apple qui s’affiche ; sans adresse, la ligne est absente.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Connecté avec Apple</h3><p class="adresse">x7k2m9p4qr@privaterelay.appleid.com</p><p style="margin-top:6px">Ta boîte et tes spots sont liés à ce compte.</p></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>5. Compte déjà associé à un autre profil (critère 3)</h2><p class="note">Le compte Google ou Apple choisi sert déjà à un autre profil Leurio : rien n’est fusionné, tu restes sur ton compte anonyme avec tes données.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Compte anonyme</h3><p>Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.</p><div class="fournisseur apple">Continuer avec Apple</div><div class="fournisseur google">Continuer avec Google</div><p class="erreur" role="alert">Ce compte est déjà associé à un autre profil Leurio.</p></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>6. Hors ligne (critère 5)</h2><p class="note">Mode avion : la fenêtre ne s’ouvre pas, le message s’affiche sous les boutons.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>✈ 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Ton compte</p><div class="compte"><h3>Compte anonyme</h3><p>Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.</p><div class="fournisseur apple">Continuer avec Apple</div><div class="fournisseur google">Continuer avec Google</div><p class="info" role="status">Connecte-toi à internet pour te connecter.</p></div><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+</div>
+</body>
+</html>

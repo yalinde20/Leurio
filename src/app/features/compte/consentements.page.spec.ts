@@ -27,6 +27,7 @@ import { SOURCE_PROFIL } from '../../core/data/profil.service';
 import { SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { compact, trouver } from './compte-informations.doubles';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 const MENTION = 'Pas encore synchronisé : ce sera fait au retour du réseau.';
 const ANALYTICS = 'Mesure d’audience (Analytics)';
@@ -67,6 +68,7 @@ async function ouvrir(url: string, { uid = 'uid-test-123', stocke = { analytics:
     providers: [
       provideIonicAngular(),
       provideRouter(routes),
+      { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
       provideHttpClient(withInterceptors([sansReseau])),
       { provide: SOURCE_COMPTE, useValue: compte },
       {
