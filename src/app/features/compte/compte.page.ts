@@ -87,6 +87,13 @@ import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
             <span class="valeur">{{ libelleTheme() }}</span>
             <span class="chevron" aria-hidden="true">›</span>
           </a>
+          <a class="rangee" [routerLink]="['/compte', 'consentements']">
+            <span>
+              Consentements
+              <span class="sous">Mesure d’audience, vidéos</span>
+            </span>
+            <span class="chevron" aria-hidden="true">›</span>
+          </a>
         </div>
         <h2 class="titre-groupe">Informations</h2>
         <div class="groupe">
@@ -121,7 +128,7 @@ export class ComptePage {
   protected readonly libelleTheme = computed(() => CHOIX_THEME.find((c) => c.valeur === this.theme.choix())?.libelle);
 
   /**
-   * Vrai quand une page enfant (Préférences, Thème, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
+   * Vrai quand une page enfant (Préférences, Thème, Consentements, À propos et sources, Confidentialité) est ouverte : l'écran « Compte » lui laisse la place.
    * Piloté par l'activation de la sortie, pour masquer l'en-tête dans le même passage que l'apparition de l'enfant.
    */
   protected readonly enfantOuvert = signal(this.router.url.split(/[?#]/)[0].startsWith('/compte/'));

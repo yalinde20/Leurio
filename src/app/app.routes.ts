@@ -33,10 +33,11 @@ export const routes: Routes = [
       {
         path: 'compte',
         loadComponent: () => import('./features/compte/compte.page').then((m) => m.ComptePage),
-        // « Préférences », « Thème », « À propos et sources » et « Confidentialité » s'ouvrent dans l'écran « Compte », comme le détail dans « Conseil ».
+        // « Préférences », « Thème », « Consentements », « À propos et sources » et « Confidentialité » s'ouvrent dans l'écran « Compte », comme le détail dans « Conseil ».
         children: [
           { path: 'preferences', loadComponent: () => import('./features/compte/preferences.page').then((m) => m.PreferencesPage) },
           { path: 'theme', loadComponent: () => import('./features/compte/theme.page').then((m) => m.ThemePage) },
+          { path: 'consentements', loadComponent: () => import('./features/compte/consentements.page').then((m) => m.ConsentementsPage) },
           { path: 'a-propos', loadComponent: () => import('./features/compte/a-propos.page').then((m) => m.AProposPage) },
           {
             path: 'confidentialite',

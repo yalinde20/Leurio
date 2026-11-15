@@ -74,7 +74,7 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
         <ul>
           <li>
             Ton niveau, tes espèces favorites, la date de création du compte et deux réglages internes (ton offre, gratuite, et tes
-            consentements, tous sur « non »).
+            consentements, sur « non » par défaut, modifiables dans Compte › Consentements).
           </li>
           <li>
             Ta boîte à leurres : le type, la taille, le poids, la couleur, la marque si tu l’indiques, la date d’ajout, et la photo si
