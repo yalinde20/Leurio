@@ -2,13 +2,18 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 import { ComptePage } from './compte.page';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 describe('ComptePage', () => {
   // US 91 (décision du propriétaire) : l'onglet n'est plus vide ; son contenu est couvert par compte.page.informations.spec.ts.
   it('affiche son titre « Compte »', async () => {
     await TestBed.configureTestingModule({
       imports: [ComptePage],
-      providers: [provideIonicAngular(), provideRouter([])],
+      providers: [
+        provideIonicAngular(),
+        provideRouter([]),
+        { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(ComptePage);
     await fixture.whenStable();

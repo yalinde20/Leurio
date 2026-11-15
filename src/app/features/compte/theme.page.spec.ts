@@ -22,6 +22,7 @@ import { SOURCE_COMPTE, SourceCompte } from '../../core/data/compte.service';
 import { SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SOURCE_TACKLE_BOX, SourceTackleBox } from '../../core/data/tackle-box.service';
 import { compact, trouver } from './compte-informations.doubles';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 const CLE = 'leurio.theme';
 const LIBELLES = ['Suivre le téléphone', 'Clair', 'Sombre'] as const;
@@ -52,6 +53,7 @@ async function ouvrir(url = '/compte') {
     providers: [
       provideIonicAngular(),
       provideRouter(routes),
+      { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
       provideHttpClient(withInterceptors([sansReseau])),
       { provide: SOURCE_COMPTE, useValue: source },
       { provide: SOURCE_TACKLE_BOX, useValue: boite },

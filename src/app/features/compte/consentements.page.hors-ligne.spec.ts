@@ -14,6 +14,7 @@ import { SOURCE_PROFIL } from '../../core/data/profil.service';
 import { SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { compact } from './compte-informations.doubles';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 const MENTION = 'Pas encore synchronisé : ce sera fait au retour du réseau.';
 const sansReseau: HttpInterceptorFn = (req) => throwError(() => new Error(`requête non prévue : ${req.url}`));
@@ -34,6 +35,7 @@ describe('US 94 : Consentements hors ligne sans cache', () => {
       providers: [
         provideIonicAngular(),
         provideRouter(routes),
+        { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
         provideHttpClient(withInterceptors([sansReseau])),
         { provide: SOURCE_COMPTE, useValue: { uidCourant: async () => 'u', connecterAnonymement: async () => 'u', profilExiste: async () => true, ecrireProfil: async () => undefined } },
         {

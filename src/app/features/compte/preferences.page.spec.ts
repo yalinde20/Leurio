@@ -39,6 +39,7 @@ import { SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { Conditions } from '../../core/engine/conditions';
 import { compact, trouver } from './compte-informations.doubles';
+import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 const MENTION = 'Pas encore synchronisé : ce sera fait au retour du réseau.';
 // Ordre du contenu volontairement non alphabétique : la page doit suivre le contenu.
@@ -110,6 +111,7 @@ async function ouvrir(url: string, { uid = 'uid-test-123', enAttente = false, ni
     providers: [
       provideIonicAngular(),
       provideRouter(routes),
+      { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
       provideHttpClient(withInterceptors([sansReseau])),
       { provide: SOURCE_COMPTE, useValue: compte },
       {
