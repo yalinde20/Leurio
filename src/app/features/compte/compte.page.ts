@@ -166,6 +166,9 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
       font-size: 17px;
       font-family: inherit;
     }
+    .champ input::placeholder {
+      color: var(--lr-texte-secondaire);
+    }
     .champ input.en-erreur {
       border-color: var(--lr-danger);
     }
@@ -228,6 +231,7 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
                   type="email"
                   autocomplete="email"
                   inputmode="email"
+                  placeholder="toi@exemple.fr"
                   [class.en-erreur]="message() === 'email-invalide' || message() === 'adresse-utilisee'"
                   [value]="email()"
                   (input)="email.set($any($event.target).value)"
