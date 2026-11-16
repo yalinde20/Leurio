@@ -100,6 +100,7 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
     }
     .message {
       margin: -8px 0 16px;
+      font-size: 15px;
     }
     .message.erreur {
       font-weight: 600;

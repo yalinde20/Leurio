@@ -35,6 +35,8 @@ export interface EnregistrementFichier {
   enregistrer(nom: string, contenu: string): Promise<void>;
 }
 
+const DELAI_LIBERATION_URL_MS = 60_000;
+
 /** Web : téléchargement du navigateur (Blob et lien `download`). */
 export function creerEnregistrementWeb(): EnregistrementFichier {
   return {
@@ -47,8 +49,8 @@ export function creerEnregistrementWeb(): EnregistrementFichier {
       document.body.appendChild(lien);
       lien.click();
       lien.remove();
-      // Laisse le navigateur démarrer le téléchargement avant de libérer l'adresse.
-      setTimeout(() => URL.revokeObjectURL(url), 0);
+      // Sur iPhone Safari, l'utilisateur confirme le téléchargement plus tard : on garde l'adresse 60 s (comme FileSaver.js).
+      setTimeout(() => URL.revokeObjectURL(url), DELAI_LIBERATION_URL_MS);
     },
   };
 }
