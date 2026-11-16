@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.46.0](https://github.com/yalinde20/Leurio/compare/v1.45.0...v1.46.0) (2026-11-16)
+
+
+### Features
+
+* **compte:** exemple d'adresse dans le champ E-mail, comme la maquette (US 96) ([3566bfa](https://github.com/yalinde20/Leurio/commit/3566bfaed660d9ae2f3f99c1314a051899518e11))
+* **compte:** lier le compte anonyme à une adresse e-mail (US 96) ([14a9e6b](https://github.com/yalinde20/Leurio/commit/14a9e6b0f46405427ead952118e54ff6737c33a3))
+
 ## [1.45.0](https://github.com/yalinde20/Leurio/compare/v1.44.0...v1.45.0) (2026-11-15)
 
 
