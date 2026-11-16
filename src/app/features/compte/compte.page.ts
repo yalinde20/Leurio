@@ -5,7 +5,10 @@ import { Capacitor } from '@capacitor/core';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
-type MessageLiaison = 'deja-associe' | 'hors-ligne' | 'echec';
+type MessageLiaison = 'deja-associe' | 'hors-ligne' | 'echec' | 'email-invalide' | 'mot-de-passe-court' | 'adresse-utilisee';
+
+const MOT_DE_PASSE_MIN = 6;
+const FORMAT_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const ANNULATIONS = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/user-cancelled'];
 
@@ -14,6 +17,15 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
   if (code === 'auth/credential-already-in-use' || code === 'auth/email-already-in-use') return 'deja-associe';
   if (code === 'auth/network-request-failed') return 'hors-ligne';
   if (code && ANNULATIONS.includes(code)) return null;
+  return 'echec';
+}
+
+/** Le message à montrer pour une erreur de liaison par e-mail (US 96). */
+function messagePourErreurEmail(code: string | undefined): MessageLiaison {
+  if (code === 'auth/email-already-in-use') return 'adresse-utilisee';
+  if (code === 'auth/invalid-email') return 'email-invalide';
+  if (code === 'auth/weak-password') return 'mot-de-passe-court';
+  if (code === 'auth/network-request-failed') return 'hors-ligne';
   return 'echec';
 }
 
@@ -126,6 +138,51 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
       color: var(--lr-texte);
       border: 1px solid var(--lr-bordure);
     }
+    .fournisseur.email {
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      border: 1px solid var(--lr-bordure);
+    }
+    .champ {
+      display: block;
+      margin-top: 12px;
+    }
+    .champ .libelle {
+      display: block;
+      margin: 0 0 4px 2px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--lr-texte);
+    }
+    .champ input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 48px;
+      padding: 0 12px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-fond);
+      color: var(--lr-texte);
+      font-size: 17px;
+      font-family: inherit;
+    }
+    .champ input::placeholder {
+      color: var(--lr-texte-secondaire);
+    }
+    .champ input.en-erreur {
+      border-color: var(--lr-danger);
+    }
+    .champ .aide {
+      display: block;
+      margin: 4px 0 0 2px;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
+    .fournisseur.principal {
+      border: none;
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+    }
     .fournisseur:disabled {
       opacity: 0.5;
     }
@@ -157,16 +214,44 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
         <h2 class="titre-groupe">Ton compte</h2>
         <div class="compte">
           @if (compteLie(); as lie) {
-            <h3>Connecté avec {{ lie.fournisseur === 'google' ? 'Google' : 'Apple' }}</h3>
+            <h3>Connecté avec {{ libelleFournisseur[lie.fournisseur] }}</h3>
             @if (lie.email) {
               <p class="adresse">{{ lie.email }}</p>
             }
             <p class="lien-donnees">Ta boîte et tes spots sont liés à ce compte.</p>
           } @else if (lectureFaite()) {
             <h3>Compte anonyme</h3>
-            <p>Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.</p>
+            <p>Lie-le à Google, à Apple ou à ton e-mail pour garder ta boîte et tes spots si tu changes de téléphone.</p>
             <button type="button" class="fournisseur apple" [disabled]="enCours()" (click)="lier('apple')">Continuer avec Apple</button>
             <button type="button" class="fournisseur google" [disabled]="enCours()" (click)="lier('google')">Continuer avec Google</button>
+            @if (formulaireEmail()) {
+              <label class="champ">
+                <span class="libelle">E-mail</span>
+                <input
+                  type="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  placeholder="toi@exemple.fr"
+                  [class.en-erreur]="message() === 'email-invalide' || message() === 'adresse-utilisee'"
+                  [value]="email()"
+                  (input)="email.set($any($event.target).value)"
+                />
+              </label>
+              <label class="champ">
+                <span class="libelle">Mot de passe</span>
+                <input
+                  type="password"
+                  autocomplete="new-password"
+                  [class.en-erreur]="message() === 'mot-de-passe-court'"
+                  [value]="motDePasse()"
+                  (input)="motDePasse.set($any($event.target).value)"
+                />
+                <span class="aide">Au moins 6 caractères.</span>
+              </label>
+              <button type="button" class="fournisseur principal" [disabled]="enCours()" (click)="lierEmail()">Créer mon compte</button>
+            } @else {
+              <button type="button" class="fournisseur email" [disabled]="enCours()" (click)="ouvrirFormulaireEmail()">Continuer avec l’e-mail</button>
+            }
             <div aria-live="polite">
               @if (enCours()) {
                 <p class="en-cours">Connexion en cours…</p>
@@ -178,6 +263,15 @@ function messagePourErreur(code: string | undefined): MessageLiaison | null {
             @switch (message()) {
               @case ('deja-associe') {
                 <p class="erreur" role="alert">Ce compte est déjà associé à un autre profil Leurio.</p>
+              }
+              @case ('email-invalide') {
+                <p class="erreur" role="alert">Adresse e-mail invalide.</p>
+              }
+              @case ('mot-de-passe-court') {
+                <p class="erreur" role="alert">Le mot de passe doit contenir au moins 6 caractères.</p>
+              }
+              @case ('adresse-utilisee') {
+                <p class="erreur" role="alert">Cette adresse est déjà utilisée.</p>
               }
               @case ('echec') {
                 <p class="erreur" role="alert">La connexion n’a pas abouti. Réessaie.</p>
@@ -245,6 +339,10 @@ export class ComptePage {
   protected readonly lectureFaite = signal(false);
   protected readonly enCours = signal(false);
   protected readonly message = signal<MessageLiaison | null>(null);
+  protected readonly formulaireEmail = signal(false);
+  protected readonly email = signal('');
+  protected readonly motDePasse = signal('');
+  protected readonly libelleFournisseur: Record<FournisseurLiaison, string> = { google: 'Google', apple: 'Apple', email: 'l’e-mail' };
 
   /**
    * Décision du propriétaire (US 95, réponse B) : la connexion se fait dans une fenêtre web ; la connexion native
@@ -264,7 +362,39 @@ export class ComptePage {
       });
   }
 
-  protected async lier(fournisseur: FournisseurLiaison): Promise<void> {
+  protected ouvrirFormulaireEmail(): void {
+    this.message.set(null);
+    this.formulaireEmail.set(true);
+  }
+
+  /** US 96 : la saisie est vérifiée sur l'appareil avant tout envoi ; le compte courant est lié, jamais remplacé. */
+  protected async lierEmail(): Promise<void> {
+    if (this.enCours()) return;
+    this.message.set(null);
+    const adresse = this.email().trim();
+    if (!FORMAT_EMAIL.test(adresse)) {
+      this.message.set('email-invalide');
+      return;
+    }
+    if (this.motDePasse().length < MOT_DE_PASSE_MIN) {
+      this.message.set('mot-de-passe-court');
+      return;
+    }
+    if (navigator.onLine === false) {
+      this.message.set('hors-ligne');
+      return;
+    }
+    this.enCours.set(true);
+    try {
+      this.compteLie.set(await this.liaison.lierEmail(adresse, this.motDePasse()));
+    } catch (erreur) {
+      this.message.set(messagePourErreurEmail((erreur as { code?: string } | null)?.code));
+    } finally {
+      this.enCours.set(false);
+    }
+  }
+
+  protected async lier(fournisseur: 'google' | 'apple'): Promise<void> {
     if (this.enCours()) return;
     this.message.set(null);
     if (navigator.onLine === false) {

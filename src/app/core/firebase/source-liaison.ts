@@ -1,14 +1,14 @@
 import type { Injector } from '@angular/core';
 import type { CompteLie, FournisseurLiaison, SourceLiaison } from '../data/liaison-compte';
 
-const ID_FOURNISSEUR: Record<string, FournisseurLiaison> = { 'google.com': 'google', 'apple.com': 'apple' };
+const ID_FOURNISSEUR: Record<string, FournisseurLiaison> = { 'google.com': 'google', 'apple.com': 'apple', password: 'email' };
 
 interface UtilisateurLiaison {
   email: string | null;
   providerData: readonly { providerId: string; email: string | null }[];
 }
 
-/** Le compte Google ou Apple lié à l'utilisateur, `null` s'il est encore anonyme (aucun des deux fournisseurs). */
+/** Le compte Google, Apple ou e-mail lié à l'utilisateur, `null` s'il est encore anonyme (aucun de ces fournisseurs). */
 export function versCompteLie(utilisateur: UtilisateurLiaison | null): CompteLie | null {
   const info = utilisateur?.providerData.find((p) => p.providerId in ID_FOURNISSEUR);
   if (!utilisateur || !info) return null;
@@ -39,6 +39,15 @@ export function creerSourceLiaisonFirebase(injector: Injector): SourceLiaison {
       const { user } = await linkWithPopup(utilisateur, prestataire);
       const lie = versCompteLie(user);
       return lie ?? { fournisseur, email: user.email };
+    },
+    async lierEmail(email, motDePasse) {
+      const { auth } = await firebase();
+      await auth.authStateReady();
+      const utilisateur = auth.currentUser;
+      if (!utilisateur) throw Object.assign(new Error('Aucun compte à lier.'), { code: 'auth/no-current-user' });
+      const { EmailAuthProvider, linkWithCredential } = await import('firebase/auth');
+      const { user } = await linkWithCredential(utilisateur, EmailAuthProvider.credential(email, motDePasse));
+      return versCompteLie(user) ?? { fournisseur: 'email', email: user.email ?? email };
     },
   };
 }
