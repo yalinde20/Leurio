@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 97 : exporter mes données</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .titre-groupe { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .groupe-liste { margin: 0 0 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .rangee { display:flex; align-items:center; justify-content:space-between; gap: 12px; min-height:52px; padding: 10px 16px; font-size:17px; border-top:1px solid var(--lr-bordure); }
+  .rangee:first-child { border-top:none; }
+  .rangee .chev { color: var(--lr-texte-secondaire); font-size:22px; }
+  .rangee .ext { flex: none; white-space: nowrap; color: var(--lr-primaire); font-size:15px; font-weight:600; }
+  .rangee .sous, .sous { display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .rangee .valeur { color: var(--lr-texte-secondaire); font-size: 15px; margin-left: auto; }
+  .compte { margin: 0 0 16px; padding: 14px 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .compte h3 { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+  .compte p { margin: 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .compte p.adresse { margin-top: 2px; font-size: 16px; color: var(--lr-texte); overflow-wrap: anywhere; }
+  .fournisseur {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border-radius: 12px; font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .fournisseur.apple { background: var(--lr-texte); color: var(--lr-fond); border: 1px solid var(--lr-texte); }
+  .fournisseur.google { background: var(--lr-surface); color: var(--lr-texte); border: 1px solid var(--lr-bordure); }
+  .fournisseur.inactif { opacity: .5; }
+  .en-cours { margin: 10px 0 0 !important; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .erreur { margin: 10px 0 0 !important; font-size: 15px !important; font-weight: 600; color: var(--lr-danger) !important; }
+  .info { margin: 10px 0 0 !important; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px !important; color: var(--lr-texte) !important; }
+  .feuille-sys { margin: 0 0 16px; padding: 16px; border-radius: 16px; border: 1px dashed var(--lr-texte-secondaire); font-size: 15px; color: var(--lr-texte-secondaire); text-align: center; }
+
+  .fournisseur.email { background: var(--lr-surface); color: var(--lr-texte); border: 1px solid var(--lr-bordure); }
+  .champ { display: block; margin-top: 12px; }
+  .champ .libelle { display: block; margin: 0 0 4px 2px; font-size: 15px; font-weight: 600; color: var(--lr-texte); }
+  .champ .saisie { display: flex; align-items: center; min-height: 48px; padding: 0 12px; border: 1px solid var(--lr-bordure); border-radius: 12px; background: var(--lr-fond); font-size: 17px; color: var(--lr-texte); }
+  .champ .saisie.vide { color: var(--lr-texte-secondaire); }
+  .champ .saisie.en-erreur { border-color: var(--lr-danger); }
+  .champ .aide { display: block; margin: 4px 0 0 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .principal { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 14px; border-radius: 12px; border: none; background: var(--lr-primaire); color: var(--lr-sur-primaire); font-size: 17px; font-weight: 600; }
+  .principal.inactif { opacity: .5; }
+
+  .rangee.action { color: var(--lr-primaire); font-weight: 600; }
+  .rangee.action .ico { flex: none; font-size: 20px; }
+  .rangee.inactif { opacity: .5; }
+  .message { margin: -8px 0 16px !important; }
+  .fichier { width: 390px; max-width: 100%; margin: 0; padding: 14px 16px; border: 1px solid var(--lr-bordure); border-radius: 16px;
+    background: var(--lr-surface); color: var(--lr-texte); font: 13px/1.45 ui-monospace, "SF Mono", Menlo, monospace; white-space: pre; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>US 97 — Exporter mes données</h1>
+<p class="note">iPhone, PWA (Safari ou app installée) ; Android : même écran. PLAN §2.5, §4 (export exigé par les stores). Nouvelle rubrique « Mes données » sous « Informations », avec une seule rangée « Exporter mes données ». Le fichier est un JSON indenté nommé leurio-export-AAAA-MM-JJ.json ; les photos y figurent par leur adresse (photoUrl). Sans réseau, l’export reprend les données gardées sur le téléphone (cache Firestore). Tokens du projet uniquement, cibles de 48 px minimum. La rubrique « Ton compte » (US 95, 96) et « Réglementation » ne changent pas et ne sont pas redessinées.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Écran Compte (état normal)</h2><p class="note">Nouvelle rubrique « Mes données » sous « Informations ». La rangée entière (52 px) est le bouton.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Mes données</p><div class="groupe-liste"><div class="rangee action"><span>Exporter mes données<span class="sous">Profil, boîte et spots dans un fichier</span></span><span class="ico" aria-hidden="true">⤓</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>2. Préparation du fichier</h2><p class="note">Le temps de lire le profil, la boîte et les spots : la rangée est inactive, le sous-titre l’annonce.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Mes données</p><div class="groupe-liste"><div class="rangee action inactif"><span>Exporter mes données<span class="sous">Préparation du fichier…</span></span><span class="ico" aria-hidden="true">⤓</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>3. Fichier téléchargé (critère 1)</h2><p class="note">Safari demande la confirmation du téléchargement (feuille système, non redessinée) ; le fichier arrive dans Fichiers › Téléchargements. L’écran confirme le nom du fichier.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Mes données</p><div class="groupe-liste"><div class="rangee action"><span>Exporter mes données<span class="sous">Profil, boîte et spots dans un fichier</span></span><span class="ico" aria-hidden="true">⤓</span></div></div><p class="info message" role="status">Fichier « leurio-export-2026-11-16.json » téléchargé.</p><div class="feuille-sys">Feuille de Safari : « Voulez-vous télécharger leurio-export-2026-11-16.json ? » — Afficher · Télécharger</div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>4. Hors ligne</h2><p class="note">Mode avion : l’export se fait quand même, avec les données gardées sur le téléphone ; l’écran le dit.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>✈ 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Mes données</p><div class="groupe-liste"><div class="rangee action"><span>Exporter mes données<span class="sous">Profil, boîte et spots dans un fichier</span></span><span class="ico" aria-hidden="true">⤓</span></div></div><p class="info message" role="status">Fichier « leurio-export-2026-11-16.json » téléchargé. Hors ligne : il reprend les données gardées sur ce téléphone.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>5. Erreur</h2><p class="note">La lecture des données échoue : aucun fichier, un message, la rangée redevient active.</p><div class="phone" style="height:auto;min-height:640px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Réglages</p><div class="groupe-liste"><div class="rangee"><span>Préférences<span class="sous">Espèces, niveau, unités</span></span><span class="chev">›</span></div><div class="rangee"><span>Thème</span><span class="valeur">Suivre le téléphone</span><span class="chev">›</span></div><div class="rangee"><span>Consentements<span class="sous">Mesure d’audience, vidéos</span></span><span class="chev">›</span></div></div><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité</span><span class="chev">›</span></div></div><p class="titre-groupe">Mes données</p><div class="groupe-liste"><div class="rangee action"><span>Exporter mes données<span class="sous">Profil, boîte et spots dans un fichier</span></span><span class="ico" aria-hidden="true">⤓</span></div></div><p class="erreur message" role="alert">L’export n’a pas abouti. Réessaie.</p></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div><h2>6. Contenu du fichier (critère 2)</h2><p class="note">Le fichier ouvert dans Fichiers : JSON indenté de 2 espaces, lisible. Le profil, chaque leurre et chaque spot avec tous leurs champs tels qu’enregistrés (dates en millisecondes, comme dans la base) ; la photo d’un leurre par son adresse photoUrl, pas en fichier. Un champ facultatif absent (marque, photoUrl) n’apparaît pas.</p><pre class="fichier">{
+  "app": "Leurio",
+  "exporteLe": "2026-11-16T21:40:12.000Z",
+  "profil": {
+    "niveau": "debutant",
+    "especesFavorites": [
+      "brochet",
+      "perche"
+    ],
+    "consentements": {
+      "analytics": false,
+      "video": true
+    },
+    "createdAt": 1761730293000,
+    "plan": "free"
+  },
+  "tackleBox": [
+    {
+      "id": "k3Pq9xLm",
+      "typeId": "shad",
+      "tailleCm": 10,
+      "poidsG": 12,
+      "couleur": "blanc nacré",
+      "marque": "Sakura",
+      "photoUrl": "https://firebasestorage.googleapis.com/…/lures/k3Pq9xLm.jpg",
+      "createdAt": 1762100000000
+    },
+    {
+      "id": "Zr81bWq0",
+      "typeId": "cuiller",
+      "tailleCm": 5,
+      "poidsG": 6,
+      "couleur": "argent",
+      "createdAt": 1762200000000
+    }
+  ],
+  "spots": [
+    {
+      "id": "aB12cD34",
+      "nom": "Étang du Moulin",
+      "lat": 47.2184,
+      "lng": -1.5536,
+      "categorie": 2,
+      "milieu": "lac",
+      "departement": "44",
+      "prive": true
+    }
+  ]
+}</pre><h2>7. Boîte et spots vides (critère 3)</h2><p class="note">Le profil et deux listes vides.</p><pre class="fichier">{
+  "app": "Leurio",
+  "exporteLe": "2026-11-16T21:40:12.000Z",
+  "profil": {
+    "niveau": "intermediaire",
+    "especesFavorites": [
+      "sandre"
+    ],
+    "consentements": {
+      "analytics": true,
+      "video": false
+    },
+    "createdAt": 1761730293000,
+    "plan": "free"
+  },
+  "tackleBox": [],
+  "spots": []
+}</pre>
+</div>
+</body>
+</html>
