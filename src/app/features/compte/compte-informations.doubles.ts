@@ -44,6 +44,8 @@ const interception: HttpInterceptorFn = (req) => {
 export interface OptionsApp {
   /** Uid renvoyé par le double de SOURCE_COMPTE ; `null` : pas de compte. */
   uid?: string | null;
+  /** Fournisseurs supplémentaires (US 97 : doubles de SOURCE_EXPORT et ENREGISTREMENT_FICHIER). */
+  providers?: (Provider | EnvironmentProviders)[];
 }
 
 export async function ouvrirCompte(options: OptionsApp = {}) {
@@ -60,6 +62,7 @@ export async function ouvrirCompte(options: OptionsApp = {}) {
     provideHttpClient(withInterceptors([interception])),
     { provide: SOURCE_COMPTE, useValue: source },
     { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
+    ...(options.providers ?? []),
   ];
   await TestBed.configureTestingModule({ imports: [App], providers }).compileComponents();
   const fixture = TestBed.createComponent(App);
