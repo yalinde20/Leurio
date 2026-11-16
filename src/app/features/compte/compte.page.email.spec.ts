@@ -59,7 +59,8 @@ const ADRESSE = 'camille.martin@free.fr';
 const MOT_DE_PASSE = 'secret6';
 /** Le libellé du bouton, avec l'apostrophe typographique de l'app ou l'apostrophe droite des critères. */
 const BOUTON_EMAIL = /Continuer avec l['’]e-mail/;
-const CONNECTE_EMAIL = /Connecté avec l['’]e-mail/;
+// Comparé au texte compacté (sans espaces) de la page.
+const CONNECTE_EMAIL = /Connectéavecl['’]e-mail/;
 
 const contenu: HttpInterceptorFn = (req) => {
   const m = /assets\/data\/([^/]+)\.json$/.exec(req.url);

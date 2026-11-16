@@ -44,7 +44,8 @@ import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { CONTENU, compact, trouver } from './compte-informations.doubles';
 
 const UID = 'uid-anonyme-95';
-const EXPLICATION = 'Lie-le à Google ou à Apple pour garder ta boîte et tes spots si tu changes de téléphone.';
+// US 96 : l'explication cite aussi l'e-mail (maquette validée).
+const EXPLICATION = 'Lie-le à Google, à Apple ou à ton e-mail pour garder ta boîte et tes spots si tu changes de téléphone.';
 const DEJA_ASSOCIE = 'Ce compte est déjà associé à un autre profil Leurio.';
 const HORS_LIGNE = 'Connecte-toi à internet pour te connecter.';
 const LIE = 'Ta boîte et tes spots sont liés à ce compte.';
@@ -71,6 +72,7 @@ async function ouvrir(options: Options = {}) {
       appels.push(f);
       return (options.lier ?? (async (x) => ({ fournisseur: x, email: 'camille@example.test' })))(f);
     },
+    lierEmail: async () => Promise.reject(new Error('non prévu (US 96)')),
   };
   const enregistre = (nom: string) => async () => void ecritures.push(nom);
   await TestBed.configureTestingModule({
@@ -143,7 +145,8 @@ function exigerEtatAnonyme(page: HTMLElement) {
   const labels = Array.from(page.querySelectorAll<HTMLElement>('button, ion-button'))
     .map((b) => compact(b.textContent))
     .filter((x) => x.startsWith(compact('Continuer avec')));
-  expect(labels).toEqual([compact('Continuer avec Apple'), compact('Continuer avec Google')]);
+  // US 96 : un troisième bouton, « Continuer avec l’e-mail », vient après Apple et Google (maquette validée).
+  expect(labels).toEqual([compact('Continuer avec Apple'), compact('Continuer avec Google'), compact('Continuer avec l’e-mail')]);
 }
 
 const aucunMessage = (page: HTMLElement) => {

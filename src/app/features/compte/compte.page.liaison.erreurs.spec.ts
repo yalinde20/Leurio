@@ -14,10 +14,11 @@ afterEach(() => vi.restoreAllMocks());
 const erreur = (code: string) => Object.assign(new Error(code), { code });
 const boutons = (page: HTMLElement) => Array.from(page.querySelectorAll('button')).map((b) => b.textContent?.trim());
 
-async function ouvrir(source: SourceLiaison) {
+/** US 96 : ces cas limites ne touchent pas à l'e-mail ; `lierEmail` est complété par un double qui échoue. */
+async function ouvrir(source: Omit<SourceLiaison, 'lierEmail'>) {
   await TestBed.configureTestingModule({
     imports: [ComptePage],
-    providers: [provideIonicAngular(), provideRouter([]), { provide: SOURCE_LIAISON, useValue: source }],
+    providers: [provideIonicAngular(), provideRouter([]), { provide: SOURCE_LIAISON, useValue: { ...source, lierEmail: async () => Promise.reject(new Error('non prévu')) } }],
   }).compileComponents();
   const fixture = TestBed.createComponent(ComptePage);
   const page = fixture.nativeElement as HTMLElement;
