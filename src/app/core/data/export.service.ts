@@ -35,6 +35,17 @@ export interface EnregistrementFichier {
   enregistrer(nom: string, contenu: string): Promise<void>;
 }
 
+/** L'utilisateur a fermé la feuille de partage sans rien choisir : ce n'est pas un échec, l'écran n'affiche rien (décision du propriétaire, US 97). */
+export class ExportAnnule extends Error {
+  constructor() {
+    super('Export annulé');
+    this.name = 'ExportAnnule';
+  }
+}
+
+/** Message du plugin @capacitor/share quand la feuille est fermée sans choix (iOS et Android : « Share canceled »). */
+const PARTAGE_ANNULE = /cancel/i;
+
 const DELAI_LIBERATION_URL_MS = 60_000;
 
 /** Web : téléchargement du navigateur (Blob et lien `download`). */
@@ -64,7 +75,12 @@ export function creerEnregistrementNatif(): EnregistrementFichier {
         import('@capacitor/share'),
       ]);
       const { uri } = await Filesystem.writeFile({ path: nom, data: contenu, directory: Directory.Cache, encoding: Encoding.UTF8 });
-      await Share.share({ title: nom, files: [uri] });
+      try {
+        await Share.share({ title: nom, files: [uri] });
+      } catch (erreur) {
+        if (erreur instanceof Error && PARTAGE_ANNULE.test(erreur.message)) throw new ExportAnnule();
+        throw erreur;
+      }
     },
   };
 }

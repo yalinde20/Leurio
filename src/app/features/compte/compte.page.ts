@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
-import { ExportService } from '../../core/data/export.service';
+import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
@@ -445,8 +445,9 @@ export class ComptePage {
       const nom = await this.export.exporter();
       this.exportHorsLigne.set(navigator.onLine === false);
       this.fichierExporte.set(nom);
-    } catch {
-      this.exportEchec.set(true);
+    } catch (erreur) {
+      // Feuille de partage fermée sans choix (app native) : aucun message.
+      if (!(erreur instanceof ExportAnnule)) this.exportEchec.set(true);
     } finally {
       this.exportEnCours.set(false);
     }

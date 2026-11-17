@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Capacitor } from '@capacitor/core';
-import { creerEnregistrementNatif, creerEnregistrementWeb, ENREGISTREMENT_FICHIER } from './export.service';
+import { creerEnregistrementNatif, creerEnregistrementWeb, ENREGISTREMENT_FICHIER, ExportAnnule } from './export.service';
 
 const filesystem = vi.hoisted(() => ({ writeFile: vi.fn() }));
 const partage = vi.hoisted(() => ({ share: vi.fn() }));
@@ -83,5 +83,21 @@ describe('US 97 : enregistrement du fichier exporté', () => {
       encoding: 'utf8',
     });
     expect(partage.share).toHaveBeenCalledWith({ title: 'leurio-export-2026-11-16.json', files: ['file:///cache/leurio-export-2026-11-16.json'] });
+  });
+
+  it('given l\'app native, when je ferme la feuille de partage sans rien choisir, then l\'enregistrement rejette avec ExportAnnule (décision du propriétaire, US 97)', async () => {
+    filesystem.writeFile.mockResolvedValue({ uri: 'file:///cache/leurio-export-2026-11-16.json' });
+    partage.share.mockRejectedValue(new Error('Share canceled'));
+
+    await expect(creerEnregistrementNatif().enregistrer('leurio-export-2026-11-16.json', '{"a":1}')).rejects.toBeInstanceOf(ExportAnnule);
+  });
+
+  it('given l\'app native, when le partage échoue pour une autre raison, then l\'erreur n\'est pas prise pour une annulation', async () => {
+    filesystem.writeFile.mockResolvedValue({ uri: 'file:///cache/leurio-export-2026-11-16.json' });
+    partage.share.mockRejectedValue(new Error('Can\'t share while sharing is in progress'));
+
+    const erreur = await creerEnregistrementNatif().enregistrer('leurio-export-2026-11-16.json', '{"a":1}').catch((e: unknown) => e);
+    expect(erreur).toBeInstanceOf(Error);
+    expect(erreur).not.toBeInstanceOf(ExportAnnule);
   });
 });

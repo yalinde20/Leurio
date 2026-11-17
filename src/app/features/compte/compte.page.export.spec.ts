@@ -7,7 +7,7 @@
  */
 import { TestBed } from '@angular/core/testing';
 import { Capacitor } from '@capacitor/core';
-import { ENREGISTREMENT_FICHIER, SOURCE_EXPORT, type DonneesExport } from '../../core/data/export.service';
+import { ENREGISTREMENT_FICHIER, ExportAnnule, SOURCE_EXPORT, type DonneesExport } from '../../core/data/export.service';
 import { compact, ouvrirCompte, toucher, trouver } from './compte-informations.doubles';
 
 const DONNEES: DonneesExport = {
@@ -148,5 +148,16 @@ describe('US 97 : « Exporter mes données » dans Compte', () => {
     await toucher(page, 'Exporter mes données', stabiliser);
 
     expect(enregistres.map((e) => e.nom)).toEqual(['leurio-export-2026-11-16.json']);
+  });
+
+  it('given l\'app native, when je ferme la feuille de partage sans rien choisir, then aucun message ne s\'affiche et la rangée redevient active (décision du propriétaire, US 97)', async () => {
+    vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(true);
+    const { page, stabiliser } = await ouvrir({ enregistrer: async () => Promise.reject(new ExportAnnule()) });
+
+    await toucher(page, 'Exporter mes données', stabiliser);
+
+    expect(page.querySelector('[role="alert"]')).toBeNull();
+    expect(page.querySelector('[role="status"]')).toBeNull();
+    expect(bouton(page)!.disabled).toBe(false);
   });
 });
