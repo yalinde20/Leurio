@@ -1,9 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
 import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
+import { SOURCE_SUPPRESSION, SuppressionCompteService } from '../../core/data/suppression-compte.service';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
 type MessageLiaison = 'deja-associe' | 'hors-ligne' | 'echec' | 'email-invalide' | 'mot-de-passe-court' | 'adresse-utilisee';
@@ -28,6 +29,22 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
   if (code === 'auth/weak-password') return 'mot-de-passe-court';
   if (code === 'auth/network-request-failed') return 'hors-ligne';
   return 'echec';
+}
+
+type MessageSuppression = 'hors-ligne' | 'mot-de-passe' | 'echec';
+
+/** Le message à montrer pour une erreur de suppression ou de reconnexion ; `null` quand l'utilisateur a simplement fermé la fenêtre. */
+function messagePourErreurSuppression(code: string | undefined): MessageSuppression | null {
+  if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'mot-de-passe';
+  if (code && ANNULATIONS.includes(code)) return null;
+  return 'echec';
+}
+
+/** La reconnexion demandée : avant toute suppression (`avant`), ou après l'effacement des données quand Firebase refuse de supprimer le compte (`apres`). */
+interface Reconnexion {
+  fournisseur: FournisseurLiaison;
+  email: string | null;
+  etape: 'avant' | 'apres';
 }
 
 @Component({
@@ -97,6 +114,83 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
     }
     .rangee:disabled {
       opacity: 0.5;
+    }
+    .rangee.danger {
+      color: var(--lr-danger);
+      font-weight: 600;
+    }
+    .rangee.danger .ico {
+      flex: none;
+      font-size: 20px;
+    }
+    .voile {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--lr-voile);
+    }
+    .alerte {
+      width: 290px;
+      max-width: 100%;
+      overflow: hidden;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 16px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      text-align: center;
+      outline: none;
+    }
+    .alerte .corps {
+      padding: 18px 16px 14px;
+    }
+    .alerte h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .alerte p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--lr-texte-secondaire);
+    }
+    .alerte input {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 48px;
+      margin-top: 12px;
+      padding: 0 12px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 10px;
+      background: var(--lr-fond);
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 17px;
+    }
+    .alerte .actions button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      border-top: 1px solid var(--lr-bordure);
+      background: transparent;
+      color: var(--lr-primaire);
+      font-family: inherit;
+      font-size: 17px;
+    }
+    .alerte .actions .detruire {
+      color: var(--lr-danger);
+      font-weight: 600;
+    }
+    .alerte .actions .gras {
+      font-weight: 600;
     }
     .message {
       margin: -8px 0 16px;
@@ -365,6 +459,13 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
             </span>
             <span class="ico" aria-hidden="true">⤓</span>
           </button>
+          <button type="button" class="rangee danger" [disabled]="suppressionEnCours()" (click)="demanderSuppression()">
+            <span>
+              Supprimer mon compte
+              <span class="sous">{{ suppressionEnCours() ? 'Suppression en cours…' : 'Compte, boîte, spots et photos' }}</span>
+            </span>
+            <span class="ico" aria-hidden="true">🗑</span>
+          </button>
         </div>
         <div aria-live="polite">
           @if (fichierExporte(); as nom) {
@@ -379,6 +480,19 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
         @if (exportEchec()) {
           <p class="message erreur" role="alert">L’export n’a pas abouti. Réessaie.</p>
         }
+        <div aria-live="polite">
+          @if (messageSuppression() === 'hors-ligne') {
+            <p class="message info" role="status">Connecte-toi à internet pour supprimer ton compte.</p>
+          }
+        </div>
+        @switch (messageSuppression()) {
+          @case ('mot-de-passe') {
+            <p class="message erreur" role="alert">Mot de passe incorrect.</p>
+          }
+          @case ('echec') {
+            <p class="message erreur" role="alert">La suppression n’a pas abouti. Réessaie.</p>
+          }
+        }
         <h2 class="titre-groupe">Réglementation</h2>
         <div class="groupe">
           <a class="rangee" href="https://www.cartedepeche.fr" target="_blank" rel="noopener">
@@ -391,6 +505,72 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
         </div>
       </ion-content>
     }
+    @if (confirmation()) {
+      <div class="voile">
+        <div
+          #alerte
+          class="alerte"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="titre-suppression"
+          aria-describedby="texte-suppression"
+          tabindex="-1"
+          (keydown.escape)="$event.stopPropagation(); fermerConfirmation()"
+          (keydown.tab)="pieger($event)"
+        >
+          <div class="corps">
+            <h3 id="titre-suppression">Supprimer définitivement ton compte, ta boîte et tes spots ?</h3>
+            <p id="texte-suppression">Tes leurres, leurs photos et tes spots seront effacés. Cette action est irréversible.</p>
+          </div>
+          <div class="actions">
+            <button type="button" class="detruire" (click)="confirmerSuppression()">Supprimer définitivement</button>
+            <button type="button" class="gras" data-focus (click)="fermerConfirmation()">Annuler</button>
+          </div>
+        </div>
+      </div>
+    }
+    @if (reconnexion(); as reco) {
+      <div class="voile">
+        <div
+          #alerte
+          class="alerte"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="titre-reconnexion"
+          aria-describedby="texte-reconnexion"
+          tabindex="-1"
+          (keydown.escape)="$event.stopPropagation(); fermerReconnexion()"
+          (keydown.tab)="pieger($event)"
+        >
+          <div class="corps">
+            <h3 id="titre-reconnexion">Reconnecte-toi pour supprimer ton compte</h3>
+            @if (reco.fournisseur === 'email') {
+              <p id="texte-reconnexion">Saisis le mot de passe de {{ reco.email }}.</p>
+              <input
+                type="password"
+                autocomplete="current-password"
+                aria-label="Mot de passe"
+                placeholder="Mot de passe"
+                data-focus
+                [value]="motDePasseSuppression()"
+                (input)="motDePasseSuppression.set($any($event.target).value)"
+                (keydown.enter)="reconnecter(reco)"
+              />
+            } @else {
+              <p id="texte-reconnexion">Par sécurité, confirme que c’est bien toi.</p>
+            }
+          </div>
+          <div class="actions">
+            @if (reco.fournisseur === 'email') {
+              <button type="button" class="detruire" (click)="reconnecter(reco)">Supprimer définitivement</button>
+            } @else {
+              <button type="button" class="gras" data-focus (click)="reconnecter(reco)">Continuer avec {{ libelleFournisseur[reco.fournisseur] }}</button>
+            }
+            <button type="button" [class.gras]="reco.fournisseur === 'email'" (click)="fermerReconnexion()">Annuler</button>
+          </div>
+        </div>
+      </div>
+    }
     <router-outlet (activate)="enfantOuvert.set(true)" (deactivate)="enfantOuvert.set(false)" />
   `,
 })
@@ -400,6 +580,15 @@ export class ComptePage {
 
   private readonly liaison = inject(SOURCE_LIAISON);
   private readonly export = inject(ExportService);
+  private readonly suppression = inject(SOURCE_SUPPRESSION);
+  private readonly etatLocal = inject(SuppressionCompteService);
+
+  protected readonly confirmation = signal(false);
+  protected readonly reconnexion = signal<Reconnexion | null>(null);
+  protected readonly suppressionEnCours = signal(false);
+  protected readonly messageSuppression = signal<MessageSuppression | null>(null);
+  protected readonly motDePasseSuppression = signal('');
+  private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
 
   protected readonly exportEnCours = signal(false);
   /** Nom du dernier fichier exporté, `null` tant qu'aucun export n'a abouti. */
@@ -424,6 +613,11 @@ export class ComptePage {
   protected readonly natif = Capacitor.isNativePlatform();
 
   constructor() {
+    // Le focus passe à la boîte de dialogue quand elle s'ouvre : sur « Annuler » (confirmation, Google, Apple) ou sur le mot de passe.
+    effect(() => {
+      const alerte = this.alerte()?.nativeElement;
+      if (alerte) (alerte.querySelector<HTMLElement>('[data-focus]') ?? alerte).focus();
+    });
     if (this.natif) return;
     // Lecture seule : une erreur de lecture laisse l'écran à l'état anonyme.
     this.liaison
@@ -450,6 +644,100 @@ export class ComptePage {
       if (!(erreur instanceof ExportAnnule)) this.exportEchec.set(true);
     } finally {
       this.exportEnCours.set(false);
+    }
+  }
+
+  protected demanderSuppression(): void {
+    if (this.suppressionEnCours()) return;
+    this.messageSuppression.set(null);
+    this.confirmation.set(true);
+  }
+
+  protected fermerConfirmation(): void {
+    this.confirmation.set(false);
+  }
+
+  protected fermerReconnexion(): void {
+    this.reconnexion.set(null);
+    this.motDePasseSuppression.set('');
+  }
+
+  /** Garde le focus clavier dans la boîte de dialogue (dialogue modal). */
+  protected pieger(evenement: Event): void {
+    const elements = [...(evenement.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('button, input')];
+    const premier = elements[0];
+    const dernier = elements[elements.length - 1];
+    const maj = (evenement as KeyboardEvent).shiftKey;
+    if (maj && document.activeElement === premier) {
+      evenement.preventDefault();
+      dernier?.focus();
+    } else if (!maj && document.activeElement === dernier) {
+      evenement.preventDefault();
+      premier?.focus();
+    }
+  }
+
+  /**
+   * US 98 : hors ligne, rien n'est appelé. Si Firebase veut une connexion récente, la reconnexion est demandée avant d'effacer quoi que ce soit.
+   */
+  protected async confirmerSuppression(): Promise<void> {
+    this.confirmation.set(false);
+    if (navigator.onLine === false) {
+      this.messageSuppression.set('hors-ligne');
+      return;
+    }
+    this.suppressionEnCours.set(true);
+    try {
+      const fournisseur = await this.suppression.reconnexionRequise();
+      if (fournisseur) {
+        await this.demanderReconnexion(fournisseur, 'avant');
+        return;
+      }
+      await this.supprimer(false);
+    } catch (erreur) {
+      this.messageSuppression.set(messagePourErreurSuppression((erreur as { code?: string } | null)?.code));
+    } finally {
+      this.suppressionEnCours.set(false);
+    }
+  }
+
+  private async demanderReconnexion(fournisseur: FournisseurLiaison, etape: Reconnexion['etape']): Promise<void> {
+    const lie = this.compteLie() ?? (await this.liaison.compteLie().catch(() => null));
+    this.motDePasseSuppression.set('');
+    this.reconnexion.set({ fournisseur, email: lie?.email ?? null, etape });
+  }
+
+  /** Efface les données (sauf si c'est déjà fait), puis le compte, puis l'état du téléphone, et revient au début de l'onboarding. */
+  private async supprimer(donneesEffacees: boolean): Promise<void> {
+    if (!donneesEffacees) await this.suppression.supprimerDonnees();
+    try {
+      await this.suppression.supprimerCompte();
+    } catch (erreur) {
+      if ((erreur as { code?: string } | null)?.code !== 'auth/requires-recent-login') throw erreur;
+      // La connexion a vieilli pendant l'effacement : on reconnecte, puis seul le compte reste à supprimer.
+      const lie = await this.liaison.compteLie().catch(() => null);
+      if (!lie) throw erreur;
+      await this.demanderReconnexion(lie.fournisseur, 'apres');
+      return;
+    }
+    this.etatLocal.effacerEtatLocal();
+    await this.router.navigateByUrl('/onboarding');
+  }
+
+  /** Appelé dans le geste du toucher : la fenêtre du fournisseur s'ouvre avant tout `await` (Safari bloque sinon). */
+  protected async reconnecter(reco: Reconnexion): Promise<void> {
+    if (this.suppressionEnCours()) return;
+    this.suppressionEnCours.set(true);
+    const reconnexion =
+      reco.fournisseur === 'email' ? this.suppression.reconnecterEmail(this.motDePasseSuppression()) : this.suppression.reconnecter(reco.fournisseur);
+    this.fermerReconnexion();
+    try {
+      await reconnexion;
+      await this.supprimer(reco.etape === 'apres');
+    } catch (erreur) {
+      this.messageSuppression.set(messagePourErreurSuppression((erreur as { code?: string } | null)?.code));
+    } finally {
+      this.suppressionEnCours.set(false);
     }
   }
 

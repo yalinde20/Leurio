@@ -30,4 +30,13 @@ export class SaisieTempEauStore {
       // Sans stockage, la mesure ne survit pas à la fermeture de l'app.
     }
   }
+
+  /** Retire la saisie gardée (suppression du compte, US 98). */
+  effacer(): void {
+    try {
+      localStorage.removeItem(CLE);
+    } catch {
+      // Stockage inaccessible : rien à retirer.
+    }
+  }
 }
