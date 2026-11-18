@@ -12,7 +12,7 @@ import { of, throwError } from 'rxjs';
 import { App } from '../../app';
 import { routes } from '../../app.routes';
 import { SOURCE_COMPTE, SourceCompte } from '../../core/data/compte.service';
-import { SOURCE_LIAISON } from '../../core/data/liaison-compte';
+import { CompteLie, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 
 /** Contenu double : chaque fichier de assets/data est servi par ce double (jamais le vrai contenu). */
 export const CONTENU: Record<string, unknown> = {
@@ -44,6 +44,8 @@ const interception: HttpInterceptorFn = (req) => {
 export interface OptionsApp {
   /** Uid renvoyé par le double de SOURCE_COMPTE ; `null` : pas de compte. */
   uid?: string | null;
+  /** Compte lié rendu par le double de SOURCE_LIAISON (US 98) ; `null` par défaut : compte anonyme. */
+  compteLie?: CompteLie | null;
   /** Fournisseurs supplémentaires (US 97 : doubles de SOURCE_EXPORT et ENREGISTREMENT_FICHIER). */
   providers?: (Provider | EnvironmentProviders)[];
 }
@@ -61,7 +63,7 @@ export async function ouvrirCompte(options: OptionsApp = {}) {
     provideRouter(routes),
     provideHttpClient(withInterceptors([interception])),
     { provide: SOURCE_COMPTE, useValue: source },
-    { provide: SOURCE_LIAISON, useValue: { compteLie: async () => null, lier: async () => Promise.reject(new Error('non prévu')) } },
+    { provide: SOURCE_LIAISON, useValue: { compteLie: async () => options.compteLie ?? null, lier: async () => Promise.reject(new Error('non prévu')) } },
     ...(options.providers ?? []),
   ];
   await TestBed.configureTestingModule({ imports: [App], providers }).compileComponents();
