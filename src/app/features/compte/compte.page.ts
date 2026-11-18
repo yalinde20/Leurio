@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { SOURCE_SUPPRESSION, SuppressionCompteService } from '../../core/data/suppression-compte.service';
+import { PortailDirective } from '../../shared/portail/portail.directive';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
 type MessageLiaison = 'deja-associe' | 'hors-ligne' | 'echec' | 'email-invalide' | 'mot-de-passe-court' | 'adresse-utilisee';
@@ -49,7 +50,7 @@ interface Reconnexion {
 
 @Component({
   selector: 'app-compte',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet, PortailDirective],
   host: { class: 'ion-page' },
   styles: `
     /* Dès que la page enfant est dans le DOM (avant le prochain passage de détection de changements), l'écran « Compte » lui laisse la place. */
@@ -194,6 +195,15 @@ interface Reconnexion {
     }
     .alerte .actions .gras {
       font-weight: 600;
+    }
+    .sr-seulement {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
     .message {
       margin: -8px 0 16px;
@@ -484,6 +494,9 @@ interface Reconnexion {
           <p class="message erreur" role="alert">L’export n’a pas abouti. Réessaie.</p>
         }
         <div aria-live="polite">
+          @if (suppressionEnCours()) {
+            <p class="sr-seulement" role="status">Suppression en cours…</p>
+          }
           @if (messageSuppression() === 'hors-ligne') {
             <p class="message info" role="status">Connecte-toi à internet pour supprimer ton compte.</p>
           }
@@ -509,7 +522,7 @@ interface Reconnexion {
       </ion-content>
     }
     @if (confirmation()) {
-      <div class="voile">
+      <div class="voile" role="presentation" appPortail (click)="$event.target === $event.currentTarget && fermerConfirmation()">
         <div
           #alerte
           class="alerte"
@@ -533,7 +546,7 @@ interface Reconnexion {
       </div>
     }
     @if (reconnexion(); as reco) {
-      <div class="voile">
+      <div class="voile" role="presentation" appPortail (click)="$event.target === $event.currentTarget && annulerReconnexion()">
         <div
           #alerte
           class="alerte"
