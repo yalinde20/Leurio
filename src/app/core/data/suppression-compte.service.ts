@@ -38,15 +38,23 @@ export class SuppressionCompteService {
   private readonly compte = inject(CompteService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
 
-  /** Ne lève jamais d'erreur : un stockage inaccessible est ignoré. */
-  effacerEtatLocal(): void {
-    this.onboarding.effacer();
+  /**
+   * Dès que les données Firebase sont effacées : oublie le marqueur du profil écrit et l'uid en cache, pour qu'un échec de la suppression
+   * du compte d'authentification ne laisse pas un marqueur pointer vers un profil supprimé. Ne lève jamais d'erreur.
+   */
+  oublierProfil(): void {
     this.compte.reinitialiser();
-    this.saisieTempEau.effacer();
     try {
       localStorage.removeItem(CLE_PROFIL_ECRIT);
     } catch {
       // Stockage inaccessible : rien d'autre à faire.
     }
+  }
+
+  /** Ne lève jamais d'erreur : un stockage inaccessible est ignoré. */
+  effacerEtatLocal(): void {
+    this.onboarding.effacer();
+    this.saisieTempEau.effacer();
+    this.oublierProfil();
   }
 }

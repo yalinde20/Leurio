@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
@@ -184,6 +184,9 @@ interface Reconnexion {
       color: var(--lr-primaire);
       font-family: inherit;
       font-size: 17px;
+    }
+    .alerte .actions .detruire[aria-disabled='true'] {
+      opacity: 0.5;
     }
     .alerte .actions .detruire {
       color: var(--lr-danger);
@@ -459,7 +462,7 @@ interface Reconnexion {
             </span>
             <span class="ico" aria-hidden="true">⤓</span>
           </button>
-          <button type="button" class="rangee danger" [disabled]="suppressionEnCours()" (click)="demanderSuppression()">
+          <button #boutonSuppression type="button" class="rangee danger" [disabled]="suppressionEnCours()" (click)="demanderSuppression()">
             <span>
               Supprimer mon compte
               <span class="sous">{{ suppressionEnCours() ? 'Suppression en cours…' : 'Compte, boîte, spots et photos' }}</span>
@@ -539,7 +542,7 @@ interface Reconnexion {
           aria-labelledby="titre-reconnexion"
           aria-describedby="texte-reconnexion"
           tabindex="-1"
-          (keydown.escape)="$event.stopPropagation(); fermerReconnexion()"
+          (keydown.escape)="$event.stopPropagation(); annulerReconnexion()"
           (keydown.tab)="pieger($event)"
         >
           <div class="corps">
@@ -562,11 +565,11 @@ interface Reconnexion {
           </div>
           <div class="actions">
             @if (reco.fournisseur === 'email') {
-              <button type="button" class="detruire" (click)="reconnecter(reco)">Supprimer définitivement</button>
+              <button type="button" class="detruire" [attr.aria-disabled]="motDePasseSuppression() === '' ? 'true' : null" (click)="reconnecter(reco)">Supprimer définitivement</button>
             } @else {
               <button type="button" class="gras" data-focus (click)="reconnecter(reco)">Continuer avec {{ libelleFournisseur[reco.fournisseur] }}</button>
             }
-            <button type="button" [class.gras]="reco.fournisseur === 'email'" (click)="fermerReconnexion()">Annuler</button>
+            <button type="button" [class.gras]="reco.fournisseur === 'email'" (click)="annulerReconnexion()">Annuler</button>
           </div>
         </div>
       </div>
@@ -588,6 +591,8 @@ export class ComptePage {
   protected readonly suppressionEnCours = signal(false);
   protected readonly messageSuppression = signal<MessageSuppression | null>(null);
   protected readonly motDePasseSuppression = signal('');
+  private readonly injecteur = inject(Injector);
+  private readonly boutonSuppression = viewChild<ElementRef<HTMLElement>>('boutonSuppression');
   private readonly alerte = viewChild<ElementRef<HTMLElement>>('alerte');
 
   protected readonly exportEnCours = signal(false);
@@ -655,11 +660,25 @@ export class ComptePage {
 
   protected fermerConfirmation(): void {
     this.confirmation.set(false);
+    this.rendreFocus();
   }
 
   protected fermerReconnexion(): void {
     this.reconnexion.set(null);
     this.motDePasseSuppression.set('');
+  }
+
+  /** « Annuler » ou Échap dans la reconnexion : si les données sont déjà effacées, l'abandon est signalé (le compte existe encore). */
+  protected annulerReconnexion(): void {
+    const etape = this.reconnexion()?.etape;
+    this.fermerReconnexion();
+    if (etape === 'apres') this.messageSuppression.set('echec');
+    this.rendreFocus();
+  }
+
+  /** Quand une boîte de dialogue se ferme sans suite, le focus revient sur la rangée « Supprimer mon compte » (désactivée tant qu'une suppression est en cours). */
+  private rendreFocus(): void {
+    afterNextRender(() => this.boutonSuppression()?.nativeElement.focus(), { injector: this.injecteur });
   }
 
   /** Garde le focus clavier dans la boîte de dialogue (dialogue modal). */
@@ -684,6 +703,7 @@ export class ComptePage {
     this.confirmation.set(false);
     if (navigator.onLine === false) {
       this.messageSuppression.set('hors-ligne');
+      this.rendreFocus();
       return;
     }
     this.suppressionEnCours.set(true);
@@ -696,6 +716,7 @@ export class ComptePage {
       await this.supprimer(false);
     } catch (erreur) {
       this.messageSuppression.set(messagePourErreurSuppression((erreur as { code?: string } | null)?.code));
+      this.rendreFocus();
     } finally {
       this.suppressionEnCours.set(false);
     }
@@ -709,7 +730,10 @@ export class ComptePage {
 
   /** Efface les données (sauf si c'est déjà fait), puis le compte, puis l'état du téléphone, et revient au début de l'onboarding. */
   private async supprimer(donneesEffacees: boolean): Promise<void> {
-    if (!donneesEffacees) await this.suppression.supprimerDonnees();
+    if (!donneesEffacees) {
+      await this.suppression.supprimerDonnees();
+      this.etatLocal.oublierProfil();
+    }
     try {
       await this.suppression.supprimerCompte();
     } catch (erreur) {
@@ -724,9 +748,13 @@ export class ComptePage {
     await this.router.navigateByUrl('/onboarding');
   }
 
-  /** Appelé dans le geste du toucher : la fenêtre du fournisseur s'ouvre avant tout `await` (Safari bloque sinon). */
+  /**
+   * Appelé dans le geste du toucher : aucun `await` avant `reconnecter`, et la source ouvre la fenêtre sans attendre non plus quand
+   * `reconnexionRequise` a déjà chargé Firebase (Safari bloque sinon la fenêtre).
+   */
   protected async reconnecter(reco: Reconnexion): Promise<void> {
     if (this.suppressionEnCours()) return;
+    if (reco.fournisseur === 'email' && this.motDePasseSuppression() === '') return;
     this.suppressionEnCours.set(true);
     const reconnexion =
       reco.fournisseur === 'email' ? this.suppression.reconnecterEmail(this.motDePasseSuppression()) : this.suppression.reconnecter(reco.fournisseur);
@@ -735,7 +763,10 @@ export class ComptePage {
       await reconnexion;
       await this.supprimer(reco.etape === 'apres');
     } catch (erreur) {
-      this.messageSuppression.set(messagePourErreurSuppression((erreur as { code?: string } | null)?.code));
+      const message = messagePourErreurSuppression((erreur as { code?: string } | null)?.code);
+      // Données déjà effacées : même une fenêtre fermée laisse le compte en place, donc l'échec est signalé.
+      this.messageSuppression.set(message ?? (reco.etape === 'apres' ? 'echec' : null));
+      this.rendreFocus();
     } finally {
       this.suppressionEnCours.set(false);
     }

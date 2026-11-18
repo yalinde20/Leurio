@@ -54,4 +54,15 @@ describe('SuppressionCompteService.effacerEtatLocal', () => {
     expect(creations).toHaveLength(2);
     expect(ecritures).toEqual(['uid-1', 'uid-2']);
   });
+
+  it('given un profil écrit, when j\'oublie le profil, then le marqueur est retiré mais l\'onboarding reste', () => {
+    const onboarding = TestBed.inject(OnboardingStore);
+    onboarding.terminer({ niveau: 'debutant', especesFavorites: [] });
+    localStorage.setItem('leurio.compte', 'uid-0');
+
+    TestBed.inject(SuppressionCompteService).oublierProfil();
+
+    expect(localStorage.getItem('leurio.compte')).toBeNull();
+    expect(onboarding.lire()).not.toBeNull();
+  });
 });
