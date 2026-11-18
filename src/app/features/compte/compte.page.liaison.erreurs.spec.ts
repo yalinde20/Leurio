@@ -12,7 +12,11 @@ import { ComptePage } from './compte.page';
 afterEach(() => vi.restoreAllMocks());
 
 const erreur = (code: string) => Object.assign(new Error(code), { code });
-const boutons = (page: HTMLElement) => Array.from(page.querySelectorAll('button')).map((b) => b.textContent?.trim());
+/** Les boutons de connexion seulement : le bouton « Exporter mes données » (US 97) est aussi sur l'écran (décision du propriétaire, US 97). */
+const boutons = (page: HTMLElement) =>
+  Array.from(page.querySelectorAll('button'))
+    .map((b) => b.textContent?.trim() ?? '')
+    .filter((t) => t.startsWith('Continuer avec') || t === 'Créer mon compte');
 
 /** US 96 : ces cas limites ne touchent pas à l'e-mail ; `lierEmail` est complété par un double qui échoue. */
 async function ouvrir(source: Omit<SourceLiaison, 'lierEmail'>) {
@@ -90,7 +94,7 @@ describe('US 95 : app native (décision du propriétaire, réponse B)', () => {
 
     expect(page.textContent).not.toContain('Ton compte');
     expect(page.textContent).not.toContain('Continuer avec');
-    expect(page.querySelectorAll('button')).toHaveLength(0);
+    expect(boutons(page)).toEqual([]);
     expect(page.textContent).toContain('Réglages');
     expect(compteLie).not.toHaveBeenCalled();
   });

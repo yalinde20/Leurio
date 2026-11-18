@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
+import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
@@ -68,6 +69,48 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
     }
     .rangee:first-child {
       border-top: none;
+    }
+    button.rangee {
+      appearance: none;
+      width: 100%;
+      margin: 0;
+      border-right: none;
+      border-bottom: none;
+      border-left: none;
+      border-radius: 0;
+      background: none;
+      font: inherit;
+      font-size: 17px;
+      text-align: left;
+      cursor: pointer;
+    }
+    button.rangee:first-child {
+      border-top: none;
+    }
+    .rangee.action {
+      color: var(--lr-primaire);
+      font-weight: 600;
+    }
+    .rangee.action .ico {
+      flex: none;
+      font-size: 20px;
+    }
+    .rangee:disabled {
+      opacity: 0.5;
+    }
+    .message {
+      margin: -8px 0 16px;
+      font-size: 15px;
+    }
+    .message.erreur {
+      font-weight: 600;
+      color: var(--lr-danger);
+    }
+    .message.info {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--lr-sable);
+      color: var(--lr-texte);
     }
     .chevron {
       font-size: 22px;
@@ -313,6 +356,29 @@ function messagePourErreurEmail(code: string | undefined): MessageLiaison {
             <span class="chevron" aria-hidden="true">›</span>
           </a>
         </div>
+        <h2 class="titre-groupe">Mes données</h2>
+        <div class="groupe">
+          <button type="button" class="rangee action" [disabled]="exportEnCours()" (click)="exporter()">
+            <span>
+              Exporter mes données
+              <span class="sous">{{ exportEnCours() ? 'Préparation du fichier…' : 'Profil, boîte et spots dans un fichier' }}</span>
+            </span>
+            <span class="ico" aria-hidden="true">⤓</span>
+          </button>
+        </div>
+        <div aria-live="polite">
+          @if (fichierExporte(); as nom) {
+            <p class="message info" role="status">
+              Fichier « {{ nom }} » téléchargé.
+              @if (exportHorsLigne()) {
+                Hors ligne : il reprend les données gardées sur ce téléphone.
+              }
+            </p>
+          }
+        </div>
+        @if (exportEchec()) {
+          <p class="message erreur" role="alert">L’export n’a pas abouti. Réessaie.</p>
+        }
         <h2 class="titre-groupe">Réglementation</h2>
         <div class="groupe">
           <a class="rangee" href="https://www.cartedepeche.fr" target="_blank" rel="noopener">
@@ -333,6 +399,13 @@ export class ComptePage {
   private readonly theme = inject(ThemeService);
 
   private readonly liaison = inject(SOURCE_LIAISON);
+  private readonly export = inject(ExportService);
+
+  protected readonly exportEnCours = signal(false);
+  /** Nom du dernier fichier exporté, `null` tant qu'aucun export n'a abouti. */
+  protected readonly fichierExporte = signal<string | null>(null);
+  protected readonly exportHorsLigne = signal(false);
+  protected readonly exportEchec = signal(false);
 
   protected readonly compteLie = signal<CompteLie | null>(null);
   /** Faux tant que le compte courant n'est pas lu : l'écran n'affiche alors aucun bouton (pas de flash pour un compte déjà lié). */
@@ -360,6 +433,24 @@ export class ComptePage {
         this.compteLie.set(lie);
         this.lectureFaite.set(true);
       });
+  }
+
+  /** US 97 : exporte le profil, la boîte et les spots ; fonctionne hors ligne depuis les données en cache. */
+  protected async exporter(): Promise<void> {
+    if (this.exportEnCours()) return;
+    this.fichierExporte.set(null);
+    this.exportEchec.set(false);
+    this.exportEnCours.set(true);
+    try {
+      const nom = await this.export.exporter();
+      this.exportHorsLigne.set(navigator.onLine === false);
+      this.fichierExporte.set(nom);
+    } catch (erreur) {
+      // Feuille de partage fermée sans choix (app native) : aucun message.
+      if (!(erreur instanceof ExportAnnule)) this.exportEchec.set(true);
+    } finally {
+      this.exportEnCours.set(false);
+    }
   }
 
   protected ouvrirFormulaireEmail(): void {
