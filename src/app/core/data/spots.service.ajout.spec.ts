@@ -22,7 +22,9 @@ describe('SpotsService : écoute et ajout (US 4)', () => {
       },
     });
     const recus: unknown[] = [];
-    const arreter = await spots.ecouter((s) => recus.push(s), () => undefined);
+    const arreter = spots.ecouter((s) => recus.push(s), () => undefined);
+    await vi.waitFor(() => expect(arrete).toBe(false));
+    await new Promise<void>((r) => setTimeout(r));
 
     rappel([
       { id: 'a', data: valide, enAttente: true },
@@ -38,7 +40,7 @@ describe('SpotsService : écoute et ajout (US 4)', () => {
     const spots = service({ uid: async () => 'u1', documents: async () => [{ id: 'a', data: valide }] });
     const recus: unknown[] = [];
 
-    await spots.ecouter((s) => recus.push(s), () => undefined);
+    spots.ecouter((s) => recus.push(s), () => undefined);
     await vi.waitFor(() => expect(recus).toHaveLength(1));
 
     expect(recus[0]).toEqual([{ id: 'a', nom: 'Étang du moulin', lat: 47.5, lng: -0.9, categorie: 2, milieu: 'lac', departement: '49' }]);
@@ -49,9 +51,8 @@ describe('SpotsService : écoute et ajout (US 4)', () => {
     const spots = service({ uid: async () => null, ecouter });
     const recus: unknown[] = [];
 
-    await spots.ecouter((s) => recus.push(s), () => undefined);
-
-    expect(recus).toEqual([[]]);
+    spots.ecouter((s) => recus.push(s), () => undefined);
+    await vi.waitFor(() => expect(recus).toEqual([[]]));
     expect(ecouter).not.toHaveBeenCalled();
   });
 

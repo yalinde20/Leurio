@@ -42,6 +42,8 @@ export interface SaisieSpot {
 export interface SourceSpots {
   /** L'identifiant de l'utilisateur connecté, `null` sans compte. */
   uid(): Promise<string | null>;
+  /** Suit l'utilisateur connecté (`null` sans compte), à l'ouverture puis à chaque changement ; rend la fonction qui arrête le suivi. Facultative : sans elle, `uid` est lu une fois. */
+  surUid?(rappel: (uid: string | null) => void, surErreur: (erreur: unknown) => void): () => void;
   /** Les documents de `users/{uid}/spots`. */
   documents(uid: string): Promise<DocumentSpot[]>;
   /**
@@ -89,20 +91,33 @@ export class SpotsService {
 
   /**
    * Suit les spots de l'utilisateur : `surChangement` reçoit la liste complète à chaque changement (écriture locale comprise).
-   * Sans utilisateur connecté, la liste est vide. Rend la fonction qui arrête l'écoute.
-   * Une source sans `ecouter` est lue une fois.
+   * La liste suit le compte (US 99) : sans utilisateur elle est vide, et un compte qui apparaît ou change (compte anonyme créé
+   * après l'ouverture, suppression du compte) rebranche l'écoute. Rend la fonction qui arrête tout.
+   * Une source sans `ecouter` est lue une fois, pour l'utilisateur connu à l'ouverture.
    */
-  async ecouter(surChangement: (spots: SpotEnregistre[]) => void, surErreur: (erreur: unknown) => void): Promise<() => void> {
-    const uid = await this.source.uid();
-    if (uid === null) {
-      surChangement([]);
-      return () => undefined;
-    }
-    if (!this.source.ecouter) {
-      this.source.documents(uid).then((documents) => surChangement(enSpots(documents)), surErreur);
-      return () => undefined;
-    }
-    return this.source.ecouter(uid, (documents) => surChangement(enSpots(documents)), surErreur);
+  ecouter(surChangement: (spots: SpotEnregistre[]) => void, surErreur: (erreur: unknown) => void): () => void {
+    const source = this.source;
+    let arrete = false;
+    let arreterEcoute: () => void = () => undefined;
+    const pour = (uid: string | null): void => {
+      arreterEcoute();
+      arreterEcoute = () => undefined;
+      if (arrete) return;
+      if (uid === null) return surChangement([]);
+      if (!source.ecouter) {
+        source.documents(uid).then((documents) => !arrete && surChangement(enSpots(documents)), surErreur);
+        return;
+      }
+      arreterEcoute = source.ecouter(uid, (documents) => surChangement(enSpots(documents)), surErreur);
+    };
+    let arreterUid: () => void = () => undefined;
+    if (source.surUid && source.ecouter) arreterUid = source.surUid(pour, surErreur);
+    else source.uid().then(pour, surErreur);
+    return () => {
+      arrete = true;
+      arreterUid();
+      arreterEcoute();
+    };
   }
 
   /** Crée un spot privé. Rejette sans utilisateur connecté. Résout dès l'écriture locale : hors ligne, le serveur confirmera plus tard. */

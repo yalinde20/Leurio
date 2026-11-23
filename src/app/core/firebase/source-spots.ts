@@ -14,6 +14,20 @@ export function creerSourceSpotsFirebase(injector: Injector): SourceSpots {
       await auth.authStateReady();
       return auth.currentUser?.uid ?? null;
     },
+    surUid(rappel, surErreur) {
+      let arrete = false;
+      let desabonner: () => void = () => undefined;
+      void (async () => {
+        const { auth } = await firebase();
+        const { onAuthStateChanged } = await import('firebase/auth');
+        if (arrete) return;
+        desabonner = onAuthStateChanged(auth, (utilisateur) => rappel(utilisateur?.uid ?? null), surErreur);
+      })().catch(surErreur);
+      return () => {
+        arrete = true;
+        desabonner();
+      };
+    },
     async documents(uid) {
       const { db } = await firebase();
       const { collection, getDocs } = await import('firebase/firestore');

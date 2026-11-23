@@ -218,19 +218,15 @@ export class SpotsPage {
 
   constructor() {
     afterNextRender(() => this.creerCarte());
-    let arreterEcoute: () => void = () => undefined;
+    const arreterEcoute = this.spots.ecouter(
+      (spots) => this.etat.set({ type: 'pret', spots }),
+      () => this.etat.set({ type: 'erreur' }),
+    );
     this.destroyRef.onDestroy(() => {
       this.detruit = true;
       arreterEcoute();
       this.carte()?.remove();
     });
-    this.spots
-      .ecouter(
-        (spots) => this.etat.set({ type: 'pret', spots }),
-        () => this.etat.set({ type: 'erreur' }),
-      )
-      .then((arreter) => (this.detruit ? arreter() : (arreterEcoute = arreter)))
-      .catch(() => this.etat.set({ type: 'erreur' }));
     effect(() => {
       const carte = this.carte();
       const etat = this.etat();
