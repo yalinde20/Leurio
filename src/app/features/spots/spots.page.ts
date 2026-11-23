@@ -1,11 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked, viewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import * as L from 'leaflet';
 import { CatalogService } from '../../core/data/catalog.service';
 import type { Federation } from '../../core/data/catalog.types';
 import { etatOuverture, prochaineOuverture1reCategorie } from '../../core/regulation/calendar';
 import { GeoService } from '../../core/data/geo.service';
+import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { ATTRIBUTION, icone, TUILES } from './carte-spots';
@@ -156,6 +158,34 @@ interface LigneSpot {
       font-size: 14px;
       color: var(--lr-texte-secondaire);
     }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin: 4px 16px 12px;
+    }
+    .actions button {
+      flex: 1;
+      min-height: 48px;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .voir-conseil {
+      border: none;
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+    }
+    .preparer {
+      border: 1px solid var(--lr-primaire);
+      background: var(--lr-surface);
+      color: var(--lr-primaire);
+    }
+    .bientot {
+      margin: -4px 16px 12px;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
+    }
     .attente {
       font-size: 14px;
       color: var(--lr-texte-secondaire);
@@ -245,6 +275,15 @@ interface LigneSpot {
                     } @else if (ligne.spot.id === choisi() && federations()[ligne.spot.departement]; as f) {
                       <ng-container [ngTemplateOutlet]="lien" [ngTemplateOutletContext]="{ $implicit: f }" />
                     }
+                    @if (ligne.spot.id === choisi()) {
+                      <div class="actions">
+                        <button type="button" class="voir-conseil" (click)="voirLeConseil(ligne.spot)">Voir le conseil</button>
+                        <button type="button" class="preparer" (click)="preparerLaSortie()">Préparer ma sortie</button>
+                      </div>
+                      @if (bientot()) {
+                        <p class="bientot" role="status">Bientôt disponible</p>
+                      }
+                    }
                   </li>
                 }
               </ul>
@@ -272,6 +311,8 @@ export class SpotsPage {
   private readonly position = inject(PositionService);
   private readonly geo = inject(GeoService);
   private readonly catalogue = inject(CatalogService);
+  private readonly lieuDemande = inject(LieuDemandeService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
   private readonly boutonAjouter = viewChild<ElementRef<HTMLElement>>('ajouter');
@@ -281,6 +322,8 @@ export class SpotsPage {
   /** Fédération par département, lue dans le contenu : absent tant que la recherche court, `null` si le contenu n'en a pas. */
   protected readonly federations = signal<Record<string, Federation | null>>({});
   protected readonly horsLigne = signal(navigator.onLine === false);
+  /** Vrai après « Préparer ma sortie » sur le spot ouvert ; retombe quand un autre spot s'ouvre. */
+  protected readonly bientot = signal(false);
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
@@ -359,11 +402,23 @@ export class SpotsPage {
   protected choisir(spot: SpotEnregistre): void {
     // Un département déjà cherché n'est pas redemandé : le lien d'un spot déjà ouvert ne clignote pas.
     void this.chercherFederation(spot.departement);
+    if (spot.id !== this.choisi()) this.bientot.set(false);
     this.choisi.set(spot.id);
     // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
     this.cadrageAReprendre = false;
     this.majMarqueurs();
     this.carte()?.setView([spot.lat, spot.lng], Math.max(this.carte()?.getZoom() ?? 0, ZOOM_COMMUNE));
+  }
+
+  /** « Voir le conseil » : l'onglet « Conseil » prend ce spot comme lieu. */
+  protected voirLeConseil(spot: SpotEnregistre): void {
+    this.lieuDemande.demander(spot);
+    void this.router.navigateByUrl('/conseil');
+  }
+
+  /** « Préparer ma sortie » n'est pas encore là : un message, ni navigation ni réseau. */
+  protected preparerLaSortie(): void {
+    this.bientot.set(true);
   }
 
   private async chercherFederation(departement: string): Promise<void> {
