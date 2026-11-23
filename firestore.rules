@@ -20,7 +20,7 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny(['uid', 'lat', 'lng', 'latitude', 'longitude'])
         && (!('conditions' in request.resource.data)
           || (request.resource.data.conditions is map
-            && !request.resource.data.conditions.keys().hasAny(['lat', 'lng', 'latitude', 'longitude'])));
+            && request.resource.data.conditions.keys().hasOnly(['tempEau', 'vent', 'debitTendance', 'pressionTendance48h', 'pression', 'departement'])));
     }
 
     // Tout le reste est refusé (refus par défaut).
