@@ -3,7 +3,9 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import * as L from 'leaflet';
 import { GeoService } from '../../core/data/geo.service';
 import { PositionService } from '../../core/data/position.service';
-import { Milieu, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
+import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
+import { ATTRIBUTION, icone, TUILES } from './carte-spots';
+import { SpotFormulaireComponent } from './spot-formulaire.component';
 
 /** France métropolitaine entière (Corse comprise), à l'échelle d'un pays. */
 const BORNES_FRANCE: L.LatLngBoundsLiteral = [
@@ -18,7 +20,6 @@ const ZOOM_COMMUNE = 13;
 /** Zoom d'un ensemble de spots quand la carte n'a pas encore de taille (page pas encore affichée). */
 const ZOOM_SANS_TAILLE = 8;
 
-const TUILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const LIBELLES_MILIEU: Record<Milieu, string> = { riviere: 'Rivière', lac: 'Lac', canal: 'Canal' };
 
 type Etat = { type: 'chargement' } | { type: 'erreur' } | { type: 'pret'; spots: SpotEnregistre[] };
@@ -28,22 +29,9 @@ interface LigneSpot {
   detail: string;
 }
 
-/** Épingle : la couleur vient du token `--lr-carte-marqueur` (voir src/theme/carte.scss). */
-function icone(grande: boolean): L.DivIcon {
-  const [largeur, hauteur] = grande ? [40, 54] : [30, 40];
-  // Zone tactile d'au moins 48 px autour de l'épingle ; la pointe reste sur la coordonnée (bas du centre de la zone).
-  const [zoneLargeur, zoneHauteur] = [48, Math.max(48, hauteur)];
-  return L.divIcon({
-    className: 'marqueur-spot',
-    html: `<svg width="${largeur}" height="${hauteur}" viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg>`,
-    iconSize: [zoneLargeur, zoneHauteur],
-    iconAnchor: [zoneLargeur / 2, zoneHauteur],
-  });
-}
-
 @Component({
   selector: 'app-spots',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, SpotFormulaireComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -103,6 +91,10 @@ function icone(grande: boolean): L.DivIcon {
       color: var(--lr-texte);
       font: inherit;
       text-align: left;
+    }
+    .attente {
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
     }
     .nom {
       font-size: 17px;
@@ -171,6 +163,9 @@ function icone(grande: boolean): L.DivIcon {
                   <li>
                     <button type="button" class="spot" [class.choisi]="ligne.spot.id === choisi()" [attr.aria-current]="ligne.spot.id === choisi() ? 'true' : null" (click)="choisir(ligne.spot)">
                       <span class="nom">{{ ligne.spot.nom }}</span>&ngsp;<span class="detail">{{ ligne.detail }}</span>
+                      @if (ligne.spot.enAttente) {
+                        <span class="attente">Pas encore synchronisé : il le sera au retour du réseau.</span>
+                      }
                     </button>
                   </li>
                 }
@@ -179,11 +174,13 @@ function icone(grande: boolean): L.DivIcon {
           }
         }
         @if (etat().type !== 'chargement') {
-          <!-- Le formulaire d'ajout vient avec une autre story : le bouton est affiché sans action. -->
-          <button type="button" class="ajouter">Ajouter un spot</button>
+          <button #ajouter type="button" class="ajouter" (click)="ouvrirFormulaire()">Ajouter un spot</button>
         }
       </div>
     </ion-content>
+    @if (formulaireOuvert()) {
+      <app-spot-formulaire [echec]="echec()" [enCours]="enCours()" (valide)="enregistrer($event)" (annuler)="fermerFormulaire()" />
+    }
   `,
 })
 export class SpotsPage {
@@ -192,10 +189,14 @@ export class SpotsPage {
   private readonly geo = inject(GeoService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
+  private readonly boutonAjouter = viewChild<ElementRef<HTMLElement>>('ajouter');
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
   protected readonly choisi = signal<string | null>(null);
   protected readonly horsLigne = signal(navigator.onLine === false);
+  protected readonly formulaireOuvert = signal(false);
+  protected readonly echec = signal(false);
+  protected readonly enCours = signal(false);
   protected readonly lignes = computed<LigneSpot[]>(() => {
     const etat = this.etat();
     if (etat.type !== 'pret') return [];
@@ -211,15 +212,21 @@ export class SpotsPage {
   private franceAReprendre = false;
   /** Vrai dès que l'utilisateur déplace ou zoome la carte : une position GPS tardive ne la recentre plus. */
   private utilisateurABouge = false;
+  /** Les spots dont la carte montre les marqueurs (identité, nom, position) : `null` tant que rien n'est affiché. */
+  private spotsAffiches: string | null = null;
   private detruit = false;
 
   constructor() {
     afterNextRender(() => this.creerCarte());
+    const arreterEcoute = this.spots.ecouter(
+      (spots) => this.etat.set({ type: 'pret', spots }),
+      () => this.etat.set({ type: 'erreur' }),
+    );
     this.destroyRef.onDestroy(() => {
       this.detruit = true;
+      arreterEcoute();
       this.carte()?.remove();
     });
-    void this.charger();
     effect(() => {
       const carte = this.carte();
       const etat = this.etat();
@@ -265,11 +272,29 @@ export class SpotsPage {
       .join(' · ');
   }
 
-  private async charger(): Promise<void> {
+  protected ouvrirFormulaire(): void {
+    this.echec.set(false);
+    this.formulaireOuvert.set(true);
+  }
+
+  protected fermerFormulaire(): void {
+    this.formulaireOuvert.set(false);
+    // La feuille emporte le focus en se fermant : « Ajouter un spot » le reprend.
+    queueMicrotask(() => this.boutonAjouter()?.nativeElement.focus());
+  }
+
+  /** Résout dès l'écriture locale : la liste et la carte se mettent à jour par l'écoute, pas par un état local. */
+  protected async enregistrer(saisie: SaisieSpot): Promise<void> {
+    if (this.enCours()) return;
+    this.enCours.set(true);
+    this.echec.set(false);
     try {
-      this.etat.set({ type: 'pret', spots: await this.spots.mesSpots() });
+      await this.spots.ajouter(saisie);
+      this.fermerFormulaire();
     } catch {
-      this.etat.set({ type: 'erreur' });
+      this.echec.set(true);
+    } finally {
+      this.enCours.set(false);
     }
   }
 
@@ -283,7 +308,7 @@ export class SpotsPage {
     L.tileLayer(TUILES, {
       maxZoom: 19,
       crossOrigin: true,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributeurs OpenStreetMap</a>',
+      attribution: ATTRIBUTION,
     }).addTo(carte);
     // La région reflète l'état de la carte (lu par les tests, qui ne touchent pas à Leaflet).
     const reporter = () => {
@@ -310,6 +335,10 @@ export class SpotsPage {
 
   /** Pose un marqueur par spot et cadre la carte ; sans spot, centre sur la position de l'utilisateur si elle est connue. */
   private afficher(carte: L.Map, spots: SpotEnregistre[]): void {
+    // L'écoute renvoie la liste à chaque confirmation du serveur : sans changement de spot, les marqueurs et le cadrage restent tels quels.
+    const cle = JSON.stringify(spots.map((s) => [s.id, s.nom, s.lat, s.lng]));
+    if (cle === this.spotsAffiches) return;
+    this.spotsAffiches = cle;
     this.calque?.clearLayers();
     this.marqueurs.clear();
     for (const spot of spots) {
