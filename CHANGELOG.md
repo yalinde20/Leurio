@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.50.0](https://github.com/yalinde20/Leurio/compare/v1.49.0...v1.50.0) (2026-11-23)
+
+
+### Features
+
+* Voir le conseil d'un spot et emplacement Préparer ma sortie (US 7) ([cecfa4a](https://github.com/yalinde20/Leurio/commit/cecfa4a5d568e02e6bc766a56369be2afbc3f4eb))
+
+
+### Bug Fixes
+
+* moment gardé relibellé après minuit, tests du moment et de l'espèce gardés (US 7) ([d03ef9a](https://github.com/yalinde20/Leurio/commit/d03ef9a35556004c6ec997197c2bfb7a24ecd770))
+
 ## [1.49.0](https://github.com/yalinde20/Leurio/compare/v1.48.0...v1.49.0) (2026-11-23)
 
 
