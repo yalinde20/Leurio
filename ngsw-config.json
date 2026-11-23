@@ -25,5 +25,12 @@
         "files": ["/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)", "/assets/**"]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "tuiles-osm",
+      "urls": ["https://*.tile.openstreetmap.org/**"],
+      "cacheConfig": { "strategy": "performance", "maxSize": 500, "maxAge": "30d" }
+    }
   ]
 }

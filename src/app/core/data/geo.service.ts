@@ -113,6 +113,12 @@ export class GeoService {
     return meilleur.code;
   }
 
+  /** Nom du département de ce code (« Maine-et-Loire » pour « 49 »), ou `null` si le code est inconnu. */
+  nomDepartement(code: string): string | null {
+    const trouve = (contenu.departements as unknown as { code: string; nom: string }[]).find((d) => d.code === code);
+    return trouve?.nom ?? null;
+  }
+
   private departements(): DepartementIndexe[] {
     this.index ??= (contenu.departements as unknown as { code: string; polygones: Polygone[] }[]).map((d) => {
       const polygones = d.polygones.map((anneaux) => ({ anneaux, boite: boiteDe(anneaux[0]) }));

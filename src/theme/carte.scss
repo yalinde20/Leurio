@@ -1,0 +1,95 @@
+/* Carte Leaflet de l'onglet Spots (US 3) : les éléments sont créés par Leaflet, hors de l'encapsulation d'Angular.
+   Couleurs uniquement par les tokens --lr-*. */
+@use 'sass:meta';
+
+@include meta.load-css('leaflet/dist/leaflet.css');
+
+.leaflet-container {
+  background: var(--lr-carte-terre);
+  font: inherit;
+}
+
+/* Thème sombre : les tuiles OpenStreetMap sont assombries par un filtre. */
+@mixin tuiles-sombres {
+  .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    @include tuiles-sombres;
+  }
+}
+
+html[data-theme='sombre'] {
+  @include tuiles-sombres;
+}
+
+/* Contrôles de zoom de 48 px. */
+.leaflet-container .leaflet-control-zoom.leaflet-bar {
+  overflow: hidden;
+  border: 1px solid var(--lr-bordure);
+  border-radius: 12px;
+
+  a {
+    width: 48px;
+    height: 48px;
+    border-bottom: 1px solid var(--lr-bordure);
+    background-color: var(--lr-surface);
+    color: var(--lr-texte);
+    font-size: 24px;
+    line-height: 48px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover,
+    &:focus {
+      background-color: var(--lr-sable);
+    }
+
+    &.leaflet-disabled {
+      background-color: var(--lr-surface);
+      color: var(--lr-texte-secondaire);
+    }
+  }
+}
+
+.leaflet-container .leaflet-control-attribution {
+  background: var(--lr-surface);
+  color: var(--lr-texte-secondaire);
+
+  a {
+    color: var(--lr-primaire);
+  }
+}
+
+/* Marqueurs : épingle aux couleurs du thème. */
+.marqueur-spot {
+  background: transparent;
+  border: none;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  path {
+    fill: var(--lr-carte-marqueur);
+    stroke: var(--lr-surface);
+    stroke-width: 1.5;
+  }
+
+  circle {
+    fill: var(--lr-surface);
+  }
+}
+
+.leaflet-container path.ma-position {
+  fill: var(--lr-primaire);
+  fill-opacity: 1;
+  stroke: var(--lr-surface);
+  stroke-width: 3;
+}

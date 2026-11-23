@@ -1,6 +1,11 @@
 import { inject, Injectable, InjectionToken, Injector } from '@angular/core';
 import { creerSourceSpotsFirebase } from '../firebase/source-spots';
 
+/** Type d'eau d'un spot (PLAN §7). */
+export type Milieu = 'riviere' | 'lac' | 'canal';
+
+const MILIEUX: readonly unknown[] = ['riviere', 'lac', 'canal'];
+
 /** Un spot enregistré, réduit à ce dont le conseil a besoin (PLAN §7 : `users/{uid}/spots`). */
 export interface SpotEnregistre {
   id: string;
@@ -8,6 +13,8 @@ export interface SpotEnregistre {
   lat: number;
   lng: number;
   categorie: 1 | 2;
+  /** Absent quand le document n'a pas de type d'eau valide : le spot reste utilisable (position, catégorie). */
+  milieu?: Milieu;
   departement: string;
 }
 
@@ -33,13 +40,15 @@ export const SOURCE_SPOTS = new InjectionToken<SourceSpots>('SOURCE_SPOTS', {
 const estTexte = (v: unknown): v is string => typeof v === 'string' && v.trim() !== '';
 const estNombre = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
-/** Un document mal formé (champ manquant ou d'un autre type) est ignoré. */
+/** Un document mal formé (champ manquant ou d'un autre type) est ignoré, sauf pour `milieu` : sans type d'eau valide, le spot est gardé sans lui. */
 function enSpot({ id, data }: DocumentSpot): SpotEnregistre | null {
   const d = (data ?? {}) as Record<string, unknown>;
-  const { nom, lat, lng, categorie, departement } = d;
+  const { nom, lat, lng, categorie, departement, milieu } = d;
   if (!estTexte(nom) || !estNombre(lat) || !estNombre(lng) || !estTexte(departement)) return null;
   if (categorie !== 1 && categorie !== 2) return null;
-  return { id, nom, lat, lng, categorie, departement };
+  return MILIEUX.includes(milieu)
+    ? { id, nom, lat, lng, categorie, milieu: milieu as Milieu, departement }
+    : { id, nom, lat, lng, categorie, departement };
 }
 
 /** Les spots de l'utilisateur, en lecture seule (PLAN §7). */
