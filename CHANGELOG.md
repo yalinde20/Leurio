@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.47.0](https://github.com/yalinde20/Leurio/compare/v1.46.0...v1.47.0) (2026-11-23)
+
+
+### Features
+
+* exporter mes données depuis Compte (US 97) ([1292ca1](https://github.com/yalinde20/Leurio/commit/1292ca18659a83d2df4074d62155bcfe0e8988f5))
+* supprimer mon compte (US 98) ([710adcb](https://github.com/yalinde20/Leurio/commit/710adcb29cd9a03caf0d840eabeb505b56e92712))
+
+
+### Bug Fixes
+
+* corrections de la revue de l'export (US 97) ([41cd173](https://github.com/yalinde20/Leurio/commit/41cd1733aaacf157cb5e82883b237a4dcfbff38e))
+* dialogues de suppression au-dessus des onglets, toucher hors de l'alerte (US 98) ([9588862](https://github.com/yalinde20/Leurio/commit/9588862fa4e05d10c4b8b9068e481b6f6ebb36c5))
+* revue US 98 (suppression robuste, focus, marqueur de compte) ([07f8944](https://github.com/yalinde20/Leurio/commit/07f894439bcd66380c42640d6da5b1cc4cb585fe))
+* tests US 95 limités aux boutons de connexion, annulation du partage sans message (US 97) ([c2791ec](https://github.com/yalinde20/Leurio/commit/c2791ece464a994842032881743535aee970f613))
+
 ## [1.46.0](https://github.com/yalinde20/Leurio/compare/v1.45.0...v1.46.0) (2026-11-16)
 
 
