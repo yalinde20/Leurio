@@ -661,7 +661,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                   <app-ligne-boite [ligne]="ligne" />
                 }
                 @if (avisDonnes().has(c.rang)) {
-                  <p class="merci" role="status">Merci pour ton retour !</p>
+                  <p class="merci" role="status" tabindex="-1" [id]="'merci-' + c.rang">Merci pour ton retour !</p>
                 } @else {
                   <div class="avis">
                     <p class="question">Ce conseil t'a aidé ?</p>
@@ -955,6 +955,10 @@ export class ConseilPage implements OnInit {
     if (!contexte || this.avisDonnes().has(carte.rang)) return;
     this.avisDonnes.update((rangs) => new Set(rangs).add(carte.rang));
     this.feedback.donnerAvis(carte, utile, contexte.conditions, contexte.moment);
+    // Le bouton touché disparaît : le focus passe au remerciement, que les lecteurs d'écran annoncent alors.
+    afterNextRender(() => this.hostEl.nativeElement.querySelector<HTMLElement>(`#merci-${carte.rang}`)?.focus({ preventScroll: true }), {
+      injector: this.injector,
+    });
   }
 
   protected async ouvrirDetail(rang: number): Promise<void> {

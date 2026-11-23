@@ -154,6 +154,15 @@ for (const champ of ['lat', 'lng', 'latitude', 'longitude', 'uid']) {
   });
 }
 
+test('US 88 critère 6 : given les règles Firestore déployées, when un client crée un feedback sans le champ utile, then la création est refusée', async () => {
+  const { utile: _utile, ...sansUtile } = avis88;
+  await assertFails(setDoc(doc(db(A), 'feedback', 'f88'), sansUtile));
+});
+
+test('US 88 critère 6 : given les règles Firestore déployées, when un client crée un feedback dont utile n\'est pas un booléen, then la création est refusée', async () => {
+  await assertFails(setDoc(doc(db(A), 'feedback', 'f88'), { ...avis88, utile: 'oui' }));
+});
+
 test('US 88 critère 7 : given les règles Firestore déployées et un feedback existant, when un client tente de le lire, de le lister, de le modifier ou de le supprimer, then chaque opération est refusée', async () => {
   await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'feedback', 'f88'), avis88); });
   for (const uid of [A, B, null]) {

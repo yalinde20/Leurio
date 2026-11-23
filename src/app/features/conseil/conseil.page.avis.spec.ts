@@ -272,4 +272,27 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(compact(cartes(page)[0].textContent)).toContain(MERCI);
     expect(compact(page.textContent)).not.toMatch(/erreur|réessaie|échec/i);
   });
+
+  it("critère 3 : given une carte, when je touche deux fois de suite le bouton avant le rendu suivant, then un seul document est créé pour cette carte", async () => {
+    const { page, envois } = await afficher();
+    const carte = cartes(page)[0];
+    const oui = bouton(carte, OUI);
+
+    oui?.click();
+    oui?.click();
+    bouton(carte, NON)?.click();
+
+    expect(envois).toHaveLength(1);
+  });
+
+  it("accessibilité : given une carte, when je touche 👍, then le focus passe sur le remerciement de cette carte", async () => {
+    const { page, attendre } = await afficher();
+
+    bouton(cartes(page)[0], OUI)?.click();
+    await attendre();
+
+    const merci = cartes(page)[0].querySelector<HTMLElement>('[role="status"]');
+    expect(merci?.textContent).toContain('Merci pour ton retour !');
+    expect(document.activeElement).toBe(merci);
+  });
 });

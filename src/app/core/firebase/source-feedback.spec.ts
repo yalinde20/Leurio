@@ -54,6 +54,38 @@ describe('creerSourceFeedbackFirebase (US 88)', () => {
     expect(ecritures).toHaveLength(1);
   });
 
+  describe('sans compte au moment du vote', () => {
+    it("critère 5 : given aucun utilisateur n'est connecté, when j'envoie un avis, then l'envoi se termine, rien n'est écrit tant qu'un compte n'existe pas, puis un seul document est écrit à son arrivée", async () => {
+      const observateurs: ((u: { uid: string } | null) => void)[] = [];
+      const desabonner = vi.fn();
+      const auth = { authStateReady: async () => undefined, currentUser: null as { uid: string } | null };
+      vi.resetModules();
+      vi.doMock('firebase/auth', () => ({
+        onAuthStateChanged: (_a: unknown, rappel: (u: { uid: string } | null) => void) => {
+          observateurs.push(rappel);
+          return desabonner;
+        },
+      }));
+      const { creerSourceFeedbackFirebase } = await import('./source-feedback');
+      const sansCompte = creerSourceFeedbackFirebase({ get: () => ({ auth, db: {} }) } as unknown as Injector);
+
+      await expect(sansCompte.envoyer(DOCUMENT)).resolves.toBeUndefined();
+      observateurs.forEach((o) => o(null));
+      await new Promise((r) => setTimeout(r, 20));
+      expect(ecritures).toHaveLength(0);
+
+      auth.currentUser = { uid: 'anonyme' };
+      observateurs.forEach((o) => o({ uid: 'anonyme' }));
+      observateurs.forEach((o) => o({ uid: 'anonyme' }));
+      await new Promise((r) => setTimeout(r, 20));
+
+      expect(ecritures).toHaveLength(1);
+      expect(ecritures[0].data).toEqual(DOCUMENT);
+      expect(desabonner).toHaveBeenCalled();
+      vi.doUnmock('firebase/auth');
+    });
+  });
+
   it("critère 5 : given le serveur refuse l'écriture, when j'envoie un avis, then l'appelant ne reçoit pas d'erreur", async () => {
     mode.refus = true;
 

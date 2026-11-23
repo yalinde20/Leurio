@@ -13,10 +13,27 @@ export function creerSourceFeedbackFirebase(injector: Injector): SourceFeedback 
         // Les règles exigent un compte (anonyme) : on attend sa restauration locale, jamais le réseau.
         await auth.authStateReady();
         const { addDoc, collection } = await import('firebase/firestore');
-        // L'addDoc ne se résout qu'à l'accusé du serveur, absent hors ligne : on ne l'attend pas.
-        addDoc(collection(db, 'feedback'), feedback).catch((erreur: unknown) =>
-          console.warn("L'avis n'a pas pu être enregistré sur le serveur.", erreur),
-        );
+        const ecrire = () =>
+          // L'addDoc ne se résout qu'à l'accusé du serveur, absent hors ligne : on ne l'attend pas.
+          addDoc(collection(db, 'feedback'), feedback).catch((erreur: unknown) =>
+            console.warn("L'avis n'a pas pu être enregistré sur le serveur.", erreur),
+          );
+        if (auth.currentUser) {
+          ecrire();
+        } else {
+          // Pas encore de compte (premier lancement hors ligne, création en échec) : une écriture faite maintenant
+          // resterait dans la file de l'utilisateur absent et ne partirait jamais. On l'écrit à l'arrivée du compte,
+          // sans bloquer l'appelant.
+          const { onAuthStateChanged } = await import('firebase/auth');
+          let envoye = false;
+          const arreter: () => void = onAuthStateChanged(auth, (utilisateur) => {
+            if (!utilisateur || envoye) return;
+            envoye = true;
+            // Si l'observateur est appelé avant le retour de onAuthStateChanged, `arreter` n'existe pas encore.
+            queueMicrotask(() => arreter());
+            ecrire();
+          });
+        }
       } catch (erreur) {
         console.warn("L'avis n'a pas pu être envoyé.", erreur);
       }
