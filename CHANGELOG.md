@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.48.0](https://github.com/yalinde20/Leurio/compare/v1.47.0...v1.48.0) (2026-11-23)
+
+
+### Features
+
+* formulaire d'ajout de spot privé (US 4) ([f9303d0](https://github.com/yalinde20/Leurio/commit/f9303d0c1d28ee0a9d5b46d0449fe6f783e1a252))
+
+
+### Bug Fixes
+
+* la liste des spots suit le compte connecté, et tests e2e du formulaire (US 4) ([e40e632](https://github.com/yalinde20/Leurio/commit/e40e63220a7325810c4e090e138813fec50359fe))
+* spots limités à la France métropolitaine (décision du propriétaire, US 4) ([684b93a](https://github.com/yalinde20/Leurio/commit/684b93a1d73e0900cb70668c5a6a3f44bfa008b8))
+
 ## [1.47.0](https://github.com/yalinde20/Leurio/compare/v1.46.0...v1.47.0) (2026-11-23)
 
 
