@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import contenu from '../../../assets/data/departements.json';
 import type { Lieu } from './weather-provider';
 
-/** Résultat quand le lieu n'est dans aucun département de la France métropolitaine. */
+/** Résultat quand le lieu n'est dans aucun département de France (métropole et départements d'outre-mer). */
 export const HORS_FRANCE = 'hors France';
 
 /**
@@ -81,7 +81,7 @@ function distanceContourM(anneaux: Polygone, lon: number, lat: number): number {
 
 /**
  * Trouve le département d'un lieu à partir de contours simplifiés embarqués dans l'app (PLAN §2.4, §5) :
- * aucune requête réseau, le résultat est donc le même hors ligne. France métropolitaine seulement.
+ * aucune requête réseau, le résultat est donc le même hors ligne. France métropolitaine et départements d'outre-mer (971 à 976).
  * Les contours sont simplifiés : près d'une frontière ou d'une côte, l'erreur peut atteindre quelques centaines de mètres.
  */
 @Injectable({ providedIn: 'root' })

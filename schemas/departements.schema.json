@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Contours des départements métropolitains (departements.json)",
+  "title": "Contours des départements de métropole et d'outre-mer (departements.json)",
   "type": "object",
   "additionalProperties": false,
   "required": ["sources", "dateVerif", "departements"],
@@ -19,7 +19,7 @@
         "additionalProperties": false,
         "required": ["code", "nom", "polygones"],
         "properties": {
-          "code": { "type": "string", "pattern": "^(\\d{2}|2A|2B)$" },
+          "code": { "type": "string", "pattern": "^(\\d{2}|2A|2B|97[1-46])$" },
           "nom": { "type": "string", "minLength": 1 },
           "polygones": {
             "type": "array",
