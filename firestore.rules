@@ -17,10 +17,15 @@ service cloud.firestore {
     match /feedback/{id} {
       allow create: if request.auth != null
         && request.resource.data.keys().hasOnly(['conseilId', 'typeId', 'techniqueId', 'utile', 'conditions', 'date'])
+        && request.resource.data.keys().hasAll(['conseilId', 'typeId', 'techniqueId', 'utile', 'conditions', 'date'])
+        && request.resource.data.utile is bool
+        && request.resource.data.conseilId is string
+        && request.resource.data.typeId is string
+        && request.resource.data.techniqueId is string
+        && request.resource.data.date is string
         && !request.resource.data.keys().hasAny(['uid', 'lat', 'lng', 'latitude', 'longitude'])
-        && (!('conditions' in request.resource.data)
-          || (request.resource.data.conditions is map
-            && !request.resource.data.conditions.keys().hasAny(['lat', 'lng', 'latitude', 'longitude'])));
+        && request.resource.data.conditions is map
+        && request.resource.data.conditions.keys().hasOnly(['tempEau', 'vent', 'debitTendance', 'pressionTendance48h', 'pression', 'departement']);
     }
 
     // Tout le reste est refusé (refus par défaut).

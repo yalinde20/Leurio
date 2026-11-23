@@ -6,12 +6,14 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
+import { FeedbackService } from '../../core/data/feedback.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
+import { Conditions } from '../../core/engine/conditions';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
 import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
@@ -82,6 +84,8 @@ interface CarteConditions {
 /** Une carte de conseil, déjà traduite en noms et formatée. */
 interface CarteConseil {
   rang: number;
+  typeId: string;
+  techniqueId: string;
   type: string;
   animation: string;
   couleur: string;
@@ -387,6 +391,50 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       position: absolute;
       inset: 0;
     }
+    /* Au-dessus de l'extension de « Voir le détail » : un tap sur 👍 / 👎 ne doit pas ouvrir le détail. */
+    .avis,
+    .merci {
+      position: relative;
+      z-index: 1;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--lr-bordure);
+    }
+    .avis {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .avis .question {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .avis .boutons {
+      display: flex;
+      flex: none;
+      gap: 8px;
+    }
+    .avis button {
+      width: 56px;
+      height: 48px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-fond);
+      font-family: inherit;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .merci {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      margin-bottom: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--lr-primaire);
+    }
     .lien-federation {
       display: flex;
       align-items: center;
@@ -612,6 +660,17 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                 @if (lignes()[$index]; as ligne) {
                   <app-ligne-boite [ligne]="ligne" />
                 }
+                @if (avisDonnes().has(c.rang)) {
+                  <p class="merci" role="status" tabindex="-1" [id]="'merci-' + c.rang">Merci pour ton retour !</p>
+                } @else {
+                  <div class="avis">
+                    <p class="question">Ce conseil t'a aidé ?</p>
+                    <div class="boutons">
+                      <button type="button" aria-label="Oui, ce conseil m'a aidé" (click)="donnerAvis(c, true)">👍</button>
+                      <button type="button" aria-label="Non, ce conseil ne m'a pas aidé" (click)="donnerAvis(c, false)">👎</button>
+                    </div>
+                  </div>
+                }
                 <button
                   type="button"
                   class="voir-detail"
@@ -682,6 +741,7 @@ export class ConseilPage implements OnInit {
   private readonly unites = inject(UnitesService);
   private readonly router = inject(Router);
   private readonly lieuDemande = inject(LieuDemandeService);
+  private readonly feedback = inject(FeedbackService);
   private readonly choix = inject(ConseilChoixStore);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -883,6 +943,22 @@ export class ConseilPage implements OnInit {
 
   private urlEnfant(): boolean {
     return this.router.url.split(/[?#]/)[0].startsWith('/conseil/');
+  }
+
+  /** Les rangs des cartes qui ont reçu un avis ; remis à zéro quand le top 3 est recalculé (un avis par carte affichée). */
+  protected readonly avisDonnes = signal<ReadonlySet<number>>(new Set());
+  /** Les conditions et le moment du top 3 affiché : ce que l'avis note. */
+  private contexteAvis: { conditions: Conditions; moment: Date } | null = null;
+
+  protected donnerAvis(carte: CarteConseil, utile: boolean): void {
+    const contexte = this.contexteAvis;
+    if (!contexte || this.avisDonnes().has(carte.rang)) return;
+    this.avisDonnes.update((rangs) => new Set(rangs).add(carte.rang));
+    this.feedback.donnerAvis(carte, utile, contexte.conditions, contexte.moment);
+    // Le bouton touché disparaît : le focus passe au remerciement, que les lecteurs d'écran annoncent alors.
+    afterNextRender(() => this.hostEl.nativeElement.querySelector<HTMLElement>(`#merci-${carte.rang}`)?.focus({ preventScroll: true }), {
+      injector: this.injector,
+    });
   }
 
   protected async ouvrirDetail(rang: number): Promise<void> {
@@ -1140,6 +1216,8 @@ export class ConseilPage implements OnInit {
     if (unites === 'imperiales') conditions.unites = unites;
     this.detailStore.details.set([]);
     this.detailStore.pourLaBoite.set(null);
+    this.avisDonnes.set(new Set());
+    this.contexteAvis = null;
     this.conseil.set({ type: 'calcul' });
     try {
       const [resultat, types, animations, couleurs, especes] = await Promise.all([
@@ -1157,6 +1235,8 @@ export class ConseilPage implements OnInit {
       this.detailStore.pourLaBoite.set({ conseils: resultat.conseils, types, couleurs });
       const cartes = resultat.conseils.map((c, i): CarteConseil => ({
         rang: i + 1,
+        typeId: c.typeId,
+        techniqueId: c.techniqueId,
         type: types.find((t) => t.id === c.typeId)?.nom ?? c.typeId,
         animation: animations.find((a) => a.id === c.techniqueId)?.nom ?? c.techniqueId,
         couleur: couleurs.find((x) => x.id === c.couleur)?.nom ?? c.couleur,
@@ -1166,6 +1246,7 @@ export class ConseilPage implements OnInit {
         tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
         pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? []).map(finirParUnPoint)].filter(Boolean).join(' '),
       }));
+      this.contexteAvis = { conditions: releve.conditions, moment };
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
     } catch {
       if (!perime()) this.conseil.set({ type: 'indisponible' });
