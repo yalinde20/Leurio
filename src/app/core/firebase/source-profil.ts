@@ -26,7 +26,7 @@ export function creerSourceProfilFirebase(injector: Injector): SourceProfil {
       const lire = (instantane: { exists(): boolean; data(): unknown }) => {
         if (!instantane.exists()) return null;
         const { consentements } = instantane.data() as Partial<UserDoc>;
-        return { analytics: consentements?.analytics === true, video: consentements?.video === true };
+        return { analytics: consentements?.analytics === true, video: typeof consentements?.video === 'boolean' ? consentements.video : null };
       };
       try {
         return lire(await getDoc(reference));

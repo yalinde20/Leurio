@@ -87,7 +87,7 @@ export class CompteService {
       await this.source.ecrireProfil(uid, {
         niveau: actuel.niveau,
         especesFavorites: actuel.especesFavorites,
-        consentements: { analytics: false, video: false },
+        consentements: { analytics: false, video: null },
         createdAt: Date.now(),
         plan: 'free',
       });

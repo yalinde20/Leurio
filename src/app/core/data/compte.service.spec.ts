@@ -65,7 +65,7 @@ describe('CompteService (US 90)', () => {
     expect(doc!.plan).toBe('free');
   });
 
-  it('critère 2 : given le compte anonyme est créé, when on lit users/{uid}, then niveau et especesFavorites sont ceux de la page 2 et les consentements analytics et video sont à faux', async () => {
+  it('critère 2 : given le compte anonyme est créé, when on lit users/{uid}, then niveau et especesFavorites sont ceux de la page 2 et les consentements analytics est faux et video null (jamais répondu)', async () => {
     const { source, profils } = creerSource();
 
     await service(source).assurerCompte(CHOIX);
@@ -73,7 +73,7 @@ describe('CompteService (US 90)', () => {
     const doc = profils.get('uid-neuf');
     expect(doc?.niveau).toBe('intermediaire');
     expect(doc?.especesFavorites).toEqual(['BRO', 'SAN']);
-    expect(doc?.consentements).toEqual({ analytics: false, video: false });
+    expect(doc?.consentements).toEqual({ analytics: false, video: null });
   });
 
   it("critère 3 : given je n'ai pas de réseau, when je termine l'onboarding puis que le réseau revient (événement online), then assurerCompte ne rejette pas et le compte et users/{uid} sont créés au retour", async () => {

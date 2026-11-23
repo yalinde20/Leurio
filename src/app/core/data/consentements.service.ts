@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { SOURCE_COMPTE } from './compte.service';
 import { SOURCE_PROFIL } from './profil.service';
 
@@ -8,7 +8,7 @@ export type Consentement = 'analytics' | 'video';
  * Les consentements de `users/{uid}.consentements` (US 94, PLAN §4, §7, §9 bis), lisibles par le reste de l'app : Analytics (US 19) ne se charge
  * que si `analytics()` est vrai, un lecteur vidéo tiers (US 10) que si `video()` est vrai. Tout est refusé tant que l'utilisateur n'a pas accepté.
  *
- * `analytics()` et `video()` valent faux aussi tant que la lecture n'est pas finie : un consommateur doit donc appeler et attendre `charger()`
+ * `analytics()` et `video()` valent faux (et `reponseVideo()` null) aussi tant que la lecture n'est pas finie : un consommateur doit donc appeler et attendre `charger()`
  * (ou lire `charge()`) avant de décider de charger Analytics ou un lecteur tiers, pour ne pas confondre « refusé » et « pas encore lu ».
  */
 @Injectable({ providedIn: 'root' })
@@ -17,10 +17,13 @@ export class ConsentementsService {
   private readonly profil = inject(SOURCE_PROFIL);
 
   private readonly _analytics = signal(false);
-  private readonly _video = signal(false);
+  private readonly _reponseVideo = signal<boolean | null>(null);
   private readonly _charge = signal(false);
   readonly analytics = this._analytics.asReadonly();
-  readonly video = this._video.asReadonly();
+  /** Vrai seulement si la vidéo tierce est acceptée : seul cas où un lecteur tiers peut se charger. */
+  readonly video = computed(() => this._reponseVideo() === true);
+  /** Tri-état (US 10) : `null` = jamais répondu (on demande), `false` = refusé (on ne redemande pas), `true` = accepté. */
+  readonly reponseVideo = this._reponseVideo.asReadonly();
   /** Vrai quand la lecture de `users/{uid}` est terminée (même sans compte ou sans document) : les valeurs sont alors fiables. */
   readonly charge = this._charge.asReadonly();
 
@@ -51,7 +54,7 @@ export class ConsentementsService {
     const stocke = uid === null ? null : await this.profil.lireConsentements(uid);
     if (stocke !== null) {
       if (!this.modifies.has('analytics')) this._analytics.set(stocke.analytics);
-      if (!this.modifies.has('video')) this._video.set(stocke.video);
+      if (!this.modifies.has('video')) this._reponseVideo.set(stocke.video);
     }
     this._charge.set(true);
   }
@@ -62,10 +65,11 @@ export class ConsentementsService {
    */
   async modifier(consentement: Consentement, accepte: boolean): Promise<void> {
     this.modifies.add(consentement);
-    (consentement === 'analytics' ? this._analytics : this._video).set(accepte);
+    if (consentement === 'analytics') this._analytics.set(accepte);
+    else this._reponseVideo.set(accepte);
     await this.charger();
     const uid = await this.compte.uidCourant();
     if (uid === null) return;
-    await this.profil.mettreAJour(uid, { consentements: { analytics: this._analytics(), video: this._video() } });
+    await this.profil.mettreAJour(uid, { consentements: { analytics: this._analytics(), video: this._reponseVideo() } });
   }
 }
