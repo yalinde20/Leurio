@@ -1,21 +1,18 @@
-// Génère src/assets/data/departements.json (US 58, US 4) : contours simplifiés des départements de la France
-// métropolitaine et d'outre-mer (971 à 976), embarqués dans l'app pour trouver un département sans réseau.
-// Source : https://github.com/gregoiredavid/france-geojson (departements-version-simplifiee.geojson pour la métropole,
-// departements/97X-nom/departement-97X-nom.geojson pour chaque DOM, aux coordonnées réelles : pas la version
-// « avec outre-mer » dont les DOM sont déplacés près de la métropole) ; tracés IGN Admin Express COG 2018, Licence Ouverte Etalab.
-// Usage : node scripts/generate-departements.mjs <fichier.geojson>... [dateVerif AAAA-MM-JJ]
-// (un fichier est une collection de départements ou un seul ; dateVerif : par défaut la date du jour)
+// Génère src/assets/data/departements.json (US 58) : contours simplifiés des départements de la France
+// métropolitaine, embarqués dans l'app pour trouver un département sans réseau.
+// Source : https://github.com/gregoiredavid/france-geojson (departements-version-simplifiee.geojson ;
+// tracés IGN Admin Express COG 2018, Licence Ouverte Etalab).
+// Usage : node scripts/generate-departements.mjs <departements-version-simplifiee.geojson> [dateVerif AAAA-MM-JJ]
+// (dateVerif : par défaut la date du jour)
 // Simplification : Douglas-Peucker (0,0015°, soit ~150 m), coordonnées arrondies à 4 décimales (~10 m).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const TOLERANCE = 0.0015;
-const arguments_ = process.argv.slice(2);
-const dateVerif = arguments_.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a));
-const entrees = arguments_.filter((a) => a !== dateVerif);
-if (entrees.length === 0) {
-  console.error('Usage : node scripts/generate-departements.mjs <fichier.geojson>... [dateVerif AAAA-MM-JJ]');
+const entree = process.argv[2];
+if (!entree) {
+  console.error('Usage : node scripts/generate-departements.mjs <departements-version-simplifiee.geojson>');
   process.exit(1);
 }
 const sortie = join(dirname(fileURLToPath(import.meta.url)), '..', 'src/assets/data/departements.json');
@@ -65,11 +62,8 @@ function anneau(points) {
   return sansDoublon.length >= 4 ? sansDoublon : null;
 }
 
-const features = entrees.flatMap((entree) => {
-  const geojson = JSON.parse(readFileSync(entree, 'utf8'));
-  return geojson.type === 'Feature' ? [geojson] : geojson.features;
-});
-const departements = features.map((f) => {
+const geojson = JSON.parse(readFileSync(entree, 'utf8'));
+const departements = geojson.features.map((f) => {
   const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
   const polygones = polys
     .map((rings) => {
@@ -85,10 +79,9 @@ const contenu = {
   sources: [
     'https://github.com/gregoiredavid/france-geojson',
     'https://geoservices.ign.fr/adminexpress',
-    'https://github.com/gregoiredavid/france-geojson/tree/master/departements (départements d\'outre-mer : 971 Guadeloupe, 972 Martinique, 973 Guyane, 974 La Réunion, 976 Mayotte)',
     'IGN Admin Express COG, édition 2018 (codes INSEE COG 2018), Licence Ouverte Etalab 2.0, via france-geojson (Grégoire David)',
   ],
-  dateVerif: dateVerif ?? new Date().toISOString().slice(0, 10),
+  dateVerif: process.argv[3] ?? new Date().toISOString().slice(0, 10),
   departements,
 };
 writeFileSync(sortie, JSON.stringify(contenu) + '\n');

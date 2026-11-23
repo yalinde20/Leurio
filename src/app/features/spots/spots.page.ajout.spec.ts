@@ -19,7 +19,7 @@
  *    (ou déplace) un unique marqueur Leaflet (`.leaflet-marker-icon` dans la région) et la région reflète sa position dans
  *    `data-marqueur-lat` / `data-marqueur-lng` (couture de test, comme `data-centre-*` en US 3 ; absents tant qu'aucun marqueur) ;
  *  - tant qu'aucune position n'est posée : « Touche la carte pour placer le spot. » ; ensuite le département sous la carte, dans un
- *    `[role="status"]` : « Département : 49 Maine-et-Loire » (code, puis nom lu dans departements.json) ; hors France (métropole et DOM) :
+ *    `[role="status"]` : « Département : 49 Maine-et-Loire » (code, puis nom lu dans departements.json) ; hors de la France métropolitaine (DOM compris, décision du propriétaire) :
  *    un `[role="alert"]` « Département introuvable : place le spot en France » ;
  *  - erreurs : un `[role="alert"]` par champ invalide, sous le champ (celui de « Nom » est désigné par son `aria-describedby`) :
  *    « Donne un nom à ton spot », « Choisis la catégorie », « Choisis le type d'eau », « Place le spot sur la carte » ;
@@ -46,7 +46,7 @@ const ETANG: DocumentSpotAttente = {
 const PONT_DE_CE = { lat: 47.43, lng: -0.52 }; // Maine-et-Loire (49)
 const NANTES = { lat: 47.22, lng: -1.55 }; // Loire-Atlantique (44)
 const MADRID = { lat: 40.4, lng: -3.7 }; // Espagne
-const SAINT_DENIS = { lat: -21.1, lng: 55.5 }; // La Réunion (974)
+const SAINT_DENIS = { lat: -21.1, lng: 55.5 }; // La Réunion (974) : hors France métropolitaine, refusée
 
 const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
 const texte = (el: Element | null) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
@@ -225,14 +225,17 @@ describe('SpotsPage : formulaire d\'ajout d\'un spot privé (US 4)', () => {
     expect(statut(env.page)).toBe('Département : 49 Maine-et-Loire');
   });
 
-  it('critère 2 : given le formulaire ouvert, when l\'utilisateur touche la carte à La Réunion (DOM), then le département détecté est « Département : 974 La Réunion »', async () => {
+  it('critère 4 : given le formulaire rempli, when l\'utilisateur touche la carte à La Réunion (DOM, hors France métropolitaine, décision du propriétaire), then « Département introuvable : place le spot en France » s\'affiche et « Enregistrer » refuse l\'enregistrement', async () => {
     const env = await ouvrir();
     await ouvrirFormulaire(env);
+    await remplir(env, { ...COMPLET, lieu: SAINT_DENIS });
 
-    await toucher(env, SAINT_DENIS);
+    expect(alertes(env.page)).toContain('Département introuvable : place le spot en France');
 
-    expect(statut(env.page)).toBe('Département : 974 La Réunion');
-    expect(alertes(env.page)).not.toContain('Département introuvable : place le spot en France');
+    await enregistrer(env);
+
+    expect(env.ecritures).toEqual([]);
+    expect(dialogue(env.page)).not.toBeNull();
   });
 
   it('critère 3 : given un marqueur déjà posé, when l\'utilisateur touche un autre endroit, then le marqueur se déplace et le département est mis à jour', async () => {

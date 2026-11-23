@@ -31,7 +31,7 @@ describe('GeoService : cas limites', () => {
     expect(departement(46.2044, 6.1432)).toBe(HORS_FRANCE);
   });
 
-  it('given des coordonnées dans une collectivité d’outre-mer qui n’est pas un département (Nouvelle-Calédonie), when on demande le département, then le service rend « hors France »', () => {
-    expect(departement(-22.27, 166.45)).toBe(HORS_FRANCE); // US 4 : les DOM (971 à 976) sont des départements, voir geo.service.dom.spec.ts
+  it('given des coordonnées dans les territoires d’outre-mer, when on demande le département, then le service rend « hors France »', () => {
+    expect(departement(14.6, -61.0)).toBe(HORS_FRANCE);
   });
 });
