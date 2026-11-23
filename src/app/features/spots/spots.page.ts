@@ -183,6 +183,7 @@ export class SpotsPage {
   private readonly spots = inject(SpotsService);
   private readonly position = inject(PositionService);
   private readonly geo = inject(GeoService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
@@ -203,7 +204,7 @@ export class SpotsPage {
 
   constructor() {
     afterNextRender(() => this.creerCarte());
-    inject(DestroyRef).onDestroy(() => {
+    this.destroyRef.onDestroy(() => {
       this.detruit = true;
       this.carte()?.remove();
     });
@@ -224,7 +225,10 @@ export class SpotsPage {
   /** Appelé par Ionic quand l'onglet devient visible : la carte a pu être créée sans taille. */
   ionViewDidEnter(): void {
     const carte = this.carte();
-    if (!carte) return;
+    if (carte) this.redimensionner(carte);
+  }
+
+  private redimensionner(carte: L.Map): void {
     carte.invalidateSize();
     const etat = this.etat();
     if (this.cadrageAReprendre && etat.type === 'pret') this.cadrer(carte, etat.spots);
@@ -232,6 +236,8 @@ export class SpotsPage {
 
   protected choisir(spot: SpotEnregistre): void {
     this.choisi.set(spot.id);
+    // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
+    this.cadrageAReprendre = false;
     this.majMarqueurs();
     this.carte()?.setView([spot.lat, spot.lng], Math.max(this.carte()?.getZoom() ?? 0, ZOOM_COMMUNE));
   }
@@ -275,6 +281,12 @@ export class SpotsPage {
     carte.on('moveend', reporter);
     reporter();
     this.calque = L.layerGroup().addTo(carte);
+    // La page peut être créée avant d'être affichée (onglet en transition) : Leaflet garde alors une taille nulle.
+    if (typeof ResizeObserver !== 'undefined') {
+      const observateur = new ResizeObserver(() => this.redimensionner(carte));
+      observateur.observe(element);
+      this.destroyRef.onDestroy(() => observateur.disconnect());
+    }
     this.carte.set(carte);
   }
 
@@ -288,8 +300,11 @@ export class SpotsPage {
       this.marqueurs.set(spot.id, marqueur);
       this.calque?.addLayer(marqueur);
     }
-    if (spots.length > 0) this.cadrer(carte, spots);
-    else void this.centrerSurPosition(carte);
+    this.majMarqueurs();
+    // Un spot déjà touché dans la liste (avant la pose des marqueurs) garde le centrage demandé.
+    if (spots.length > 0) {
+      if (this.choisi() === null) this.cadrer(carte, spots);
+    } else void this.centrerSurPosition(carte);
   }
 
   private majMarqueurs(): void {
@@ -300,9 +315,11 @@ export class SpotsPage {
     const points = spots.map((s): L.LatLngTuple => [s.lat, s.lng]);
     const bornes = L.latLngBounds(points);
     this.cadrageAReprendre = carte.getSize().x === 0;
-    if (this.cadrageAReprendre) carte.setView(bornes.getCenter(), points.length === 1 ? ZOOM_COMMUNE : ZOOM_SANS_TAILLE);
-    else if (points.length === 1) carte.setView(points[0], ZOOM_COMMUNE);
-    else carte.fitBounds(bornes, { padding: [40, 40], maxZoom: ZOOM_COMMUNE });
+    // Cadrage initial sans animation : un zoom animé en cours ignorerait le centrage demandé par un tap sur la liste.
+    const sansAnimation = { animate: false };
+    if (this.cadrageAReprendre) carte.setView(bornes.getCenter(), points.length === 1 ? ZOOM_COMMUNE : ZOOM_SANS_TAILLE, sansAnimation);
+    else if (points.length === 1) carte.setView(points[0], ZOOM_COMMUNE, sansAnimation);
+    else carte.fitBounds(bornes, { padding: [40, 40], maxZoom: ZOOM_COMMUNE, ...sansAnimation });
   }
 
   private async centrerSurPosition(carte: L.Map): Promise<void> {
@@ -310,6 +327,6 @@ export class SpotsPage {
     if (this.detruit || !resultat.disponible) return;
     const lieu: L.LatLngTuple = [resultat.latitude, resultat.longitude];
     L.circleMarker(lieu, { radius: 9, className: 'ma-position', interactive: false }).addTo(this.calque ?? carte);
-    carte.setView(lieu, ZOOM_COMMUNE);
+    carte.setView(lieu, ZOOM_COMMUNE, { animate: false });
   }
 }
