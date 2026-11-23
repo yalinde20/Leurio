@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, linkedSignal, signal, untracked } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Video, VideoHebergee, VideoPropre } from '../../core/data/catalog.types';
 import { ConsentementsService } from '../../core/data/consentements.service';
@@ -27,6 +27,9 @@ export function adresseLecteur(video: VideoHebergee): string {
  * Sous elle (US 10), la rubrique « Vidéo complète » lit la première vidéo YouTube, Vimeo ou Dailymotion de la liste, dans le lecteur officiel,
  * et seulement après consentement : tant que `ConsentementsService.video()` n'est pas vrai, aucun <iframe> n'existe et aucune plateforme n'est appelée.
  * Jamais répondu : une carte pose la question ; refusé : la rubrique n'apparaît pas.
+ * Sans réseau (US 11, `navigator.onLine` et événements `online` / `offline`), aucun <iframe>, ni titre « Vidéo complète », ni crédit, ni question :
+ * la phrase « Hors ligne… » se place sous la boucle lisible, ou, sans boucle utilisable, une zone 16:9 dit « Vidéo disponible avec du réseau ».
+ * Refusé : rien de plus que la boucle. Au retour du réseau, l'écran de l'US 10 reprend la place sans recharger.
  * Tant que le fichier manque, ne se charge pas ou que la lecture est refusée (iOS, économie d'énergie), rien ne s'affiche :
  * ni zone vidéo, ni message. La <video> reste dans le DOM mais invisible (et sans hauteur) jusqu'à `canplay` : iOS ne lance
  * pas une vidéo en `display: none`.
@@ -55,6 +58,33 @@ export function adresseLecteur(video: VideoHebergee): string {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    .hors-ligne {
+      margin: 8px 0 0;
+      font-size: 15px;
+      line-height: 1.4;
+      color: var(--lr-texte-secondaire);
+    }
+    .video-reseau {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-sizing: border-box;
+      margin-top: 12px;
+      padding: 16px;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      background: var(--lr-sable);
+      color: var(--lr-texte);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .video-reseau svg {
+      flex: none;
+      width: 22px;
+      height: 22px;
     }
     .titre-video {
       margin: 16px 0 8px;
@@ -158,7 +188,16 @@ export function adresseLecteur(video: VideoHebergee): string {
       }
     }
     @if (tierce(); as t) {
-      @if (rubriqueVisible()) {
+      @if (rubriqueVisible() && horsLigne()) {
+        @if (boucle() && etat() !== 'ecarte') {
+          <p class="hors-ligne">Hors ligne : la vidéo complète sera disponible avec du réseau</p>
+        } @else {
+          <div class="video-reseau">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0v5l-8 5v2l8-2.5v5.5l-2 1.5V22l3.5-1 3.5 1v-1.5l-2-1.5V13z" fill="currentColor" /></svg>
+            Vidéo disponible avec du réseau
+          </div>
+        }
+      } @else if (rubriqueVisible()) {
         <h3 class="titre-video">Vidéo complète</h3>
         @if (consentements.video() === true) {
           <iframe
@@ -221,7 +260,18 @@ export class VideoPlayerComponent {
     return t ? this.sanitizer.bypassSecurityTrustResourceUrl(adresseLecteur(t)) : null;
   });
 
+  /** Vrai sans réseau (mode avion) ; suit les événements `offline` et `online` de la fenêtre. */
+  protected readonly horsLigne = signal(navigator.onLine === false);
+
   constructor() {
+    const majReseau = () => this.horsLigne.set(navigator.onLine === false);
+    majReseau();
+    window.addEventListener('online', majReseau);
+    window.addEventListener('offline', majReseau);
+    inject(DestroyRef).onDestroy(() => {
+      window.removeEventListener('online', majReseau);
+      window.removeEventListener('offline', majReseau);
+    });
     effect(() => {
       if (!this.tierce()) return;
       this.consentements.charger().then(

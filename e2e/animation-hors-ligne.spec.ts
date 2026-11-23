@@ -91,6 +91,20 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
   await page.goBack();
   await page.goBack();
   await expect(carte.getByText('Voir le détail')).toBeVisible();
+  // creerProfil écrit par l'API REST de l'émulateur, sans passer par l'app : on relit users/{uid} en ligne avec le SDK de l'app pour que
+  // son cache local tienne ce consentement (sinon la lecture faite hors ligne peut rendre l'ancien profil, comme pour un pêcheur
+  // dont l'app n'aurait jamais vu son choix).
+  await expect
+    .poll(() =>
+      page.evaluate(async (id) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const f = (window as any).leurioFirebase;
+        const { doc, getDoc } = f.sdk.firestore;
+        const instantane = await getDoc(doc(f.db, 'users', id));
+        return instantane.metadata.fromCache ? 'cache' : (instantane.data()?.consentements?.video ?? null);
+      }, uid),
+    )
+    .toBe(video);
   await page.context().setOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
 }
@@ -107,8 +121,9 @@ const retourDuReseau = async (page: Page) => {
 };
 
 test("US 11 critère 1 : given le consentement accepté, une vidéo YouTube et une boucle, et le mode avion, when j'ouvre la fiche, then aucun lecteur tiers n'est chargé et la boucle est lue avec « Hors ligne : la vidéo complète sera disponible avec du réseau »", async ({ page }) => {
-  const urls = enregistrerRequetes(page);
   await conseilsPuisModeAvion(page, true);
+  // Les requêtes comptées sont celles faites en mode avion (la visite préalable, en ligne, peut charger le lecteur).
+  const urls = enregistrerRequetes(page);
   await ouvrirLaFiche(page);
 
   await expect(page.getByText(TEXTE_HORS_LIGNE)).toBeVisible();
@@ -122,8 +137,9 @@ test("US 11 critère 1 : given le consentement accepté, une vidéo YouTube et u
 
 test("US 11 critère 2 : given une animation sans boucle utilisable et le mode avion, when j'ouvre la fiche, then la zone vidéo affiche « Vidéo disponible avec du réseau » et les textes de la fiche restent lisibles", async ({ page }) => {
   boucleDisponible = false;
-  const urls = enregistrerRequetes(page);
   await conseilsPuisModeAvion(page, true);
+  // Les requêtes comptées sont celles faites en mode avion (la visite préalable, en ligne, peut charger le lecteur).
+  const urls = enregistrerRequetes(page);
   await ouvrirLaFiche(page);
 
   await expect(page.getByText(TEXTE_SANS_BOUCLE)).toBeVisible();
@@ -150,8 +166,9 @@ test('US 11 critère 3 : given la fiche ouverte hors ligne avec la boucle, when 
 });
 
 test("US 11 cas limite : given le consentement jamais répondu et le mode avion, when j'ouvre la fiche puis que le réseau revient, then la question n'est posée qu'au retour du réseau, sans lecteur", async ({ page }) => {
-  const urls = enregistrerRequetes(page);
   await conseilsPuisModeAvion(page, null);
+  // Les requêtes comptées sont celles faites en mode avion (la visite préalable, en ligne, peut charger le lecteur).
+  const urls = enregistrerRequetes(page);
   await ouvrirLaFiche(page);
 
   await expect(page.getByText(TEXTE_HORS_LIGNE)).toBeVisible();
