@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 3 : onglet Spots, carte et liste</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea; --lr-surface: #fffdf8; --lr-texte: #10241f; --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be; --lr-primaire: #0e6b5c; --lr-sur-primaire: #f7f3ea; --lr-sable: #e9dcc0;
+    --lr-danger: #b42318; --lr-carte-eau: #9cc9d6; --lr-carte-terre: #e9e2cf; --lr-carte-marqueur: #e8590c;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714; --lr-surface: #16231f; --lr-texte: #e6e1d6; --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36; --lr-primaire: #5cc8b0; --lr-sur-primaire: #0e1714; --lr-sable: #3a3326;
+    --lr-danger: #f97066; --lr-carte-eau: #123a44; --lr-carte-terre: #1b2622; --lr-carte-marqueur: #ff8a3d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif; background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; position: sticky; top: 8px; z-index: 10; }
+  .switch label { min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; color: #222; font-size: 15px; }
+  #t-clair:checked ~ .switch label[for="t-clair"], #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone { width: 390px; max-width: 100%; border: 1px solid #888; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: var(--lr-fond); color: var(--lr-texte); }
+  .statusbar { height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; background: var(--lr-surface); }
+  .toolbar { min-height: 44px; display: flex; align-items: center; justify-content: center; background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure); }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { padding: 16px; min-height: 520px; }
+  .tabbar { display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure); padding-bottom: 34px; }
+  .tab { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire); }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte Leaflet. */
+  .carte-map { position: relative; height: 240px; border-radius: 16px; overflow: hidden; border: 1px solid var(--lr-bordure); background: var(--lr-carte-terre); }
+  .carte-map .fond { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .zoom { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid var(--lr-bordure); }
+  .zoom button { width: 48px; height: 48px; border: none; background: var(--lr-surface); color: var(--lr-texte); font-size: 24px; font-family: inherit; }
+  .zoom button + button { border-top: 1px solid var(--lr-bordure); }
+  .attrib { position: absolute; right: 0; bottom: 0; padding: 2px 6px; font-size: 11px; background: var(--lr-surface); color: var(--lr-texte-secondaire); border-top-left-radius: 6px; }
+  .pin { position: absolute; width: 30px; height: 40px; transform: translate(-50%, -100%); }
+  .pin svg { width: 100%; height: 100%; }
+  .pin path { fill: var(--lr-carte-marqueur); stroke: var(--lr-surface); stroke-width: 1.5; }
+  .pin circle { fill: var(--lr-surface); }
+  .pin.on { width: 40px; height: 54px; }
+  .moi { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--lr-primaire); border: 3px solid var(--lr-surface); transform: translate(-50%, -50%); box-shadow: 0 0 0 10px color-mix(in srgb, var(--lr-primaire) 25%, transparent); }
+  .hl { position: absolute; top: 8px; right: 8px; padding: 6px 10px; border-radius: 8px; background: var(--lr-surface); color: var(--lr-texte); font-size: 14px; font-weight: 600; border: 1px solid var(--lr-bordure); }
+
+  /* La liste. */
+  .section-titre { margin: 20px 0 8px; font-size: 20px; font-weight: 700; }
+  .liste { list-style: none; margin: 0; padding: 0; background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; overflow: hidden; }
+  .liste li + li { border-top: 1px solid var(--lr-bordure); }
+  .spot { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; width: 100%; min-height: 56px; padding: 8px 16px; border: none; background: transparent; color: var(--lr-texte); font-family: inherit; text-align: left; }
+  .spot .nom { font-size: 17px; font-weight: 600; }
+  .spot .meta { font-size: 14px; color: var(--lr-texte-secondaire); }
+  .spot.on .nom { color: var(--lr-primaire); font-weight: 700; }
+  .vide { margin: 0; min-height: 48px; display: flex; align-items: center; font-size: 16px; color: var(--lr-texte-secondaire); }
+  .bouton { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px; border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire); font-size: 17px; font-weight: 600; font-family: inherit; }
+  code { font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>US 3 — Onglet Spots : carte et liste de mes spots</h1>
+<p class="note">iPhone, app installée. PLAN §2.4, §3 (écran Spots : carte Leaflet, liste), §4 (Leaflet + OpenStreetMap) et §7 (<code>users/{uid}/spots</code>, seuls mes spots). La carte est en haut de l'écran, la liste dessous. Toutes les couleurs (marqueurs, contrôles de zoom, attribution, liste) viennent des tokens ; en thème sombre, les tuiles OpenStreetMap sont assombries par un filtre pour ne pas éblouir. Le formulaire d'ajout, la modification et la suppression d'un spot ne font pas partie de cette story.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+
+<h2>1. Deux spots enregistrés (critère 1)</h2>
+<p class="note">La carte (Leaflet + tuiles OpenStreetMap, 240 px de haut) s'ajuste pour montrer tous les marqueurs : un par spot, couleur <code>--lr-carte-marqueur</code>. Sous la carte, « Mes spots » : une ligne de 48 px minimum par spot, dans l'ordre alphabétique, avec le nom puis « catégorie · type d'eau · département ». Le département est affiché avec son nom et son numéro, lus dans le contenu (<code>departements.json</code>). Le bouton « Ajouter un spot » est en bas de la liste.</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin" style="left:112px;top:58px" title="Étang du moulin"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin" style="left:240px;top:84px" title="La Sèvre à Clisson"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Étang du moulin</span><span class="meta">2e catégorie · Lac · Maine-et-Loire (49)</span></button></li><li><button class="spot"><span class="nom">La Sèvre à Clisson</span><span class="meta">1re catégorie · Rivière · Loire-Atlantique (44)</span></button></li></ul><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>2. Un spot touché dans la liste (critère 3)</h2>
+<p class="note">Toucher « La Sèvre à Clisson » centre la carte sur son marqueur (animation courte) ; ce marqueur grossit et la ligne passe en couleur primaire, en gras. La carte reste à l'écran au-dessus de la liste.</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin on" style="left:167px;top:92px" title="La Sèvre à Clisson"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Étang du moulin</span><span class="meta">2e catégorie · Lac · Maine-et-Loire (49)</span></button></li><li><button class="spot on"><span class="nom">La Sèvre à Clisson</span><span class="meta">1re catégorie · Rivière · Loire-Atlantique (44)</span></button></li></ul><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>3. Aucun spot, géolocalisation autorisée (critères 2 et 4)</h2>
+<p class="note">La carte est centrée sur ta position (point couleur primaire, zoom à l'échelle d'une commune). La liste montre « Aucun spot pour l'instant » et le bouton « Ajouter un spot ».</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="moi" style="left:172px;top:112px" title="Ta position"></span>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><p class="vide">Aucun spot pour l'instant</p><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>4. Aucun spot, géolocalisation refusée (critère 5)</h2>
+<p class="note">La carte montre la France métropolitaine entière, Corse comprise. Pas de message d'erreur : la liste est la même que dans l'état 3.</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240"><rect width="358" height="240" fill="var(--lr-carte-eau)"/><path d="M130 14 L175 8 L215 24 L258 32 L284 54 L276 98 L292 134 L278 172 L246 200 L205 208 L172 224 L136 212 L106 192 L113 156 L98 120 L68 100 L70 80 L106 68 Z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="2"/><path d="M304 182 l10 4 l-2 22 l-9 -6 z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="1.5"/></svg>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><p class="vide">Aucun spot pour l'instant</p><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>5. Chargement</h2>
+<p class="note">Pendant la lecture des spots, la carte est déjà là (France entière) et la liste montre « Chargement des spots… ».</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240"><rect width="358" height="240" fill="var(--lr-carte-eau)"/><path d="M130 14 L175 8 L215 24 L258 32 L284 54 L276 98 L292 134 L278 172 L246 200 L205 208 L172 224 L136 212 L106 192 L113 156 L98 120 L68 100 L70 80 L106 68 Z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="2"/><path d="M304 182 l10 4 l-2 22 l-9 -6 z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="1.5"/></svg>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><p class="vide">Chargement des spots…</p></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>6. Erreur de lecture</h2>
+<p class="note">Si la lecture des spots échoue : « Tes spots ne sont pas disponibles pour le moment. » (même texte que le sélecteur de lieu du Conseil). La carte montre la France entière.</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240"><rect width="358" height="240" fill="var(--lr-carte-eau)"/><path d="M130 14 L175 8 L215 24 L258 32 L284 54 L276 98 L292 134 L278 172 L246 200 L205 208 L172 224 L136 212 L106 192 L113 156 L98 120 L68 100 L70 80 L106 68 Z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="2"/><path d="M304 182 l10 4 l-2 22 l-9 -6 z" fill="var(--lr-carte-terre)" stroke="var(--lr-bordure)" stroke-width="1.5"/></svg>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><p class="vide">Tes spots ne sont pas disponibles pour le moment.</p><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+<h2>7. Hors ligne</h2>
+<p class="note">Les spots viennent du cache local de Firestore : liste et marqueurs s'affichent. Les tuiles pas encore en cache restent couleur <code>--lr-carte-terre</code>, et une mention s'affiche sur la carte : « Hors ligne : carte incomplète ».</p>
+<div class="phone">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Spots</span></div>
+    <div class="content"><div class="carte-map " role="region" aria-label="Carte des spots">
+      <svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/></svg><div class="hl">Hors ligne : carte incomplète</div><span class="pin" style="left:112px;top:58px" title="Étang du moulin"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin" style="left:240px;top:84px" title="La Sèvre à Clisson"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span>
+      <div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div>
+      <div class="attrib">© contributeurs OpenStreetMap</div>
+    </div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Étang du moulin</span><span class="meta">2e catégorie · Lac · Maine-et-Loire (49)</span></button></li><li><button class="spot"><span class="nom">La Sèvre à Clisson</span><span class="meta">1re catégorie · Rivière · Loire-Atlantique (44)</span></button></li></ul><button class="bouton">Ajouter un spot</button></div>
+    <nav class="tabbar">
+      <div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+
+  <h2>8. Thème clair et thème sombre (critère 6)</h2>
+  <p class="note">Utilise l'interrupteur en haut : marqueurs, contrôles de zoom, attribution, liste et bouton changent avec le thème actif.</p>
+
+  <h2>9. Android</h2>
+  <p class="note">Même écran ; titre de la barre du haut à gauche.</p>
+</div>
+</body>
+</html>
