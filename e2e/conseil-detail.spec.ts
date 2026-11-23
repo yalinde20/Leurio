@@ -69,7 +69,7 @@ test('US 86 critère 2 : given le détail ouvert, when je touche « Voir l\'anim
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
   await expect(page.getByText('Vitesse', { exact: true })).toBeVisible();
   await expect(page.getByText('Erreur à éviter', { exact: true })).toBeVisible();
-  await expect(page.getByText("La vidéo de l'animation arrive bientôt.")).toBeVisible();
+  await expect(page.getByText("La vidéo de l'animation arrive bientôt.")).toHaveCount(0);
 });
 
 test('US 86 critère 3 : given le détail ouvert, when je reviens en arrière, then l\'écran Conseil montre le même top 3', async ({ page }) => {

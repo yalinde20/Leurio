@@ -4,14 +4,15 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Animation, CatalogService } from '../../core/data/catalog.service';
 import { ConseilDetailStore } from '../conseil/conseil-detail.store';
 import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
+import { VideoPlayerComponent } from '../../shared/video-player/video-player.component';
 
 /**
- * La fiche d'une animation (US 86, US 8) : geste, vitesse et erreur à éviter, lus dans techniques.json. La vidéo arrivera avec le ticket 20.
+ * La fiche d'une animation (US 86, US 8) : geste, vitesse et erreur à éviter, lus dans techniques.json. La boucle courte « self » est lue sous le texte (US 9) ; sans fichier lisible, la fiche n'a que ses textes.
  * Une animation absente du contenu (ou un contenu illisible) affiche « Cette animation n'est pas encore décrite ».
  */
 @Component({
   selector: 'app-animation',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BoutonRetourComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, BoutonRetourComponent, VideoPlayerComponent],
   host: { class: 'ion-page' },
   styles: `
     .carte {
@@ -40,18 +41,6 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
       font-size: 16px;
       line-height: 1.4;
     }
-    .video-attente {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 180px;
-      padding: 16px;
-      border-radius: 12px;
-      background: var(--lr-sable);
-      color: var(--lr-texte-secondaire);
-      font-size: 15px;
-      text-align: center;
-    }
   `,
   template: `
     <ion-header>
@@ -71,7 +60,7 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
           <h3>Erreur à éviter</h3>
           <p>{{ a.erreurAEviter }}</p>
         </section>
-        <div class="video-attente">La vidéo de l'animation arrive bientôt.</div>
+        <app-video-player [videos]="a.videos" />
       } @else if (absente()) {
         <section class="carte">
           <h2>Animation</h2>
