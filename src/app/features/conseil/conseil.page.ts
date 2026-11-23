@@ -1,4 +1,4 @@
-import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -6,6 +6,7 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
+import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
@@ -28,6 +29,7 @@ import {
   formaterTempEau,
   formaterVent,
 } from './conditions-format';
+import { ConseilChoixStore, MomentChoisi } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
 import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 import { LigneBoiteComponent } from './ligne-boite.component';
@@ -42,13 +44,6 @@ import {
 
 const TOUTES = 'Toutes les espèces';
 const UNE_HEURE_MS = 3600 * 1000;
-
-/** Le moment affiché ; `null` = « Maintenant ». Le libellé et la mention sont figés au choix. */
-interface MomentChoisi {
-  date: Date;
-  libelle: string;
-  mention: string;
-}
 
 /** Le lieu du conseil, avec le spot dont il vient (`null` = position GPS) : les deux vont ensemble. */
 interface Lieu {
@@ -686,6 +681,8 @@ export class ConseilPage implements OnInit {
   private readonly detailStore = inject(ConseilDetailStore);
   private readonly unites = inject(UnitesService);
   private readonly router = inject(Router);
+  private readonly lieuDemande = inject(LieuDemandeService);
+  private readonly choix = inject(ConseilChoixStore);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Vrai quand le détail d'un conseil ou la fiche animation est ouvert : l'écran « Conseil » laisse la place à l'enfant, le top 3 reste dans le composant. */
@@ -715,6 +712,16 @@ export class ConseilPage implements OnInit {
   private readonly injector = inject(Injector);
 
   constructor() {
+    // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
+    const gardé = this.choix.moment();
+    if (gardé) {
+      const maintenant = new Date();
+      this.choix.moment.set(
+        gardé.date.getTime() <= maintenant.getTime()
+          ? null
+          : { date: gardé.date, libelle: libelleMoment(gardé.date, maintenant), mention: mentionMoment(gardé.date, maintenant) },
+      );
+    }
     // Au retour du détail, le focus revient sur le bouton de la carte ouverte.
     effect(() => {
       if (this.enfantOuvert() || this.rangOuvert === null) return;
@@ -729,6 +736,12 @@ export class ConseilPage implements OnInit {
           }),
         { injector: this.injector },
       );
+    });
+    // Le lieu demandé par l'écran « Spots », que la page soit créée après la navigation ou déjà vivante.
+    effect(() => {
+      if (this.lieuDemande.demande() === null) return;
+      const spot = untracked(() => this.lieuDemande.prendre());
+      if (spot) untracked(() => this.appliquerDemande(spot));
     });
     // Le focus entre dans le champ dès qu'il s'ouvre.
     effect(() => this.champTemp()?.nativeElement.focus());
@@ -749,15 +762,15 @@ export class ConseilPage implements OnInit {
   private readonly selecteur = viewChild<ElementRef<HTMLButtonElement>>('selecteur');
   /** Vrai dès que la position est connue : avant, un moment choisi n'aurait aucun lieu où s'appliquer. */
   protected readonly lieuPret = signal(false);
-  /** Le moment choisi ; `null` = « Maintenant ». État du composant, jamais mémorisé. */
-  private readonly moment = signal<MomentChoisi | null>(null);
+  /** Le moment choisi ; `null` = « Maintenant ». Gardé en mémoire par le store le temps de l'app, jamais sur le téléphone. */
+  private readonly moment = this.choix.moment;
   protected readonly libelleSelecteur = computed(() => this.moment()?.libelle ?? 'Maintenant');
   protected readonly feuilleOuverte = signal(false);
   protected readonly jourBrouillon = signal<JourMoment>('aujourdhui');
   protected readonly heureBrouillon = signal(0);
 
-  /** L'espèce visée ; `null` pour « Toutes les espèces ». Gardée tant que la page vit, jamais mémorisée. */
-  protected readonly espece = signal<Espece | null>(null);
+  /** L'espèce visée ; `null` pour « Toutes les espèces ». Gardée en mémoire par le store le temps de l'app, jamais sur le téléphone. */
+  protected readonly espece = this.choix.espece;
   protected readonly choixOuvert = signal(false);
   protected readonly choixEspeces = signal<ChoixEspece[]>([]);
   private readonly bouton = viewChild.required<ElementRef<HTMLElement>>('boutonEspece');
@@ -916,7 +929,15 @@ export class ConseilPage implements OnInit {
   }
 
   ngOnInit(): void {
-    void this.charger();
+    // Un spot demandé par l'écran « Spots » est le lieu de départ : la position GPS n'est pas demandée (l'effet du constructeur l'applique).
+    if (this.lieuDemande.demande() === null) void this.charger();
+  }
+
+  /** Le spot demandé par « Voir le conseil » devient le lieu, comme un choix dans la feuille « Lieu ». */
+  private appliquerDemande(spot: SpotEnregistre): void {
+    this.lieuOuvert.set(false);
+    this.spotChoisi.set(spot);
+    void this.appliquerLieu(spot);
   }
 
   protected ouvrirFeuille(): void {

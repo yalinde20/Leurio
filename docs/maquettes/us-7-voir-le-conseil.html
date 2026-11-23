@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 7 : voir le conseil d'un spot</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea; --lr-surface: #fffdf8; --lr-texte: #10241f; --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be; --lr-primaire: #0e6b5c; --lr-sur-primaire: #f7f3ea; --lr-sable: #e9dcc0;
+    --lr-danger: #b42318; --lr-carte-eau: #9cc9d6; --lr-carte-terre: #e9e2cf; --lr-carte-marqueur: #e8590c;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714; --lr-surface: #16231f; --lr-texte: #e6e1d6; --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36; --lr-primaire: #5cc8b0; --lr-sur-primaire: #0e1714; --lr-sable: #3a3326;
+    --lr-danger: #f97066; --lr-carte-eau: #123a44; --lr-carte-terre: #1b2622; --lr-carte-marqueur: #ff8a3d;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif; background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; position: sticky; top: 8px; z-index: 10; }
+  .switch label { min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; color: #222; font-size: 15px; }
+  #t-clair:checked ~ .switch label[for="t-clair"], #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone { width: 390px; max-width: 100%; border: 1px solid #888; border-radius: 44px; overflow: hidden; display: flex; flex-direction: column; background: var(--lr-fond); color: var(--lr-texte); }
+  .statusbar { height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; background: var(--lr-surface); }
+  .toolbar { min-height: 44px; display: flex; align-items: center; justify-content: center; background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure); }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { padding: 16px; min-height: 520px; }
+  .tabbar { display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure); padding-bottom: 34px; }
+  .tab { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire); }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte Leaflet. */
+  .carte-map { position: relative; height: 240px; border-radius: 16px; overflow: hidden; border: 1px solid var(--lr-bordure); background: var(--lr-carte-terre); }
+  .carte-map .fond { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .zoom { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; border-radius: 12px; overflow: hidden; border: 1px solid var(--lr-bordure); }
+  .zoom button { width: 48px; height: 48px; border: none; background: var(--lr-surface); color: var(--lr-texte); font-size: 24px; font-family: inherit; }
+  .zoom button + button { border-top: 1px solid var(--lr-bordure); }
+  .attrib { position: absolute; right: 0; bottom: 0; padding: 2px 6px; font-size: 11px; background: var(--lr-surface); color: var(--lr-texte-secondaire); border-top-left-radius: 6px; }
+  .pin { position: absolute; width: 30px; height: 40px; transform: translate(-50%, -100%); }
+  .pin svg { width: 100%; height: 100%; }
+  .pin path { fill: var(--lr-carte-marqueur); stroke: var(--lr-surface); stroke-width: 1.5; }
+  .pin circle { fill: var(--lr-surface); }
+  .pin.on { width: 40px; height: 54px; }
+  .moi { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--lr-primaire); border: 3px solid var(--lr-surface); transform: translate(-50%, -50%); box-shadow: 0 0 0 10px color-mix(in srgb, var(--lr-primaire) 25%, transparent); }
+  .hl { position: absolute; top: 8px; right: 8px; padding: 6px 10px; border-radius: 8px; background: var(--lr-surface); color: var(--lr-texte); font-size: 14px; font-weight: 600; border: 1px solid var(--lr-bordure); }
+
+  /* La liste. */
+  .section-titre { margin: 20px 0 8px; font-size: 20px; font-weight: 700; }
+  .liste { list-style: none; margin: 0; padding: 0; background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; overflow: hidden; }
+  .liste li + li { border-top: 1px solid var(--lr-bordure); }
+  .spot { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; width: 100%; min-height: 56px; padding: 8px 16px; border: none; background: transparent; color: var(--lr-texte); font-family: inherit; text-align: left; }
+  .spot .nom { font-size: 17px; font-weight: 600; }
+  .spot .meta { font-size: 14px; color: var(--lr-texte-secondaire); }
+  .spot.on .nom { color: var(--lr-primaire); font-weight: 700; }
+  .vide { margin: 0; min-height: 48px; display: flex; align-items: center; font-size: 16px; color: var(--lr-texte-secondaire); }
+  .bouton { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px; border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire); font-size: 17px; font-weight: 600; font-family: inherit; }
+  code { font-size: 13px; }
+
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display: flex; align-items: center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 16px; }
+  .form .lbl { display: block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ { width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px; background: var(--lr-surface); color: var(--lr-texte); font-size: 17px; display: flex; align-items: center; }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .invalide { outline: 2px solid var(--lr-danger); outline-offset: -1px; }
+  .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .segments { display: flex; border: 1px solid var(--lr-bordure); border-radius: 12px; overflow: hidden; background: var(--lr-surface); }
+  .segment { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--lr-texte); }
+  .segment + .segment { border-left: 1px solid var(--lr-bordure); }
+  .segment.on { background: var(--lr-primaire); color: var(--lr-sur-primaire); font-weight: 600; }
+  .form .carte-map { height: 200px; }
+  .aide { margin: 6px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .dept { margin: 8px 0 0; font-size: 16px; font-weight: 600; }
+  .attente { font-size: 14px; color: var(--lr-texte-secondaire); }
+</style>
+<style>
+  .lien-fede { display: flex; align-items: center; gap: 6px; min-height: 48px; margin-top: 4px; color: var(--lr-primaire); font-size: 16px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .lien-fede svg { width: 16px; height: 16px; flex: none; }
+  .sans-lien { margin: 6px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .spot-ouvert { padding: 8px 16px 4px; background: var(--lr-surface); }
+  .spot-ouvert .nom { font-size: 17px; font-weight: 700; color: var(--lr-primaire); }
+  .spot-ouvert .meta { display: block; font-size: 14px; color: var(--lr-texte-secondaire); margin-top: 2px; }
+  .safari { background: #f2f2f7; color: #111; }
+  .safari .barre-url { margin: 8px 12px; min-height: 40px; border-radius: 10px; background: #e3e3e8; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .safari .page { min-height: 560px; padding: 24px 16px; background: #fff; }
+  .safari .page .bandeau { height: 56px; border-radius: 8px; background: #1d5c8c; margin-bottom: 16px; }
+  .safari .page .ligne { height: 14px; border-radius: 4px; background: #ddd; margin-bottom: 10px; }
+  .safari .bas { display: flex; justify-content: space-around; padding: 10px 0 34px; font-size: 22px; color: #0a7aff; }
+  .ferme { margin: 0 16px 10px; padding: 10px 12px 4px; border: 1px solid var(--lr-danger); border-left-width: 4px; border-radius: 12px; background: var(--lr-fond); }
+  .ferme .titre { display: block; font-size: 15px; font-weight: 700; color: var(--lr-danger); }
+  .ferme .date { display: block; margin-top: 2px; font-size: 15px; color: var(--lr-texte); }
+  .ferme .mention { display: block; margin-top: 6px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ferme .lien-fede { margin-top: 0; }
+  .ferme .sans-lien { margin: 4px 0 8px; font-size: 14px; }
+  .lien-ligne { margin: 0 16px 4px; }
+  .date-jour { display: inline-block; margin: 0 0 8px; padding: 4px 10px; border-radius: 8px; background: #222; color: #fff; font-size: 13px; font-weight: 600; }
+  .actions { display: flex; gap: 8px; margin: 4px 16px 12px; }
+  .actions .act { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 16px; font-weight: 600; font-family: inherit; }
+  .actions .principal { border: none; background: var(--lr-primaire); color: var(--lr-sur-primaire); }
+  .actions .secondaire { border: 1px solid var(--lr-primaire); background: var(--lr-surface); color: var(--lr-primaire); }
+  .bientot { margin: -4px 16px 12px; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .touche { outline: 3px dashed var(--lr-carte-marqueur); outline-offset: 2px; }
+  .ph-conseil .content{ flex: 1; padding: 16px; overflow: hidden; }
+  .ph-conseil .carte{
+    background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px;
+    padding: 16px; color: var(--lr-texte);
+  }
+  .ph-conseil .carte h3{ margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+  .ph-conseil .carte .mention{ margin: -6px 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ph-conseil .carte dl{ margin: 0; }
+  .ph-conseil .ligne{ padding: 10px 0; border-top: 1px solid var(--lr-bordure); }
+  .ph-conseil .ligne:first-child{ border-top: none; padding-top: 0; }
+  .ph-conseil .ligne dt{ display: inline; font-size: 16px; font-weight: 600; }
+  .ph-conseil .ligne dd{ display: inline; margin: 0; font-size: 16px; }
+  .ph-conseil .ligne .source{ display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ph-conseil .ligne.eau dd{ font-size: 22px; font-weight: 700; }
+  .ph-conseil .lien-fede{
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
+  .ph-conseil .chargement{ font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
+  .ph-conseil .bandeau .ligne dd.ferme,.ph-conseil .bandeau .alerte{ color: var(--lr-danger); font-weight: 700; }
+  .ph-conseil .bandeau .alerte{ display: block; font-size: 16px; }
+  .ph-conseil .resume{ font-size: 14px; color: var(--lr-texte-secondaire); margin: 0 0 12px; }
+  .ph-conseil .section-titre{ margin: 20px 0 8px; font-size: 20px; font-weight: 700; }
+  .ph-conseil .badge{
+    display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+    background: var(--lr-sable); color: var(--lr-texte); font-size: 14px; font-weight: 600;
+  }
+  .ph-conseil .conseil{ margin-bottom: 12px; }
+  .ph-conseil .conseil .entete{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ph-conseil .rang{
+    flex: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--lr-primaire); color: var(--lr-sur-primaire); font-weight: 700; font-size: 16px;
+  }
+  .ph-conseil .conseil h4{ margin: 0; font-size: 20px; font-weight: 700; }
+  .ph-conseil .conseil .ligne{ padding: 6px 0; }
+  .ph-conseil .pourquoi{ margin: 8px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .ph-conseil .avertissement{ border-color: var(--lr-danger); }
+  .ph-conseil .avertissement .alerte{ margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--lr-danger); }
+  .ph-conseil .message{ margin: 0; font-size: 16px; }
+  .ph-conseil .chargement{ font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .ph-conseil .bouton{
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .ph-conseil .bouton[disabled]{ opacity: .5; }
+  .ph-conseil .content.scroll{ overflow: visible; }
+  .ph-conseil .selecteur{
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px;
+    margin: 0 0 12px; padding: 8px 16px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font-family: inherit; font-size: 16px; text-align: left;
+  }
+  .ph-conseil .selecteur .lib{ color: var(--lr-texte-secondaire); font-size: 14px; display: block; }
+  .ph-conseil .selecteur .val{ font-size: 17px; font-weight: 700; }
+  .ph-conseil .selecteur .chevron{ color: var(--lr-primaire); font-size: 22px; }
+  .ph-conseil .voile{ position: relative; }
+  .ph-conseil .voile::after{ content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .ph-conseil .feuille{
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .ph-conseil .poignee{ width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .ph-conseil .feuille h3{ margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .ph-conseil .options{ list-style: none; margin: 0; padding: 0; }
+  .ph-conseil .options li{
+    display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 4px;
+    border-top: 1px solid var(--lr-bordure); font-size: 17px;
+  }
+  .ph-conseil .options li:first-child{ border-top: none; }
+  .ph-conseil .options li.on{ font-weight: 700; color: var(--lr-primaire); }
+  .ph-conseil .options .coche{ font-size: 20px; }
+  .ph-conseil .btn-sec{
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px; border-radius: 12px;
+    border: 1px solid var(--lr-primaire); background: transparent; color: var(--lr-primaire); font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .ph-conseil .mention-bandeau{ display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .ph-conseil .options .vide{ color: var(--lr-texte-secondaire); font-size: 16px; }
+  .ph-conseil .options .sous{ display:block; font-size:14px; color: var(--lr-texte-secondaire); font-weight:400; }
+  .ph-conseil .sous-titre{ margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--lr-texte-secondaire); text-transform: uppercase; letter-spacing: .04em; }
+  .ph-conseil .choix-a{ border: 2px dashed #c2410c; border-radius: 8px; padding: 4px; }
+</style>
+</head>
+<body>
+<h1>US 7 — Ouvrir le conseil pour un spot et emplacement « Préparer ma sortie »</h1>
+<p class="note">iPhone, app installée. PLAN §2.1, §3, §8. S'appuie sur les US 5 et 6 : toucher un spot ouvre sa ligne (lien de la fédération, bandeau « Fermé » s'il y a lieu) ; la feuille « Lieu du conseil » est celle de l'US 87. Tokens du projet uniquement, cibles de 48 px. Le pointillé orange marque le bouton touché ; le cartouche noir « Date du jour » n'est là que pour la maquette.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Spot ouvert : les deux actions (critère 1)</h2><p class="note">Sous la ligne dépliée de « Pont de Cé » (après le lien « Site de la fédération »), deux boutons côte à côte : « Voir le conseil » (plein) et « Préparer ma sortie » (contour). Seul le spot ouvert les montre.</p><span class="date-jour">Date du jour : samedi 20 juin 2026</span><div class="phone"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Spots</span></div><div class="content"><div class="carte-map"><svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin" style="left:120px;top:90px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin on" style="left:230px;top:150px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div><div class="attrib">© contributeurs OpenStreetMap</div></div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Gué de la Sarthe</span><span class="meta">1re catégorie · Rivière · Maine-et-Loire (49)</span></button></li><li><button class="spot on"><span class="nom">Pont de Cé</span><span class="meta">2e catégorie · Rivière · Maine-et-Loire (49)</span></button><a class="lien-fede lien-ligne" href="https://fedepeche49.fr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Site de la fédération</a><div class="actions"><button class="act principal">Voir le conseil</button><button class="act secondaire">Préparer ma sortie</button></div></li></ul><div class="bouton">Ajouter un spot</div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>2. Spot de 1re catégorie ouvert, hors saison (critère 1)</h2><p class="note">Les actions viennent sous le bandeau « Fermé » de l'US 6. « Voir le conseil » reste possible : l'onglet « Conseil » affiche alors son propre bandeau de réglementation (US 87).</p><span class="date-jour">Date du jour : dimanche 15 février 2026</span><div class="phone"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Spots</span></div><div class="content"><div class="carte-map"><svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin on" style="left:120px;top:90px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin" style="left:230px;top:150px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div><div class="attrib">© contributeurs OpenStreetMap</div></div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot on"><span class="nom">Gué de la Sarthe</span><span class="meta">1re catégorie · Rivière · Maine-et-Loire (49)</span></button><div class="ferme" role="note"><span class="titre">Fermé : la 1re catégorie est hors saison</span><span class="date">Réouverture le samedi 14 mars 2026</span><span class="mention">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="https://fedepeche49.fr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Site de la fédération</a></div><div class="actions"><button class="act principal">Voir le conseil</button><button class="act secondaire">Préparer ma sortie</button></div></li><li><button class="spot"><span class="nom">Pont de Cé</span><span class="meta">2e catégorie · Rivière · Maine-et-Loire (49)</span></button></li></ul><div class="bouton">Ajouter un spot</div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>3. « Voir le conseil » touché (critère 2)</h2><p class="note">Le bouton touché sur « Pont de Cé»…</p><span class="date-jour">Date du jour : samedi 20 juin 2026</span><div class="phone"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Spots</span></div><div class="content"><div class="carte-map"><svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin" style="left:120px;top:90px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin on" style="left:230px;top:150px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div><div class="attrib">© contributeurs OpenStreetMap</div></div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Gué de la Sarthe</span><span class="meta">1re catégorie · Rivière · Maine-et-Loire (49)</span></button></li><li><button class="spot on"><span class="nom">Pont de Cé</span><span class="meta">2e catégorie · Rivière · Maine-et-Loire (49)</span></button><a class="lien-fede lien-ligne" href="https://fedepeche49.fr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Site de la fédération</a><div class="actions"><button class="act principal touche">Voir le conseil</button><button class="act secondaire">Préparer ma sortie</button></div></li></ul><div class="bouton">Ajouter un spot</div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>… l'onglet « Conseil » s'ouvre sur « Pont de Cé » (critère 2)</h2><p class="note">L'onglet « Conseil » devient actif avec le lieu « Pont de Cé » déjà choisi, comme si on l'avait pris dans la feuille « Lieu du conseil » (US 87) : conditions, top 3 et bandeau de réglementation sont calculés à la position, avec la catégorie et le département du spot. Moment et espèce gardent leur valeur. Le lieu n'est pas mémorisé : au prochain lancement, le conseil repart de « Ma position », comme aujourd'hui.</p><div class="phone ph-conseil" style="height:auto">
+    <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="toolbar"><span class="title">Conseil</span></div>
+    <div class="content scroll"><button class="selecteur"><span><span class="lib">Lieu</span><span class="val">Pont de Cé</span></span><span class="chevron">›</span></button><button class="selecteur"><span><span class="lib">Moment</span><span class="val">Maintenant</span></span><span class="chevron">›</span></button><button class="selecteur"><span><span class="lib">Espèce</span><span class="val">Toutes les espèces</span></span><span class="chevron">›</span></button><section class="carte"><h3>Conditions</h3><dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>10,5 °C</dd><span class="source">Station Hub'Eau L'Oudon à Segré, à 6 km</span></div><div class="ligne"><dt>Débit :</dt> <dd>Normal</dd></div><div class="ligne"><dt>Pression :</dt> <dd>1018 hPa, stable sur 48 h</dd></div><div class="ligne"><dt>…</dt></div></dl></section><h3 class="section-titre">Ton top 3</h3><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Shad</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Tirée-relâchée</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>8 cm</dd></div></dl><p class="pourquoi">À 10,5 °C, l'activité du poisson (sandre) est ralentie : une animation lente lui convient.</p></article><article class="carte conseil"><div class="entete"><span class="rang">2</span><h4>Jig à jupe</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Gratté</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>10 g</dd></div></dl><p class="pourquoi">À 10,5 °C, l'activité du poisson (black-bass) est ralentie : une animation lente lui convient.</p></article><article class="carte conseil"><div class="entete"><span class="rang">3</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 10,5 °C, l'activité du poisson (perche) est ralentie : une animation lente lui convient.</p></article><section class="carte bandeau" style="margin-top:12px"><h3>Réglementation</h3><dl><div class="ligne"><dt>Pêche :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum</dd></div><div class="ligne"><span class="mention-bandeau">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Voir la fédération de ton département</a></div></dl></section><button class="bouton" disabled>Préparer ma sortie</button></div>
+    <nav class="tabbar">
+      <div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div>
+      <div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div>
+      <div class="tab"><svg><use href="#i-spots"/></svg>Spots</div>
+      <div class="tab"><svg><use href="#i-compte"/></svg>Compte</div>
+    </nav>
+  </div>
+
+  
+<h2>4. « Préparer ma sortie » touché (critère 3)</h2><p class="note">Sous les boutons, le message « Bientôt disponible » s'affiche (annoncé aux lecteurs d'écran). Rien n'est téléchargé, on reste sur l'onglet « Spots ». Le message disparaît quand on ouvre un autre spot. Le fonctionnement réel arrivera avec le ticket 21.</p><span class="date-jour">Date du jour : samedi 20 juin 2026</span><div class="phone"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Spots</span></div><div class="content"><div class="carte-map"><svg class="fond" viewBox="0 0 358 240" preserveAspectRatio="none"><rect width="358" height="240" fill="var(--lr-carte-terre)"/><path d="M-10 170 C 60 140, 110 200, 170 160 S 290 90, 370 120" fill="none" stroke="var(--lr-carte-eau)" stroke-width="14"/><ellipse cx="80" cy="70" rx="38" ry="22" fill="var(--lr-carte-eau)"/><path d="M0 225 L358 200" stroke="var(--lr-bordure)" stroke-width="3"/><path d="M200 0 L230 240" stroke="var(--lr-bordure)" stroke-width="3"/></svg><span class="pin" style="left:120px;top:90px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><span class="pin on" style="left:230px;top:150px"><svg viewBox="0 0 24 32"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg></span><div class="zoom"><button aria-label="Zoom avant">+</button><button aria-label="Zoom arrière">−</button></div><div class="attrib">© contributeurs OpenStreetMap</div></div><h3 class="section-titre">Mes spots</h3><ul class="liste"><li><button class="spot"><span class="nom">Gué de la Sarthe</span><span class="meta">1re catégorie · Rivière · Maine-et-Loire (49)</span></button></li><li><button class="spot on"><span class="nom">Pont de Cé</span><span class="meta">2e catégorie · Rivière · Maine-et-Loire (49)</span></button><a class="lien-fede lien-ligne" href="https://fedepeche49.fr"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Site de la fédération</a><div class="actions"><button class="act principal">Voir le conseil</button><button class="act secondaire touche">Préparer ma sortie</button></div><p class="bientot" role="status">Bientôt disponible</p></li></ul><div class="bouton">Ajouter un spot</div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab on"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>5. Hors ligne</h2>
+<p class="note">Les deux boutons restent affichés. « Voir le conseil » ouvre l'onglet « Conseil » sur le spot, qui applique sa propre dégradation sans réseau (conditions en cache, conseil « moins précis »). « Préparer ma sortie » affiche le même « Bientôt disponible ».</p>
+<h2>6. Thème clair et thème sombre</h2>
+<p class="note">Utilise l'interrupteur en haut : les boutons prennent la couleur primaire du thème actif.</p>
+<h2>7. Android</h2>
+<p class="note">Même affichage.</p>
+</div>
+</body>
+</html>
