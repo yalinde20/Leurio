@@ -1,6 +1,7 @@
 import { inject, Injectable, InjectionToken, Injector } from '@angular/core';
 import { creerSourceSuppressionFirebase } from '../firebase/source-suppression';
 import { CompteService, CLE_PROFIL_ECRIT } from './compte.service';
+import { ConsentementsService } from './consentements.service';
 import type { FournisseurLiaison } from './liaison-compte';
 import { OnboardingStore } from './onboarding.store';
 import { SaisieTempEauStore } from './saisie-temp-eau.store';
@@ -36,6 +37,7 @@ export const SOURCE_SUPPRESSION = new InjectionToken<SourceSuppression>('SOURCE_
 export class SuppressionCompteService {
   private readonly onboarding = inject(OnboardingStore);
   private readonly compte = inject(CompteService);
+  private readonly consentements = inject(ConsentementsService);
   private readonly saisieTempEau = inject(SaisieTempEauStore);
 
   /**
@@ -44,6 +46,7 @@ export class SuppressionCompteService {
    */
   oublierProfil(): void {
     this.compte.reinitialiser();
+    this.consentements.oublier();
     try {
       localStorage.removeItem(CLE_PROFIL_ECRIT);
     } catch {

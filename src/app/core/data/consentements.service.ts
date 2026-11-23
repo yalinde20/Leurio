@@ -31,15 +31,18 @@ export class ConsentementsService {
   private lecture: { uid: string | null; promesse: Promise<void> } | null = null;
   /** Les choix faits pendant cette session : une lecture qui finit après eux ne les écrase pas. */
   private readonly modifies = new Set<Consentement>();
+  /** Numéro de la lecture courante : une lecture d'un compte précédent qui finit en retard est ignorée. */
+  private generation = 0;
 
   /** Lit `users/{uid}` (une seule fois par compte) ; sans compte ou sans document, tout reste refusé. */
   async charger(): Promise<void> {
     const uid = await this.compte.uidCourant();
     if (this.lecture?.uid !== uid) {
-      this._charge.set(false);
-      // Un autre compte : les choix locaux faits pour le précédent ne valent plus.
-      if (this.lecture !== null) this.modifies.clear();
-      const promesse = this.lire(uid);
+      // Un autre compte : ni ses valeurs ni les choix locaux faits pour le précédent ne valent plus.
+      if (this.lecture !== null) this.remettreAZero();
+      this.generation++;
+      const generation = this.generation;
+      const promesse = this.lire(uid, generation);
       const lecture = { uid, promesse };
       this.lecture = lecture;
       // Une lecture en échec (hors ligne, sans cache) pourra être retentée.
@@ -50,12 +53,27 @@ export class ConsentementsService {
     return this.lecture!.promesse;
   }
 
-  private async lire(uid: string | null): Promise<void> {
+  /** Oublie tout ce qui venait d'un compte (suppression du compte, changement de compte) : plus rien n'est accepté ni lu. */
+  oublier(): void {
+    this.generation++;
+    this.lecture = null;
+    this.remettreAZero();
+  }
+
+  private remettreAZero(): void {
+    this._charge.set(false);
+    this._analytics.set(false);
+    this._reponseVideo.set(null);
+    this.modifies.clear();
+  }
+
+  private async lire(uid: string | null, generation: number): Promise<void> {
     const stocke = uid === null ? null : await this.profil.lireConsentements(uid);
-    if (stocke !== null) {
-      if (!this.modifies.has('analytics')) this._analytics.set(stocke.analytics);
-      if (!this.modifies.has('video')) this._reponseVideo.set(stocke.video);
-    }
+    // Le compte a changé (ou été oublié) pendant la lecture : ces valeurs ne sont plus celles du compte courant.
+    if (generation !== this.generation) return;
+    // Sans document : jamais répondu, rien d'accepté (sauf choix fait pendant cette session).
+    if (!this.modifies.has('analytics')) this._analytics.set(stocke?.analytics ?? false);
+    if (!this.modifies.has('video')) this._reponseVideo.set(stocke?.video ?? null);
     this._charge.set(true);
   }
 
