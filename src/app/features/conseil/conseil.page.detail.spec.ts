@@ -10,8 +10,8 @@
  *  - Le détail : un titre « Détail du conseil » ; les lignes « Couleur : », « Taille : » ou « Poids : », « Poids de tête : »
  *    (seulement pour un type qui a `poidsTeteG`), « Où le lancer : » ; une liste `li` avec une phrase par entrée de `pourquoi` ;
  *    un bouton « Voir l'animation » ; un bouton de retour dont le texte est « Conseil » (hors de la barre d'onglets).
- *  - La fiche animation : un titre avec le nom de l'animation, « Le geste », « Vitesse », « Erreur à éviter » (intitulés renommés par l'US 8), la boîte
- *    « La vidéo de l'animation arrive bientôt. » et un bouton de retour « Détail ».
+ *  - La fiche animation : un titre avec le nom de l'animation, « Le geste », « Vitesse », « Erreur à éviter » (intitulés renommés par l'US 8), pas
+ *    d'encadré « La vidéo de l'animation arrive bientôt. » (retiré, décision du propriétaire à l'US 9) et un bouton de retour « Détail ».
  *  - Le retour (bouton « Conseil » ou retour du navigateur) ne rappelle ni ConditionsService ni MoteurService.
  * Temps : faux timers sur `Date`. Maintenant = lundi 9 novembre 2026, 14 h à Paris. Demain 10 h = 2026-11-10T09:00Z.
  */
@@ -320,7 +320,7 @@ describe('Détail d\'un conseil (US 86)', () => {
     expect(texte).toContain(compact('Lente, avec une pause au fond à chaque tirée'));
     expect(texte).toContain(compact('Erreur à éviter'));
     expect(texte).toContain(compact('Laisser le fil détendu pendant la descente.'));
-    expect(texte).toContain(compact("La vidéo de l'animation arrive bientôt."));
+    expect(texte).not.toContain(compact("La vidéo de l'animation arrive bientôt."));
     expect(detailOuvert(env.page)).toBe(false);
   });
 
