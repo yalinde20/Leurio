@@ -4,7 +4,7 @@ import { test, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import { ROOT } from '../helpers/run.mjs';
 
@@ -133,4 +133,35 @@ test('US 90 critère 6 : given les règles Firestore déployées et un profil us
   await assertFails(setDoc(ref, { ...profilAnonyme, niveau: 'intermediaire' }));
   await assertFails(updateDoc(ref, { plan: 'pro' }));
   await assertFails(deleteDoc(ref));
+});
+
+// US 88 : l'avis 👍 / 👎 d'un conseil (PLAN §7) : création seule, sans uid ni coordonnées, aucun champ inconnu.
+const avis88 = { conseilId: 'shad:tiree', typeId: 'shad', techniqueId: 'tiree', utile: false, conditions: { tempEau: 12, vent: 14, debitTendance: 'normal', pressionTendance48h: -8, departement: '49' }, date: '2026-11-09T12:00:00.000Z' };
+
+test('US 88 critère 6 : given les règles Firestore déployées, when un client connecté crée un feedback conforme à US 88, then la création est acceptée', async () => {
+  await assertSucceeds(setDoc(doc(db(A), 'feedback', 'f88'), avis88));
+});
+
+for (const champ of ['uid', 'lat', 'lng', 'latitude', 'longitude', 'inconnu']) {
+  test(`US 88 critère 6 : given les règles Firestore déployées, when un client crée un feedback contenant le champ ${champ}, then la création est refusée`, async () => {
+    await assertFails(setDoc(doc(db(A), 'feedback', 'f88'), { ...avis88, [champ]: champ === 'uid' ? A : 47.2181 }));
+  });
+}
+
+for (const champ of ['lat', 'lng', 'latitude', 'longitude', 'uid']) {
+  test(`US 88 critère 6 : given les règles Firestore déployées, when un client crée un feedback dont conditions contient ${champ}, then la création est refusée`, async () => {
+    await assertFails(setDoc(doc(db(A), 'feedback', 'f88'), { ...avis88, conditions: { ...avis88.conditions, [champ]: champ === 'uid' ? A : 47.2181 } }));
+  });
+}
+
+test('US 88 critère 7 : given les règles Firestore déployées et un feedback existant, when un client tente de le lire, de le lister, de le modifier ou de le supprimer, then chaque opération est refusée', async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => { await setDoc(doc(ctx.firestore(), 'feedback', 'f88'), avis88); });
+  for (const uid of [A, B, null]) {
+    const ref = doc(db(uid), 'feedback', 'f88');
+    await assertFails(getDoc(ref));
+    await assertFails(getDocs(collection(db(uid), 'feedback')));
+    await assertFails(setDoc(ref, { ...avis88, utile: true }));
+    await assertFails(updateDoc(ref, { utile: true }));
+    await assertFails(deleteDoc(ref));
+  }
 });
