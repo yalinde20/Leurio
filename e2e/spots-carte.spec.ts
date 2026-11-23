@@ -106,6 +106,7 @@ test('critère 6 : given l\'onglet « Spots » ouvert en thème clair, when le t
 
 test('critère 6 : given les contrôles de la carte, when on les mesure, then les boutons de zoom et les lignes de la liste font au moins 48 px', async ({ page }) => {
   await ouvrirSpots(page, SPOTS);
+  await expect(page.locator('ul li button').first()).toBeVisible();
   for (const sel of ['.leaflet-control-zoom a', 'ul li button']) {
     const boites = await page.locator(sel).evaluateAll((els) => els.map((e) => e.getBoundingClientRect()));
     expect(boites.length).toBeGreaterThan(0);
