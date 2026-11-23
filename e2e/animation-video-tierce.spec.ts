@@ -2,6 +2,8 @@
 // Contenu réel (la première animation conseillée a une vidéo YouTube), émulateurs Firebase (Auth et Firestore). Aucune plateforme réelle :
 // les requêtes vers un hôte non local sont coupées, et l'<iframe> de YouTube reçoit une page vide. On vérifie l'URL du lecteur,
 // l'absence de toute requête vers une plateforme avant le consentement, et le choix écrit dans users/{uid}.consentements.video.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
 import { attendreFirebase, enregistrerRequetes, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
@@ -13,6 +15,8 @@ test.use({
 });
 
 const MAINTENANT = new Date('2026-11-09T12:00:00Z');
+// Les boucles « self » ne sont pas encore dans le build (décision US 9) : le clip de test de e2e/fixtures est servi à leur place, comme dans animation-boucle.spec.ts.
+const CLIP = readFileSync(join(__dirname, 'fixtures', 'boucle-test.webm'));
 const PLATEFORMES = /(^|\.)(youtube\.com|youtube-nocookie\.com|youtu\.be|ytimg\.com|vimeo\.com|vimeocdn\.com|dailymotion\.com|dai\.ly)$/;
 
 const versPlateformes = (urls: string[]) =>
@@ -35,6 +39,7 @@ test.beforeEach(async ({ page }) => {
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
   // Le faux lecteur de YouTube : une page vide (la requête reste enregistrée par enregistrerRequetes).
   await page.route(/^https:\/\/www\.youtube-nocookie\.com\//, (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>faux lecteur</title>' }));
+  await page.route('**/assets/videos/*.mp4', (route) => route.fulfill({ status: 200, contentType: 'video/webm', body: CLIP }));
   await page.route('https://hubeau.eaufrance.fr/**', (route) => {
     if (!route.request().url().includes('/temperature/chronique')) return route.abort();
     return route.fulfill({
