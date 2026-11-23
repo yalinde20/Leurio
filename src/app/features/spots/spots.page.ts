@@ -1,6 +1,8 @@
 import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import * as L from 'leaflet';
+import { CatalogService } from '../../core/data/catalog.service';
+import type { Federation } from '../../core/data/catalog.types';
 import { GeoService } from '../../core/data/geo.service';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
@@ -92,6 +94,23 @@ interface LigneSpot {
       font: inherit;
       text-align: left;
     }
+    .lien-federation {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 48px;
+      margin-top: 4px;
+      color: var(--lr-primaire);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .lien-federation svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
     .attente {
       font-size: 14px;
       color: var(--lr-texte-secondaire);
@@ -167,6 +186,12 @@ interface LigneSpot {
                         <span class="attente">Pas encore synchronisé : il le sera au retour du réseau.</span>
                       }
                     </button>
+                    @if (ligne.spot.id === choisi() && federationChoisie(); as f) {
+                      <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        Site de la fédération
+                      </a>
+                    }
                   </li>
                 }
               </ul>
@@ -187,12 +212,15 @@ export class SpotsPage {
   private readonly spots = inject(SpotsService);
   private readonly position = inject(PositionService);
   private readonly geo = inject(GeoService);
+  private readonly catalogue = inject(CatalogService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
   private readonly boutonAjouter = viewChild<ElementRef<HTMLElement>>('ajouter');
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
   protected readonly choisi = signal<string | null>(null);
+  /** Fédération du département du spot choisi ; `undefined` tant que la recherche court ou si le contenu n'en a pas. */
+  protected readonly federationChoisie = signal<Federation | undefined>(undefined);
   protected readonly horsLigne = signal(navigator.onLine === false);
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
@@ -203,6 +231,8 @@ export class SpotsPage {
     return [...etat.spots].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')).map((spot) => ({ spot, detail: this.detail(spot) }));
   });
 
+  /** Numéro de la dernière recherche : une réponse tardive pour un spot déjà quitté ne l'emporte jamais. */
+  private rechercheFederation = 0;
   private readonly carte = signal<L.Map | null>(null);
   private readonly marqueurs = new Map<string, L.Marker>();
   private calque: L.LayerGroup | null = null;
@@ -255,10 +285,18 @@ export class SpotsPage {
 
   protected choisir(spot: SpotEnregistre): void {
     this.choisi.set(spot.id);
+    void this.chercherFederation(spot);
     // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
     this.cadrageAReprendre = false;
     this.majMarqueurs();
     this.carte()?.setView([spot.lat, spot.lng], Math.max(this.carte()?.getZoom() ?? 0, ZOOM_COMMUNE));
+  }
+
+  private async chercherFederation(spot: SpotEnregistre): Promise<void> {
+    const rang = ++this.rechercheFederation;
+    this.federationChoisie.set(undefined);
+    const federation = await this.catalogue.federation(spot.departement);
+    if (rang === this.rechercheFederation && !this.detruit) this.federationChoisie.set(federation);
   }
 
   private detail(spot: SpotEnregistre): string {
