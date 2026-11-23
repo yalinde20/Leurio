@@ -68,4 +68,16 @@ export class OnboardingStore {
       // Stockage plein ou inaccessible : l'onboarding sera remontré au prochain lancement.
     }
   }
+
+  /** Oublie l'onboarding terminé et les choix en mémoire : l'app repart de la page 1 (suppression du compte, US 98). */
+  effacer(): void {
+    this.choix = null;
+    this.positionObtenue = null;
+    this.localisationDifferee = false;
+    try {
+      localStorage.removeItem(CLE);
+    } catch {
+      // Stockage inaccessible : la copie en mémoire est déjà vidée.
+    }
+  }
 }

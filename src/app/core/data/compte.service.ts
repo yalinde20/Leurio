@@ -96,6 +96,13 @@ export class CompteService {
     this.choix = null;
   }
 
+  /** Oublie le compte courant (suppression du compte, US 98) : le prochain onboarding crée un nouveau compte anonyme et son profil. */
+  reinitialiser(): void {
+    this.choix = null;
+    this.uidConnecte = null;
+    this.arreterEcoute();
+  }
+
   private readonly reprendre = (): void => {
     if (this.choix !== null) void this.assurerCompte(this.choix);
   };
