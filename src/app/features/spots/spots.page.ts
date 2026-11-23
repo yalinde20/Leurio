@@ -99,7 +99,7 @@ interface LigneSpot {
       align-items: center;
       gap: 6px;
       min-height: 48px;
-      margin-top: 4px;
+      margin: 0 16px 4px;
       color: var(--lr-primaire);
       font-size: 16px;
       font-weight: 600;
@@ -284,8 +284,9 @@ export class SpotsPage {
   }
 
   protected choisir(spot: SpotEnregistre): void {
+    // Toucher à nouveau le spot déjà ouvert ne relance pas la recherche : son lien ne clignote pas.
+    if (this.choisi() !== spot.id) void this.chercherFederation(spot);
     this.choisi.set(spot.id);
-    void this.chercherFederation(spot);
     // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
     this.cadrageAReprendre = false;
     this.majMarqueurs();
