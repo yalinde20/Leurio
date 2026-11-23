@@ -30,6 +30,11 @@ type Etat = { type: 'chargement' } | { type: 'erreur' } | { type: 'pret'; spots:
 
 const FORMAT_REOUVERTURE = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+/** Minuit local du jour d'une date, en millisecondes. */
+function debutDuJour(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
 interface LigneSpot {
   spot: SpotEnregistre;
   detail: string;
@@ -279,10 +284,15 @@ export class SpotsPage {
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
+  /** Le jour local (minuit, en millisecondes) : relu quand l'app revient au premier plan, pour qu'un bandeau « Fermé » suive le changement de saison. */
+  private readonly jour = signal(debutDuJour(new Date()));
   protected readonly lignes = computed<LigneSpot[]>(() => {
     const etat = this.etat();
     if (etat.type !== 'pret') return [];
-    return [...etat.spots].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')).map((spot) => ({ spot, detail: this.detail(spot), reouverture: this.reouverture(spot) }));
+    const aujourdhui = new Date(this.jour());
+    return [...etat.spots]
+      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+      .map((spot) => ({ spot, detail: this.detail(spot), reouverture: this.reouverture(spot, aujourdhui) }));
   });
 
   /** Départements dont la fédération a déjà été demandée au contenu. */
@@ -306,7 +316,7 @@ export class SpotsPage {
       (spots) => {
         this.etat.set({ type: 'pret', spots });
         // Un bandeau « Fermé » porte le lien de son département, spot ouvert ou non.
-        for (const spot of spots) if (this.reouverture(spot) !== null) void this.chercherFederation(spot.departement);
+        for (const spot of spots) if (this.reouverture(spot, new Date()) !== null) void this.chercherFederation(spot.departement);
       },
       () => this.etat.set({ type: 'erreur' }),
     );
@@ -320,6 +330,11 @@ export class SpotsPage {
       const etat = this.etat();
       if (carte && etat.type !== 'chargement') untracked(() => this.afficher(carte, etat.type === 'pret' ? etat.spots : []));
     });
+  }
+
+  @HostListener('document:visibilitychange')
+  protected majJour(): void {
+    if (document.visibilityState === 'visible') this.jour.set(debutDuJour(new Date()));
   }
 
   @HostListener('window:online')
@@ -355,12 +370,13 @@ export class SpotsPage {
     if (this.federationsDemandees.has(departement)) return;
     this.federationsDemandees.add(departement);
     const federation = await this.catalogue.federation(departement);
+    // `undefined` peut venir d'un contenu qui ne s'est pas chargé : le département sera redemandé à la prochaine occasion.
+    if (federation === undefined) this.federationsDemandees.delete(departement);
     if (!this.detruit) this.federations.update((f) => ({ ...f, [departement]: federation ?? null }));
   }
 
   /** Réouverture d'un spot de 1re catégorie fermé aujourd'hui, en toutes lettres ; `null` quand il n'y a pas de bandeau. */
-  private reouverture(spot: SpotEnregistre): string | null {
-    const aujourdhui = new Date();
+  private reouverture(spot: SpotEnregistre, aujourdhui: Date): string | null {
     if (etatOuverture(spot.categorie, aujourdhui) === 'ouvert') return null;
     return FORMAT_REOUVERTURE.format(prochaineOuverture1reCategorie(aujourdhui));
   }

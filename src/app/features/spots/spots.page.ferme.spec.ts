@@ -176,6 +176,18 @@ describe('SpotsPage : bandeau « Fermé » en 1re catégorie hors saison (US 6)'
     expect(texte(elementDe(env, 'Gué de la Sarthe'))).toContain('Réouverture le samedi 13 mars 2027');
   });
 
+  it('critère 3 : given la liste ouverte le dimanche 20 septembre 2026 sans bandeau, when l\'app revient au premier plan le lundi 21 septembre, then le bandeau « Fermé » apparaît sans attendre un changement de spot', async () => {
+    const env = await monter([2026, 9, 20], [SPOT_1RE]);
+    await vi.waitFor(() => expect(texte(elementDe(env, 'Gué de la Sarthe'))).toContain('Gué de la Sarthe'), { timeout: 2000 });
+    expect(aBandeau(env)).toBe(false);
+
+    vi.setSystemTime(new Date(2026, 8, 21, 8, 0, 0));
+    document.dispatchEvent(new Event('visibilitychange'));
+    await env.stabiliser();
+
+    await vi.waitFor(() => expect(texte(elementDe(env, 'Gué de la Sarthe'))).toContain('Réouverture le samedi 13 mars 2027'), { timeout: 2000 });
+  });
+
   it('critère 4 : given un spot de 2e catégorie et le 15 février 2026, when l\'utilisateur ouvre le spot, then aucun bandeau « Fermé » de 1re catégorie (le spot de 1re catégorie voisin, lui, en a un)', async () => {
     const env = await monter([2026, 2, 15], [SPOT_1RE, SPOT_2E]);
     // Contrôle de la cause : le spot de 1re catégorie porte bien le bandeau.
