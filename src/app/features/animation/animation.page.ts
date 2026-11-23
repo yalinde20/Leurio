@@ -60,7 +60,7 @@ import { VideoPlayerComponent } from '../../shared/video-player/video-player.com
           <h3>Erreur à éviter</h3>
           <p>{{ a.erreurAEviter }}</p>
         </section>
-        <app-video-player [videos]="a.videos" />
+        <app-video-player [videos]="a.videos" [titre]="a.nom" />
       } @else if (absente()) {
         <section class="carte">
           <h2>Animation</h2>

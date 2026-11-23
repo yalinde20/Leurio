@@ -65,7 +65,7 @@ test.describe('US 90 : compte anonyme en silence', () => {
     await aucunMessage(page);
   });
 
-  test("critère 2 : given le compte anonyme est créé, when on lit users/{uid}, then niveau et especesFavorites sont ceux de la page 2 et les consentements analytics et video sont à faux", async ({ page }) => {
+  test("critère 2 : given le compte anonyme est créé, when on lit users/{uid}, then niveau et especesFavorites sont ceux de la page 2 et les consentements analytics est faux et video null (jamais répondu)", async ({ page }) => {
     await couperLeReel(page);
     await terminerOnboarding(page);
 
@@ -74,7 +74,7 @@ test.describe('US 90 : compte anonyme en silence', () => {
     expect(champs['niveau']).toEqual({ stringValue: 'intermediaire' });
     const especes = (champs['especesFavorites'].arrayValue.values as { stringValue: string }[]).map((v) => v.stringValue);
     expect([...especes].sort()).toEqual(['BRO', 'SAN']);
-    expect(champs['consentements'].mapValue.fields).toEqual({ analytics: { booleanValue: false }, video: { booleanValue: false } });
+    expect(champs['consentements'].mapValue.fields).toEqual({ analytics: { booleanValue: false }, video: { nullValue: null } });
     expect(Number(champs['createdAt'].integerValue ?? champs['createdAt'].doubleValue)).toBeGreaterThan(1_700_000_000_000);
     expect(champs['plan']).toEqual({ stringValue: 'free' });
   });

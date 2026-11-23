@@ -21,7 +21,7 @@ describe('critère 7 : document utilisateur', () => {
     expectTypeOf<UserDoc>().toHaveProperty('createdAt');
     expectTypeOf<UserDoc>().toHaveProperty('plan');
     expectTypeOf<UserDoc['especesFavorites']>().toEqualTypeOf<string[]>();
-    expectTypeOf<UserDoc['consentements']>().toEqualTypeOf<{ analytics: boolean; video: boolean }>();
+    expectTypeOf<UserDoc['consentements']>().toEqualTypeOf<{ analytics: boolean; video: boolean | null }>();
     expectTypeOf<UserDoc['createdAt']>().toEqualTypeOf<number>();
   });
 

@@ -81,7 +81,8 @@
             },
             "lienAuteur": {
               "type": "string",
-              "minLength": 1
+              "minLength": 1,
+              "pattern": "^https://"
             },
             "dateVerif": {
               "type": "string",
