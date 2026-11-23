@@ -712,8 +712,16 @@ export class ConseilPage implements OnInit {
   private readonly injector = inject(Injector);
 
   constructor() {
-    // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ».
-    if ((this.choix.moment()?.date.getTime() ?? Infinity) <= Date.now()) this.choix.moment.set(null);
+    // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
+    const gardé = this.choix.moment();
+    if (gardé) {
+      const maintenant = new Date();
+      this.choix.moment.set(
+        gardé.date.getTime() <= maintenant.getTime()
+          ? null
+          : { date: gardé.date, libelle: libelleMoment(gardé.date, maintenant), mention: mentionMoment(gardé.date, maintenant) },
+      );
+    }
     // Au retour du détail, le focus revient sur le bouton de la carte ouverte.
     effect(() => {
       if (this.enfantOuvert() || this.rangOuvert === null) return;
@@ -754,14 +762,14 @@ export class ConseilPage implements OnInit {
   private readonly selecteur = viewChild<ElementRef<HTMLButtonElement>>('selecteur');
   /** Vrai dès que la position est connue : avant, un moment choisi n'aurait aucun lieu où s'appliquer. */
   protected readonly lieuPret = signal(false);
-  /** Le moment choisi ; `null` = « Maintenant ». État du composant, jamais mémorisé. */
+  /** Le moment choisi ; `null` = « Maintenant ». Gardé en mémoire par le store le temps de l'app, jamais sur le téléphone. */
   private readonly moment = this.choix.moment;
   protected readonly libelleSelecteur = computed(() => this.moment()?.libelle ?? 'Maintenant');
   protected readonly feuilleOuverte = signal(false);
   protected readonly jourBrouillon = signal<JourMoment>('aujourdhui');
   protected readonly heureBrouillon = signal(0);
 
-  /** L'espèce visée ; `null` pour « Toutes les espèces ». Gardée tant que la page vit, jamais mémorisée. */
+  /** L'espèce visée ; `null` pour « Toutes les espèces ». Gardée en mémoire par le store le temps de l'app, jamais sur le téléphone. */
   protected readonly espece = this.choix.espece;
   protected readonly choixOuvert = signal(false);
   protected readonly choixEspeces = signal<ChoixEspece[]>([]);
