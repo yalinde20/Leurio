@@ -143,6 +143,14 @@ const liens = (racine: ParentNode, libelle: string) => [...racine.querySelectorA
 const lienFormulaire = (page: HTMLElement) => liens(formulaire(page), LIBELLE_FORMULAIRE)[0];
 
 describe('SpotsPage : lien vers la fédération du département (US 5)', () => {
+  // Date du jour fixée en saison : hors saison, un spot de 1re catégorie porte le bandeau « Fermé » de l'US 6 et son propre lien
+  // (décision du propriétaire, US 6). Ce spec ne dépend plus de la date réelle.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 5, 20, 12, 0, 0));
+  });
+  afterEach(() => vi.useRealTimers());
+
   it('critère 1 : given le formulaire avec une position en Maine-et-Loire (49, dans la table), when le département est détecté, then « Trouver la catégorie sur le site de la fédération » s\'affiche dans le groupe Catégorie et pointe vers l\'URL de la fédération du 49', async () => {
     const env = await ouvrir();
     await ouvrirFormulaire(env);
