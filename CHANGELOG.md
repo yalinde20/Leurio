@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.49.0](https://github.com/yalinde20/Leurio/compare/v1.48.0...v1.49.0) (2026-11-23)
+
+
+### Features
+
+* bandeau « Fermé » sur les spots de 1re catégorie hors saison (US 6) ([b5e88a5](https://github.com/yalinde20/Leurio/commit/b5e88a561105e832c3cdd4cd1f9bb75bc47ee94c))
+
+
+### Bug Fixes
+
+* bandeau « Fermé » relu au retour au premier plan, fédération redemandée après un échec (US 6) ([07159a1](https://github.com/yalinde20/Leurio/commit/07159a1de552acceaa99d778def731efac3a04eb))
+* lien de la fédération aligné dans la liste, sans clignotement au second toucher (US 5) ([7349168](https://github.com/yalinde20/Leurio/commit/73491681e0c49bb69eebe5bf7026b44bc4e856f2))
+
 ## [1.48.0](https://github.com/yalinde20/Leurio/compare/v1.47.0...v1.48.0) (2026-11-23)
 
 
