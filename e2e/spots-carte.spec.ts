@@ -148,3 +148,17 @@ test('critère 3 : given l\'onglet « Spots » ouvert, when on touche « La Sèv
     })
     .toBeLessThan(30);
 });
+
+test('critère 5 : given la géolocalisation refusée et aucun spot, when on ouvre l\'onglet « Spots », then la carte montre la France entière', async ({ page }) => {
+  await ouvrirSpots(page, {});
+  const region = page.getByRole('region', { name: 'Carte des spots' });
+  await expect(page.getByText('Aucun spot pour l\'instant')).toBeVisible();
+
+  // Les bornes visibles (sud, ouest, nord, est) contiennent la France métropolitaine, Corse et Dunkerque compris.
+  await expect
+    .poll(async () => {
+      const [sud, ouest, nord, est] = ((await region.getAttribute('data-bornes')) ?? '').split(',').map(Number);
+      return sud <= 41.4 && ouest <= -5.1 && nord >= 51.1 && est >= 9.6;
+    })
+    .toBe(true);
+});

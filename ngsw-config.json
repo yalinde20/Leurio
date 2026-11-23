@@ -29,8 +29,8 @@
   "dataGroups": [
     {
       "name": "tuiles-osm",
-      "urls": ["https://*.tile.openstreetmap.org/**"],
-      "cacheConfig": { "strategy": "performance", "maxSize": 500, "maxAge": "30d" }
+      "urls": ["https://tile.openstreetmap.org/**"],
+      "cacheConfig": { "strategy": "performance", "cacheOpaqueResponses": false, "maxSize": 500, "maxAge": "30d" }
     }
   ]
 }

@@ -6,6 +6,11 @@ import { PositionService } from '../../core/data/position.service';
 import { Milieu, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 
 /** France métropolitaine entière (Corse comprise), à l'échelle d'un pays. */
+const BORNES_FRANCE: L.LatLngBoundsLiteral = [
+  [41.3, -5.2],
+  [51.1, 9.6],
+];
+/** Repli sans taille de carte (page pas encore affichée) : le centre de ces bornes et un zoom de pays. */
 const CENTRE_FRANCE: L.LatLngTuple = [46.6, 2.5];
 const ZOOM_FRANCE = 5;
 /** Échelle d'une commune, pour la position de l'utilisateur ou un spot seul. */
@@ -13,7 +18,7 @@ const ZOOM_COMMUNE = 13;
 /** Zoom d'un ensemble de spots quand la carte n'a pas encore de taille (page pas encore affichée). */
 const ZOOM_SANS_TAILLE = 8;
 
-const TUILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TUILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const LIBELLES_MILIEU: Record<Milieu, string> = { riviere: 'Rivière', lac: 'Lac', canal: 'Canal' };
 
 type Etat = { type: 'chargement' } | { type: 'erreur' } | { type: 'pret'; spots: SpotEnregistre[] };
@@ -26,11 +31,13 @@ interface LigneSpot {
 /** Épingle : la couleur vient du token `--lr-carte-marqueur` (voir src/theme/carte.scss). */
 function icone(grande: boolean): L.DivIcon {
   const [largeur, hauteur] = grande ? [40, 54] : [30, 40];
+  // Zone tactile d'au moins 48 px autour de l'épingle ; la pointe reste sur la coordonnée (bas du centre de la zone).
+  const [zoneLargeur, zoneHauteur] = [48, Math.max(48, hauteur)];
   return L.divIcon({
     className: 'marqueur-spot',
-    html: '<svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg>',
-    iconSize: [largeur, hauteur],
-    iconAnchor: [largeur / 2, hauteur],
+    html: `<svg width="${largeur}" height="${hauteur}" viewBox="0 0 24 32" aria-hidden="true"><path d="M12 31s-10-11-10-18a10 10 0 0 1 20 0c0 7-10 18-10 18z"/><circle cx="12" cy="12" r="4"/></svg>`,
+    iconSize: [zoneLargeur, zoneHauteur],
+    iconAnchor: [zoneLargeur / 2, zoneHauteur],
   });
 }
 
@@ -200,6 +207,10 @@ export class SpotsPage {
   private calque: L.LayerGroup | null = null;
   /** Vrai quand le cadrage des spots a été fait sur une carte sans taille (page pas encore affichée) : à refaire à l'affichage. */
   private cadrageAReprendre = false;
+  /** Vrai quand la vue France entière a été posée sur une carte sans taille : à refaire à l'affichage. */
+  private franceAReprendre = false;
+  /** Vrai dès que l'utilisateur déplace ou zoome la carte : une position GPS tardive ne la recentre plus. */
+  private utilisateurABouge = false;
   private detruit = false;
 
   constructor() {
@@ -232,6 +243,7 @@ export class SpotsPage {
     carte.invalidateSize();
     const etat = this.etat();
     if (this.cadrageAReprendre && etat.type === 'pret') this.cadrer(carte, etat.spots);
+    else if (this.franceAReprendre && !this.utilisateurABouge) this.cadrerFrance(carte);
   }
 
   protected choisir(spot: SpotEnregistre): void {
@@ -264,11 +276,13 @@ export class SpotsPage {
   private creerCarte(): void {
     if (this.detruit) return;
     const element = this.conteneur().nativeElement;
-    const carte = L.map(element, { zoomControl: false, attributionControl: false }).setView(CENTRE_FRANCE, ZOOM_FRANCE);
+    const carte = L.map(element, { zoomControl: false, attributionControl: false, zoomSnap: 0.5 });
+    this.cadrerFrance(carte);
     L.control.zoom({ zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' }).addTo(carte);
     L.control.attribution({ prefix: false }).addTo(carte);
     L.tileLayer(TUILES, {
       maxZoom: 19,
+      crossOrigin: true,
       attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributeurs OpenStreetMap</a>',
     }).addTo(carte);
     // La région reflète l'état de la carte (lu par les tests, qui ne touchent pas à Leaflet).
@@ -277,9 +291,13 @@ export class SpotsPage {
       element.dataset['centreLat'] = String(centre.lat);
       element.dataset['centreLng'] = String(centre.lng);
       element.dataset['zoom'] = String(carte.getZoom());
+      const b = carte.getBounds();
+      element.dataset['bornes'] = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].join(',');
     };
     carte.on('moveend', reporter);
     reporter();
+    // Toute action de l'utilisateur sur la carte (glisser, boutons de zoom, molette, clavier) la lui laisse.
+    for (const evenement of ['pointerdown', 'wheel', 'keydown']) element.addEventListener(evenement, () => (this.utilisateurABouge = true), { passive: true });
     this.calque = L.layerGroup().addTo(carte);
     // La page peut être créée avant d'être affichée (onglet en transition) : Leaflet garde alors une taille nulle.
     if (typeof ResizeObserver !== 'undefined') {
@@ -314,6 +332,7 @@ export class SpotsPage {
   private cadrer(carte: L.Map, spots: SpotEnregistre[]): void {
     const points = spots.map((s): L.LatLngTuple => [s.lat, s.lng]);
     const bornes = L.latLngBounds(points);
+    this.franceAReprendre = false;
     this.cadrageAReprendre = carte.getSize().x === 0;
     // Cadrage initial sans animation : un zoom animé en cours ignorerait le centrage demandé par un tap sur la liste.
     const sansAnimation = { animate: false };
@@ -322,9 +341,17 @@ export class SpotsPage {
     else carte.fitBounds(bornes, { padding: [40, 40], maxZoom: ZOOM_COMMUNE, ...sansAnimation });
   }
 
+  /** France métropolitaine entière (Corse comprise) ; sans taille de carte, repli sur un centre et un zoom de pays. */
+  private cadrerFrance(carte: L.Map): void {
+    this.franceAReprendre = carte.getSize().x === 0;
+    if (this.franceAReprendre) carte.setView(CENTRE_FRANCE, ZOOM_FRANCE, { animate: false });
+    else carte.fitBounds(BORNES_FRANCE, { animate: false });
+  }
+
   private async centrerSurPosition(carte: L.Map): Promise<void> {
     const resultat = await this.position.positionGps();
-    if (this.detruit || !resultat.disponible) return;
+    if (this.detruit || !resultat.disponible || this.utilisateurABouge) return;
+    this.franceAReprendre = false;
     const lieu: L.LatLngTuple = [resultat.latitude, resultat.longitude];
     L.circleMarker(lieu, { radius: 9, className: 'ma-position', interactive: false }).addTo(this.calque ?? carte);
     carte.setView(lieu, ZOOM_COMMUNE, { animate: false });
