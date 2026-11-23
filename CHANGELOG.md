@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.51.0](https://github.com/yalinde20/Leurio/compare/v1.50.0...v1.51.0) (2026-11-23)
+
+
+### Features
+
+* boucle courte de l'animation dans la fiche, premier VideoPlayer (US 9) ([7a96aa1](https://github.com/yalinde20/Leurio/commit/7a96aa1e39fc4c0b75e272c9ff7f87d16e817b5f))
+
+
+### Bug Fixes
+
+* zone vidéo affichée seulement quand la boucle est prête, refus de lecture iOS, aria-hidden (US 9) ([49f1bc6](https://github.com/yalinde20/Leurio/commit/49f1bc6fdd45be7ac85bc21018a20010557244de))
+
 ## [1.50.0](https://github.com/yalinde20/Leurio/compare/v1.49.0...v1.50.0) (2026-11-23)
 
 
