@@ -1,6 +1,8 @@
-import { AfterViewInit, afterNextRender, Component, computed, DestroyRef, ElementRef, inject, input, output, signal, viewChild, WritableSignal } from '@angular/core';
+import { AfterViewInit, afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, input, output, signal, untracked, viewChild, WritableSignal } from '@angular/core';
 import * as L from 'leaflet';
+import { CatalogService } from '../../core/data/catalog.service';
 import { GeoService, HORS_FRANCE } from '../../core/data/geo.service';
+import type { Federation } from '../../core/data/catalog.types';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot } from '../../core/data/spots.service';
 import { ATTRIBUTION, icone, TUILES } from './carte-spots';
@@ -153,6 +155,28 @@ const MILIEUX: Choix<Milieu>[] = [
       font-weight: 600;
       color: var(--lr-danger);
     }
+    .lien-federation {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 48px;
+      margin-top: 4px;
+      color: var(--lr-primaire);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .lien-federation svg {
+      width: 16px;
+      height: 16px;
+      flex: none;
+    }
+    .sans-lien {
+      margin: 6px 0 0;
+      font-size: 15px;
+      color: var(--lr-texte-secondaire);
+    }
     .enregistrer {
       display: flex;
       align-items: center;
@@ -217,6 +241,14 @@ const MILIEUX: Choix<Milieu>[] = [
           @if (erreurCategorie(); as message) {
             <p id="erreur-categorie" class="erreur" role="alert">{{ message }}</p>
           }
+          @if (federation(); as f) {
+            <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              Trouver la catégorie sur le site de la fédération
+            </a>
+          } @else if (federation() === null) {
+            <p class="sans-lien">Pas de lien pour ce département : cherche ta fédération départementale de pêche</p>
+          }
         </div>
         <div class="groupe">
           <span id="etiquette-milieu" class="etiquette">Type d'eau</span>
@@ -271,6 +303,7 @@ export class SpotFormulaireComponent implements AfterViewInit {
 
   private readonly geo = inject(GeoService);
   private readonly positionService = inject(PositionService);
+  private readonly catalogue = inject(CatalogService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialogue = viewChild.required<ElementRef<HTMLElement>>('dialogue');
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
@@ -295,6 +328,11 @@ export class SpotFormulaireComponent implements AfterViewInit {
     return nom ? `${code} ${nom}` : code;
   });
 
+  /** Fédération du département : `undefined` tant que rien n'est à montrer (pas de position, hors de France, recherche en cours), `null` si le contenu n'en a pas. */
+  protected readonly federation = signal<Federation | null | undefined>(undefined);
+  /** Numéro de la dernière recherche : une réponse tardive pour un ancien département ne l'emporte jamais. */
+  private rechercheEnCours = 0;
+
   /** Les erreurs n'apparaissent qu'après un premier essai d'enregistrement, puis suivent la saisie. */
   private readonly tente = signal(false);
   protected readonly erreurNom = computed(() => (this.tente() && this.nom().trim() === '' ? 'Donne un nom à ton spot' : null));
@@ -310,6 +348,10 @@ export class SpotFormulaireComponent implements AfterViewInit {
 
   constructor() {
     afterNextRender(() => this.creerCarte());
+    effect(() => {
+      const departement = this.departement();
+      untracked(() => void this.chercherFederation(departement));
+    });
     this.destroyRef.onDestroy(() => {
       this.detruit = true;
       this.carte?.remove();
@@ -341,6 +383,14 @@ export class SpotFormulaireComponent implements AfterViewInit {
     const departement = this.departement();
     if (nom === '' || categorie === null || milieu === null || position === null || departement === null || departement === HORS_FRANCE) return;
     this.valide.emit({ nom, lat: position.lat, lng: position.lng, categorie, milieu, departement });
+  }
+
+  private async chercherFederation(departement: string | null): Promise<void> {
+    const rang = ++this.rechercheEnCours;
+    this.federation.set(undefined);
+    if (departement === null || departement === HORS_FRANCE) return;
+    const federation = await this.catalogue.federation(departement);
+    if (rang === this.rechercheEnCours && !this.detruit) this.federation.set(federation ?? null);
   }
 
   private creerCarte(): void {
