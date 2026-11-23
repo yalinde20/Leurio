@@ -5,7 +5,10 @@ import { Animation, CatalogService } from '../../core/data/catalog.service';
 import { ConseilDetailStore } from '../conseil/conseil-detail.store';
 import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 
-/** La fiche d'une animation (US 86) : geste, vitesse et erreur à éviter. La vidéo arrivera avec le ticket 20. */
+/**
+ * La fiche d'une animation (US 86, US 8) : geste, vitesse et erreur à éviter, lus dans techniques.json. La vidéo arrivera avec le ticket 20.
+ * Une animation absente du contenu (ou un contenu illisible) affiche « Cette animation n'est pas encore décrite ».
+ */
 @Component({
   selector: 'app-animation',
   imports: [IonHeader, IonToolbar, IonTitle, IonContent, BoutonRetourComponent],
@@ -28,6 +31,9 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
       margin: 12px 0 4px;
       font-size: 16px;
       font-weight: 600;
+    }
+    .message-vide {
+      color: var(--lr-texte-secondaire);
     }
     p {
       margin: 0;
@@ -60,12 +66,17 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
           <h2>{{ a.nom }}</h2>
           <h3>Le geste</h3>
           <p>{{ a.geste }}</p>
-          <h3>La vitesse</h3>
+          <h3>Vitesse</h3>
           <p>{{ a.vitesse }}</p>
-          <h3>L'erreur à éviter</h3>
+          <h3>Erreur à éviter</h3>
           <p>{{ a.erreurAEviter }}</p>
         </section>
         <div class="video-attente">La vidéo de l'animation arrive bientôt.</div>
+      } @else if (absente()) {
+        <section class="carte">
+          <h2>Animation</h2>
+          <p class="message-vide">Cette animation n'est pas encore décrite</p>
+        </section>
       }
     </ion-content>
   `,
@@ -77,20 +88,26 @@ export class AnimationPage implements OnInit {
   private readonly store = inject(ConseilDetailStore);
 
   protected readonly animation = signal<Animation | null>(null);
+  /** Le conseil renvoie vers une animation que le contenu ne décrit pas (ou qu'il ne peut pas lire). */
+  protected readonly absente = signal(false);
 
   async ngOnInit(): Promise<void> {
     const rang = Number(this.route.snapshot.paramMap.get('rang'));
     const id = this.store.details().find((d) => d.rang === rang)?.animationId;
+    if (!id) {
+      // Rechargement ou lien direct, sans conseil en mémoire : retour à l'écran « Conseil ».
+      void this.router.navigateByUrl('/conseil', { replaceUrl: true });
+      return;
+    }
     try {
-      const trouvee = id ? (await this.catalogue.animations()).find((a) => a.id === id) : undefined;
+      const trouvee = (await this.catalogue.animations()).find((a) => a.id === id);
       if (trouvee) {
         this.animation.set(trouvee);
         return;
       }
     } catch {
-      // Contenu illisible : même sortie que pour une animation introuvable.
+      // Contenu illisible : même message que pour une animation absente du contenu.
     }
-    // Rechargement, lien direct ou animation introuvable : retour à l'écran « Conseil ».
-    void this.router.navigateByUrl('/conseil', { replaceUrl: true });
+    this.absente.set(true);
   }
 }

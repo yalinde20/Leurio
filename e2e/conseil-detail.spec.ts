@@ -67,8 +67,8 @@ test('US 86 critère 2 : given le détail ouvert, when je touche « Voir l\'anim
   await page.getByRole('button', { name: "Voir l'animation" }).click();
 
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
-  await expect(page.getByText('La vitesse', { exact: true })).toBeVisible();
-  await expect(page.getByText("L'erreur à éviter", { exact: true })).toBeVisible();
+  await expect(page.getByText('Vitesse', { exact: true })).toBeVisible();
+  await expect(page.getByText('Erreur à éviter', { exact: true })).toBeVisible();
   await expect(page.getByText("La vidéo de l'animation arrive bientôt.")).toBeVisible();
 });
 
