@@ -1,5 +1,5 @@
 /*
- * US 88 : donner un avis 👍 / 👎 sur un conseil (PLAN  �2.1,  �7,  �8.6,  �10).
+ * US 88 : donner un avis 👍 / 👎 sur un conseil (PLAN §2.1, §7, §8.6, §10).
  * Maquette de référence : docs/maquettes/us-88-avis-sur-un-conseil.html.
  *
  * CONTRAT (la couture que l'implémentation doit fournir) :
@@ -7,12 +7,12 @@
  *    creerSourceFeedbackFirebase(inject(Injector))) et
  *      interface SourceFeedback { envoyer(feedback: Record<string, unknown>): Promise<void> }
  *    `envoyer` crée UN document dans la collection `feedback` ; le double des tests enregistre le document reçu.
- *  - Chaque carte du top 3 porte, au-dessus de  � Voir le détail  �,  � Ce conseil t'a aidé ?  � et deux boutons
- *     � 👍  � (aria-label  � Oui, ce conseil m'a aidé  �) et  � 👎  � (aria-label  � Non, ce conseil ne m'a pas aidé  �).
+ *  - Chaque carte du top 3 porte, au-dessus de « Voir le détail », « Ce conseil t'a aidé ? » et deux boutons
+ * « 👍 » (aria-label « Oui, ce conseil m'a aidé ») et « 👎 » (aria-label « Non, ce conseil ne m'a pas aidé »).
  *  - Le tap envoie UN document { conseilId: string non vide (distinct par carte), typeId, techniqueId, utile: boolean,
- *    conditions: { tempEau, vent arrondis �  l'entier ; debitTendance, pressionTendance48h tels quels ; departement ; sans lat/lng },
- *    date: instant arrondi �  l'heure (chaîne ISO ou Date) } et rien d'autre (pas d'uid, pas de latitude, pas de longitude).
- *  - Le tap ne passe pas par `await` du réseau : la carte affiche  � Merci pour ton retour !  � (role="status") tout de suite, même si
+ *    conditions: { tempEau, vent arrondis à l'entier ; debitTendance, pressionTendance48h tels quels ; departement ; sans lat/lng },
+ *    date: instant arrondi à l'heure (chaîne ISO ou Date) } et rien d'autre (pas d'uid, pas de latitude, pas de longitude).
+ *  - Le tap ne passe pas par `await` du réseau : la carte affiche « Merci pour ton retour ! » (role="status") tout de suite, même si
  *    `envoyer` ne se résout jamais (hors ligne) ou échoue. Le tap n'ouvre pas le détail. Les autres cartes ne changent pas.
  * Doubles : comme conseil.page.top3.spec.ts ; aucun accès réseau.
  */
@@ -52,7 +52,7 @@ const RELEVE: ReleveActuel = { conditions: CONDITIONS, pressionHpa: 1012, moinsP
 
 const TYPES = [
   { id: 'shad', nom: 'Shad' },
-  { id: 'jig', nom: 'Jig �  jupe' },
+  { id: 'jig', nom: 'Jig à jupe' },
   { id: 'ver', nom: 'Ver souple finesse' },
 ] as TypeLeurre[];
 const ANIMATIONS = [
@@ -131,7 +131,7 @@ const bouton = (carte: HTMLElement, label: string) =>
 const MERCI = compact('Merci pour ton retour !');
 
 describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
-  it("critère 1 : given l'écran Conseil montre 3 cartes, when je regarde une carte, then elle affiche  � Ce conseil t'a aidé ?  � avec un bouton  � 👍  � et un bouton  � 👎  �", async () => {
+  it("critère 1 : given l'écran Conseil montre 3 cartes, when je regarde une carte, then elle affiche « Ce conseil t'a aidé ? » avec un bouton « 👍 » et un bouton « 👎 »", async () => {
     const { page } = await afficher();
 
     const liste = cartes(page);
@@ -143,7 +143,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     }
   });
 
-  it('critère 1 : given une carte, when je la regarde, then la ligne d\'avis est au-dessus de  � Voir le détail  �', async () => {
+  it('critère 1 : given une carte, when je la regarde, then la ligne d\'avis est au-dessus de « Voir le détail »', async () => {
     const { page } = await afficher();
 
     const carte = cartes(page)[0];
@@ -154,7 +154,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(avis!.compareDocumentPosition(detail!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("critère 2 : given une carte de conseil, when je touche  � 👍  �, then un document feedback est créé avec conseilId, typeId, techniqueId, utile �  vrai, les conditions arrondies et la date", async () => {
+  it("critère 2 : given une carte de conseil, when je touche « 👍 », then un document feedback est créé avec conseilId, typeId, techniqueId, utile à vrai, les conditions arrondies et la date", async () => {
     const { page, envois } = await afficher();
 
     bouton(cartes(page)[1], OUI)?.click();
@@ -180,7 +180,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(new Set(envois.map((e) => e['conseilId'])).size).toBe(3);
   });
 
-  it("critère 2 : given une carte de conseil, when je touche  � 👍  �, then la carte affiche  � Merci pour ton retour !  � (role status) �  la place des boutons, sans ouvrir le détail, et les autres cartes sont inchangées", async () => {
+  it("critère 2 : given une carte de conseil, when je touche « 👍 », then la carte affiche « Merci pour ton retour ! » (role status) à la place des boutons, sans ouvrir le détail, et les autres cartes sont inchangées", async () => {
     const { page, navigate, attendre } = await afficher();
     const [premiere, deuxieme, troisieme] = cartes(page);
 
@@ -203,7 +203,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("critère 3 : given une carte de conseil, when je touche  � 👎  �, then un document feedback est créé avec utile �  faux et la carte affiche  � Merci pour ton retour !  �", async () => {
+  it("critère 3 : given une carte de conseil, when je touche « 👎 », then un document feedback est créé avec utile à faux et la carte affiche « Merci pour ton retour ! »", async () => {
     const { page, envois, navigate, attendre } = await afficher();
 
     bouton(cartes(page)[2], NON)?.click();
@@ -241,7 +241,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(JSON.stringify(envois[0])).not.toContain('-0.55');
   });
 
-  it("critère 4 : given des conditions �  décimales, when j'envoie un avis, then la température de l'eau et le vent sont arrondis �  l'entier et la date �  l'heure", async () => {
+  it("critère 4 : given des conditions à décimales, when j'envoie un avis, then la température de l'eau et le vent sont arrondis à l'entier et la date à l'heure", async () => {
     const { page, envois } = await afficher();
 
     bouton(cartes(page)[0], NON)?.click();
@@ -252,7 +252,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(new Date(envois[0]['date'] as string).toISOString()).toBe('2026-11-09T12:00:00.000Z');
   });
 
-  it("critère 5 : given je n'ai pas de réseau (l'envoi ne se termine jamais), when je touche  � 👍  �, then la carte affiche  � Merci pour ton retour !  � sans erreur ni attente", async () => {
+  it("critère 5 : given je n'ai pas de réseau (l'envoi ne se termine jamais), when je touche « 👍 », then la carte affiche « Merci pour ton retour ! » sans erreur ni attente", async () => {
     const { page, envois, attendre } = await afficher(() => new Promise<void>(() => undefined));
 
     bouton(cartes(page)[0], OUI)?.click();
@@ -263,7 +263,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(compact(page.textContent)).not.toMatch(/erreur|réessaie|échec|chargement/i);
   });
 
-  it("critère 5 : given l'envoi est refusé ou échoue, when je touche  � 👎  �, then la carte affiche quand même  � Merci pour ton retour !  � sans message d'erreur", async () => {
+  it("critère 5 : given l'envoi est refusé ou échoue, when je touche « 👎 », then la carte affiche quand même « Merci pour ton retour ! » sans message d'erreur", async () => {
     const { page, attendre } = await afficher(() => Promise.reject(new Error('hors ligne')));
 
     bouton(cartes(page)[0], NON)?.click();
