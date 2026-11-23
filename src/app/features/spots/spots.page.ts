@@ -1,8 +1,10 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, untracked, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import * as L from 'leaflet';
 import { CatalogService } from '../../core/data/catalog.service';
 import type { Federation } from '../../core/data/catalog.types';
+import { etatOuverture, prochaineOuverture1reCategorie } from '../../core/regulation/calendar';
 import { GeoService } from '../../core/data/geo.service';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
@@ -26,14 +28,23 @@ const LIBELLES_MILIEU: Record<Milieu, string> = { riviere: 'Rivière', lac: 'Lac
 
 type Etat = { type: 'chargement' } | { type: 'erreur' } | { type: 'pret'; spots: SpotEnregistre[] };
 
+const FORMAT_REOUVERTURE = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+/** Minuit local du jour d'une date, en millisecondes. */
+function debutDuJour(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
 interface LigneSpot {
   spot: SpotEnregistre;
   detail: string;
+  /** Date de réouverture, en toutes lettres, d'un spot de 1re catégorie fermé ; `null` sinon (PLAN §6). */
+  reouverture: string | null;
 }
 
 @Component({
   selector: 'app-spots',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, SpotFormulaireComponent],
+  imports: [NgTemplateOutlet, IonHeader, IonToolbar, IonTitle, IonContent, SpotFormulaireComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -111,6 +122,40 @@ interface LigneSpot {
       height: 16px;
       flex: none;
     }
+    .ferme {
+      margin: 0 16px 10px;
+      padding: 10px 12px 4px;
+      border: 1px solid var(--lr-danger);
+      border-left-width: 4px;
+      border-radius: 12px;
+      background: var(--lr-fond);
+    }
+    .ferme .titre {
+      display: block;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--lr-danger);
+    }
+    .ferme .date {
+      display: block;
+      margin-top: 2px;
+      font-size: 15px;
+      color: var(--lr-texte);
+    }
+    .ferme .mention {
+      display: block;
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
+    .ferme .lien-federation {
+      margin: 0;
+    }
+    .ferme .sans-lien {
+      margin: 4px 0 8px;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
     .attente {
       font-size: 14px;
       color: var(--lr-texte-secondaire);
@@ -186,11 +231,19 @@ interface LigneSpot {
                         <span class="attente">Pas encore synchronisé : il le sera au retour du réseau.</span>
                       }
                     </button>
-                    @if (ligne.spot.id === choisi() && federationChoisie(); as f) {
-                      <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">
-                        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                        Site de la fédération
-                      </a>
+                    @if (ligne.reouverture; as reouverture) {
+                      <div class="ferme" role="note">
+                        <span class="titre">Fermé : la 1re catégorie est hors saison</span>
+                        <span class="date">Réouverture le {{ reouverture }}</span>
+                        <span class="mention">À vérifier dans l'arrêté de ton département</span>
+                        @if (federations()[ligne.spot.departement]; as f) {
+                          <ng-container [ngTemplateOutlet]="lien" [ngTemplateOutletContext]="{ $implicit: f }" />
+                        } @else if (federations()[ligne.spot.departement] === null) {
+                          <p class="sans-lien">Pas de lien pour ce département : cherche ta fédération départementale de pêche</p>
+                        }
+                      </div>
+                    } @else if (ligne.spot.id === choisi() && federations()[ligne.spot.departement]; as f) {
+                      <ng-container [ngTemplateOutlet]="lien" [ngTemplateOutletContext]="{ $implicit: f }" />
                     }
                   </li>
                 }
@@ -203,6 +256,12 @@ interface LigneSpot {
         }
       </div>
     </ion-content>
+    <ng-template #lien let-f>
+      <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9 2h5v5M14 2 7.5 8.5M12 9.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        Site de la fédération
+      </a>
+    </ng-template>
     @if (formulaireOuvert()) {
       <app-spot-formulaire [echec]="echec()" [enCours]="enCours()" (valide)="enregistrer($event)" (annuler)="fermerFormulaire()" />
     }
@@ -219,20 +278,25 @@ export class SpotsPage {
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
   protected readonly choisi = signal<string | null>(null);
-  /** Fédération du département du spot choisi ; `undefined` tant que la recherche court ou si le contenu n'en a pas. */
-  protected readonly federationChoisie = signal<Federation | undefined>(undefined);
+  /** Fédération par département, lue dans le contenu : absent tant que la recherche court, `null` si le contenu n'en a pas. */
+  protected readonly federations = signal<Record<string, Federation | null>>({});
   protected readonly horsLigne = signal(navigator.onLine === false);
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
+  /** Le jour local (minuit, en millisecondes) : relu quand l'app revient au premier plan, pour qu'un bandeau « Fermé » suive le changement de saison. */
+  private readonly jour = signal(debutDuJour(new Date()));
   protected readonly lignes = computed<LigneSpot[]>(() => {
     const etat = this.etat();
     if (etat.type !== 'pret') return [];
-    return [...etat.spots].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')).map((spot) => ({ spot, detail: this.detail(spot) }));
+    const aujourdhui = new Date(this.jour());
+    return [...etat.spots]
+      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+      .map((spot) => ({ spot, detail: this.detail(spot), reouverture: this.reouverture(spot, aujourdhui) }));
   });
 
-  /** Numéro de la dernière recherche : une réponse tardive pour un spot déjà quitté ne l'emporte jamais. */
-  private rechercheFederation = 0;
+  /** Départements dont la fédération a déjà été demandée au contenu. */
+  private readonly federationsDemandees = new Set<string>();
   private readonly carte = signal<L.Map | null>(null);
   private readonly marqueurs = new Map<string, L.Marker>();
   private calque: L.LayerGroup | null = null;
@@ -249,7 +313,11 @@ export class SpotsPage {
   constructor() {
     afterNextRender(() => this.creerCarte());
     const arreterEcoute = this.spots.ecouter(
-      (spots) => this.etat.set({ type: 'pret', spots }),
+      (spots) => {
+        this.etat.set({ type: 'pret', spots });
+        // Un bandeau « Fermé » porte le lien de son département, spot ouvert ou non.
+        for (const spot of spots) if (this.reouverture(spot, new Date()) !== null) void this.chercherFederation(spot.departement);
+      },
       () => this.etat.set({ type: 'erreur' }),
     );
     this.destroyRef.onDestroy(() => {
@@ -262,6 +330,11 @@ export class SpotsPage {
       const etat = this.etat();
       if (carte && etat.type !== 'chargement') untracked(() => this.afficher(carte, etat.type === 'pret' ? etat.spots : []));
     });
+  }
+
+  @HostListener('document:visibilitychange')
+  protected majJour(): void {
+    if (document.visibilityState === 'visible') this.jour.set(debutDuJour(new Date()));
   }
 
   @HostListener('window:online')
@@ -284,8 +357,8 @@ export class SpotsPage {
   }
 
   protected choisir(spot: SpotEnregistre): void {
-    // Toucher à nouveau le spot déjà ouvert ne relance pas la recherche : son lien ne clignote pas.
-    if (this.choisi() !== spot.id) void this.chercherFederation(spot);
+    // Un département déjà cherché n'est pas redemandé : le lien d'un spot déjà ouvert ne clignote pas.
+    void this.chercherFederation(spot.departement);
     this.choisi.set(spot.id);
     // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
     this.cadrageAReprendre = false;
@@ -293,11 +366,19 @@ export class SpotsPage {
     this.carte()?.setView([spot.lat, spot.lng], Math.max(this.carte()?.getZoom() ?? 0, ZOOM_COMMUNE));
   }
 
-  private async chercherFederation(spot: SpotEnregistre): Promise<void> {
-    const rang = ++this.rechercheFederation;
-    this.federationChoisie.set(undefined);
-    const federation = await this.catalogue.federation(spot.departement);
-    if (rang === this.rechercheFederation && !this.detruit) this.federationChoisie.set(federation);
+  private async chercherFederation(departement: string): Promise<void> {
+    if (this.federationsDemandees.has(departement)) return;
+    this.federationsDemandees.add(departement);
+    const federation = await this.catalogue.federation(departement);
+    // `undefined` peut venir d'un contenu qui ne s'est pas chargé : le département sera redemandé à la prochaine occasion.
+    if (federation === undefined) this.federationsDemandees.delete(departement);
+    if (!this.detruit) this.federations.update((f) => ({ ...f, [departement]: federation ?? null }));
+  }
+
+  /** Réouverture d'un spot de 1re catégorie fermé aujourd'hui, en toutes lettres ; `null` quand il n'y a pas de bandeau. */
+  private reouverture(spot: SpotEnregistre, aujourdhui: Date): string | null {
+    if (etatOuverture(spot.categorie, aujourdhui) === 'ouvert') return null;
+    return FORMAT_REOUVERTURE.format(prochaineOuverture1reCategorie(aujourdhui));
   }
 
   private detail(spot: SpotEnregistre): string {
