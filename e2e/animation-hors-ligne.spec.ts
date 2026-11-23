@@ -86,14 +86,8 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
   await page.reload();
   const carte = page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
   await expect(carte.getByText('Voir le détail')).toBeVisible();
-  // Les écrans sont chargés à la demande : on visite la fiche une fois avec du réseau (puis on revient aux conseils) pour que son code soit déjà là, comme pour un pêcheur qui a utilisé l'app.
-  await ouvrirLaFiche(page);
-  await page.goBack();
-  await page.goBack();
-  await expect(carte.getByText('Voir le détail')).toBeVisible();
-  // creerProfil écrit par l'API REST de l'émulateur, sans passer par l'app : on relit users/{uid} en ligne avec le SDK de l'app pour que
-  // son cache local tienne ce consentement (sinon la lecture faite hors ligne peut rendre l'ancien profil, comme pour un pêcheur
-  // dont l'app n'aurait jamais vu son choix).
+  // creerProfil écrit par l'API REST de l'émulateur, sans passer par l'app : avant que la fiche lise le consentement, on attend que le
+  // serveur rende ce profil au SDK de l'app (et que son cache local le tienne), sinon la fiche peut lire l'ancien profil, sans consentement.
   await expect
     .poll(() =>
       page.evaluate(async (id) => {
@@ -105,6 +99,11 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
       }, uid),
     )
     .toBe(video);
+  // Les écrans sont chargés à la demande : on visite la fiche une fois avec du réseau (puis on revient aux conseils) pour que son code soit déjà là, comme pour un pêcheur qui a utilisé l'app.
+  await ouvrirLaFiche(page);
+  await page.goBack();
+  await page.goBack();
+  await expect(carte.getByText('Voir le détail')).toBeVisible();
   await page.context().setOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
 }
