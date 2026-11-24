@@ -26,7 +26,10 @@ const INTERVALLE_MIN_MS = 3_600_000;
 export interface PortFeatureFlags {
   /** Récupère les valeurs distantes. Ne rejette jamais et rend la main en 10 s au plus. */
   initialiser(): Promise<void>;
-  /** Synchrone : la dernière valeur reçue, sinon la valeur par défaut ; un flag non déclaré est désactivé. */
+  /**
+   * Synchrone : la dernière valeur reçue, sinon la valeur par défaut ; un flag non déclaré est désactivé.
+   * Le flag est lu à la dernière valeur chargée : il peut changer une fois `initialiser()` terminé.
+   */
   estActif(nom: string): boolean;
 }
 
@@ -34,14 +37,41 @@ export interface PortFeatureFlags {
 export interface ModuleRemoteConfig {
   isSupported(): Promise<boolean>;
   getRemoteConfig(app: FirebaseApp): RemoteConfigMinimal;
-  /** Rejette sans réseau, mais les valeurs activées au lancement précédent sont alors déjà chargées. */
+  /**
+   * Rejette sans réseau. Le module fourni doit avoir chargé les valeurs activées au lancement précédent avant de requêter, pour que
+   * `getValue` les lise même si la requête échoue : `adapterSdkRemoteConfig` le garantit pour le vrai SDK.
+   */
   fetchAndActivate(remoteConfig: never): Promise<boolean>;
-  getValue(remoteConfig: never, cle: string): { asBoolean(): boolean; getSource(): 'remote' | 'default' | 'static' };
+  getValue(
+    remoteConfig: never,
+    cle: string,
+  ): { asBoolean(): boolean; getSource(): 'remote' | 'default' | 'static' };
 }
 
 interface RemoteConfigMinimal {
   defaultConfig: Record<string, string | number | boolean>;
   settings: { fetchTimeoutMillis: number; minimumFetchIntervalMillis: number };
+}
+
+/** Sous-ensemble du SDK `firebase/remote-config` que l'adaptateur utilise. */
+export interface SdkRemoteConfig extends ModuleRemoteConfig {
+  ensureInitialized(remoteConfig: never): Promise<void>;
+}
+
+/**
+ * Adapte le vrai SDK : `fetchAndActivate` seul ne charge pas les valeurs persistées (IndexedDB), seul `ensureInitialized` le fait.
+ * On l'attend donc avant la requête, qui échoue sans réseau : `getValue` rend alors les dernières valeurs reçues (critère 3).
+ */
+export function adapterSdkRemoteConfig(sdk: SdkRemoteConfig): ModuleRemoteConfig {
+  return {
+    isSupported: () => sdk.isSupported(),
+    getRemoteConfig: (app) => sdk.getRemoteConfig(app),
+    getValue: (rc, cle) => sdk.getValue(rc, cle),
+    fetchAndActivate: async (rc) => {
+      await sdk.ensureInitialized(rc);
+      return sdk.fetchAndActivate(rc);
+    },
+  };
 }
 
 export function creerPortFeatureFlags(
@@ -67,17 +97,29 @@ export function creerPortFeatureFlags(
       if (contexte.emulateurs) return;
       let minuteur: ReturnType<typeof setTimeout> | undefined;
       try {
-        const delai = new Promise<void>((resolve) => (minuteur = setTimeout(resolve, DELAI_MAX_MS)));
+        const delai = new Promise<void>(
+          (resolve) =>
+            (minuteur = setTimeout(() => {
+              console.warn(
+                'Remote Config met trop de temps : l’app continue avec les valeurs qu’elle a.',
+              );
+              resolve();
+            }, DELAI_MAX_MS)),
+        );
         await Promise.race([demarrer(), delai]);
       } catch (erreur) {
-        console.error('Remote Config n’a pas répondu : l’app garde les dernières valeurs reçues ou les valeurs par défaut.', erreur);
+        console.warn(
+          'Remote Config n’a pas répondu : l’app garde les dernières valeurs reçues ou les valeurs par défaut.',
+          erreur,
+        );
       } finally {
         clearTimeout(minuteur);
       }
     },
     estActif(nom) {
-      const defaut = flags[nom] ?? false;
-      if (!(nom in flags) || !pret) return defaut;
+      if (!Object.hasOwn(flags, nom)) return false;
+      const defaut = flags[nom];
+      if (!pret) return defaut;
       try {
         const valeur = pret.module.getValue(pret.remoteConfig, nom);
         return valeur.getSource() === 'remote' ? valeur.asBoolean() : defaut;
@@ -88,22 +130,17 @@ export function creerPortFeatureFlags(
   };
 }
 
+/** Les flags y sont lus à la dernière valeur chargée : ils peuvent changer une fois `initialiser()` terminé. */
 export const FEATURE_FLAGS = new InjectionToken<PortFeatureFlags>('FEATURE_FLAGS', {
   providedIn: 'root',
   factory: () => {
     const injector = inject(Injector);
     return creerPortFeatureFlags({ emulateurs }, async () => {
-      const [sdk, { FirebaseService }] = await Promise.all([import('firebase/remote-config'), import('./firebase.service')]);
-      const module = {
-        isSupported: sdk.isSupported,
-        getRemoteConfig: sdk.getRemoteConfig,
-        getValue: sdk.getValue,
-        // `getValue` ne lit les valeurs persistées qu'une fois le SDK initialisé : on l'attend avant la requête, qui peut échouer.
-        fetchAndActivate: async (rc) => {
-          await sdk.ensureInitialized(rc);
-          return sdk.fetchAndActivate(rc);
-        },
-      } as ModuleRemoteConfig;
+      const [sdk, { FirebaseService }] = await Promise.all([
+        import('firebase/remote-config'),
+        import('./firebase.service'),
+      ]);
+      const module = adapterSdkRemoteConfig(sdk as unknown as SdkRemoteConfig);
       return { module, app: injector.get(FirebaseService).app };
     });
   },
