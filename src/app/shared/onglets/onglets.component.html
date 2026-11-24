@@ -1,4 +1,10 @@
-<div class="contenu">
+@if (horsLigne()) {
+  <div class="hors-ligne" role="status">
+    <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+    <span>Hors ligne</span>
+  </div>
+}
+<div class="contenu" [class.contenu-hors-ligne]="horsLigne()">
   <router-outlet></router-outlet>
 </div>
 <ion-tab-bar>
