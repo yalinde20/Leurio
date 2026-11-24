@@ -7,6 +7,8 @@ export interface ConfigFirebase {
   storageBucket: string;
   messagingSenderId: string;
   appId: string;
+  /** Identifiant de mesure Google Analytics (G-…), facultatif : sans lui, Analytics reste inerte (US 19). */
+  measurementId?: string;
 }
 
 export interface ConfigApp {

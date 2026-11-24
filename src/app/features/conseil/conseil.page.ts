@@ -8,6 +8,7 @@ import { CatalogService, Espece, Federation } from '../../core/data/catalog.serv
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { FeedbackService } from '../../core/data/feedback.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
+import { MesureAudienceService } from '../../core/data/mesure-audience.service';
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
@@ -775,6 +776,7 @@ export class ConseilPage implements OnInit {
   private readonly feedback = inject(FeedbackService);
   private readonly sortie = inject(SortieService);
   private readonly choix = inject(ConseilChoixStore);
+  private readonly mesure = inject(MesureAudienceService);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
   /** Vrai quand le détail d'un conseil ou la fiche animation est ouvert : l'écran « Conseil » laisse la place à l'enfant, le top 3 reste dans le composant. */
@@ -1299,6 +1301,7 @@ export class ConseilPage implements OnInit {
       }));
       this.contexteAvis = { conditions: releve.conditions, moment };
       this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
+      this.mesure.envoyer('conseil_affiche', { espece: cible?.code ?? 'toutes', nombre: resultat.conseils.length });
     } catch {
       if (!perime()) this.conseil.set({ type: 'indisponible' });
     }
