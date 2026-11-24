@@ -38,7 +38,7 @@
     {
       "name": "tuiles-osm",
       "urls": ["https://tile.openstreetmap.org/**"],
-      "cacheConfig": { "strategy": "performance", "cacheOpaqueResponses": false, "maxSize": 500, "maxAge": "30d" }
+      "cacheConfig": { "strategy": "performance", "cacheOpaqueResponses": false, "maxSize": 3000, "maxAge": "30d" }
     }
   ]
 }

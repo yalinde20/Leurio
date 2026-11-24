@@ -4,6 +4,7 @@ import { ouNull } from './ou-null';
 import { avecDelai, INDEXED_DB, MAGASIN_SORTIE, ouvrirBase } from './conditions-cache';
 import { distanceKm, HubeauService, ResultatTendanceDebit } from './hubeau.service';
 import { ResultatTempEau, TemperatureEauService } from './temperature-eau.service';
+import { TuilesService } from './tuiles.service';
 import { Lieu, WeatherProvider } from './weather-provider';
 
 /** Un lieu à moins de ce rayon, en km, est le lieu de la sortie préparée. */
@@ -106,6 +107,8 @@ export class SortieService {
   async preparer(lieu: Lieu): Promise<ResultatPreparation> {
     // Sans réseau, rien n'est téléchargé : la sortie déjà préparée reste en place.
     if (!navigator.onLine) return { statut: 'hors ligne' };
+    // Les tuiles autour du lieu se gardent en tâche de fond : la sortie ne les attend pas et leur échec ne la change pas.
+    this.injector.get(TuilesService).mettreEnCacheAutour(lieu).catch(() => undefined);
     const maintenant = new Date();
     const weather = this.injector.get(WeatherProvider);
     const temperatureEau = this.injector.get(TemperatureEauService);
