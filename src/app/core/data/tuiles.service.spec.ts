@@ -39,8 +39,10 @@ function attendues(lieu: { latitude: number; longitude: number }): string[] {
 
 const urlDe = (entree: unknown) => (typeof entree === 'string' ? entree : entree instanceof URL ? entree.href : (entree as Request).url);
 
-function installer(enLigne = true, fetchDouble?: (url: string) => Promise<Response>) {
+function installer(enLigne = true, fetchDouble?: (url: string) => Promise<Response>, serviceWorker = true) {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(enLigne);
+  // Un service worker contrôle la page (sans lui, personne ne garderait les tuiles : voir le dernier test).
+  vi.stubGlobal('navigator', Object.create(navigator, { serviceWorker: { value: serviceWorker ? { controller: {} } : undefined } }));
   const demandees: string[] = [];
   const fetchSpy = vi.fn(async (entree: unknown) => {
     const url = urlDe(entree);
@@ -98,16 +100,72 @@ describe('TuilesService (US 17)', () => {
     expect(demandees).toHaveLength(attendues(ANGERS).length);
   });
 
-  it('given des tuiles déjà dans le cache du navigateur, when on met en cache autour, then elles ne sont pas redemandées', async () => {
-    const deja = new Set(attendues(ANGERS).slice(0, 10));
-    vi.stubGlobal('caches', { match: vi.fn(async (entree: unknown) => (deja.has(urlDe(entree)) ? new Response('png') : undefined)) });
+  it('given des tuiles déjà gardées par le navigateur, when on met en cache autour, then chacune est quand même demandée, le service worker décidant de répondre sans réseau ou de la rafraîchir', async () => {
+    vi.stubGlobal('caches', { match: vi.fn(async () => new Response('png')) });
     const { service, demandees } = installer();
 
     await service.mettreEnCacheAutour(ANGERS);
 
-    expect(demandees.length).toBeGreaterThan(0);
-    expect(demandees.some((u) => deja.has(u))).toBe(false);
-    expect(demandees).toHaveLength(attendues(ANGERS).length - deja.size);
+    expect([...demandees].sort()).toEqual([...attendues(ANGERS)].sort());
+  });
+
+  it('given un lieu connu, when on met en cache autour, then la tuile de zoom 16 qui le contient (calculée à part) est demandée', async () => {
+    const { service, demandees } = installer();
+
+    await service.mettreEnCacheAutour(ANGERS);
+
+    expect(demandees).toContain(`${BASE}16/32667/22924.png`);
+  });
+
+  it('given deux appels en même temps sur le même lieu, when ils se terminent, then jamais plus de 2 requêtes ne sont en vol et chaque tuile n\'est demandée qu\'une fois', async () => {
+    let enVol = 0;
+    let max = 0;
+    const { service, demandees } = installer(true, async () => {
+      enVol++;
+      max = Math.max(max, enVol);
+      await new Promise((r) => setTimeout(r, 0));
+      enVol--;
+      return new Response('png');
+    });
+
+    await Promise.all([service.mettreEnCacheAutour(ANGERS), service.mettreEnCacheAutour(ANGERS)]);
+
+    expect(max).toBe(2);
+    expect(demandees).toHaveLength(attendues(ANGERS).length);
+    expect(new Set(demandees).size).toBe(demandees.length);
+  });
+
+  it('given deux appels sur deux lieux différents, when ils se terminent, then jamais plus de 2 requêtes ne sont en vol en tout', async () => {
+    let enVol = 0;
+    let max = 0;
+    const { service } = installer(true, async () => {
+      enVol++;
+      max = Math.max(max, enVol);
+      await new Promise((r) => setTimeout(r, 0));
+      enVol--;
+      return new Response('png');
+    });
+
+    await Promise.all([service.mettreEnCacheAutour(ANGERS), service.mettreEnCacheAutour({ latitude: 46, longitude: 2 })]);
+
+    expect(max).toBe(2);
+  });
+
+  it('given une tuile demandée, when on met de nouveau en cache autour après la fin, then elle est redemandée (le service worker la rafraîchit si elle est périmée)', async () => {
+    const { service, demandees } = installer();
+
+    await service.mettreEnCacheAutour(ANGERS);
+    await service.mettreEnCacheAutour(ANGERS);
+
+    expect(demandees).toHaveLength(2 * attendues(ANGERS).length);
+  });
+
+  it('given aucun service worker qui contrôle la page, when on met en cache autour, then aucune requête n\'est faite', async () => {
+    const { service, fetchSpy } = installer(true, undefined, false);
+
+    await service.mettreEnCacheAutour(ANGERS);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it('given l\'appareil en mode avion, when on met en cache autour, then aucune requête n\'est faite', async () => {
