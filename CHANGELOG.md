@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.57.0](https://github.com/yalinde20/Leurio/compare/v1.56.0...v1.57.0) (2026-11-24)
+
+
+### Features
+
+* US 19 charger Analytics seulement après consentement ([7385062](https://github.com/yalinde20/Leurio/commit/73850623356b3aea8ae07903bd109eb4fe3779ab))
+
+
+### Bug Fixes
+
+* US 19 suites de la revue ([a792296](https://github.com/yalinde20/Leurio/commit/a7922966fbf001591a6dd38383afee0289870797))
+
 ## [1.56.0](https://github.com/yalinde20/Leurio/compare/v1.55.0...v1.56.0) (2026-11-24)
 
 
