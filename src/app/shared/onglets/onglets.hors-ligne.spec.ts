@@ -1,7 +1,9 @@
 /*
  * US 13 : indicateur « Hors ligne » dans la coque à onglets. Maquette : docs/maquettes/us-13-indicateur-hors-ligne.html.
- * Le bandeau est un élément `role="status"` qui porte le texte « Hors ligne », au-dessus de la page (donc avant le contenu
+ * Le bandeau a le rôle accessible « status » (élément <output>, rôle implicite, ou attribut role="status") et porte le texte « Hors ligne », au-dessus de la page (donc avant le contenu
  * des onglets) ; il suit les événements `offline` / `online` de la fenêtre (navigator.onLine), sans recharger.
+ * Choix du propriétaire (option B) : un <output> sans attribut role, pour que les tests US 97/98, qui lisent le premier
+ * `[role="status"]` de l'écran, trouvent toujours leur message.
  * La coque est partagée par les quatre onglets : l'e2e (e2e/hors-ligne.spec.ts) vérifie chacun d'eux.
  */
 import { TestBed } from '@angular/core/testing';
@@ -20,14 +22,14 @@ async function ouvrir(enLigne: boolean) {
   await fixture.whenStable();
   const coque = fixture.nativeElement as HTMLElement;
   const bandeau = () =>
-    [...coque.querySelectorAll('[role="status"]')].find((e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim() === 'Hors ligne') ?? null;
+    [...coque.querySelectorAll('[role="status"], output:not([role])')].find((e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim() === 'Hors ligne') ?? null;
   return { coque, bandeau, reseau };
 }
 
 describe('OngletsComponent : indicateur « Hors ligne » (US 13)', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("critère 1 : given l'app ouverte avec du réseau, when le réseau est coupé, then un bandeau role=status « Hors ligne » s'affiche avant le contenu de l'onglet", async () => {
+  it("critère 1 : given l'app ouverte avec du réseau, when le réseau est coupé, then un bandeau de rôle status « Hors ligne » s'affiche avant le contenu de l'onglet", async () => {
     const { coque, bandeau, reseau } = await ouvrir(true);
     expect(bandeau()).toBeNull();
 

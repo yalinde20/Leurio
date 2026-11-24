@@ -1,8 +1,8 @@
 @if (horsLigne()) {
-  <div class="hors-ligne" role="status">
+  <output class="hors-ligne">
     <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
     <span>Hors ligne</span>
-  </div>
+  </output>
 }
 <div class="contenu" [class.contenu-hors-ligne]="horsLigne()">
   <router-outlet></router-outlet>
