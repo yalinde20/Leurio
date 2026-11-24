@@ -436,7 +436,14 @@ describe('SpotsPage : ouvrir le conseil pour un spot (US 7)', () => {
     horsLigne();
     const li = await ouvrirSpot(env, 'Pont de Cé');
     surveillerLeReseau(env);
-    const avant = { gps: env.appels.positionGps, spot: env.appels.positionSpot.length, ajouts: env.appels.ajouts };
+    const avant = {
+      gps: env.appels.positionGps,
+      spot: env.appels.positionSpot.length,
+      ajouts: env.appels.ajouts,
+      releves: env.appels.releves.length,
+      moteur: env.appels.moteur.length,
+      federations: env.appels.federations,
+    };
     action(li, 'Préparer ma sortie').click();
     await env.stabiliser();
 
@@ -446,6 +453,9 @@ describe('SpotsPage : ouvrir le conseil pour un spot (US 7)', () => {
     expect(env.appels.positionGps).toBe(avant.gps);
     expect(env.appels.positionSpot).toHaveLength(avant.spot);
     expect(env.appels.ajouts).toBe(avant.ajouts);
+    expect(env.appels.releves).toHaveLength(avant.releves);
+    expect(env.appels.moteur).toHaveLength(avant.moteur);
+    expect(env.appels.federations).toBe(avant.federations);
   });
 
   it('critère 3 : given le message de « Préparer ma sortie » affiché, when j\'ouvre un autre spot, then le message disparaît', async () => {

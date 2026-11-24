@@ -6,12 +6,11 @@ import * as L from 'leaflet';
 import { CatalogService } from '../../core/data/catalog.service';
 import type { Federation } from '../../core/data/catalog.types';
 import { etatOuverture, prochaineOuverture1reCategorie } from '../../core/regulation/calendar';
-import { dateEtHeureParis } from '../../core/data/conditions.service';
 import { GeoService } from '../../core/data/geo.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
-import { SortieService } from '../../core/data/sortie.service';
+import { messagePreparation, SortieService } from '../../core/data/sortie.service';
 import { ATTRIBUTION, icone, TUILES } from './carte-spots';
 import { SpotFormulaireComponent } from './spot-formulaire.component';
 
@@ -183,6 +182,9 @@ interface LigneSpot {
       background: var(--lr-surface);
       color: var(--lr-primaire);
     }
+    .preparer[disabled] {
+      opacity: 0.5;
+    }
     .message-sortie {
       margin: -4px 16px 12px;
       font-size: 16px;
@@ -286,7 +288,7 @@ interface LigneSpot {
                     @if (ligne.spot.id === choisi()) {
                       <div class="actions">
                         <button type="button" class="voir-conseil" (click)="voirLeConseil(ligne.spot)">Voir le conseil</button>
-                        <button type="button" class="preparer" [disabled]="preparation() === ligne.spot.id" (click)="preparerLaSortie(ligne.spot)">
+                        <button type="button" class="preparer" [disabled]="preparation() !== null" (click)="preparerLaSortie(ligne.spot)">
                           {{ preparation() === ligne.spot.id ? 'Préparation…' : 'Préparer ma sortie' }}
                         </button>
                       </div>
@@ -433,20 +435,15 @@ export class SpotsPage {
 
   /** « Préparer ma sortie » : garde les conditions des 48 h à venir du spot pour le conseil sans réseau (US 14). */
   protected async preparerLaSortie(spot: SpotEnregistre): Promise<void> {
-    if (this.preparation() === spot.id) return;
+    // Une seule sortie est gardée (la dernière écrite l'emporte) : pas de seconde préparation tant qu'une court.
+    if (this.preparation() !== null) return;
     this.preparation.set(spot.id);
     this.messageSortie.set(null);
     const resultat = await this.sortie.preparer({ latitude: spot.lat, longitude: spot.lng });
-    if (this.preparation() === spot.id) this.preparation.set(null);
+    this.preparation.set(null);
     // Un autre spot s'est ouvert pendant la préparation : son résultat ne concerne plus l'écran.
     if (this.choisi() !== spot.id) return;
-    this.messageSortie.set(
-      resultat.statut === 'prete'
-        ? { type: 'prete', texte: `Sortie prête : conditions jusqu'au ${dateEtHeureParis(resultat.jusquA)}` }
-        : resultat.statut === 'hors ligne'
-          ? { type: 'hors ligne', texte: 'Pas de réseau : prépare ta sortie avant de partir' }
-          : { type: 'echec', texte: 'La préparation a échoué, réessaie' },
-    );
+    this.messageSortie.set(messagePreparation(resultat));
   }
 
   private async chercherFederation(departement: string): Promise<void> {

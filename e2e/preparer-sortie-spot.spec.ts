@@ -76,7 +76,12 @@ test("critère 1 : given le détail du spot « Pont de Cé » avec du réseau, w
   await boutonPreparer(page).click();
 
   await expect(page.getByRole('status').filter({ hasText: "Sortie prête : conditions jusqu'au 26/11 à 9 h" })).toBeVisible();
-  expect(requetesMeteo.length).toBeGreaterThan(avant);
+  // La requête posée par la touche est la prévision heure par heure (48 h) du spot, avec ses coordonnées.
+  const nouvelles = requetesMeteo.slice(avant).map((u) => new URL(u));
+  const previsions = nouvelles.filter((u) => u.searchParams.has('hourly'));
+  expect(previsions.length).toBeGreaterThan(0);
+  expect(Number.isFinite(Number(previsions[0].searchParams.get('latitude')))).toBe(true);
+  expect(Number.isFinite(Number(previsions[0].searchParams.get('longitude')))).toBe(true);
   await expect(page.getByText('Bientôt disponible')).toHaveCount(0);
 });
 

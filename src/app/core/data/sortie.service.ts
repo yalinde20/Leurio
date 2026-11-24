@@ -1,4 +1,5 @@
 import { inject, Injectable, Injector } from '@angular/core';
+import { dateEtHeureParis } from './conditions.service';
 import { ouNull } from './ou-null';
 import { avecDelai, INDEXED_DB, MAGASIN_SORTIE, ouvrirBase } from './conditions-cache';
 import { distanceKm, HubeauService, ResultatTendanceDebit } from './hubeau.service';
@@ -196,4 +197,11 @@ export class SortieService {
       return false;
     }
   }
+}
+
+/** Le message affiché après « Préparer ma sortie » (Conseil et Spots) : `prete` en `status`, les autres en `alert`. */
+export function messagePreparation(resultat: ResultatPreparation): { type: 'prete' | 'hors ligne' | 'echec'; texte: string } {
+  if (resultat.statut === 'prete') return { type: 'prete', texte: `Sortie prête : conditions jusqu'au ${dateEtHeureParis(resultat.jusquA)}` };
+  if (resultat.statut === 'hors ligne') return { type: 'hors ligne', texte: 'Pas de réseau : prépare ta sortie avant de partir' };
+  return { type: 'echec', texte: 'La préparation a échoué, réessaie' };
 }

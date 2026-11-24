@@ -351,6 +351,29 @@ describe('SpotsPage : préparer ma sortie depuis un spot (US 15)', () => {
     expect(compact(pageSpots(env).textContent)).not.toContain(compact('Bientôt disponible'));
   });
 
+  it("given la préparation d'un spot en cours, when j'ouvre un autre spot, then son bouton est désactivé, toucher ne prépare rien et le résultat du premier n'apparaît pas sur le second", async () => {
+    let terminer!: () => void;
+    const attente = new Promise<void>((resolve) => (terminer = resolve));
+    const env = await ouvrirLApp(new IDBFactory(), { enLigne: true, previsions: async () => (await attente, previsions()) }, PREPAREE_A);
+    boutonPreparer(await ouvrirSpot(env, 'Pont de Cé')).click();
+    await env.stabiliser();
+    expect(env.previsions48h).toHaveBeenCalledTimes(1);
+
+    const autre = await ouvrirSpot(env, 'Gué de la Sarthe');
+    expect(boutonPreparer(autre).disabled).toBe(true);
+    boutonPreparer(autre).click();
+    await env.stabiliser();
+    expect(env.previsions48h).toHaveBeenCalledTimes(1);
+
+    terminer();
+    await vi.waitFor(async () => {
+      await env.stabiliser();
+      expect(boutonPreparer(ligne(env, 'Gué de la Sarthe')).disabled).toBe(false);
+    });
+    expect(compact(pageSpots(env).textContent)).not.toContain(compact('Sortie prête'));
+    expect(ligne(env, 'Gué de la Sarthe').querySelector('[role="status"], [role="alert"]')).toBeNull();
+  });
+
   it("critère 2 : given une sortie préparée pour « Pont de Cé », puis le mode avion, when l'utilisateur touche « Voir le conseil » sur ce spot, then le top 3 s'affiche, calculé avec les conditions en cache de ce spot (« Conditions du 24/11 à 9 h »)", async () => {
     const fabrique = new IDBFactory();
     await preparerAvant(fabrique);
