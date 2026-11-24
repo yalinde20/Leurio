@@ -81,7 +81,11 @@ async function ouvrir({ initiaux = [ETANG], horsLigne = false }: { initiaux?: Do
   await TestBed.configureTestingModule({
     imports: [SpotsPage],
     providers: [
-      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },provideIonicAngular(), { provide: GEOLOCALISATION, useValue: geolocalisation }, { provide: SOURCE_SPOTS, useValue: source }],
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
+      provideIonicAngular(),
+      { provide: GEOLOCALISATION, useValue: geolocalisation },
+      { provide: SOURCE_SPOTS, useValue: source },
+    ],
   }).compileComponents();
   const fixture = TestBed.createComponent(SpotsPage);
   const stabiliser = async () => {

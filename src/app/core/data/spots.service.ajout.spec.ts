@@ -6,8 +6,12 @@ const valide = { nom: 'Étang du moulin', lat: 47.5, lng: -0.9, categorie: 2, mi
 const saisie = { nom: '  Pont de Cé ', lat: 47.43, lng: -0.52, categorie: 2 as const, milieu: 'riviere' as const, departement: '49' };
 
 function service(source: Partial<SourceSpots> & { uid: () => Promise<string | null> }) {
-  TestBed.configureTestingModule({ providers: [
-      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },{ provide: SOURCE_SPOTS, useValue: { documents: async () => [], ...source } }] });
+  TestBed.configureTestingModule({
+    providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
+      { provide: SOURCE_SPOTS, useValue: { documents: async () => [], ...source } },
+    ],
+  });
   return TestBed.inject(SpotsService);
 }
 

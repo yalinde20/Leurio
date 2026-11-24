@@ -1,16 +1,19 @@
 /*
  * US 17 : garder en cache les tuiles de carte autour des spots (PLAN §4, §10 phase 5).
- * Contrat choisi (à implémenter) :
+ * Contrat :
  *  - TuilesService (nouveau, root, src/app/core/data/tuiles.service.ts) :
  *      mettreEnCacheAutour(lieu: Lieu): Promise<void>, ne rejette jamais.
  *  - Il télécharge, avec le `fetch` global, les tuiles `https://tile.openstreetmap.org/{z}/{x}/{y}.png` (URL de TUILES, sans
- *    sous-domaine) du carré de 2 km autour du lieu : latitude ± 2/111°, longitude ± 2/(111·cos latitude)°, pour les zooms
+ *    sous-domaine) du carré de ± 2 km autour du lieu (4 km de large) : latitude ± 2/111°, longitude ± 2/(111·cos latitude)°, pour les zooms
  *    10 à 16 inclus, jamais 17 ou plus (politique d'usage d'OSM). Par zoom : toutes les tuiles de x(ouest) à x(est) et de
  *    y(nord) à y(sud), avec x = floor((lng + 180) / 360 · 2^z) et y = floor((1 − asinh(tan φ) / π) / 2 · 2^z).
- *  - Au plus 2 requêtes en vol à la fois.
- *  - Une tuile déjà dans le Cache Storage (`caches.match(url)` rend une réponse) n'est pas redemandée.
- *  - Hors ligne (`navigator.onLine` faux) : aucune requête. Un échec réseau n'est jamais propagé.
- * Doubles : `fetch` et `caches` globaux ; aucun appel réel.
+ *  - Une seule file pour toute l'app : au plus 2 requêtes en vol, quel que soit le nombre d'appels ; une tuile en attente ou
+ *    en vol n'est demandée qu'une fois.
+ *  - Chaque tuile passe par `fetch` : le service worker (groupe `tuiles-osm`) répond depuis son cache quand elle est fraîche et
+ *    la redemande quand elle est périmée (décision du propriétaire après revue).
+ *  - Hors ligne (`navigator.onLine` faux) ou sans service worker qui contrôle la page : aucune requête. Un échec réseau n'est
+ *    jamais propagé.
+ * Doubles : `fetch`, `caches` et `navigator.serviceWorker` ; aucun appel réel.
  */
 import { TestBed } from '@angular/core/testing';
 import { TuilesService } from './tuiles.service';
