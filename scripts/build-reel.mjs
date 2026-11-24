@@ -23,6 +23,7 @@ if (manquantes.length > 0) {
   process.exit(1);
 }
 
+const mesure = process.env.FIREBASE_MEASUREMENT_ID?.trim(); // facultatif : sans lui, Analytics reste inerte (US 19)
 const v = (n) => JSON.stringify(process.env[n].trim());
 const fichier = fileURLToPath(new URL('../src/app/core/firebase/config.reelle.ts', import.meta.url));
 writeFileSync(
@@ -40,7 +41,7 @@ export const config: ConfigApp = {
     storageBucket: ${v('FIREBASE_STORAGE_BUCKET')},
     messagingSenderId: ${v('FIREBASE_MESSAGING_SENDER_ID')},
     appId: ${v('FIREBASE_APP_ID')},
-  },
+${mesure ? `    measurementId: ${JSON.stringify(mesure)},\n` : ''}  },
   appCheckSiteKey: ${v('FIREBASE_APPCHECK_SITE_KEY')},
   build: ${JSON.stringify(identifierBuild())},
 };

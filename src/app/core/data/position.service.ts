@@ -1,6 +1,7 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { GeoService } from './geo.service';
+import { MesureAudienceService } from './mesure-audience.service';
 
 /** Motif rendu quand l'utilisateur a refusé l'accès à sa position. */
 export const POSITION_REFUSEE = 'position refusée';
@@ -91,6 +92,7 @@ const INDISPONIBLE: PositionManquante = { disponible: false, motif: POSITION_IND
 export class PositionService {
   private readonly geolocalisation = inject(GEOLOCALISATION);
   private readonly geo = inject(GeoService);
+  private readonly mesure = inject(MesureAudienceService);
 
   /** Position du GPS, ou « position refusée » / « position indisponible » (délai de `DELAI_GPS_MS`). */
   async positionGps(): Promise<ResultatPosition> {
@@ -117,14 +119,10 @@ export class PositionService {
       ]);
       if (position === 'delai') return INDISPONIBLE;
       const { latitude, longitude, accuracy } = position.coords;
-      return {
-        disponible: true,
-        source: 'gps',
-        latitude,
-        longitude,
-        precisionM: accuracy,
-        departement: this.geo.departement({ latitude, longitude }),
-      };
+      const departement = this.geo.departement({ latitude, longitude });
+      // Seul le département part vers Analytics, jamais la latitude ni la longitude (US 19).
+      this.mesure.envoyer('position_obtenue', { departement });
+      return { disponible: true, source: 'gps', latitude, longitude, precisionM: accuracy, departement };
     } catch (erreur) {
       if (CODES_REFUS.includes(codeErreur(erreur))) return REFUSEE;
       return (await this.permission()) === 'denied' ? REFUSEE : INDISPONIBLE;

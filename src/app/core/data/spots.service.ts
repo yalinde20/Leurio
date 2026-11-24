@@ -1,5 +1,6 @@
 import { inject, Injectable, InjectionToken, Injector } from '@angular/core';
 import { creerSourceSpotsFirebase } from '../firebase/source-spots';
+import { MesureAudienceService } from './mesure-audience.service';
 import { TuilesService } from './tuiles.service';
 
 /** Type d'eau d'un spot (PLAN §7). */
@@ -83,6 +84,7 @@ const enSpots = (documents: DocumentSpot[]): SpotEnregistre[] => documents.map(e
 export class SpotsService {
   private readonly source = inject(SOURCE_SPOTS);
   private readonly tuiles = inject(TuilesService);
+  private readonly mesure = inject(MesureAudienceService);
 
   /** Sans utilisateur connecté, aucun spot. Une erreur de lecture est propagée à l'appelant. */
   async mesSpots(): Promise<SpotEnregistre[]> {
@@ -138,5 +140,6 @@ export class SpotsService {
     });
     // Les tuiles autour du spot se gardent en tâche de fond : l'ajout ne les attend pas et leur échec ne le change pas.
     this.tuiles.mettreEnCacheAutour({ latitude: saisie.lat, longitude: saisie.lng }).catch(() => undefined);
+    this.mesure.envoyer('spot_ajoute', { milieu: saisie.milieu, categorie: saisie.categorie, departement: saisie.departement });
   }
 }

@@ -101,7 +101,10 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
     .toBe(video);
   // Les écrans sont chargés à la demande : on visite la fiche une fois avec du réseau (puis on revient aux conseils) pour que son code soit déjà là, comme pour un pêcheur qui a utilisé l'app.
   await ouvrirLaFiche(page);
+  // On attend chaque écran avant le retour suivant : deux retours enchaînés peuvent se marcher dessus dans le routeur, surtout quand la
+  // fiche s'affiche vite (consentements lus dès le démarrage depuis l'US 19).
   await page.goBack();
+  await expect(page.getByRole('button', { name: "Voir l'animation" })).toBeVisible();
   await page.goBack();
   await expect(carte.getByText('Voir le détail')).toBeVisible();
   await page.context().setOffline(true);

@@ -5,6 +5,7 @@ import { provideIonicAngular } from '@ionic/angular';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { CompteService } from './core/data/compte.service';
+import { MesureAudienceService } from './core/data/mesure-audience.service';
 import { OnboardingStore } from './core/data/onboarding.store';
 import { GestionnaireErreurs } from './core/firebase/gestionnaire-erreurs';
 import { BUILD_APP, initialiserPlantages, PLANTAGES, VERSION_APP } from './core/firebase/plantages';
@@ -45,6 +46,10 @@ export const appConfig: ApplicationConfig = {
     // Ne bloque ni ne fait jamais échouer le démarrage.
     provideAppInitializer(() => {
       void initialiserPlantages(inject(PLANTAGES), inject(VERSION_APP), inject(BUILD_APP));
+    }),
+    // Analytics ne s'initialise qu'après le consentement du compte (US 19) : on lit les consentements en tâche de fond, sans bloquer le démarrage.
+    provideAppInitializer(() => {
+      inject(MesureAudienceService).demarrer();
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
