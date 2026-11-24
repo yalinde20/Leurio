@@ -1,6 +1,6 @@
 // US 12 : l'app, le contenu et les boucles vidéo sont disponibles hors ligne (PLAN §4, §10 phase 5, §11 PWA).
-// Les vidéos tierces ne sont jamais mises en cache (§9 bis). Le critère 2 (fiche animation) est reporté.
-// Build de production servi sur le port 4300 (voir playwright.config.ts) ; le critère 5 sert sa propre copie.
+// Les vidéos tierces ne sont jamais mises en cache (§9 bis).
+// Build de production servi sur le port 4300 (voir playwright.config.ts) ; les critères 2 et 5 servent chacun leur propre copie du build.
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -132,17 +132,15 @@ test('US 12 critère 2 : given l\'app ouverte une fois avec du réseau, sans avo
     await ouvrirUneFoisEnLigne(page, base);
     const carte = () => page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
     await expect(carte().getByText('Voir le détail')).toBeVisible();
-    // Le service worker a tout gardé, clip compris (sinon l'assertion hors ligne échoue).
-    await page
-      .waitForFunction(
-        async () => {
-          for (const nom of await caches.keys()) for (const r of await (await caches.open(nom)).keys()) if (new URL(r.url).pathname.startsWith('/assets/videos/')) return true;
-          return false;
-        },
-        undefined,
-        { timeout: 20_000 },
-      )
-      .catch(() => undefined);
+    // Le service worker a précaché le clip, et rien d'un autre hôte (aucune vidéo tierce en cache, §9 bis).
+    const cacheVideos = () =>
+      page.evaluate(async () => {
+        const urls: string[] = [];
+        for (const nom of await caches.keys()) for (const r of await (await caches.open(nom)).keys()) urls.push(r.url);
+        return { clip: urls.some((u) => new URL(u).pathname.startsWith('/assets/videos/')), autresHotes: urls.filter((u) => new URL(u).origin !== location.origin) };
+      });
+    await expect.poll(async () => (await cacheVideos()).clip, { message: 'clip précaché par le service worker', timeout: 20_000 }).toBe(true);
+    expect((await cacheVideos()).autresHotes).toEqual([]);
 
     // Mode avion, nouvelle ouverture, puis la fiche d'une animation (jamais visitée en ligne).
     await context.setOffline(true);
@@ -240,6 +238,7 @@ const TYPES: Record<string, string> = {
   '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json',
+  // Le clip de test est un WebM servi sous les noms .mp4 de techniques.json (Chromium le lit ; Safari n'est pas couvert ici).
   '.mp4': 'video/webm',
   '.webmanifest': 'application/manifest+json',
   '.png': 'image/png',
@@ -328,6 +327,23 @@ test('US 12 critère 5 : given une nouvelle version de l\'app déployée, when l
     await rouverte.goto(`${base}/`);
     await expect(titreVisible(rouverte)).toHaveText('Conseil');
     await expect.poll(() => journal.includes('/index.html'), { timeout: 30_000 }).toBe(true);
+    // La nouvelle version est prête quand le cache du service worker tient l'index.html v2.
+    await expect
+      .poll(
+        () =>
+          rouverte.evaluate(async () => {
+            for (const nom of await caches.keys()) {
+              const cache = await caches.open(nom);
+              for (const r of await cache.keys()) {
+                if (new URL(r.url).pathname !== '/index.html') continue;
+                if ((await (await cache.match(r))?.text())?.includes('content="v2"')) return true;
+              }
+            }
+            return false;
+          }),
+        { timeout: 30_000 },
+      )
+      .toBe(true);
 
     // Ouverture suivante : la nouvelle version est servie.
     const suivante = await context.newPage();
