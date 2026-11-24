@@ -87,6 +87,17 @@ for (const [provider, debut] of [['vimeo', 'https://vimeo.com/api/oembed.json'],
     assert.ok(appels[0].includes('12345'));
   });
 
+  for (const status of [401, 403]) {
+    test(`critère ${provider === 'vimeo' ? 3 : 4} (choix du propriétaire) : given une vidéo ${provider} dont la réponse oEmbed simulée est ${status}, then elle est signalée disparue`, async () => {
+      const { resultat } = await lancer(
+        [technique('verticale', [{ provider, id: '12345' }])],
+        () => new Response('', { status }),
+      );
+      assert.deepEqual(resultat.disparues, [{ animation: 'verticale', provider, id: '12345' }]);
+      assert.deepEqual(resultat.nonVerifiees, []);
+    });
+  }
+
   test(`critère 5 : given une vidéo ${provider} dont la réponse oEmbed simulée est 200, then elle n'est pas signalée`, async () => {
     const { resultat } = await lancer(
       [technique('verticale', [{ provider, id: '12345' }])],
@@ -242,4 +253,22 @@ test('critère 11 : given les tests du script, when ils tournent, then aucune re
   } finally {
     globalThis.fetch = vraiFetch;
   }
+});
+
+test('given un fichier de données illisible, when on lance la commande, then elle échoue avec le code 3, distinct d\'une vidéo disparue', () => {
+  const dir = dossierVide();
+  const data = join(dir, 'techniques.json');
+  writeFileSync(data, '{ pas du json');
+  const r = spawnSync('node', [SCRIPT, '--data', data, '--assets', dir], {
+    cwd: ROOT, encoding: 'utf8', timeout: 60_000,
+    env: { ...process.env, YOUTUBE_API_KEY: 'cle-de-test', NODE_OPTIONS: `--import ${GARDE}` },
+  });
+  assert.equal(r.status, 3, r.stderr);
+  assert.match(r.stderr, /vérification impossible/);
+});
+
+test('given une entrée self qui désigne un dossier, when on lance la commande, then elle est signalée disparue', () => {
+  const r = lancerCli([technique('twitching', [{ provider: 'self', fichier: 'videos' }])], []);
+  assert.equal(r.status, 1);
+  assert.match(r.out, /DISPARUE\s+twitching\s+self\s+videos/);
 });

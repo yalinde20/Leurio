@@ -1,9 +1,10 @@
 // Vérifie que chaque vidéo de techniques.json existe encore (PLAN §9, §9 bis) :
 // YouTube (API videos.list, clé YOUTUBE_API_KEY), Vimeo et Dailymotion (oEmbed), fichiers « self ».
 // Usage : node scripts/check-videos.ts [--json] [--data <techniques.json>] [--assets <dossier>]
-// Code de sortie : 0 si aucune vidéo n'a disparu, 1 sinon, 2 si YOUTUBE_API_KEY manque.
+// Code de sortie : 0 si aucune vidéo n'a disparu, 1 sinon, 2 si YOUTUBE_API_KEY manque,
+// 3 si le script n'a pas pu tourner (fichier de données illisible…).
 // Une vidéo « non vérifiée » (panne réseau, réponse 5xx) ne bloque pas. Syntaxe TypeScript effaçable seulement.
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,6 +49,9 @@ export interface Options {
 const racine = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LOT_YOUTUBE = 50;
 const VARIABLE_CLE = 'YOUTUBE_API_KEY';
+const DELAI_REQUETE_MS = 15_000;
+
+const estUnFichier = (chemin: string): boolean => statSync(chemin, { throwIfNoEntry: false })?.isFile() ?? false;
 
 const OEMBED: Record<string, (id: string) => string> = {
   vimeo: (id) => `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(`https://vimeo.com/${id}`)}`,
@@ -111,7 +115,7 @@ export async function checkVideos({ techniques, fetch, apiKey, baseDir = join(ra
       if (video.provider === 'youtube' && video.id) youtube.push({ animation, id: video.id });
       else if (video.provider in OEMBED && video.id) await verifierOembed(animation, video.provider, video.id, fetch, resultat);
       else if (video.provider === 'self' && video.fichier) {
-        if (!existsSync(join(baseDir, video.fichier))) {
+        if (!estUnFichier(join(baseDir, video.fichier))) {
           resultat.disparues.push({ animation, provider: 'self', fichier: video.fichier });
         }
       }
@@ -134,8 +138,20 @@ async function main(args: string[]): Promise<number> {
   }
   const data = resolve(valeurOption(args, '--data') ?? join(racine, 'src/assets/data/techniques.json'));
   const baseDir = resolve(valeurOption(args, '--assets') ?? join(racine, 'src/assets'));
-  const techniques = JSON.parse(readFileSync(data, 'utf8')) as Technique[];
-  const resultat = await checkVideos({ techniques, fetch: (url) => fetch(url), apiKey, baseDir });
+  let resultat: Resultat;
+  try {
+    const techniques = JSON.parse(readFileSync(data, 'utf8')) as unknown;
+    if (!Array.isArray(techniques)) throw new Error(`${data} ne contient pas une liste d'animations`);
+    resultat = await checkVideos({
+      techniques: techniques as Technique[],
+      fetch: (url) => fetch(url, { signal: AbortSignal.timeout(DELAI_REQUETE_MS) }),
+      apiKey,
+      baseDir,
+    });
+  } catch (e) {
+    console.error(`Erreur : vérification impossible (${e instanceof Error ? e.message : String(e)}).`);
+    return 3;
+  }
 
   if (args.includes('--json')) {
     console.log(JSON.stringify(resultat, null, 2));
