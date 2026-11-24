@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject, Injector, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, inject, Injector, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular';
@@ -6,6 +6,8 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { CompteService } from './core/data/compte.service';
 import { OnboardingStore } from './core/data/onboarding.store';
+import { GestionnaireErreurs } from './core/firebase/gestionnaire-erreurs';
+import { BUILD_APP, initialiserPlantages, PLANTAGES, VERSION_APP } from './core/firebase/plantages';
 import { OpenMeteoService } from './core/data/open-meteo.service';
 import { WeatherProvider } from './core/data/weather-provider';
 import { ThemeService } from './shared/theme.service';
@@ -36,6 +38,13 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const choix = inject(OnboardingStore).lire();
       if (choix !== null) void inject(CompteService).assurerCompte(choix);
+    }),
+    // Les erreurs non gérées vont à Crashlytics (app native de production seulement, PLAN §4), sans position ni e-mail.
+    { provide: ErrorHandler, useClass: GestionnaireErreurs },
+    // Au lancement : active la collecte, pose la version et envoie les rapports restés en attente (plantage hors ligne).
+    // Ne bloque ni ne fait jamais échouer le démarrage.
+    provideAppInitializer(() => {
+      void initialiserPlantages(inject(PLANTAGES), inject(VERSION_APP), inject(BUILD_APP));
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

@@ -13,4 +13,6 @@ export interface ConfigApp {
   firebase: ConfigFirebase;
   /** Clé de site reCAPTCHA v3 d'App Check ; vide sur les émulateurs. */
   appCheckSiteKey: string;
+  /** Identifiant du build, « commit court · date » (ex. « 1970163 · 2026-11-24 ») ; « dev » sur les émulateurs. */
+  build: string;
 }

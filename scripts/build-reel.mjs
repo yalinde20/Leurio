@@ -4,6 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { identifierBuild } from './build-info.mjs';
 
 const VARIABLES = [
   'FIREBASE_API_KEY',
@@ -41,6 +42,7 @@ export const config: ConfigApp = {
     appId: ${v('FIREBASE_APP_ID')},
   },
   appCheckSiteKey: ${v('FIREBASE_APPCHECK_SITE_KEY')},
+  build: ${JSON.stringify(identifierBuild())},
 };
 `,
 );
