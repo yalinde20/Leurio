@@ -36,6 +36,9 @@ vi.mock('firebase/storage', () => ({ getStorage: () => ({}), connectStorageEmula
 describe('FirebaseService : App Check sous les tests (US 131)', () => {
   it('critère 3 : given les tests automatisés, when le service Firebase est instancié, then le fournisseur factice est utilisé et aucun reCAPTCHA n\'est construit', async () => {
     construits.length = 0;
+    // Dans la suite complète, un autre spec a pu charger firebase.service avec le vrai SDK : on repart de modules neufs,
+    // pour que les doubles ci-dessus s'appliquent.
+    vi.resetModules();
     const { FirebaseService } = await import('./firebase.service');
     new FirebaseService();
     expect(construits).toEqual(['CustomProvider']);
