@@ -147,6 +147,7 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await ouvrirOnglet(page, 'Spots');
   await ajouterSpot(page, 'Au bord de l\'eau');
   await expect(ligneSpot(page, 'Au bord de l\'eau')).toContainText('Pas encore synchronisé');
+  expect(await spotsSurEmulateur(uid), 'hors ligne, le serveur n\'a toujours que le premier spot').toHaveLength(1);
   await modeAvion(page, false);
   await expect.poll(async () => (await spotsSurEmulateur(uid)).length, { timeout: 30_000 }).toBe(2);
   await expect(ligneSpot(page, 'Au bord de l\'eau')).not.toContainText('Pas encore synchronisé');
