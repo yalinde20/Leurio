@@ -81,3 +81,10 @@ test('critère 4 : given le build de production en configuration émulateurs, wh
   assert.ok(js.includes('9099') && js.includes('8080') && js.includes('9199'), 'les ports des émulateurs (9099, 8080, 9199) sont absents du bundle');
   assert.ok(js.includes('leurioFirebase'), 'le hook window.leurioFirebase (émulateurs seulement) est absent');
 });
+
+// US 131, critère 4 : la valeur provisoire `a-configurer` du secret ne casse pas le build de production.
+test('critère 4 (US 131) : given FIREBASE_APPCHECK_SITE_KEY vaut a-configurer, when on lance le build de production, then le build réussit', () => {
+  requireScript('build');
+  const r = build('build', { ...VARIABLES, FIREBASE_APPCHECK_SITE_KEY: 'a-configurer' });
+  assert.equal(r.status, 0, `le build de production aurait dû réussir\n${r.output.slice(-2000)}`);
+});
