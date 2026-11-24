@@ -5,13 +5,13 @@ import { filter, map, startWith } from 'rxjs';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
-import { ConditionsService, dateEtHeureParis, ReleveActuel } from '../../core/data/conditions.service';
+import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { FeedbackService } from '../../core/data/feedback.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
-import { SortieService } from '../../core/data/sortie.service';
+import { messagePreparation, SortieService } from '../../core/data/sortie.service';
 import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { Conditions } from '../../core/engine/conditions';
@@ -1071,13 +1071,7 @@ export class ConseilPage implements OnInit {
     this.preparationEnCours.set(false);
     // Le lieu a changé pendant la préparation : son message ne concerne plus l'écran.
     if (choixLieu !== this.choixLieu) return;
-    this.messageSortie.set(
-      resultat.statut === 'prete'
-        ? { type: 'prete', texte: `Sortie prête : conditions jusqu'au ${dateEtHeureParis(resultat.jusquA)}` }
-        : resultat.statut === 'hors ligne'
-          ? { type: 'hors ligne', texte: 'Pas de réseau : prépare ta sortie avant de partir' }
-          : { type: 'echec', texte: 'La préparation a échoué, réessaie' },
-    );
+    this.messageSortie.set(messagePreparation(resultat));
   }
 
   protected ouvrirSaisie(): void {

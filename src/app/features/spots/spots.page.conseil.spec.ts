@@ -1,6 +1,7 @@
 /*
  * US 7 : ouvrir le conseil pour un spot et emplacement « Préparer ma sortie ». Maquette de référence : docs/maquettes/us-7-voir-le-conseil.html.
  * PLAN §2.1, §3, §8.
+ * US 15 remplace « Bientôt disponible » (note de la story) : les tests « critère 3 » de la fin du fichier décrivent le comportement de l'US 15.
  *
  * Les tests passent par l'app réelle (App + routes) : onglet « Spots », tap sur une ligne, boutons, onglet « Conseil ». Aucun mécanisme
  * interne n'est imposé (service, paramètre d'URL...) : on observe l'écran et ce que reçoivent les doubles.
@@ -9,9 +10,9 @@
  *  - dans `app-spots`, le `li` du spot ouvert contient, HORS du `button` de la ligne, deux `button` dont le texte est « Voir le conseil » et
  *    « Préparer ma sortie », placés après le lien « Site de la fédération » (ou après le bandeau « Fermé » en 1re catégorie hors saison) ;
  *    les autres lignes n'en ont pas ;
- *  - « Préparer ma sortie » : un élément `[role="status"]` « Bientôt disponible » dans le `li` du spot ouvert, sous les boutons ; on reste sur
- *    `/spots`, aucune requête (fetch, XMLHttpRequest, sendBeacon), aucun appel aux conditions, à la position ni à l'écriture des spots ;
- *    le message disparaît quand on ouvre un autre spot ;
+ *  - « Préparer ma sortie » (US 15, remplace « Bientôt disponible ») : sans réseau, un élément `[role="alert"]` « Pas de réseau : prépare ta
+ *    sortie avant de partir » dans le `li` du spot ouvert, sous les boutons ; on reste sur `/spots`, aucune requête (fetch, XMLHttpRequest,
+ *    sendBeacon), aucun appel à la position ni à l'écriture des spots ; le message disparaît quand on ouvre un autre spot ;
  *  - « Voir le conseil » : l'URL devient `/conseil` ; dans `app-conseil` le bouton « Lieu » affiche « Pont de Cé » ; la position vient de
  *    `PositionService.positionSpot` (pas de GPS), `ConditionsService.releve` reçoit `lieu` et `spot: { categorie, departement }` du spot ;
  *    le moment et l'espèce choisis sont gardés ; le lieu n'est pas mémorisé (une nouvelle app repart sur « Ma position »).
@@ -406,59 +407,69 @@ describe('SpotsPage : ouvrir le conseil pour un spot (US 7)', () => {
     expect(neuf.appels.positionSpot).toHaveLength(0);
   });
 
-  it('critère 3 : given un spot ouvert, when je touche « Préparer ma sortie », then « Bientôt disponible » s\'affiche sous les boutons (role="status") et on reste sur l\'onglet « Spots »', async () => {
+  // US 15 remplace « Bientôt disponible » (note de la story) : les trois tests ci-dessous gardent ce que protégeait l'ancien critère 3
+  // (rester sur « Spots », message dans le li du spot ouvert sous les boutons, message qui disparaît à l'ouverture d'un autre spot),
+  // avec le comportement de l'US 15. Le détail de la préparation est dans spots.page.sortie.spec.ts.
+  const horsLigne = () => espions.push(vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false));
+
+  it('critère 3 : given un spot ouvert sans réseau, when je touche « Préparer ma sortie », then « Pas de réseau : prépare ta sortie avant de partir » (role="alert") s\'affiche sous les boutons, « Bientôt disponible » n\'existe plus et on reste sur l\'onglet « Spots »', async () => {
     const env = await ouvrirLApp();
+    horsLigne();
     const li = await ouvrirSpot(env, 'Pont de Cé');
-    expect(li.querySelector('[role="status"]'), 'le message est absent avant le tap').toBeNull();
+    expect(li.querySelector('[role="status"], [role="alert"]'), 'le message est absent avant le tap').toBeNull();
     action(li, 'Préparer ma sortie').click();
     await env.stabiliser();
 
     const apres = ligne(env, 'Pont de Cé');
-    const statut = apres.querySelector<HTMLElement>('[role="status"]');
-    expect(statut, 'aucun role="status" dans la ligne').not.toBeNull();
-    expect(compact(statut!.textContent)).toBe(compact('Bientôt disponible'));
+    const alerte = apres.querySelector<HTMLElement>('[role="alert"]');
+    expect(alerte, 'aucun role="alert" dans la ligne').not.toBeNull();
+    expect(compact(alerte!.textContent)).toBe(compact('Pas de réseau : prépare ta sortie avant de partir'));
     const boutons = boutonsActions(apres);
     expect(boutons).toHaveLength(2);
-    expect(boutons[1].compareDocumentPosition(statut!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(boutons[1].compareDocumentPosition(alerte!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(compact(pageSpots(env).textContent)).not.toContain(compact('Bientôt disponible'));
     expect(env.router.url).toBe('/spots');
   });
 
-  it('critère 3 : given un spot ouvert, when je touche « Préparer ma sortie », then rien n\'est téléchargé (aucune requête, ni conditions, ni position, ni écriture)', async () => {
+  it('critère 3 : given un spot ouvert sans réseau, when je touche « Préparer ma sortie », then rien n\'est téléchargé (aucune requête, ni position, ni écriture des spots)', async () => {
     const env = await ouvrirLApp();
+    horsLigne();
     const li = await ouvrirSpot(env, 'Pont de Cé');
     surveillerLeReseau(env);
     const avant = {
-      releves: env.appels.releves.length,
       gps: env.appels.positionGps,
       spot: env.appels.positionSpot.length,
+      ajouts: env.appels.ajouts,
+      releves: env.appels.releves.length,
       moteur: env.appels.moteur.length,
       federations: env.appels.federations,
-      ajouts: env.appels.ajouts,
     };
     action(li, 'Préparer ma sortie').click();
     await env.stabiliser();
 
     // Positive control : l'action a bien eu lieu (le message est affiché), sinon l'absence de requête ne prouve rien.
-    expect(compact(ligne(env, 'Pont de Cé').querySelector('[role="status"]')?.textContent)).toBe(compact('Bientôt disponible'));
+    expect(compact(ligne(env, 'Pont de Cé').querySelector('[role="alert"]')?.textContent)).toBe(compact('Pas de réseau : prépare ta sortie avant de partir'));
     expect(env.appels.requetes).toEqual([]);
-    expect(env.appels.releves).toHaveLength(avant.releves);
     expect(env.appels.positionGps).toBe(avant.gps);
     expect(env.appels.positionSpot).toHaveLength(avant.spot);
+    expect(env.appels.ajouts).toBe(avant.ajouts);
+    expect(env.appels.releves).toHaveLength(avant.releves);
     expect(env.appels.moteur).toHaveLength(avant.moteur);
     expect(env.appels.federations).toBe(avant.federations);
-    expect(env.appels.ajouts).toBe(avant.ajouts);
   });
 
-  it('critère 3 : given « Bientôt disponible » affiché, when j\'ouvre un autre spot, then le message disparaît', async () => {
+  it('critère 3 : given le message de « Préparer ma sortie » affiché, when j\'ouvre un autre spot, then le message disparaît', async () => {
     const env = await ouvrirLApp();
+    horsLigne();
     const li = await ouvrirSpot(env, 'Pont de Cé');
     action(li, 'Préparer ma sortie').click();
     await env.stabiliser();
-    expect(compact(ligne(env, 'Pont de Cé').querySelector('[role="status"]')?.textContent)).toBe(compact('Bientôt disponible'));
+    expect(compact(ligne(env, 'Pont de Cé').querySelector('[role="alert"]')?.textContent)).toBe(compact('Pas de réseau : prépare ta sortie avant de partir'));
 
     await ouvrirSpot(env, 'Gué de la Sarthe');
 
-    expect(compact(pageSpots(env).textContent)).not.toContain(compact('Bientôt disponible'));
+    expect(compact(pageSpots(env).textContent)).not.toContain(compact('Pas de réseau'));
+    expect(pageSpots(env).querySelector('[role="alert"]')).toBeNull();
     expect(boutonsActions(ligne(env, 'Gué de la Sarthe'))).toHaveLength(2);
     expect(boutonsActions(ligne(env, 'Pont de Cé'))).toHaveLength(0);
   });
