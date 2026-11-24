@@ -14,3 +14,8 @@ beforeEach(() => {
     return fetchOrigine(entree, init);
   });
 });
+
+// Les fichiers de test d'un même worker partagent le registre de modules : un module chargé avec le vrai SDK par un fichier
+// resterait en cache pour le suivant, et les `vi.mock` de ce dernier ne s'y appliqueraient pas (ex. app-check.ts, US 20).
+// On repart d'un registre neuf avant chaque fichier.
+vi.resetModules();

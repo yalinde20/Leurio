@@ -11,3 +11,6 @@ capacitor-cordova-ios-plugins
 # Generated Config files
 App/App/capacitor.config.json
 App/App/config.xml
+
+# Liens symboliques générés par "cap update" (chemins absolus de la machine)
+App/CapApp-SPM/symlinks

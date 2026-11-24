@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { AppCheck, CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from 'firebase/app-check';
+import { AppCheck, initializeAppCheck } from 'firebase/app-check';
 import { Auth, connectAuthEmulator, getAuth } from 'firebase/auth';
 import {
   Firestore,
@@ -10,6 +11,7 @@ import {
   persistentMultipleTabManager,
 } from 'firebase/firestore';
 import { FirebaseStorage, connectStorageEmulator, getStorage } from 'firebase/storage';
+import { choisirFournisseurAppCheck } from './app-check';
 import { config, emulateurs } from './config';
 import { EMULATEURS } from './emulateurs';
 import { exposerPourLesTests } from './hook-test';
@@ -52,21 +54,10 @@ export class FirebaseService {
   }
 
   private initialiserAppCheck(): AppCheck {
-    if (emulateurs) {
-      // Mode débogage de l'environnement de test (décision du propriétaire, US 36) : un fournisseur
-      // local rend un jeton factice, sans FIREBASE_APPCHECK_DEBUG_TOKEN, car le vrai jeton de débogage
-      // s'échange avec googleapis.com. Il servira contre le vrai projet (phase 5, application stricte).
-      return initializeAppCheck(this.app, {
-        provider: new CustomProvider({
-          getToken: async () => ({ token: 'jeton-app-check-local', expireTimeMillis: Date.now() + 60 * 60 * 1000 }),
-        }),
-        isTokenAutoRefreshEnabled: false,
-      });
-    }
-    // L'application stricte (enforcement) viendra plus tard : ici App Check est seulement initialisé.
-    return initializeAppCheck(this.app, {
-      provider: new ReCaptchaEnterpriseProvider(config.appCheckSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
+    const provider = choisirFournisseurAppCheck(
+      { natif: Capacitor.isNativePlatform(), emulateurs, cleSite: config.appCheckSiteKey },
+      () => import('@capacitor-firebase/app-check').then((m) => m.FirebaseAppCheck),
+    );
+    return initializeAppCheck(this.app, { provider, isTokenAutoRefreshEnabled: !emulateurs });
   }
 }
