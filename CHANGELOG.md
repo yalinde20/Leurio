@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.56.0](https://github.com/yalinde20/Leurio/compare/v1.55.0...v1.56.0) (2026-11-24)
+
+
+### Features
+
+* US 18 remonter les plantages avec Crashlytics ([504c5e2](https://github.com/yalinde20/Leurio/commit/504c5e20d8f0471ecd64671e03e9345720d16d0c))
+
+
+### Bug Fixes
+
+* US 18 suites de la revue ([e3b419c](https://github.com/yalinde20/Leurio/commit/e3b419cfa99ea7005cdab076eb916a2fdf0345d5))
+
 ## [1.55.0](https://github.com/yalinde20/Leurio/compare/v1.54.0...v1.55.0) (2026-11-24)
 
 
