@@ -7,14 +7,18 @@
  *    (l'événement est abandonné sans consentement chargé et accepté ; latitude, longitude et valeurs non primitives sont retirées).
  */
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { SOURCE_COMPTE, SourceCompte } from './compte.service';
 import { ConsentementsService } from './consentements.service';
-import { MesureAudienceService } from './mesure-audience.service';
+import { assainirParametres, MesureAudienceService } from './mesure-audience.service';
 import { SOURCE_PROFIL } from './profil.service';
 import { ANALYTICS, PortAnalytics } from '../firebase/mesure-audience';
 
-function preparer(options: { stocke?: { analytics: boolean; video: boolean } | null } = {}) {
-  let stocke = options.stocke === undefined ? null : options.stocke;
+type Stocke = { analytics: boolean; video: boolean } | null;
+
+function preparer(options: { stocke?: Stocke; magasin?: { valeur: Stocke } } = {}) {
+  // Le magasin peut être partagé entre deux sessions : la seconde lit alors ce que la première a écrit.
+  const magasin = options.magasin ?? { valeur: options.stocke === undefined ? null : options.stocke };
   const appels: string[] = [];
   const evenements: { nom: string; parametres: Record<string, unknown> }[] = [];
   const port: PortAnalytics = {
@@ -35,12 +39,13 @@ function preparer(options: { stocke?: { analytics: boolean; video: boolean } | n
         provide: SOURCE_PROFIL,
         useValue: {
           mettreAJour: async (_u: string, champs: { consentements: { analytics: boolean; video: boolean } }) => {
-            stocke = champs.consentements;
+            magasin.valeur = champs.consentements;
           },
-          lireConsentements: async () => stocke,
+          lireConsentements: async () => magasin.valeur,
         },
       },
       { provide: ANALYTICS, useValue: port },
+      provideRouter([{ path: '**', children: [] }]),
     ],
   });
   return {
@@ -109,13 +114,15 @@ describe('US 19 : MesureAudienceService', () => {
   });
 
   it('US 19 critère 3 : given un consentement retiré et écrit, when l\'app est relancée, then Analytics n\'est jamais initialisé', async () => {
-    const premier = preparer({ stocke: { analytics: true, video: false } });
+    const magasin: { valeur: Stocke } = { valeur: { analytics: true, video: false } };
+    const premier = preparer({ magasin });
     premier.mesure.demarrer();
     await vi.waitFor(() => expect(premier.appels).toEqual(['initialiser']));
     await premier.consentements.modifier('analytics', false);
-    // Le stockage simulé garde l'écriture ; on relance avec un nouveau TestBed lisant la même valeur.
+    expect(magasin.valeur?.analytics).toBe(false);
+    // Le magasin partagé garde l'écriture de la première session ; on relance avec un nouveau TestBed qui la lit.
     TestBed.resetTestingModule();
-    const relance = preparer({ stocke: { analytics: false, video: false } });
+    const relance = preparer({ magasin });
     relance.mesure.demarrer();
     await relance.consentements.charger();
     relance.mesure.envoyer('screen_view', { page: '/' });
@@ -143,5 +150,22 @@ describe('US 19 : MesureAudienceService', () => {
     });
     await vi.waitFor(() => expect(evenements).toHaveLength(1));
     expect(evenements[0]).toEqual({ nom: 'position_obtenue', parametres: { departement: '49', precision: 12, ok: true } });
+  });
+});
+
+describe('US 19 : assainissement et pages vues', () => {
+  it('US 19 critère 4 : given Analytics accepté, when une page vue porte des coordonnées dans l\'URL, then seul le chemin est envoyé', async () => {
+    const { mesure, appels, evenements } = preparer({ stocke: { analytics: true, video: false } });
+    mesure.demarrer();
+    await vi.waitFor(() => expect(appels).toEqual(['initialiser']));
+    await TestBed.inject(Router).navigateByUrl('/compte?lat=47.43&lng=-0.52#pos=47.43,-0.52');
+    await vi.waitFor(() => expect(evenements.some((e) => e.nom === 'screen_view')).toBe(true));
+    expect(evenements.at(-1)).toEqual({ nom: 'screen_view', parametres: { page: '/compte' } });
+  });
+
+  it('US 19 critère 4 : given des paramètres, when une clé contient seulement par hasard « lat » ou « lon », then elle est gardée ; les clés de position et les valeurs qui ressemblent à des coordonnées sont retirées', () => {
+    expect(
+      assainirParametres({ longueur: 3, plateforme: 'ios', colonne: 2, lat: 1, longitude: 2, coords: 'x', departement: '49', note: '47.43,-0.52', url: 'a?lat=47.4', nom: 'Pont de Cé' }),
+    ).toEqual({ longueur: 3, plateforme: 'ios', colonne: 2, departement: '49', nom: 'Pont de Cé' });
   });
 });

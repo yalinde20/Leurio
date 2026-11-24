@@ -4,13 +4,16 @@ import { ANALYTICS, ParametresEvenement } from '../firebase/mesure-audience';
 import { ConsentementsService } from './consentements.service';
 
 /** Les clés qui disent une position : jamais envoyées, même par erreur (US 19, critère 4). Le département, lui, peut l'être. */
-const CLE_DE_POSITION = /lat|lng|lon|latitude|longitude|coord|position/i;
+const CLE_DE_POSITION = /^(lat|lng|lon|long|latitude|longitude|coords?|coordonnees?|position)$/i;
+/** Une valeur texte qui ressemble à des coordonnées : « 47.43,-0.52 » ou « lat=47.43 ». */
+const VALEUR_DE_POSITION = /-?\d{1,3}\.\d+\s*[,;]\s*-?\d{1,3}\.\d+|\b(lat|lng|lon|latitude|longitude)\s*[=:]/i;
 
-/** Retire des paramètres toute clé de position et toute valeur qui n'est pas un texte, un nombre ou un booléen. */
+/** Retire des paramètres toute clé de position (nom entier), toute valeur texte qui ressemble à des coordonnées et toute valeur qui n'est pas un texte, un nombre ou un booléen. */
 export function assainirParametres(parametres: Record<string, unknown>): ParametresEvenement {
   const propres: ParametresEvenement = {};
   for (const [cle, valeur] of Object.entries(parametres)) {
     if (CLE_DE_POSITION.test(cle)) continue;
+    if (typeof valeur === 'string' && VALEUR_DE_POSITION.test(valeur)) continue;
     if (typeof valeur === 'string' || typeof valeur === 'number' || typeof valeur === 'boolean') propres[cle] = valeur;
   }
   return propres;
@@ -48,7 +51,7 @@ export class MesureAudienceService {
       { injector: this.injector },
     );
     this.router.events.subscribe((evenement) => {
-      if (evenement instanceof NavigationEnd) this.envoyer('screen_view', { page: evenement.urlAfterRedirects });
+      if (evenement instanceof NavigationEnd) this.envoyer('screen_view', { page: evenement.urlAfterRedirects.split(/[?#]/)[0] });
     });
     this.consentements.charger().catch((erreur) => console.error('Les consentements n’ont pas pu être lus : Analytics reste coupé.', erreur));
   }

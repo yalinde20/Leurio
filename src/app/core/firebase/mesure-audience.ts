@@ -1,6 +1,7 @@
 // Mesure d'audience Firebase Analytics (US 19, PLAN §4, §7). Elle ne se charge qu'après le consentement « Analytics » du compte :
 // `firebase/analytics` n'est importé que dans `initialiser()`, jamais dans le bundle initial ni avant le consentement.
-// Le web, le développement, les tests et les builds sans identifiant de mesure ont un port inerte : aucun appel à Google.
+// Le build web ou natif avec un identifiant de mesure (FIREBASE_MEASUREMENT_ID) envoie ses événements ; seuls les émulateurs
+// (développement, tests, e2e) et les builds sans identifiant ont un port inerte : aucun appel à Google.
 import { inject, InjectionToken, Injector } from '@angular/core';
 import type { FirebaseApp } from 'firebase/app';
 import { config, emulateurs } from './config';
