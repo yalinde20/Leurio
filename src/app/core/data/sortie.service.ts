@@ -1,4 +1,5 @@
 import { inject, Injectable, Injector } from '@angular/core';
+import { ouNull } from './ou-null';
 import { avecDelai, INDEXED_DB, MAGASIN_SORTIE, ouvrirBase } from './conditions-cache';
 import { distanceKm, HubeauService, ResultatTendanceDebit } from './hubeau.service';
 import { ResultatTempEau, TemperatureEauService } from './temperature-eau.service';
@@ -46,13 +47,37 @@ interface SortieEnregistree {
 const estUnNombre = (valeur: unknown): valeur is number => typeof valeur === 'number' && Number.isFinite(valeur);
 const estUneDate = (valeur: unknown): valeur is string => typeof valeur === 'string' && !Number.isNaN(new Date(valeur).getTime());
 
+/** `null` ou un résultat dont les champs lus par `ConditionsService` ont le bon type. */
+function eauValide(eau: unknown): boolean {
+  if (eau === null || eau === undefined) return true;
+  if (typeof eau !== 'object') return false;
+  const e = eau as Record<string, unknown>;
+  if (e['statut'] !== 'connue') return typeof e['statut'] === 'string';
+  const station = e['station'] as Record<string, unknown> | undefined;
+  return (
+    estUnNombre(e['tempEauC']) &&
+    (e['source'] === 'estimation' ||
+      (e['source'] === 'capteur' && typeof station?.['nom'] === 'string' && estUnNombre(e['distanceKm'])))
+  );
+}
+
+function debitValide(debit: unknown): boolean {
+  if (debit === null || debit === undefined) return true;
+  if (typeof debit !== 'object') return false;
+  const d = debit as Record<string, unknown>;
+  return d['statut'] === 'tendance' ? ['crue', 'normal', 'étiage'].includes(d['tendance'] as string) : typeof d['statut'] === 'string';
+}
+
 function estEnregistree(valeur: unknown): valeur is SortieEnregistree {
   if (typeof valeur !== 'object' || valeur === null) return false;
   const { lieu, prepareeA, heures } = valeur as Partial<Record<keyof SortieEnregistree, unknown>>;
+  const { eau, debit } = valeur as Partial<Record<keyof SortieEnregistree, unknown>>;
   const lieuValide = typeof lieu === 'object' && lieu !== null && estUnNombre((lieu as Lieu).latitude) && estUnNombre((lieu as Lieu).longitude);
   return (
     lieuValide &&
     estUneDate(prepareeA) &&
+    eauValide(eau) &&
+    debitValide(debit) &&
     Array.isArray(heures) &&
     heures.length > 0 &&
     heures.every(
@@ -64,15 +89,6 @@ function estEnregistree(valeur: unknown): valeur is SortieEnregistree {
         estUnNombre(h['vent']),
     )
   );
-}
-
-/** Une source qui rejette est traitée comme indisponible. */
-async function ouNull<T>(source: Promise<T>): Promise<T | null> {
-  try {
-    return await source;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -112,7 +128,7 @@ export class SortieService {
       eau,
       debit,
     };
-    if (!(await avecDelai(this.ecrire(sortie), false))) return { statut: 'echec' };
+    if (!(await this.ecrire(sortie))) return { statut: 'echec' };
     return { statut: 'prete', jusquA: new Date(sortie.heures[sortie.heures.length - 1].heure) };
   }
 
@@ -124,8 +140,8 @@ export class SortieService {
       lieu: enregistree.lieu,
       prepareeA: new Date(enregistree.prepareeA),
       heures: enregistree.heures.map((h) => ({ ...h, heure: new Date(h.heure) })),
-      eau: enregistree.eau,
-      debit: enregistree.debit,
+      eau: enregistree.eau ?? null,
+      debit: enregistree.debit ?? null,
     };
   }
 
@@ -154,7 +170,7 @@ export class SortieService {
     }
   }
 
-  /** Vrai seulement si la sortie est bien écrite. */
+  /** Vrai seulement si la sortie est bien écrite. Une fois la base ouverte, on attend la fin de l'écriture : le résultat dit toujours ce qui est gardé. */
   private async ecrire(sortie: SortieEnregistree): Promise<boolean> {
     try {
       const base = await ouvrirBase(this.indexedDb);

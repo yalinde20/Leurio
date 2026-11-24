@@ -4,6 +4,7 @@ import { SaisieTempEau, saisieRecente } from '../engine/temperature-eau';
 import { ConditionsCache } from './conditions-cache';
 import { GeoService } from './geo.service';
 import { HubeauService } from './hubeau.service';
+import { ouNull } from './ou-null';
 import { MomentJourneeService } from './moment-journee.service';
 import { HeurePreparee, SortiePreparee, SortieService } from './sortie.service';
 import { TemperatureEauService } from './temperature-eau.service';
@@ -68,15 +69,6 @@ export function mentionConditionsDu(date: Date): string {
   return `Conditions du ${dateEtHeureParis(date)}`;
 }
 
-/** Une source qui rejette est traitée comme indisponible. */
-async function ouNull<T>(source: Promise<T>): Promise<T | null> {
-  try {
-    return await source;
-  } catch {
-    return null;
-  }
-}
-
 const HEURE_MS = 3600000;
 
 /**
@@ -122,7 +114,7 @@ export class ConditionsService {
    * Le reste (eau, débit, moment, saison, département) est toujours calculé en direct. Ne rejette jamais.
    * Une sortie préparée (US 14) pour ce lieu passe avant le cache : dans ses 48 h, ses heures (et son eau et son débit
    * quand ceux du moment manquent) servent, avec la mention de sa date ; au-delà, le conseil est « moins précis »
-   * et le dernier relevé n'est pas repris.
+   * et le dernier relevé n'est repris que s'il est plus récent que la sortie.
    */
   async releve(demande: DemandeConditions): Promise<ReleveActuel> {
     const { lieu, spot, especeCible } = demande;
@@ -138,10 +130,14 @@ export class ConditionsService {
     const meteoConnue = meteo !== null && meteo.disponible && 'pressionTendance48h' in meteo ? meteo : null;
     // Seule une vraie panne (indisponible sans refus, ou rejet) reprend le cache ; une demande refusée n'est pas une panne.
     const enPanne = meteo === null || (!meteo.disponible && !('refusee' in meteo));
-    const sortie = enPanne ? await this.sortie.pour(lieu) : null;
+    const [sortie, dernierReleve] = enPanne ? await Promise.all([this.sortie.pour(lieu), this.cache.lire()]) : [null, null];
     const dansLaSortie = sortie ? heureDeLaSortie(sortie, moment) : null;
     const preparee = dansLaSortie && dansLaSortie !== 'au-dela' ? dansLaSortie : null;
-    const enCache = enPanne && !dansLaSortie ? await this.cache.lire() : null;
+    // Dans les heures préparées, la sortie passe avant le cache. Au-delà, le cache ne sert que s'il est plus récent que la sortie.
+    const enCache =
+      dernierReleve && !preparee && !(dansLaSortie === 'au-dela' && sortie && new Date(dernierReleve.obtenuesA) <= sortie.prepareeA)
+        ? dernierReleve
+        : null;
     // L'eau et le débit préparés ne servent que si ceux du moment manquent.
     const eauRetenue = eau?.statut === 'connue' || !preparee ? eau : (sortie?.eau ?? eau);
     const debitRetenu = debit?.statut === 'tendance' || !preparee ? debit : (sortie?.debit ?? debit);

@@ -127,10 +127,24 @@ export class ConditionsCache {
   }
 }
 
-/** Ouvre la base de l'app (mise à niveau comprise), ou rend `null` si elle est absente, bloquée ou en erreur. */
+/**
+ * Ouvre la base de l'app (mise à niveau comprise), ou rend `null` si elle est absente, bloquée, en erreur ou muette au-delà du délai.
+ * Une ouverture qui aboutit après avoir rendu `null` referme aussitôt sa connexion, pour ne pas bloquer une mise à niveau.
+ */
 export function ouvrirBase(fabrique: IDBFactory | undefined): Promise<IDBDatabase | null> {
   if (!fabrique) return Promise.resolve(null);
   return new Promise((resolve) => {
+    let rendu = false;
+    const rendre = (base: IDBDatabase | null) => {
+      if (rendu) {
+        base?.close();
+        return;
+      }
+      rendu = true;
+      clearTimeout(minuteur);
+      resolve(base);
+    };
+    const minuteur = setTimeout(() => rendre(null), DELAI_INDEXED_DB_MS);
     try {
       const requete = fabrique.open(BASE, VERSION_BASE);
       requete.onupgradeneeded = () => {
@@ -139,11 +153,16 @@ export function ouvrirBase(fabrique: IDBFactory | undefined): Promise<IDBDatabas
           if (!base.objectStoreNames.contains(magasin)) base.createObjectStore(magasin);
         }
       };
-      requete.onsuccess = () => resolve(requete.result);
-      requete.onerror = () => resolve(null);
-      requete.onblocked = () => resolve(null);
+      requete.onsuccess = () => {
+        const base = requete.result;
+        // Une autre version de l'app qui se met à niveau n'attend jamais cette connexion.
+        base.onversionchange = () => base.close();
+        rendre(base);
+      };
+      requete.onerror = () => rendre(null);
+      requete.onblocked = () => rendre(null);
     } catch {
-      resolve(null);
+      rendre(null);
     }
   });
 }
