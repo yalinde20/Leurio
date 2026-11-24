@@ -19,6 +19,8 @@
     --lr-carte-eau: #9cc9d6;
     --lr-carte-terre: #e9e2cf;
     --lr-carte-marqueur: #e8590c;
+    --lr-bandeau: #e9dcc0;
+    --lr-sur-bandeau: #10241f;
   }
   #t-sombre:checked ~ .states {
     --lr-fond: #0e1714;
@@ -33,6 +35,8 @@
     --lr-carte-eau: #123a44;
     --lr-carte-terre: #1b2622;
     --lr-carte-marqueur: #ff8a3d;
+    --lr-bandeau: #1f3b34;
+    --lr-sur-bandeau: #e6e1d6;
   }
   * { box-sizing: border-box; }
   body {
@@ -171,7 +175,7 @@
   /* US 13 : le bandeau « Hors ligne », en haut de chaque onglet, sous la barre d'état et au-dessus du titre. */
   .hors-ligne {
     flex: none; display: flex; align-items: center; justify-content: center; gap: 8px;
-    min-height: 32px; padding: 4px 16px; background: var(--lr-sable); color: var(--lr-texte);
+    min-height: 32px; padding: 4px 16px; background: var(--lr-bandeau); color: var(--lr-sur-bandeau);
     font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--lr-bordure);
   }
   .hors-ligne svg { width: 18px; height: 18px; }
@@ -187,7 +191,7 @@
 </head>
 <body>
 <h1>US 13 — Indicateur « Hors ligne » et date des conditions utilisées</h1>
-<p class="note">iPhone, app installée. PLAN §3 et §4 (« Si une API est en panne » : mention « conditions du 27/10 à 18 h »). Sans réseau, un bandeau « Hors ligne » (icône nuage barré + texte, lu par VoiceOver) apparaît en haut des 4 onglets, sous la barre d'état et au-dessus du titre de l'écran ; il disparaît dès que le réseau revient, sans recharger l'écran. Il n'est pas touchable (pas de bouton) et ne masque rien : l'écran est poussé vers le bas de 32 px. La carte « Conditions » garde la mention « Conditions du 29/10 à 18 h » (format JJ/MM à H h, heure de Paris) quand elle affiche des conditions en cache ; avec du réseau et des conditions à jour, aucune mention. Tokens du projet uniquement.</p>
+<p class="note">iPhone, app installée. PLAN §3 et §4 (« Si une API est en panne » : mention « conditions du 27/10 à 18 h »). Sans réseau, un bandeau « Hors ligne » (icône nuage barré + texte, lu par VoiceOver) apparaît en haut des 4 onglets, sous la barre d'état et au-dessus du titre de l'écran ; il disparaît dès que le réseau revient, sans recharger l'écran. Il n'est pas touchable (pas de bouton) et ne masque rien : l'écran est poussé vers le bas de 32 px. La carte « Conditions » garde la mention « Conditions du 29/10 à 18 h » (format JJ/MM à H h, heure de Paris) quand elle affiche des conditions en cache ; avec du réseau et des conditions à jour, aucune mention. Couleur du bandeau : nouveaux tokens <code>--lr-bandeau</code> / <code>--lr-sur-bandeau</code> (clair : sable #e9dcc0, texte #10241f ; sombre : vert d'eau profond #1f3b34, texte #e6e1d6), ajoutés à src/theme/tokens.scss. Version 2 : couleur du thème sombre revue à la demande du propriétaire.</p>
 
 <input type="radio" name="t" id="t-clair" class="radio" checked>
 <input type="radio" name="t" id="t-sombre" class="radio">
