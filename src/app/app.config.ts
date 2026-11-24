@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { CompteService } from './core/data/compte.service';
 import { MesureAudienceService } from './core/data/mesure-audience.service';
 import { OnboardingStore } from './core/data/onboarding.store';
+import { FEATURE_FLAGS } from './core/firebase/feature-flags';
 import { GestionnaireErreurs } from './core/firebase/gestionnaire-erreurs';
 import { BUILD_APP, initialiserPlantages, PLANTAGES, VERSION_APP } from './core/firebase/plantages';
 import { OpenMeteoService } from './core/data/open-meteo.service';
@@ -50,6 +51,10 @@ export const appConfig: ApplicationConfig = {
     // Analytics ne s'initialise qu'après le consentement du compte (US 19) : on lit les consentements en tâche de fond, sans bloquer le démarrage.
     provideAppInitializer(() => {
       inject(MesureAudienceService).demarrer();
+    }),
+    // Feature flags (US 21) : Remote Config en tâche de fond, sans bloquer le démarrage ; les valeurs par défaut valent tant qu'il n'a rien reçu.
+    provideAppInitializer(() => {
+      void inject(FEATURE_FLAGS).initialiser();
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
