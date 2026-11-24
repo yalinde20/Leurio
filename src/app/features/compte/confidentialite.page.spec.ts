@@ -116,3 +116,31 @@ describe('US 91 : Confidentialité', () => {
     expect(page.textContent).not.toContain('uid-test-123');
   });
 });
+
+describe('US 18 : Confidentialité et Crashlytics (maquette us-18-crashlytics-confidentialite)', () => {
+  it('US 18 critère 2 : given la page « Confidentialité », when je lis « Les services qui aident Leurio », then Firebase Crashlytics est listé avec ce que le rapport contient et ne contient pas', async () => {
+    const { page } = await ouvrirConfidentialite();
+    const items = Array.from(page.querySelectorAll('ul li')).map((li) => compact(li.textContent));
+    expect(items).toContain(
+      compact(
+        'Firebase Crashlytics, dans l’app Android et iOS : si l’app plante, un rapport technique est envoyé pour corriger le problème. Il contient l’erreur, la version de l’app, le modèle et la version du téléphone. Il ne contient ni ta position, ni ton e-mail, ni ton identifiant de compte.',
+      ),
+    );
+  });
+
+  it('US 18 critère 2 : given la page « Confidentialité », when je lis « Pourquoi Leurio peut le faire », then les rapports de plantage sont justifiés par l’intérêt légitime sans consentement', async () => {
+    const { page } = await ouvrirConfidentialite();
+    const items = Array.from(page.querySelectorAll('ul li')).map((li) => compact(li.textContent));
+    expect(items).toContain(
+      compact(
+        'Les rapports de plantage : c’est l’intérêt légitime de l’éditeur à faire marcher l’app (article 6.1.f). Aucun consentement ne t’est demandé.',
+      ),
+    );
+  });
+
+  it('US 18 critère 2 : given la page « Confidentialité », when je lis « Combien de temps », then les rapports de plantage sont effacés au bout de 90 jours', async () => {
+    const { page } = await ouvrirConfidentialite();
+    const paragraphes = Array.from(page.querySelectorAll('p')).map((p) => compact(p.textContent));
+    expect(paragraphes).toContain(compact('Les rapports de plantage sont effacés au bout de 90 jours.'));
+  });
+});
