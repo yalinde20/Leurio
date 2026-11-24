@@ -3,7 +3,7 @@
 // aucun appel à reCAPTCHA. Le vrai module est exécuté ; seuls ses imports sont remplacés.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -37,19 +37,23 @@ export const config = { firebase: { apiKey: 'k', authDomain: 'd', projectId: 'p'
     'firebase/storage': ecrire('st.mjs', 'export const getStorage = () => ({}); export const connectStorageEmulator = () => {};'),
   };
   const sortie = join(dir, 'service.mjs');
-  await build({
-    entryPoints: [join(ROOT, 'src/app/core/firebase/firebase.service.ts')],
-    bundle: true, format: 'esm', platform: 'node', outfile: sortie, logLevel: 'silent',
-    plugins: [{
-      name: 'doubles',
-      setup(b) {
-        b.onResolve({ filter: /.*/ }, (a) => (remplacements[a.path] ? { path: remplacements[a.path] } : undefined));
-      },
-    }],
-  });
-  const { FirebaseService } = await import(`${pathToFileURL(sortie).href}?${Date.now()}`);
-  new FirebaseService();
-  return globalThis.__journalAppCheck;
+  try {
+    await build({
+      entryPoints: [join(ROOT, 'src/app/core/firebase/firebase.service.ts')],
+      bundle: true, format: 'esm', platform: 'node', outfile: sortie, logLevel: 'silent',
+      plugins: [{
+        name: 'doubles',
+        setup(b) {
+          b.onResolve({ filter: /.*/ }, (a) => (remplacements[a.path] ? { path: remplacements[a.path] } : undefined));
+        },
+      }],
+    });
+    const { FirebaseService } = await import(`${pathToFileURL(sortie).href}?${Date.now()}`);
+    new FirebaseService();
+    return globalThis.__journalAppCheck;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 test('critère 1 : given le mode production avec une clé de site, when Firebase est initialisé, then App Check utilise le fournisseur reCAPTCHA Enterprise avec cette clé', async () => {
