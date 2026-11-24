@@ -29,7 +29,7 @@ import { TackleBoxService } from '../../core/data/tackle-box.service';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: max(0px, env(safe-area-inset-top)) 8px 0;
+      padding: max(0px, var(--ion-safe-area-top, env(safe-area-inset-top))) 8px 0;
       border-bottom: 1px solid var(--lr-bordure);
       background: var(--lr-surface);
     }

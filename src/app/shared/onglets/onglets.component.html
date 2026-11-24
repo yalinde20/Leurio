@@ -1,4 +1,11 @@
-<div class="contenu">
+<!-- Zone annoncée toujours présente (vide en ligne), pour que VoiceOver et TalkBack lisent « Hors ligne » quand le réseau tombe. -->
+<output class="hors-ligne" [class.hors-ligne-visible]="horsLigne()">
+  @if (horsLigne()) {
+    <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+    <span>Hors ligne</span>
+  }
+</output>
+<div class="contenu" [class.contenu-hors-ligne]="horsLigne()">
   <router-outlet></router-outlet>
 </div>
 <ion-tab-bar>

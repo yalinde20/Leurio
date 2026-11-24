@@ -9,6 +9,32 @@
   flex: 1;
 }
 
+// Bandeau « Hors ligne » (maquette US 13) : il porte la zone de sécurité du haut, les en-têtes des pages ne la rajoutent pas.
+// En ligne, la zone reste dans le DOM mais vide et sans hauteur.
+.hors-ligne-visible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: calc(32px + var(--ion-safe-area-top, 0px));
+  padding: 4px 16px;
+  padding-top: calc(4px + var(--ion-safe-area-top, 0px));
+  background: var(--lr-bandeau);
+  color: var(--lr-sur-bandeau);
+  border-bottom: 1px solid var(--lr-bordure);
+  font-size: 15px;
+  font-weight: 600;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+.contenu-hors-ligne {
+  --ion-safe-area-top: 0px;
+}
+
 // Barre d'onglets façon iOS (maquette US 33) : couleurs via les tokens, cibles tactiles d'au moins 48 px.
 ion-tab-bar {
   --background: var(--lr-surface);
