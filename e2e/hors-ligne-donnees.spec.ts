@@ -2,7 +2,6 @@
 // Sur les émulateurs ; le mode avion est `context.setOffline(true)` (coupe aussi les émulateurs locaux).
 // Fermer puis rouvrir l'app (le service worker n'existe que dans le build de production) : e2e/hors-ligne-donnees.prod.spec.ts.
 // Hors périmètre : la photo d'un leurre ajoutée hors ligne (Storage).
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, type Page } from '@playwright/test';
 import { estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
@@ -53,7 +52,7 @@ test('critère 1 : given la boîte et les spots chargés une fois avec du résea
   await ouvrirOnglet(page, 'Spots');
   await ajouterSpot(page, 'Pont de Cé');
   await expect.poll(async () => (await leurresSurEmulateur(uid)).length + (await spotsSurEmulateur(uid)).length, { timeout: 20_000 }).toBe(2);
-  // Retour à l'accueil : la boîte et les spots seront relus depuis le cache local.
+  // On quitte les deux listes (elles se rouvrent ensuite sans réseau). Ici l'app n'est pas fermée : la preuve après fermeture et réouverture est dans hors-ligne-donnees.prod.spec.ts.
   await onglet(page, 'Compte');
 
   await modeAvion(page, true);
@@ -67,8 +66,7 @@ test('critère 1 : given la boîte et les spots chargés une fois avec du résea
 
 test('critère 2 : given l\'appareil en mode avion, when l\'utilisateur ajoute un spot, then le spot s\'affiche dans la liste, et au retour du réseau il est enregistré sur son compte et visible depuis un autre appareil connecté au même compte', async ({ page, browser }) => {
   test.setTimeout(120_000);
-  await ouvrir(page);
-  const uid = (await page.evaluate(() => (window as any).leurioFirebase.auth.currentUser.uid)) as string;
+  const uid = await ouvrir(page);
   const id = identifiantsUniques();
   await lierAUnEmail(page, id);
   await ouvrirOnglet(page, 'Spots');
@@ -84,12 +82,11 @@ test('critère 2 : given l\'appareil en mode avion, when l\'utilisateur ajoute u
   await expect(ligneSpot(page, 'Mode avion')).not.toContainText('Pas encore synchronisé');
 
   // Second appareil : même compte, autre stockage.
-  const second = await ouvrirSecondAppareil(browser, id, uid);
+  const second = await ouvrirSecondAppareil(browser, id);
   try {
-    await second.page.goto('/');
+    expect(second.uid, 'même compte que le premier appareil').toBe(uid);
     await ouvrirOnglet(second.page, 'Spots');
     await expect(ligneSpot(second.page, 'Mode avion')).toHaveCount(1, { timeout: 20_000 });
-    expect(await second.page.evaluate(() => (window as any).leurioFirebase.auth.currentUser?.uid)).toBe(uid);
   } finally {
     await second.context.close();
   }
@@ -145,4 +142,12 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await expect(ligneSpot(page, 'Pont de Cé')).toHaveCount(1);
   await onglet(page, 'Conseil');
   await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+
+  // §11 dans un seul scénario : un spot ajouté sans réseau est enregistré au retour du réseau.
+  await ouvrirOnglet(page, 'Spots');
+  await ajouterSpot(page, 'Au bord de l\'eau');
+  await expect(ligneSpot(page, 'Au bord de l\'eau')).toContainText('Pas encore synchronisé');
+  await modeAvion(page, false);
+  await expect.poll(async () => (await spotsSurEmulateur(uid)).length, { timeout: 30_000 }).toBe(2);
+  await expect(ligneSpot(page, 'Au bord de l\'eau')).not.toContainText('Pas encore synchronisé');
 });

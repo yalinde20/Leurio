@@ -1,10 +1,10 @@
 // US 16 : la boîte et les spots restent accessibles hors ligne, même après avoir fermé et rouvert l'app (PLAN §4, §10 phase 5, §11).
 // Build de production (service worker) servi sur le port 4300, Firestore sur l'émulateur ; fermer l'app = fermer la page,
 // la rouvrir = ouvrir une nouvelle page du même contexte (le cache IndexedDB de Firestore est conservé).
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
 import {
-  ajouterLeurre, ajouterSpot, attendreCompte, bloquerLeReseauExterne, leurresSurEmulateur, ligneLeurre, ligneSpot, modeAvion,
+  ajouterLeurre, ajouterSpot, attendreCompte, bloquerLeReseauExterne, leurresSurEmulateur, ligneLeurre, ligneSpot, modeAvion, ouvrirUneFoisEnLigne,
   onglet, ouvrirOnglet, spotsSurEmulateur, titreVisible,
 } from './hors-ligne-donnees-helpers';
 
@@ -15,35 +15,9 @@ test.beforeEach(async ({ page, context }) => {
   await bloquerLeReseauExterne(context);
 });
 
-/** Première ouverture avec du réseau : le service worker s'active, contrôle la page et remplit son cache. */
-async function installerLApp(page: Page): Promise<void> {
-  await page.goto('/');
-  await expect(titreVisible(page)).toHaveText('Conseil');
-  await page.evaluate(async () => {
-    const prete = await navigator.serviceWorker.ready;
-    const fin = Date.now() + 25_000;
-    while (prete.active && prete.active.state !== 'activated' && Date.now() < fin) await new Promise((r) => setTimeout(r, 100));
-  });
-  await page.reload();
-  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker?.controller), { timeout: 30_000 }).toBe(true);
-  await expect
-    .poll(
-      () =>
-        page.evaluate(async () => {
-          for (const nom of await caches.keys()) {
-            const requetes = await (await caches.open(nom)).keys();
-            if (requetes.some((r) => new URL(r.url).pathname === '/index.html')) return true;
-          }
-          return false;
-        }),
-      { timeout: 30_000 },
-    )
-    .toBe(true);
-}
-
 test('critère 1 : given la boîte et les spots chargés une fois avec du réseau, when l\'utilisateur ouvre « Boîte » puis « Spots » en mode avion, même après avoir fermé et rouvert l\'app, then ses leurres et ses spots s\'affichent', async ({ page, context }) => {
   test.setTimeout(120_000);
-  await installerLApp(page);
+  await ouvrirUneFoisEnLigne(page);
   const uid = await attendreCompte(page);
   await ouvrirOnglet(page, 'Boîte');
   await ajouterLeurre(page, 'gardon');
@@ -67,7 +41,7 @@ test('critère 1 : given la boîte et les spots chargés une fois avec du résea
 
 test('critère 2 : given l\'appareil en mode avion, when l\'utilisateur ajoute un spot puis ferme et rouvre l\'app, then le spot s\'affiche toujours et au retour du réseau il est enregistré sur son compte', async ({ page, context }) => {
   test.setTimeout(120_000);
-  await installerLApp(page);
+  await ouvrirUneFoisEnLigne(page);
   const uid = await attendreCompte(page);
   await ouvrirOnglet(page, 'Spots');
 
@@ -89,7 +63,7 @@ test('critère 2 : given l\'appareil en mode avion, when l\'utilisateur ajoute u
 
 test('critère 3 : given l\'appareil en mode avion, when l\'utilisateur ajoute un leurre puis ferme et rouvre l\'app, then le leurre s\'affiche toujours et au retour du réseau il est enregistré sur son compte', async ({ page, context }) => {
   test.setTimeout(120_000);
-  await installerLApp(page);
+  await ouvrirUneFoisEnLigne(page);
   const uid = await attendreCompte(page);
   await ouvrirOnglet(page, 'Boîte');
 
