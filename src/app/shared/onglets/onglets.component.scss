@@ -10,7 +10,8 @@
 }
 
 // Bandeau « Hors ligne » (maquette US 13) : il porte la zone de sécurité du haut, les en-têtes des pages ne la rajoutent pas.
-.hors-ligne {
+// En ligne, la zone reste dans le DOM mais vide et sans hauteur.
+.hors-ligne-visible {
   display: flex;
   align-items: center;
   justify-content: center;

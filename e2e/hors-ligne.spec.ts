@@ -45,9 +45,9 @@ test("critère 1 : given l'app ouverte avec du réseau, when le réseau est coup
     await onglet(page, nom).click();
     await expect(page.locator('ion-toolbar ion-title:visible'), nom).toHaveText(nom);
     await expect(bandeau(page), `bandeau sur ${nom}`).toBeVisible();
-    // En haut de l'écran : au-dessus du titre de la page.
-    const [b, titre] = await Promise.all([bandeau(page).boundingBox(), page.locator('ion-toolbar ion-title:visible').boundingBox()]);
-    expect(b!.y, `bandeau au-dessus du titre sur ${nom}`).toBeLessThan(titre!.y);
+    // En haut de l'écran : au-dessus de la barre de titre de la page, sans la recouvrir (l'écran est poussé vers le bas).
+    const [b, barre] = await Promise.all([bandeau(page).boundingBox(), page.locator('ion-toolbar:visible').first().boundingBox()]);
+    expect(b!.y + b!.height, `bandeau au-dessus de la barre de titre sur ${nom}, sans la recouvrir`).toBeLessThanOrEqual(barre!.y + 0.5);
   }
 });
 
