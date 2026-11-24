@@ -33,6 +33,7 @@ import { WeatherProvider } from '../../core/data/weather-provider';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { TuilesService } from '../../core/data/tuiles.service';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 
@@ -134,6 +135,7 @@ async function installer(fabrique: IDBFactory, reseau: Reseau, maintenant: Date)
   await TestBed.configureTestingModule({
     imports: [ConseilPage],
     providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
       provideIonicAngular(),
       { provide: INDEXED_DB, useValue: fabrique },
       { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },

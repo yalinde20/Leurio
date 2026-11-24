@@ -39,6 +39,7 @@ import { TemperatureEauService } from '../../core/data/temperature-eau.service';
 import { WeatherProvider } from '../../core/data/weather-provider';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
+import { TuilesService } from '../../core/data/tuiles.service';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 
@@ -124,6 +125,7 @@ async function ouvrirLApp(fabrique: IDBFactory, reseau: Reseau, maintenant: Date
   await TestBed.configureTestingModule({
     imports: [App],
     providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
       provideIonicAngular(),
       provideRouter(routes),
       { provide: INDEXED_DB, useValue: fabrique },

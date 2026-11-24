@@ -9,6 +9,7 @@ import { MomentJourneeService } from './moment-journee.service';
 import { SortieService } from './sortie.service';
 import { TemperatureEauService } from './temperature-eau.service';
 import { Lieu, WeatherProvider } from './weather-provider';
+import { TuilesService } from './tuiles.service';
 
 const ANGERS: Lieu = { latitude: 47.47, longitude: -0.55 };
 const HEURE_MS = 3_600_000;
@@ -40,6 +41,7 @@ function installer(fabrique: IDBFactory, enLigne: boolean, meteoPrevue = vi.fn(a
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(enLigne);
   TestBed.configureTestingModule({
     providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
       { provide: INDEXED_DB, useValue: fabrique },
       { provide: TemperatureEauService, useValue: { temperatureEauProche: async () => ({ statut: "température de l'eau inconnue" }) } },
       { provide: HubeauService, useValue: { tendanceDebitProche: async () => ({ statut: "Hub'Eau indisponible" }) } },
