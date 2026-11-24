@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.55.0](https://github.com/yalinde20/Leurio/compare/v1.54.0...v1.55.0) (2026-11-24)
+
+
+### Features
+
+* US 17 tuiles de carte en cache autour des spots ([db79207](https://github.com/yalinde20/Leurio/commit/db79207a7dc3a36d0a427c8ffa24d89c90a39389))
+
+
+### Bug Fixes
+
+* US 17 suites de la revue ([3a3c113](https://github.com/yalinde20/Leurio/commit/3a3c1130a209b2357d7cf4e3ce1e4ece99aa2d4f))
+
 ## [1.54.0](https://github.com/yalinde20/Leurio/compare/v1.53.0...v1.54.0) (2026-11-24)
 
 
