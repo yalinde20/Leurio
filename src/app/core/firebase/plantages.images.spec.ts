@@ -14,3 +14,14 @@ describe('imagesDePile', () => {
     expect(imagesDePile('Error: x')).toBeUndefined();
   });
 });
+
+describe('imagesDePile, piles Safari et WKWebView', () => {
+  it('given une pile iOS, when on la convertit, then on obtient fonction, fichier et ligne', () => {
+    const pile = 'f@capacitor://localhost/main.js:10:5\ncapacitor://localhost/main.js:20:7\nglobal code@capacitor://localhost/a.js:3:1';
+    expect(imagesDePile(pile)).toEqual([
+      { functionName: 'f', fileName: 'capacitor://localhost/main.js', lineNumber: 10 },
+      { functionName: undefined, fileName: 'capacitor://localhost/main.js', lineNumber: 20 },
+      { functionName: 'global code', fileName: 'capacitor://localhost/a.js', lineNumber: 3 },
+    ]);
+  });
+});

@@ -33,6 +33,9 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Crashlytics n'envoie rien tant que le JS ne l'a pas activé (app de production seulement, US 18). -->
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
     </application>
 
     <!-- Permissions -->

@@ -7,7 +7,7 @@ import { routes } from './app.routes';
 import { CompteService } from './core/data/compte.service';
 import { OnboardingStore } from './core/data/onboarding.store';
 import { GestionnaireErreurs } from './core/firebase/gestionnaire-erreurs';
-import { initialiserPlantages, PLANTAGES, VERSION_APP } from './core/firebase/plantages';
+import { BUILD_APP, initialiserPlantages, PLANTAGES, VERSION_APP } from './core/firebase/plantages';
 import { OpenMeteoService } from './core/data/open-meteo.service';
 import { WeatherProvider } from './core/data/weather-provider';
 import { ThemeService } from './shared/theme.service';
@@ -44,7 +44,7 @@ export const appConfig: ApplicationConfig = {
     // Au lancement : active la collecte, pose la version et envoie les rapports restés en attente (plantage hors ligne).
     // Ne bloque ni ne fait jamais échouer le démarrage.
     provideAppInitializer(() => {
-      void initialiserPlantages(inject(PLANTAGES), inject(VERSION_APP));
+      void initialiserPlantages(inject(PLANTAGES), inject(VERSION_APP), inject(BUILD_APP));
     }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

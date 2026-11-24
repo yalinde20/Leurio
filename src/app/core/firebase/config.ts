@@ -19,5 +19,6 @@ export const config: ConfigApp = {
     appId: 'demo-app-id',
   },
   appCheckSiteKey: '',
+  build: 'dev',
 };
 
