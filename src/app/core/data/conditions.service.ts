@@ -5,6 +5,7 @@ import { ConditionsCache } from './conditions-cache';
 import { GeoService } from './geo.service';
 import { HubeauService } from './hubeau.service';
 import { MomentJourneeService } from './moment-journee.service';
+import { HeurePreparee, SortiePreparee, SortieService } from './sortie.service';
 import { TemperatureEauService } from './temperature-eau.service';
 import { Lieu, WeatherProvider } from './weather-provider';
 
@@ -46,8 +47,8 @@ export interface ReleveActuel {
   moinsPrecis: boolean;
 }
 
-/** « Conditions du 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
-export function mentionConditionsDu(date: Date): string {
+/** « 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
+export function dateEtHeureParis(date: Date): string {
   const parties = new Intl.DateTimeFormat('fr-FR', {
     timeZone: 'Europe/Paris',
     day: '2-digit',
@@ -59,7 +60,12 @@ export function mentionConditionsDu(date: Date): string {
   const valeur = (type: string) => parties.find((p) => p.type === type)?.value ?? '';
   const minutes = valeur('minute');
   const heure = `${Number(valeur('hour'))} h${minutes === '00' ? '' : ` ${minutes}`}`;
-  return `Conditions du ${valeur('day')}/${valeur('month')} à ${heure}`;
+  return `${valeur('day')}/${valeur('month')} à ${heure}`;
+}
+
+/** « Conditions du 27/10 à 18 h » (ou « à 18 h 30 »), à l'heure de Paris. */
+export function mentionConditionsDu(date: Date): string {
+  return `Conditions du ${dateEtHeureParis(date)}`;
 }
 
 /** Une source qui rejette est traitée comme indisponible. */
@@ -69,6 +75,19 @@ async function ouNull<T>(source: Promise<T>): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+const HEURE_MS = 3600000;
+
+/**
+ * Où tombe le moment dans la sortie préparée : l'heure préparée la plus proche (arrondi à l'heure, comme la météo prévue),
+ * ou « au-delà » quand il dépasse sa dernière heure ; `null` pour un moment d'avant la sortie.
+ */
+function heureDeLaSortie(sortie: SortiePreparee, moment: Date): HeurePreparee | 'au-dela' | null {
+  const heure = Math.round(moment.getTime() / HEURE_MS) * HEURE_MS;
+  const trouvee = sortie.heures.find((h) => h.heure.getTime() === heure);
+  if (trouvee) return trouvee;
+  return heure > sortie.heures[sortie.heures.length - 1].heure.getTime() ? 'au-dela' : null;
 }
 
 /** Le moment est-il après l'heure en cours ? Les moments passés ou de l'heure courante sont des relevés. */
@@ -90,6 +109,7 @@ export class ConditionsService {
   private readonly geo = inject(GeoService);
 
   private readonly cache = inject(ConditionsCache);
+  private readonly sortie = inject(SortieService);
 
   /** Ne rejette jamais : une source indisponible donne `null` (ou « inconnu » pour le débit). */
   async conditions(demande: DemandeConditions): Promise<Conditions> {
@@ -100,6 +120,9 @@ export class ConditionsService {
    * Conditions et pression. Si la météo répond, le relevé est gardé en cache local ; sinon, le dernier relevé
    * en cache fournit pression, tendance, nuages et vent, avec une mention datée (PLAN §4, « Si une API est en panne »).
    * Le reste (eau, débit, moment, saison, département) est toujours calculé en direct. Ne rejette jamais.
+   * Une sortie préparée (US 14) pour ce lieu passe avant le cache : dans ses 48 h, ses heures (et son eau et son débit
+   * quand ceux du moment manquent) servent, avec la mention de sa date ; au-delà, le conseil est « moins précis »
+   * et le dernier relevé n'est pas repris.
    */
   async releve(demande: DemandeConditions): Promise<ReleveActuel> {
     const { lieu, spot, especeCible } = demande;
@@ -109,23 +132,32 @@ export class ConditionsService {
     const [eau, debit, meteo] = await Promise.all([
       saisie ? null : ouNull(this.temperatureEau.temperatureEauProche(lieu, moment)),
       ouNull(this.hubeau.tendanceDebitProche(lieu, moment)),
-      ouNull(this.weather.meteoPrevue(lieu, moment)),
+      // Sans réseau (mode avion), la météo n'est même pas demandée : elle est en panne d'office.
+      navigator.onLine === false ? null : ouNull(this.weather.meteoPrevue(lieu, moment)),
     ]);
     const meteoConnue = meteo !== null && meteo.disponible && 'pressionTendance48h' in meteo ? meteo : null;
     // Seule une vraie panne (indisponible sans refus, ou rejet) reprend le cache ; une demande refusée n'est pas une panne.
     const enPanne = meteo === null || (!meteo.disponible && !('refusee' in meteo));
-    const enCache = enPanne ? await this.cache.lire() : null;
+    const sortie = enPanne ? await this.sortie.pour(lieu) : null;
+    const dansLaSortie = sortie ? heureDeLaSortie(sortie, moment) : null;
+    const preparee = dansLaSortie && dansLaSortie !== 'au-dela' ? dansLaSortie : null;
+    const enCache = enPanne && !dansLaSortie ? await this.cache.lire() : null;
+    // L'eau et le débit préparés ne servent que si ceux du moment manquent.
+    const eauRetenue = eau?.statut === 'connue' || !preparee ? eau : (sortie?.eau ?? eau);
+    const debitRetenu = debit?.statut === 'tendance' || !preparee ? debit : (sortie?.debit ?? debit);
     const conditions: Conditions = {
-      tempEau: saisie ? saisie.valeurC : eau?.statut === 'connue' ? eau.tempEauC : null,
-      sourceTempEau: saisie ? 'saisie' : eau?.statut === 'connue' ? eau.source : null,
-      debitTendance: debit?.statut === 'tendance' ? debit.tendance : 'inconnu',
+      tempEau: saisie ? saisie.valeurC : eauRetenue?.statut === 'connue' ? eauRetenue.tempEauC : null,
+      sourceTempEau: saisie ? 'saisie' : eauRetenue?.statut === 'connue' ? eauRetenue.source : null,
+      debitTendance: debitRetenu?.statut === 'tendance' ? debitRetenu.tendance : 'inconnu',
       pressionTendance48h: meteoConnue
         ? meteoConnue.pressionTendance48h.disponible
           ? meteoConnue.pressionTendance48h.ecartHpa
           : null
-        : (enCache?.conditions.pressionTendance48h ?? null),
-      nuages: meteoConnue ? (meteoConnue.couvertureNuageusePct ?? null) : (enCache?.conditions.nuages ?? null),
-      vent: meteoConnue ? (meteoConnue.ventKmh ?? null) : (enCache?.conditions.vent ?? null),
+        : preparee
+          ? preparee.pressionTendance48h
+          : (enCache?.conditions.pressionTendance48h ?? null),
+      nuages: meteoConnue ? (meteoConnue.couvertureNuageusePct ?? null) : (preparee?.nuages ?? enCache?.conditions.nuages ?? null),
+      vent: meteoConnue ? (meteoConnue.ventKmh ?? null) : (preparee?.vent ?? enCache?.conditions.vent ?? null),
       moment: this.momentJournee.moment(lieu, moment),
       saison: saisonDe(moment),
       categorie: spot?.categorie ?? null,
@@ -135,10 +167,10 @@ export class ConditionsService {
     if (especeCible !== undefined && especeCible !== 'toutes') conditions.especeCible = especeCible;
     const origine: Pick<ReleveActuel, 'stationEau' | 'saisieA' | 'debitAbsent'> = {};
     if (saisie) origine.saisieA = saisie.mesureeA;
-    else if (eau?.statut === 'connue' && eau.source === 'capteur') {
-      origine.stationEau = { nom: eau.station.nom, distanceKm: eau.distanceKm };
+    else if (eauRetenue?.statut === 'connue' && eauRetenue.source === 'capteur') {
+      origine.stationEau = { nom: eauRetenue.station.nom, distanceKm: eauRetenue.distanceKm };
     }
-    if (debit?.statut !== 'tendance') origine.debitAbsent = debit?.statut === 'aucune station' ? 'aucune station' : "Hub'Eau indisponible";
+    if (debitRetenu?.statut !== 'tendance') origine.debitAbsent = debitRetenu?.statut === 'aucune station' ? 'aucune station' : "Hub'Eau indisponible";
     if (meteoConnue) {
       const pressionHpa = meteoConnue.pressionHpa ?? null;
       // Une prévision d'un moment futur ne doit jamais devenir le « dernier relevé » servi à « maintenant ».
@@ -146,6 +178,9 @@ export class ConditionsService {
         await this.cache.ecrire({ conditions, pressionHpa, obtenuesA: meteoConnue.heure.toISOString() });
       }
       return { conditions, pressionHpa, moinsPrecis: false, ...origine };
+    }
+    if (sortie && preparee) {
+      return { conditions, pressionHpa: preparee.pressionHpa, mention: mentionConditionsDu(sortie.prepareeA), moinsPrecis: false, ...origine };
     }
     if (enCache) {
       return {

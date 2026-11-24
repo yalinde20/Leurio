@@ -5,8 +5,11 @@ import {
   heureDemandee,
   joursPrecedents,
   Lieu,
+  MeteoIndisponible,
+  MeteoPrevue,
   MoyenneAir,
   moyenneAirJours,
+  Previsions48h,
   ResultatMeteo,
   ResultatMeteoPrevue,
   tendancePression48h,
@@ -17,6 +20,7 @@ const URL_PREVISION = 'https://api.open-meteo.com/v1/forecast';
 const URL_ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive';
 /** Au-delà, la requête est abandonnée : un réseau faible ne bloque jamais le conseil (PLAN §4). */
 const DELAI_MAX_MS = 10_000;
+const HEURE_MS = 3_600_000;
 const VALEURS = 'temperature_2m,cloud_cover,wind_speed_10m,pressure_msl';
 
 interface ReponsePrevision {
@@ -123,6 +127,60 @@ export class OpenMeteoService extends WeatherProvider {
             pressionTendance48h: tendancePression48h(pression, indexAvant >= 0 ? valeurA(horaire.pressure_msl, indexAvant) : undefined),
           };
         }
+      }
+    } catch {
+      // Réseau coupé ou erreur HTTP : une source indisponible ne bloque jamais le conseil (PLAN §4).
+    }
+    return { disponible: false };
+  }
+
+  async previsions48h(lieu: Lieu): Promise<Previsions48h | MeteoIndisponible> {
+    // Même format GMT « AAAA-MM-JJTHH:00 » que meteoPrevue ; la fenêtre va de 48 h avant l'heure en cours à 48 h après,
+    // pour calculer la tendance de chaque heure.
+    const enTexte = (h: Date) => h.toISOString().slice(0, 13) + ':00';
+    const debut = Math.floor(Date.now() / HEURE_MS) * HEURE_MS;
+    try {
+      const reponse = await firstValueFrom(
+        this.http.get<ReponsePrevision>(URL_PREVISION, {
+          params: {
+            latitude: lieu.latitude,
+            longitude: lieu.longitude,
+            hourly: VALEURS,
+            timezone: 'GMT',
+            start_hour: enTexte(new Date(debut - 48 * HEURE_MS)),
+            end_hour: enTexte(new Date(debut + 48 * HEURE_MS)),
+            temperature_unit: 'celsius',
+            wind_speed_unit: 'kmh',
+          },
+        }).pipe(timeout(DELAI_MAX_MS)),
+      );
+      const horaire = reponse?.hourly;
+      const temps: unknown = horaire?.time;
+      if (horaire && Array.isArray(temps)) {
+        const heures: MeteoPrevue[] = [];
+        for (let i = 0; i <= 48; i++) {
+          const heure = new Date(debut + i * HEURE_MS);
+          const index = temps.indexOf(enTexte(heure));
+          const indexAvant = temps.indexOf(enTexte(new Date(heure.getTime() - 48 * HEURE_MS)));
+          const pression = valeurA(horaire.pressure_msl, index);
+          const nuages = valeurA(horaire.cloud_cover, index);
+          const vent = valeurA(horaire.wind_speed_10m, index);
+          const temperature = valeurA(horaire.temperature_2m, index);
+          // Une heure incomplète rend les prévisions indisponibles en entier : on n'invente rien.
+          if (index < 0 || !estUnNombre(pression) || !estUnNombre(nuages) || !estUnNombre(vent) || !estUnNombre(temperature)) {
+            return { disponible: false };
+          }
+          heures.push({
+            disponible: true,
+            pressionHpa: pression,
+            couvertureNuageusePct: nuages,
+            ventKmh: vent,
+            temperatureAirC: temperature,
+            heure,
+            pressionTendance48h: tendancePression48h(pression, indexAvant >= 0 ? valeurA(horaire.pressure_msl, indexAvant) : undefined),
+          });
+        }
+        return { disponible: true, heures };
       }
     } catch {
       // Réseau coupé ou erreur HTTP : une source indisponible ne bloque jamais le conseil (PLAN §4).

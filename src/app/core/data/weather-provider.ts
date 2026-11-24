@@ -40,6 +40,12 @@ export interface MeteoPrevue extends MeteoActuelle {
 
 export type ResultatMeteoPrevue = MeteoPrevue | MeteoIndisponible | DemandeRefusee;
 
+/** Prévisions de chaque heure pleine, de l'heure en cours à + 48 h inclus (49 heures), chacune avec sa tendance de pression. */
+export interface Previsions48h {
+  disponible: true;
+  heures: MeteoPrevue[];
+}
+
 const HEURE_MS = 3_600_000;
 const FENETRE_MS = 48 * HEURE_MS;
 
@@ -133,6 +139,12 @@ export abstract class WeatherProvider {
    * Ne rejette jamais ; un moment hors fenêtre est refusé sans aucun appel réseau.
    */
   abstract meteoPrevue(lieu: Lieu, moment: Date): Promise<ResultatMeteoPrevue>;
+
+  /**
+   * Prévisions de toutes les heures pleines de l'heure en cours à + 48 h inclus, pour garder une sortie hors ligne (PLAN §4).
+   * Ne rejette jamais ; toute panne ou heure incomplète donne `{ disponible: false }` pour l'ensemble, jamais une valeur inventée.
+   */
+  abstract previsions48h(lieu: Lieu): Promise<Previsions48h | MeteoIndisponible>;
 
   /**
    * Moyenne de la température de l'air des 7 jours qui précèdent le jour du moment choisi (au moins 5 jours valides).
