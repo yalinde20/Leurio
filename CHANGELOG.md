@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.53.0](https://github.com/yalinde20/Leurio/compare/v1.52.0...v1.53.0) (2026-11-24)
+
+
+### Features
+
+* bandeau « Hors ligne » en &lt;output&gt; (option B du propriétaire) ([ef9df25](https://github.com/yalinde20/Leurio/commit/ef9df25a7c7f1e2e42ec31531ca4847c49814e97))
+* bandeau « Hors ligne » en haut de chaque onglet (US 13) ([c84556c](https://github.com/yalinde20/Leurio/commit/c84556c93fde3d7e2134f941941551c6f995c6d3))
+
+
+### Bug Fixes
+
+* zone sûre iOS des feuilles plein écran sous le bandeau, zone annoncée toujours présente (revue US 13) ([24607ab](https://github.com/yalinde20/Leurio/commit/24607abd523532d29585580ea20f7fe5d00fb492))
+
 ## [1.52.0](https://github.com/yalinde20/Leurio/compare/v1.51.0...v1.52.0) (2026-11-23)
 
 
