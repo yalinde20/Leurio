@@ -119,6 +119,11 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
             reCAPTCHA de Google, par Firebase App Check : il vérifie que les demandes viennent bien de l’app et pas d’un robot, à
             partir d’informations sur ton appareil et ton navigateur.
           </li>
+          <li>
+            Firebase Crashlytics, dans l’app Android et iOS : si l’app plante, un rapport technique est envoyé pour corriger le
+            problème. Il contient l’erreur, la version de l’app, le modèle et la version du téléphone. Il ne contient ni ta position, ni
+            ton e-mail, ni ton identifiant de compte.
+          </li>
         </ul>
         <p>
           Google agit pour le compte de l’éditeur. Certains de ses services, comme la connexion au compte, peuvent traiter des données
@@ -134,6 +139,10 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
         <ul>
           <li>Ton compte, ta boîte et le conseil selon ta position : c’est le service que tu demandes (RGPD, article 6.1.b).</li>
           <li>La protection contre les abus : c’est l’intérêt légitime de l’éditeur à protéger l’app (article 6.1.f).</li>
+          <li>
+            Les rapports de plantage : c’est l’intérêt légitime de l’éditeur à faire marcher l’app (article 6.1.f). Aucun consentement ne
+            t’est demandé.
+          </li>
         </ul>
 
         <h2>Combien de temps</h2>
@@ -141,6 +150,8 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
           Tes données sont gardées tant que ton compte existe, sans limite de durée : un compte inactif n’est pas supprimé
           automatiquement. Après une suppression, Google les efface de ses sauvegardes dans un délai de 180 jours au plus.
         </p>
+
+        <p>Les rapports de plantage sont effacés au bout de 90 jours.</p>
 
         <h2>Attention : si tu supprimes l’app ou son raccourci</h2>
         <p>
