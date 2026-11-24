@@ -82,9 +82,10 @@ export function imagesDePile(pile?: string): { functionName?: string; fileName?:
   if (!pile) return undefined;
   const images = pile
     .split('\n')
-    .map((ligne) => /^\s*at\s+(?:(.*?)\s+\()?(.*?):(\d+):\d+\)?\s*$/.exec(ligne) ?? /^\s*(?:(.*?)@)?(.*):(\d+):\d+\s*$/.exec(ligne))
+    .map((ligne) => /^\s*at\s+(?:(.*?)\s+\()?(.*?):(\d+):(\d+)\)?\s*$/.exec(ligne) ?? /^\s*(?:(.*?)@)?(.*):(\d+):(\d+)\s*$/.exec(ligne))
     .filter((m): m is RegExpExecArray => m !== null)
-    .map((m) => ({ functionName: m[1] || undefined, fileName: m[2], lineNumber: Number(m[3]) }));
+    // Un bundle minifié tient sur la ligne 1 et StackFrame n'a pas de colonne : on garde alors la colonne dans le nom du fichier.
+    .map((m) => ({ functionName: m[1] || undefined, fileName: m[3] === '1' ? `${m[2]}:1:${m[4]}` : m[2], lineNumber: Number(m[3]) }));
   return images.length > 0 ? images : undefined;
 }
 

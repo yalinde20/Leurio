@@ -25,3 +25,13 @@ describe('imagesDePile, piles Safari et WKWebView', () => {
     ]);
   });
 });
+
+describe('imagesDePile, bundle minifié', () => {
+  it('given une pile minifiée sur la ligne 1, when on la convertit, then la colonne reste dans le nom du fichier', () => {
+    const pile = 'Error: x\n    at a (https://leurio.test/main-XYZ.js:1:23456)\nf@capacitor://localhost/main-XYZ.js:1:777';
+    expect(imagesDePile(pile)).toEqual([
+      { functionName: 'a', fileName: 'https://leurio.test/main-XYZ.js:1:23456', lineNumber: 1 },
+      { functionName: 'f', fileName: 'capacitor://localhost/main-XYZ.js:1:777', lineNumber: 1 },
+    ]);
+  });
+});

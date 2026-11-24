@@ -7,7 +7,7 @@ const EMAIL = /[^\s@/?&=:<>()"']+(?:@|%40)[^\s@%/?&=<>()"']+\.[A-Za-z]{2,}/gi;
 // Nombres qui suivent une clé de position (lat, lng, lon, latitude, longitude, bbox), en paramètre d'URL ou en JSON.
 const CLE_POSITION = /\b(lat|lng|lon|latitude|longitude|bbox)(["']?\s*[:=]\s*["']?)-?\d+(?:\.\d+)?(?:(?:,|%2C)-?\d+(?:\.\d+)?)*/gi;
 // Chemins Firestore ou Storage : l'identifiant de compte ne sort pas.
-const CHEMIN_COMPTE = /\busers(\/|%2F)[^/\s?&#"')]+/gi;
+const CHEMIN_COMPTE = /\busers(\/|%2F)[^/%\s?&#"')]+/gi;
 // Latitude ou longitude : nombre décimal à au moins 3 chiffres après la virgule, éventuellement signé.
 const COORDONNEE = /-?\b\d{1,3}\.\d{3,}\b/g;
 

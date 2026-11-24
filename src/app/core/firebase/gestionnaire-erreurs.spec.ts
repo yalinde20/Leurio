@@ -22,6 +22,10 @@ describe('US 18 critère 2 : nettoyage des rapports', () => {
     expect(nettoyer('Version 1.2.3 introuvable, latitude absente')).toBe('Version 1.2.3 introuvable, latitude absente');
   });
 
+  it('given un chemin encodé avec une suite, when on nettoie, then seul l\'identifiant disparaît', () => {
+    expect(nettoyer('users%2FAbC%2Fspots%2Fs.jpg')).toBe('users%2F[uid]%2Fspots%2Fs.jpg');
+  });
+
   it('given users/<uid>, when on nettoie, then le chemin garde sa forme', () => {
     expect(nettoyer('users/abc/spots')).toBe('users/[uid]/spots');
   });
