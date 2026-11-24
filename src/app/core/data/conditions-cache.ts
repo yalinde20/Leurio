@@ -16,14 +16,18 @@ export const INDEXED_DB = new InjectionToken<IDBFactory | undefined>('INDEXED_DB
 });
 
 const BASE = 'leurio';
+/** Version 2 : ajout du magasin de la sortie préparée (US 14) ; le magasin « conditions » est conservé. */
+const VERSION_BASE = 2;
 const MAGASIN = 'conditions';
+/** Magasin de la sortie préparée, lu et écrit par `SortieService`. */
+export const MAGASIN_SORTIE = 'sortie';
 const CLE = 'dernieres';
 
 /** Délai maximal d'une opération IndexedDB : certains Safari iOS laissent `open()` sans réponse. */
 export const DELAI_INDEXED_DB_MS = 2000;
 
 /** Rend la valeur de `operation`, ou `defaut` si elle ne répond pas dans le délai (ou rejette). */
-function avecDelai<T>(operation: Promise<T>, defaut: T): Promise<T> {
+export function avecDelai<T>(operation: Promise<T>, defaut: T): Promise<T> {
   return new Promise<T>((resolve) => {
     const minuteur = setTimeout(() => resolve(defaut), DELAI_INDEXED_DB_MS);
     operation.then(
@@ -118,20 +122,47 @@ export class ConditionsCache {
     }
   }
 
-  /** Ouvre la base, ou rend `null` si elle est absente, bloquée ou en erreur. */
   private ouvrir(): Promise<IDBDatabase | null> {
-    const fabrique = this.indexedDb;
-    if (!fabrique) return Promise.resolve(null);
-    return new Promise((resolve) => {
-      try {
-        const requete = fabrique.open(BASE, 1);
-        requete.onupgradeneeded = () => requete.result.createObjectStore(MAGASIN);
-        requete.onsuccess = () => resolve(requete.result);
-        requete.onerror = () => resolve(null);
-        requete.onblocked = () => resolve(null);
-      } catch {
-        resolve(null);
-      }
-    });
+    return ouvrirBase(this.indexedDb);
   }
+}
+
+/**
+ * Ouvre la base de l'app (mise à niveau comprise), ou rend `null` si elle est absente, bloquée, en erreur ou muette au-delà du délai.
+ * Une ouverture qui aboutit après avoir rendu `null` referme aussitôt sa connexion, pour ne pas bloquer une mise à niveau.
+ */
+export function ouvrirBase(fabrique: IDBFactory | undefined): Promise<IDBDatabase | null> {
+  if (!fabrique) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    let rendu = false;
+    const rendre = (base: IDBDatabase | null) => {
+      if (rendu) {
+        base?.close();
+        return;
+      }
+      rendu = true;
+      clearTimeout(minuteur);
+      resolve(base);
+    };
+    const minuteur = setTimeout(() => rendre(null), DELAI_INDEXED_DB_MS);
+    try {
+      const requete = fabrique.open(BASE, VERSION_BASE);
+      requete.onupgradeneeded = () => {
+        const base = requete.result;
+        for (const magasin of [MAGASIN, MAGASIN_SORTIE]) {
+          if (!base.objectStoreNames.contains(magasin)) base.createObjectStore(magasin);
+        }
+      };
+      requete.onsuccess = () => {
+        const base = requete.result;
+        // Une autre version de l'app qui se met à niveau n'attend jamais cette connexion.
+        base.onversionchange = () => base.close();
+        rendre(base);
+      };
+      requete.onerror = () => rendre(null);
+      requete.onblocked = () => rendre(null);
+    } catch {
+      rendre(null);
+    }
+  });
 }

@@ -61,7 +61,8 @@ export class TemperatureEauService {
 
     let moyenne: MoyenneAir;
     try {
-      moyenne = await this.weather.moyenneAirDerniersJours(lieu, moment);
+      // Sans réseau (mode avion), la moyenne de l'air n'est même pas demandée.
+      moyenne = navigator.onLine === false ? { disponible: false } : await this.weather.moyenneAirDerniersJours(lieu, moment);
     } catch {
       moyenne = { disponible: false };
     }
