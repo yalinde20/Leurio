@@ -8,7 +8,10 @@ import { onboardingTermine } from './onboarding-helpers';
 // Le temps est fixé au 24/11/2026 à 9 h (Paris, 08:00Z) : la sortie préparée court jusqu'au 26/11 à 9 h.
 
 test.beforeEach(async ({ page }) => onboardingTermine(page));
-test.use({ viewport: { width: 390, height: 844 } });
+// Position accordée : à l'ouverture, l'onglet d'accueil « Conseil » calcule son conseil en ligne, comme pour un vrai
+// utilisateur ; il charge alors le contenu du moteur (assets/data). En production, le service worker le précache (US 12) ;
+// le projet [dev] n'a pas de service worker, d'où ce premier affichage en ligne avant d'aller sur « Spots ».
+test.use({ viewport: { width: 390, height: 844 }, geolocation: { latitude: 47.47, longitude: -0.55 }, permissions: ['geolocation'] });
 
 const MAINTENANT = new Date('2026-11-24T08:00:00Z');
 const HEURE_MS = 3_600_000;
@@ -50,6 +53,8 @@ async function ouvrirLeSpot(page: Page, requetesMeteo: string[] = []): Promise<v
   });
   await page.goto('/');
   await attendreFirebase(page);
+  // L'app s'ouvre sur « Conseil » : on attend son top 3 en ligne (contenu du moteur chargé), puis on va sur « Spots ».
+  await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
   await page.getByRole('tab', { name: 'Spots', exact: true }).click();
   await page.getByRole('button', { name: 'Ajouter un spot', exact: true }).click();
   await formulaire(page).getByLabel('Nom').fill('Pont de Cé');

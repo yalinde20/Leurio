@@ -6,10 +6,12 @@ import * as L from 'leaflet';
 import { CatalogService } from '../../core/data/catalog.service';
 import type { Federation } from '../../core/data/catalog.types';
 import { etatOuverture, prochaineOuverture1reCategorie } from '../../core/regulation/calendar';
+import { dateEtHeureParis } from '../../core/data/conditions.service';
 import { GeoService } from '../../core/data/geo.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { PositionService } from '../../core/data/position.service';
 import { Milieu, SaisieSpot, SpotEnregistre, SpotsService } from '../../core/data/spots.service';
+import { SortieService } from '../../core/data/sortie.service';
 import { ATTRIBUTION, icone, TUILES } from './carte-spots';
 import { SpotFormulaireComponent } from './spot-formulaire.component';
 
@@ -181,10 +183,16 @@ interface LigneSpot {
       background: var(--lr-surface);
       color: var(--lr-primaire);
     }
-    .bientot {
+    .message-sortie {
       margin: -4px 16px 12px;
-      font-size: 15px;
-      color: var(--lr-texte-secondaire);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .message-sortie.prete {
+      color: var(--lr-primaire);
+    }
+    .message-sortie.echec {
+      color: var(--lr-danger);
     }
     .attente {
       font-size: 14px;
@@ -278,10 +286,14 @@ interface LigneSpot {
                     @if (ligne.spot.id === choisi()) {
                       <div class="actions">
                         <button type="button" class="voir-conseil" (click)="voirLeConseil(ligne.spot)">Voir le conseil</button>
-                        <button type="button" class="preparer" (click)="preparerLaSortie()">Préparer ma sortie</button>
+                        <button type="button" class="preparer" [disabled]="preparation() === ligne.spot.id" (click)="preparerLaSortie(ligne.spot)">
+                          {{ preparation() === ligne.spot.id ? 'Préparation…' : 'Préparer ma sortie' }}
+                        </button>
                       </div>
-                      @if (bientot()) {
-                        <p class="bientot" role="status">Bientôt disponible</p>
+                      @if (messageSortie(); as m) {
+                        <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
+                          {{ m.texte }}
+                        </p>
                       }
                     }
                   </li>
@@ -312,6 +324,7 @@ export class SpotsPage {
   private readonly geo = inject(GeoService);
   private readonly catalogue = inject(CatalogService);
   private readonly lieuDemande = inject(LieuDemandeService);
+  private readonly sortie = inject(SortieService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly conteneur = viewChild.required<ElementRef<HTMLElement>>('carte');
@@ -322,8 +335,10 @@ export class SpotsPage {
   /** Fédération par département, lue dans le contenu : absent tant que la recherche court, `null` si le contenu n'en a pas. */
   protected readonly federations = signal<Record<string, Federation | null>>({});
   protected readonly horsLigne = signal(navigator.onLine === false);
-  /** Vrai après « Préparer ma sortie » sur le spot ouvert ; retombe quand un autre spot s'ouvre. */
-  protected readonly bientot = signal(false);
+  /** Le spot dont la sortie se prépare, `null` sinon. */
+  protected readonly preparation = signal<string | null>(null);
+  /** Résultat de « Préparer ma sortie » sur le spot ouvert ; effacé quand un autre spot s'ouvre. */
+  protected readonly messageSortie = signal<{ type: 'prete' | 'hors ligne' | 'echec'; texte: string } | null>(null);
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly enCours = signal(false);
@@ -402,7 +417,7 @@ export class SpotsPage {
   protected choisir(spot: SpotEnregistre): void {
     // Un département déjà cherché n'est pas redemandé : le lien d'un spot déjà ouvert ne clignote pas.
     void this.chercherFederation(spot.departement);
-    if (spot.id !== this.choisi()) this.bientot.set(false);
+    if (spot.id !== this.choisi()) this.messageSortie.set(null);
     this.choisi.set(spot.id);
     // Le choix de l'utilisateur l'emporte sur un cadrage différé (l'onglet peut finir de s'afficher après le tap).
     this.cadrageAReprendre = false;
@@ -416,9 +431,22 @@ export class SpotsPage {
     void this.router.navigateByUrl('/conseil');
   }
 
-  /** « Préparer ma sortie » n'est pas encore là : un message, ni navigation ni réseau. */
-  protected preparerLaSortie(): void {
-    this.bientot.set(true);
+  /** « Préparer ma sortie » : garde les conditions des 48 h à venir du spot pour le conseil sans réseau (US 14). */
+  protected async preparerLaSortie(spot: SpotEnregistre): Promise<void> {
+    if (this.preparation() === spot.id) return;
+    this.preparation.set(spot.id);
+    this.messageSortie.set(null);
+    const resultat = await this.sortie.preparer({ latitude: spot.lat, longitude: spot.lng });
+    if (this.preparation() === spot.id) this.preparation.set(null);
+    // Un autre spot s'est ouvert pendant la préparation : son résultat ne concerne plus l'écran.
+    if (this.choisi() !== spot.id) return;
+    this.messageSortie.set(
+      resultat.statut === 'prete'
+        ? { type: 'prete', texte: `Sortie prête : conditions jusqu'au ${dateEtHeureParis(resultat.jusquA)}` }
+        : resultat.statut === 'hors ligne'
+          ? { type: 'hors ligne', texte: 'Pas de réseau : prépare ta sortie avant de partir' }
+          : { type: 'echec', texte: 'La préparation a échoué, réessaie' },
+    );
   }
 
   private async chercherFederation(departement: string): Promise<void> {
