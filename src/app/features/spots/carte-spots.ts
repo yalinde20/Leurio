@@ -1,6 +1,7 @@
 import * as L from 'leaflet';
+import { TUILES } from '../../core/data/tuiles.service';
 
-export const TUILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export { TUILES };
 export const ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributeurs OpenStreetMap</a>';
 
 /** Épingle : la couleur vient du token `--lr-carte-marqueur` (voir src/theme/carte.scss). */

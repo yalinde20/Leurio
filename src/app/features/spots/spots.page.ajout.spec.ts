@@ -36,6 +36,7 @@ import * as L from 'leaflet';
 import { Geolocalisation, GEOLOCALISATION } from '../../core/data/position.service';
 import { DocumentSpot, SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SpotsPage } from './spots.page';
+import { TuilesService } from '../../core/data/tuiles.service';
 
 type DocumentSpotAttente = DocumentSpot & { enAttente?: boolean };
 
@@ -79,7 +80,12 @@ async function ouvrir({ initiaux = [ETANG], horsLigne = false }: { initiaux?: Do
   };
   await TestBed.configureTestingModule({
     imports: [SpotsPage],
-    providers: [provideIonicAngular(), { provide: GEOLOCALISATION, useValue: geolocalisation }, { provide: SOURCE_SPOTS, useValue: source }],
+    providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
+      provideIonicAngular(),
+      { provide: GEOLOCALISATION, useValue: geolocalisation },
+      { provide: SOURCE_SPOTS, useValue: source },
+    ],
   }).compileComponents();
   const fixture = TestBed.createComponent(SpotsPage);
   const stabiliser = async () => {

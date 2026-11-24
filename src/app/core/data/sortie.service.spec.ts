@@ -22,6 +22,7 @@ import { MomentJourneeService } from './moment-journee.service';
 import { SortieService } from './sortie.service';
 import { TemperatureEauService } from './temperature-eau.service';
 import { Lieu, WeatherProvider } from './weather-provider';
+import { TuilesService } from './tuiles.service';
 
 const ANGERS: Lieu = { latitude: 47.47, longitude: -0.55 };
 /** À environ 550 m d'Angers. */
@@ -110,6 +111,7 @@ function installer(fabrique: IDBFactory, reseau: Reseau, enLigne: boolean) {
   });
   TestBed.configureTestingModule({
     providers: [
+      { provide: TuilesService, useValue: { mettreEnCacheAutour: async () => undefined } },
       { provide: INDEXED_DB, useValue: fabrique },
       { provide: TemperatureEauService, useValue: { temperatureEauProche: async () => reseau.eau } },
       { provide: HubeauService, useValue: { tendanceDebitProche: async () => reseau.debit } },
