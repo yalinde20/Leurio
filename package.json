@@ -11,6 +11,7 @@
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
     "validate-data": "node scripts/validate-data.ts",
+    "check-videos": "node scripts/check-videos.ts",
     "test:acceptance": "node --test --test-concurrency=1 \"tests/acceptance/*.test.mjs\"",
     "test:e2e": "playwright test",
     "icons": "node scripts/generate-icons.mjs",
