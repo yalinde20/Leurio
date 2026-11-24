@@ -12,7 +12,7 @@ App Check est initialisé au démarrage, avant le premier accès à Firestore ou
 | --- | --- | --- |
 | Web (production) | reCAPTCHA Enterprise | Clé de site dans le secret `FIREBASE_APPCHECK_SITE_KEY`. |
 | Android (production) | Play Integrity | Via le plugin `@capacitor-firebase/app-check`. |
-| iOS (production) | App Attest, avec DeviceCheck en secours | Via le même plugin. |
+| iOS (production) | App Attest | Via le même plugin. iOS 15 minimum, donc pas de repli DeviceCheck. |
 | Développement, tests, émulateurs | Fournisseur local factice | Aucun jeton réel, aucun appel à Google. App Check n'est pas exigé. |
 
 ## Configuration dans la console Firebase
@@ -36,13 +36,17 @@ Console Firebase, projet Leurio, menu Build puis App Check, onglet Apps.
 1. Enregistre l'app iOS (`app.leurio`) avec le fournisseur App Attest.
 2. Renseigne le Team ID de ton compte Apple Developer.
 3. La capacité App Attest est déjà dans `ios/App/App/App.entitlements` (environnement `production`). Vérifie qu'elle est activée pour l'identifiant de l'app dans ton compte Apple Developer.
-4. Pour le secours DeviceCheck (iOS plus anciens ou appareils sans App Attest), crée une clé DeviceCheck (fichier `.p8`) dans ton compte Apple Developer et envoie-la dans la console Firebase, avec son identifiant de clé.
+
+## Fichiers de configuration natifs
+
+`google-services.json` (Android) et `GoogleService-Info.plist` (iOS) ne sont pas dans Git. Ils doivent être présents dans les builds natifs de production. Sans eux, l'app n'obtient aucun jeton natif. Une fois l'application stricte activée, chaque appel à Firestore et à Storage est alors refusé.
 
 ## Avant d'appliquer : regarder les métriques
 
 1. Publie une version de l'app avec App Check (web, Android, iOS).
 2. Dans la console, ouvre App Check, section Cloud Firestore puis Cloud Storage, et regarde les métriques.
-3. Attends que presque toutes les requêtes soient « vérifiées ». Les requêtes « non vérifiées » viennent d'anciennes versions de l'app, de scripts ou d'une erreur de configuration.
+3. Installe un build de production depuis TestFlight (iOS) et depuis la piste de test interne de Google Play (Android). Utilise l'app, puis vérifie que les métriques de la console montrent des requêtes vérifiées pour iOS et pour Android, pas seulement pour le web.
+4. Attends que presque toutes les requêtes soient « vérifiées ». Les requêtes « non vérifiées » viennent d'anciennes versions de l'app, de scripts ou d'une erreur de configuration.
 
 ## Appliquer l'App Check (enforcement)
 
@@ -55,13 +59,10 @@ Une fois appliqué, toute requête sans jeton App Check valide est refusée (rej
 
 Si l'app cesse de fonctionner juste après, désactive l'application dans la console : le retour est immédiat.
 
-## Jetons de débogage
+## Tests et jetons de débogage
 
-Pour tester un build natif de debug contre le vrai projet, il faut un jeton de débogage enregistré dans la console. L'attestation native ne marche pas sur un émulateur ou un build de debug non signé.
+L'app n'a pas de fournisseur de débogage (debug) pour les builds natifs. Un build natif, même de debug, utilise toujours Play Integrity ou App Attest. La variable `FIRAAppCheckDebugToken` est ignorée et aucun jeton de débogage n'apparaît dans logcat ou dans Xcode.
 
-1. Android : lance l'app en debug et lis le secret de débogage dans logcat (cherche `DebugAppCheckProvider`). Le plugin utilise le fournisseur de débogage sur un build debug.
-2. iOS : dans Xcode, ajoute la variable d'environnement `FIRAAppCheckDebugToken` au schéma (Edit Scheme, Run, Arguments). Ou lance l'app une fois et copie le jeton affiché dans la console Xcode.
-3. Dans la console Firebase, App Check, menu de l'app, « Gérer les jetons de débogage » : ajoute le jeton.
-4. Ne commite jamais un jeton de débogage et ne le mets pas dans un build de production. Supprime-le de la console quand tu as fini.
-
-Les tests automatiques n'ont pas besoin de jeton de débogage : ils utilisent les émulateurs et le fournisseur local factice.
+- Les tests automatiques et le développement utilisent les émulateurs et le fournisseur local factice. Ils n'ont besoin d'aucun jeton.
+- Pour tester un build natif contre le vrai projet une fois l'application stricte activée, installe un build venu de Google Play (piste de test interne) ou de TestFlight. Ces builds passent l'attestation.
+- Un build lancé depuis Android Studio ou Xcode sur un appareil peut échouer à l'attestation : ne compte pas sur lui contre le vrai projet.
