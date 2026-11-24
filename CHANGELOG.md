@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.54.0](https://github.com/yalinde20/Leurio/compare/v1.53.0...v1.54.0) (2026-11-24)
+
+
+### Features
+
+* « Préparer ma sortie » depuis le Conseil, conditions 48 h en cache (US 14) ([a180715](https://github.com/yalinde20/Leurio/commit/a180715a9a17b47550ff23f03a99d910504eb7ed))
+
+
+### Bug Fixes
+
+* suites de la revue US 14 (cache plus récent que la sortie, écriture cohérente, montée de version IndexedDB, lectures en parallèle) ([13b0b34](https://github.com/yalinde20/Leurio/commit/13b0b341a1bac1df0053fc7a841a5acc5ee47ae0))
+
 ## [1.53.0](https://github.com/yalinde20/Leurio/compare/v1.52.0...v1.53.0) (2026-11-24)
 
 
