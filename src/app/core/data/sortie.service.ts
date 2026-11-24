@@ -1,5 +1,5 @@
 import { inject, Injectable, Injector } from '@angular/core';
-import { dateEtHeureParis } from './conditions.service';
+import { dateEtHeureParis } from './date-paris';
 import { ouNull } from './ou-null';
 import { avecDelai, INDEXED_DB, MAGASIN_SORTIE, ouvrirBase } from './conditions-cache';
 import { distanceKm, HubeauService, ResultatTendanceDebit } from './hubeau.service';
