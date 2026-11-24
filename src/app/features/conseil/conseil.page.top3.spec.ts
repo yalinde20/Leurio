@@ -284,13 +284,15 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
     expect(compact(page.textContent)).not.toContain(compact('Localisation indisponible'));
   });
 
-  it("critère 7 : given l'écran affiché, when je le regarde, then un bouton « Préparer ma sortie » est visible, désactivé et sans action", async () => {
+  // Mis à jour par l'US 14 (décision du propriétaire, option A) : le bouton, simple emplacement en US 81, est désormais actif
+  // dès que le lieu est connu ; son action est couverte par conseil.page.sortie.spec.ts.
+  it("critère 7 : given l'écran affiché avec un lieu connu, when je le regarde, then un bouton « Préparer ma sortie » est visible et actif", async () => {
     const { page } = await afficher();
 
     const bouton = [...page.querySelectorAll<HTMLElement>('button, ion-button')].find((b) => compact(b.textContent) === compact('Préparer ma sortie'));
     expect(bouton, 'aucun bouton « Préparer ma sortie »').toBeDefined();
     const desactive = bouton!.hasAttribute('disabled') || bouton!.getAttribute('aria-disabled') === 'true';
-    expect(desactive).toBe(true);
+    expect(desactive).toBe(false);
   });
 
   it("critère 7 : given la position indisponible, when l'écran s'affiche, then le bouton « Préparer ma sortie » est quand même visible", async () => {

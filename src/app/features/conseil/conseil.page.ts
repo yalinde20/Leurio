@@ -5,12 +5,13 @@ import { filter, map, startWith } from 'rxjs';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
-import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
+import { ConditionsService, dateEtHeureParis, ReleveActuel } from '../../core/data/conditions.service';
 import { FeedbackService } from '../../core/data/feedback.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
 import { OnboardingStore } from '../../core/data/onboarding.store';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
+import { SortieService } from '../../core/data/sortie.service';
 import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { Conditions } from '../../core/engine/conditions';
@@ -278,23 +279,43 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-weight: 700;
       color: var(--lr-danger);
     }
+    .bloc-sortie {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--lr-bordure);
+    }
+    .bloc-sortie .aide {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--lr-texte-secondaire);
+    }
     .bouton-sortie {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
       min-height: 48px;
-      margin-top: 16px;
-      border: none;
+      border: 1px solid var(--lr-primaire);
       border-radius: 12px;
-      background: var(--lr-primaire);
-      color: var(--lr-sur-primaire);
-      font-size: 17px;
+      background: transparent;
+      color: var(--lr-primaire);
+      font-size: 16px;
       font-weight: 600;
       font-family: inherit;
     }
     .bouton-sortie[disabled] {
       opacity: 0.5;
+    }
+    .message-sortie {
+      margin: 8px 0 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .message-sortie.prete {
+      color: var(--lr-primaire);
+    }
+    .message-sortie.echec {
+      color: var(--lr-danger);
     }
     .bouton-mesure {
       display: flex;
@@ -592,6 +613,17 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
             }
           }
         }
+        <div class="bloc-sortie">
+          <p class="aide">Garde les conditions des 48 h à venir pour ce lieu : tu auras un conseil sans réseau.</p>
+          <button type="button" class="bouton-sortie" [disabled]="!lieuPret() || preparationEnCours()" (click)="preparerSortie()">
+            {{ preparationEnCours() ? 'Préparation…' : 'Préparer ma sortie' }}
+          </button>
+          @if (messageSortie(); as m) {
+            <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
+              {{ m.texte }}
+            </p>
+          }
+        </div>
       </section>
       <h2 class="titre-section">Ton top 3</h2>
       @if (etat().type === 'position introuvable') {
@@ -696,7 +728,6 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
           [federation]="c.federation"
         />
       }
-      <button type="button" class="bouton-sortie" disabled>Préparer ma sortie</button>
     </ion-content>
     @if (feuilleOuverte()) {
       <app-moment-feuille
@@ -742,6 +773,7 @@ export class ConseilPage implements OnInit {
   private readonly router = inject(Router);
   private readonly lieuDemande = inject(LieuDemandeService);
   private readonly feedback = inject(FeedbackService);
+  private readonly sortie = inject(SortieService);
   private readonly choix = inject(ConseilChoixStore);
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -838,6 +870,10 @@ export class ConseilPage implements OnInit {
   protected readonly especes = signal<Espece[]>([]);
 
   private lieu: Lieu | null = null;
+
+  protected readonly preparationEnCours = signal(false);
+  /** Le résultat de la dernière préparation, sous le bouton ; effacé quand le lieu change. */
+  protected readonly messageSortie = signal<{ type: 'prete' | 'hors ligne' | 'echec'; texte: string } | null>(null);
 
   /** Le spot qui sert de lieu ; `null` = « Ma position ». État du composant, jamais mémorisé. */
   protected readonly spotChoisi = signal<SpotEnregistre | null>(null);
@@ -1024,6 +1060,26 @@ export class ConseilPage implements OnInit {
     this.feuilleOuverte.set(true);
   }
 
+  /** « Préparer ma sortie » : garde les conditions des 48 h à venir du lieu affiché pour le conseil sans réseau (US 14). */
+  protected async preparerSortie(): Promise<void> {
+    const lieu = this.lieu;
+    if (!lieu || this.preparationEnCours()) return;
+    this.preparationEnCours.set(true);
+    this.messageSortie.set(null);
+    const choixLieu = this.choixLieu;
+    const resultat = await this.sortie.preparer({ latitude: lieu.latitude, longitude: lieu.longitude });
+    this.preparationEnCours.set(false);
+    // Le lieu a changé pendant la préparation : son message ne concerne plus l'écran.
+    if (choixLieu !== this.choixLieu) return;
+    this.messageSortie.set(
+      resultat.statut === 'prete'
+        ? { type: 'prete', texte: `Sortie prête : conditions jusqu'au ${dateEtHeureParis(resultat.jusquA)}` }
+        : resultat.statut === 'hors ligne'
+          ? { type: 'hors ligne', texte: 'Pas de réseau : prépare ta sortie avant de partir' }
+          : { type: 'echec', texte: 'La préparation a échoué, réessaie' },
+    );
+  }
+
   protected ouvrirSaisie(): void {
     this.brouillonTemp.set('');
     this.saisieInvalide.set(false);
@@ -1099,6 +1155,7 @@ export class ConseilPage implements OnInit {
     this.detailStore.details.set([]);
     this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
+    this.messageSortie.set(null);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
   }

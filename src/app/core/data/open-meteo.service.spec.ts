@@ -591,3 +591,93 @@ describe('WeatherProvider (Open-Meteo) — moyenne de la température de l\'air 
     });
   });
 });
+
+// US 14 : prévisions de toutes les heures des 48 h à venir, pour préparer une sortie hors ligne.
+describe('WeatherProvider (Open-Meteo) : prévisions des 48 h à venir (US 14)', () => {
+  const HEURE_MS = 3_600_000;
+  const DEBUT = new Date('2026-11-24T08:00:00Z');
+  const enTexte = (h: Date) => h.toISOString().slice(0, 13) + ':00';
+  /** Heures GMT de DEBUT − 48 h à DEBUT + 48 h ; la pression de l'heure i (depuis DEBUT − 48 h) vaut 1000 + i. */
+  const serie = (retire?: (i: number) => boolean) => {
+    const heures = Array.from({ length: 97 }, (_, i) => new Date(DEBUT.getTime() + (i - 48) * HEURE_MS));
+    const colonne = (f: (i: number) => number | null) => heures.map((_, i) => (retire?.(i) ? null : f(i)));
+    return {
+      hourly: {
+        time: heures.map(enTexte),
+        temperature_2m: colonne(() => 8),
+        cloud_cover: colonne((i) => i),
+        wind_speed_10m: colonne(() => 9),
+        pressure_msl: colonne((i) => 1000 + i),
+      },
+    };
+  };
+
+  afterEach(() => {
+    try {
+      TestBed.inject(HttpTestingController).verify();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('given une réponse complète, when on demande les prévisions 48 h à 8 h 20, then 49 heures pleines de 8 h à + 48 h sont rendues avec leur tendance sur 48 h', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-24T08:20:00Z');
+    const resultat = fournisseur.previsions48h(LIEU);
+    const req = http.expectOne((r) => r.url === URL_PREVISION);
+    expect(req.request.params.get('timezone')).toBe('GMT');
+    expect(req.request.params.get('start_hour')).toBe('2026-11-22T08:00');
+    expect(req.request.params.get('end_hour')).toBe('2026-11-26T08:00');
+    req.flush(serie());
+
+    const previsions = await resultat;
+    expect(previsions.disponible).toBe(true);
+    if (!previsions.disponible) return;
+    expect(previsions.heures).toHaveLength(49);
+    expect(previsions.heures[0].heure).toEqual(DEBUT);
+    expect(previsions.heures[48].heure).toEqual(new Date('2026-11-26T08:00:00Z'));
+    expect(previsions.heures[3]).toEqual({
+      disponible: true,
+      heure: new Date('2026-11-24T11:00:00Z'),
+      pressionHpa: 1051,
+      pressionTendance48h: { disponible: true, ecartHpa: 48 },
+      couvertureNuageusePct: 51,
+      ventKmh: 9,
+      temperatureAirC: 8,
+    });
+  });
+
+  it('given une heure dont une valeur manque, when on demande les prévisions 48 h, then elles sont indisponibles en entier', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-24T08:20:00Z');
+    const resultat = fournisseur.previsions48h(LIEU);
+    http.expectOne((r) => r.url === URL_PREVISION).flush(serie((i) => i === 70));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('given une réponse qui s\'arrête avant la 48e heure, when on demande les prévisions 48 h, then elles sont indisponibles', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-24T08:20:00Z');
+    const resultat = fournisseur.previsions48h(LIEU);
+    const reponse = serie();
+    for (const colonne of Object.values(reponse.hourly)) colonne.length = 90;
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponse);
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+
+  it('given une heure 48 h avant absente, when on demande les prévisions 48 h, then la tendance de cette heure est indisponible mais les prévisions sont rendues', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-24T08:20:00Z');
+    const resultat = fournisseur.previsions48h(LIEU);
+    const reponse = serie();
+    // On retire la première heure (DEBUT − 48 h) : la tendance de DEBUT n'a plus de point de départ.
+    for (const colonne of Object.values(reponse.hourly)) colonne.shift();
+    http.expectOne((r) => r.url === URL_PREVISION).flush(reponse);
+    const previsions = await resultat;
+    expect(previsions.disponible).toBe(true);
+    if (previsions.disponible) expect(previsions.heures[0].pressionTendance48h).toEqual({ disponible: false });
+  });
+
+  it('given une erreur réseau, when on demande les prévisions 48 h, then elles sont indisponibles sans rejet', async () => {
+    const { fournisseur, http } = miseEnPlacePrevue('2026-11-24T08:20:00Z');
+    const resultat = fournisseur.previsions48h(LIEU);
+    http.expectOne((r) => r.url === URL_PREVISION).error(new ProgressEvent('error'));
+    expect(await resultat).toStrictEqual({ disponible: false });
+  });
+});
