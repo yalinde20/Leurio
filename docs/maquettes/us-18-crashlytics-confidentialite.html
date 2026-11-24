@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 18 : Crashlytics, page Confidentialité</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les téléphones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-sable: #e9dcc0;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-sable: #3a3326;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2.etat { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .nouveau-legende { background: #fff3c4; padding: 0 4px; border-radius: 4px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .states { display: flex; flex-wrap: wrap; gap: 24px; }
+  .etat-bloc { width: 390px; max-width: 100%; }
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: space-between; flex: none; padding: 0 8px;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .toolbar .retour { min-width: 80px; min-height: 48px; display: flex; align-items: center; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .content { flex: 1; padding: 16px; overflow: hidden; font-size: 16px; line-height: 1.45; }
+  .content h2 { font-size: 18px; font-weight: 700; margin: 20px 0 6px; }
+  .content h2:first-child { margin-top: 0; }
+  .content p, .content ul { margin: 0 0 10px; }
+  .content ul { padding-left: 20px; }
+  .content li { margin-bottom: 6px; }
+  .content .suite { color: var(--lr-texte-secondaire); font-size: 14px; }
+  /* Repère de la maquette seulement : le texte nouveau n'est pas surligné dans l'app. */
+  .nouveau { outline: 2px dashed #d4a72c; outline-offset: 2px; border-radius: 4px; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>US 18 : remonter les plantages avec Crashlytics</h1>
+<p class="note">
+  Seul changement visible : trois phrases ajoutées à la page « Compte › Confidentialité ». Elle est identique sur iPhone, sur Android et sur le web.
+  Le texte nouveau est encadré en pointillés <span class="nouveau-legende">uniquement dans la maquette</span>. Rien d'autre ne change à l'écran : un plantage ne montre aucun message.
+</p>
+
+<input class="radio" type="radio" name="theme" id="t-clair" checked>
+<input class="radio" type="radio" name="theme" id="t-sombre">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+
+<div class="states">
+  <div class="etat-bloc">
+    <h2 class="etat">1. « Les services qui aident Leurio »</h2>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+      <div class="toolbar"><span class="retour">‹ Compte</span><span class="title">Confidentialité</span><span class="vide-droite"></span></div>
+      <div class="content">
+        <p class="suite">… (début de la page inchangé)</p>
+        <h2>Les services qui aident Leurio</h2>
+        <ul>
+          <li>Google Firebase : ton compte, tes données, tes photos et l’hébergement de la version web. Google garde les adresses IP de connexion quelques semaines, et celles des visites du site web quelques mois.</li>
+          <li>reCAPTCHA de Google, par Firebase App Check : il vérifie que les demandes viennent bien de l’app et pas d’un robot, à partir d’informations sur ton appareil et ton navigateur.</li>
+          <li class="nouveau">Firebase Crashlytics, dans l’app Android et iOS : si l’app plante, un rapport technique est envoyé pour corriger le problème. Il contient l’erreur, la version de l’app, le modèle et la version du téléphone. Il ne contient ni ta position, ni ton e-mail, ni ton identifiant de compte.</li>
+        </ul>
+        <p>Google agit pour le compte de l’éditeur. Certains de ses services, comme la connexion au compte, peuvent traiter des données hors de l’Union européenne, notamment aux États-Unis. Google est certifié au Data Privacy Framework UE–États-Unis, reconnu par la Commission européenne.</p>
+        <p class="suite">… (suite inchangée)</p>
+      </div>
+      <div class="tabbar"><div class="tab">Conseil</div><div class="tab">Boîte</div><div class="tab">Spots</div><div class="tab on">Compte</div></div>
+    </div>
+  </div>
+
+  <div class="etat-bloc">
+    <h2 class="etat">2. « Pourquoi » et « Combien de temps »</h2>
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+      <div class="toolbar"><span class="retour">‹ Compte</span><span class="title">Confidentialité</span><span class="vide-droite"></span></div>
+      <div class="content">
+        <h2>Ce que Leurio ne fait pas</h2>
+        <p>Pas de publicité, pas de revente de données, pas de mesure d’audience.</p>
+        <h2>Pourquoi Leurio peut le faire</h2>
+        <ul>
+          <li>Ton compte, ta boîte et le conseil selon ta position : c’est le service que tu demandes (RGPD, article 6.1.b).</li>
+          <li>La protection contre les abus : c’est l’intérêt légitime de l’éditeur à protéger l’app (article 6.1.f).</li>
+          <li class="nouveau">Les rapports de plantage : c’est l’intérêt légitime de l’éditeur à faire marcher l’app (article 6.1.f). Aucun consentement ne t’est demandé.</li>
+        </ul>
+        <h2>Combien de temps</h2>
+        <p>Tes données sont gardées tant que ton compte existe, sans limite de durée : un compte inactif n’est pas supprimé automatiquement. Après une suppression, Google les efface de ses sauvegardes dans un délai de 180 jours au plus.</p>
+        <p class="nouveau">Les rapports de plantage sont effacés au bout de 90 jours.</p>
+        <p class="suite">… (suite inchangée)</p>
+      </div>
+      <div class="tabbar"><div class="tab">Conseil</div><div class="tab">Boîte</div><div class="tab">Spots</div><div class="tab on">Compte</div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
