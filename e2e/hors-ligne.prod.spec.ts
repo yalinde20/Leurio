@@ -1,15 +1,16 @@
 // US 12 : l'app, le contenu et les boucles vidéo sont disponibles hors ligne (PLAN §4, §10 phase 5, §11 PWA).
 // Les vidéos tierces ne sont jamais mises en cache (§9 bis).
 // Build de production servi sur le port 4300 (voir playwright.config.ts) ; les critères 2 et 5 servent chacun leur propre copie du build.
-import { test, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
-import { attendreFirebase, EMULATEURS, estLocal, PROJET, profil } from './firebase-helpers';
+import { attendreFirebase, EMULATEURS, PROJET, profil } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { bloquerLeReseauExterne, ouvrirUneFoisEnLigne, titreVisible } from './hors-ligne-donnees-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -26,41 +27,6 @@ const DIST = join(process.cwd(), 'dist/leurio/browser');
 
 /** Plateformes vidéo tierces : aucune requête vers elles hors ligne (§9 bis). */
 const PLATEFORMES_VIDEO = /(^|\.)(youtube\.com|youtube-nocookie\.com|youtu\.be|ytimg\.com|vimeo\.com|vimeocdn\.com|dailymotion\.com|dai\.ly)$/;
-const titreVisible = (page: Page) => page.locator('ion-toolbar ion-title:visible');
-
-/** Aucun service réel : seules les adresses locales passent (le mode avion coupe ensuite le local aussi). */
-async function bloquerLeReseauExterne(context: BrowserContext): Promise<void> {
-  await context.route((url) => !estLocal(url.toString()), (route) => route.abort());
-}
-
-/**
- * L'utilisateur ouvre l'app une première fois avec du réseau, sur l'écran « Conseil » (sans visiter les écrans testés) :
- * le service worker s'active, contrôle la page (après un rechargement) et remplit son cache.
- */
-async function ouvrirUneFoisEnLigne(page: Page, base = ''): Promise<void> {
-  await page.goto(`${base}/`);
-  await expect(titreVisible(page)).toHaveText('Conseil');
-  await page.evaluate(async () => {
-    const prete = await navigator.serviceWorker.ready;
-    const fin = Date.now() + 25_000;
-    while (prete.active && prete.active.state !== 'activated' && Date.now() < fin) await new Promise((r) => setTimeout(r, 100));
-  });
-  await page.reload();
-  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker?.controller), { timeout: 30_000 }).toBe(true);
-  await expect
-    .poll(
-      () =>
-        page.evaluate(async () => {
-          for (const nom of await caches.keys()) {
-            const requetes = await (await caches.open(nom)).keys();
-            if (requetes.some((r) => new URL(r.url).pathname === '/index.html')) return true;
-          }
-          return false;
-        }),
-      { timeout: 30_000 },
-    )
-    .toBe(true);
-}
 
 test.beforeEach(async ({ page, context }) => {
   await onboardingTermine(page);
