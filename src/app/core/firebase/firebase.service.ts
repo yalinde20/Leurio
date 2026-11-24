@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { FirebaseApp, initializeApp } from 'firebase/app';
-import { AppCheck, CustomProvider, ReCaptchaV3Provider, initializeAppCheck } from 'firebase/app-check';
+import { AppCheck, CustomProvider, ReCaptchaEnterpriseProvider, initializeAppCheck } from 'firebase/app-check';
 import { Auth, connectAuthEmulator, getAuth } from 'firebase/auth';
 import {
   Firestore,
@@ -65,7 +65,7 @@ export class FirebaseService {
     }
     // L'application stricte (enforcement) viendra plus tard : ici App Check est seulement initialisé.
     return initializeAppCheck(this.app, {
-      provider: new ReCaptchaV3Provider(config.appCheckSiteKey),
+      provider: new ReCaptchaEnterpriseProvider(config.appCheckSiteKey),
       isTokenAutoRefreshEnabled: true,
     });
   }
