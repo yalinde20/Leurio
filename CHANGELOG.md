@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.58.0](https://github.com/yalinde20/Leurio/compare/v1.57.0...v1.58.0) (2026-11-24)
+
+
+### Features
+
+* US 21 feature flags via Firebase Remote Config ([876aa70](https://github.com/yalinde20/Leurio/commit/876aa70b90c32ff304a639bab05c4107e6488a62))
+
+
+### Bug Fixes
+
+* US 21 suites de la revue ([7148af7](https://github.com/yalinde20/Leurio/commit/7148af7de716e86e3015faa479315574320018e9))
+
 ## [1.57.0](https://github.com/yalinde20/Leurio/compare/v1.56.0...v1.57.0) (2026-11-24)
 
 
