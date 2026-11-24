@@ -140,7 +140,7 @@ export const FEATURE_FLAGS = new InjectionToken<PortFeatureFlags>('FEATURE_FLAGS
         import('firebase/remote-config'),
         import('./firebase.service'),
       ]);
-      const module = adapterSdkRemoteConfig(sdk as unknown as SdkRemoteConfig);
+      const module = adapterSdkRemoteConfig(sdk);
       return { module, app: injector.get(FirebaseService).app };
     });
   },
