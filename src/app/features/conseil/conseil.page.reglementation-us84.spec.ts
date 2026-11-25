@@ -10,8 +10,7 @@
  *    « Black-bass : vérifie ton département » ; la mention « À vérifier dans l'arrêté de ton département » ;
  *    un `a` « Voir la fédération de ton département » (href = url de CatalogService.federation(departement),
  *    target="_blank"), absent si la fédération est inconnue (pas de repli national) ;
- *  - chaque carte de conseil (`article` qui contient « Animation : ») finit son pourquoi par les `explications`
- *    du moteur, et affiche « Taille minimale : 60 cm » si l'espèce choisie a une tailleMinCm.
+ *  - chaque carte de conseil (`article` qui contient « Animation : ») affiche « Taille minimale : 60 cm » si l'espèce choisie a une tailleMinCm.
  * Le moment « maintenant » est la date système simulée ; « Demain 7 h » passe par la feuille Moment (US 82).
  */
 import { TestBed } from '@angular/core/testing';
@@ -46,7 +45,6 @@ const FERMETURE_BROCHET = new Date('2027-03-10T13:00:00Z');
 const PRINTEMPS_BROCHET_OUVERT = new Date('2027-05-10T13:00:00Z');
 const VEILLE_DE_LA_FERMETURE = new Date('2027-01-24T13:00:00Z');
 
-const EXPLICATION = "Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie)";
 const QUOTA = 'Quota : 3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum';
 const MENTION = "À vérifier dans l'arrêté de ton département";
 const LIEN = 'Voir la fédération de ton département';
@@ -261,19 +259,8 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
     expect(contient(bandeau(env.page).textContent, 'Brochet fermé en 2e catégorie')).toBe(true);
   });
 
-  it('critère 3 : given la fermeture du brochet et une explication du moteur, when je regarde les 3 cartes, then le pourquoi de chacune se termine par « Brochet fermé : certains leurres sont interdits jusqu\'au 24/04 (si tu es en 2e catégorie) »', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION] });
-
-    const cartes = cartesConseil(page);
-    expect(cartes).toHaveLength(3);
-    for (const carte of cartes) {
-      const pourquoi = compact(carte.textContent);
-      const base = pourquoi.indexOf(compact('Eau froide : une animation lente convient.'));
-      const ajout = pourquoi.indexOf(compact(EXPLICATION));
-      expect(base).toBeGreaterThan(-1);
-      expect(ajout, 'explication absente de la carte').toBeGreaterThan(base);
-    }
-  });
+  // US 205 (validée par le propriétaire) : l'explication des leurres écartés n'est plus ajoutée au pourquoi de chaque
+  // carte ; elle s'affiche une seule fois sous « Ton top 3 » (voir conseil.page.explications-us205.spec.ts).
 
   it('critère 3 : given aucune explication du moteur (hors fermeture), when je regarde les cartes, then aucune ne parle de brochet fermé', async () => {
     const { page } = await afficher({ explications: [] });

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 205 : leurres écartés, brochet fermé</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  /* La carte « Conditions ». */
+  .carte {
+    background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px;
+    padding: 16px; color: var(--lr-texte);
+  }
+  .carte h3 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+  .carte .mention { margin: -6px 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .carte dl { margin: 0; }
+  .ligne { padding: 10px 0; border-top: 1px solid var(--lr-bordure); }
+  .ligne:first-child { border-top: none; padding-top: 0; }
+  .ligne dt { display: inline; font-size: 16px; font-weight: 600; }
+  .ligne dd { display: inline; margin: 0; font-size: 16px; }
+  .ligne .source { display: block; margin-top: 2px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .ligne.eau dd { font-size: 22px; font-weight: 700; }
+  .lien-fede {
+    display: flex; align-items: center; min-height: 48px; font-size: 15px; font-weight: 600;
+    color: var(--lr-primaire); text-decoration: underline;
+  }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; }
+
+  /* Le bandeau « Réglementation » : même gabarit que la carte « Conditions ». */
+  .bandeau .ligne dd.ferme, .bandeau .alerte { color: var(--lr-danger); font-weight: 700; }
+  .bandeau .alerte { display: block; font-size: 16px; }
+  .resume { font-size: 14px; color: var(--lr-texte-secondaire); margin: 0 0 12px; }
+
+  /* Les cartes de conseil (US 81). */
+  .section-titre { margin: 20px 0 8px; font-size: 20px; font-weight: 700; }
+  .badge {
+    display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+    background: var(--lr-sable); color: var(--lr-texte); font-size: 14px; font-weight: 600;
+  }
+  .conseil { margin-bottom: 12px; }
+  .conseil .entete { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rang {
+    flex: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: var(--lr-primaire); color: var(--lr-sur-primaire); font-weight: 700; font-size: 16px;
+  }
+  .conseil h4 { margin: 0; font-size: 20px; font-weight: 700; }
+  .conseil .ligne { padding: 6px 0; }
+  .pourquoi { margin: 8px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .avertissement { border-color: var(--lr-danger); }
+  .avertissement .alerte { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: var(--lr-danger); }
+  .message { margin: 0; font-size: 16px; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .bouton[disabled] { opacity: .5; }
+  .content.scroll { overflow: visible; }
+
+  .selecteur {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px;
+    margin: 0 0 12px; padding: 8px 16px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font-family: inherit; font-size: 16px; text-align: left;
+  }
+  .selecteur .lib { color: var(--lr-texte-secondaire); font-size: 14px; display: block; }
+  .selecteur .val { font-size: 17px; font-weight: 700; }
+  .selecteur .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .nouveau { outline: 2px dashed var(--lr-primaire); outline-offset: 2px; border-radius: 4px; }
+  .legende { font-size: 13px; color: #555; max-width: 390px; margin: 4px 0 0; }
+  .bandeau .mention { display: block; font-size: 14px; color: var(--lr-texte-secondaire); }
+
+  /* US 205 : l'explication des leurres écartés, une fois, sous le titre « Ton top 3 ». */
+  .ecartes {
+    display: flex; gap: 10px; align-items: flex-start; margin: 0 0 12px; padding: 12px 14px;
+    border: 1px solid var(--lr-bordure); border-left: 4px solid var(--lr-danger); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font-size: 15px; line-height: 1.4;
+  }
+  .ecartes .ic { flex: none; width: 20px; height: 20px; color: var(--lr-danger); margin-top: 1px; }
+  .barre { border-top: 3px solid #b42318; }
+  .desk {
+    width: 1024px; max-width: 100%; border: 1px solid #888; border-radius: 10px; overflow: hidden;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .desk .chrome { height: 36px; background: #d6d6dc; display: flex; align-items: center; padding: 0 12px; gap: 6px; font-size: 13px; color: #333; }
+  .desk .chrome i { width: 12px; height: 12px; border-radius: 50%; background: #aaa; display: inline-block; }
+  .desk .content { overflow: visible; }
+  .variantes { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .variantes > div { max-width: 390px; }
+</style>
+</head>
+<body>
+<h1>US 205 — Pourquoi des leurres sont écartés pendant la fermeture du brochet</h1>
+<p class="note">iPhone, app installée, écran Conseil. PLAN §6, §8.4. Les éléments <span style="outline:2px dashed #0e6b5c;outline-offset:2px">entourés en pointillé</span> sont nouveaux. Le texte de l'explication est celui du moteur, inchangé (<code>resultat.explications</code>). Tokens du projet uniquement (bordure gauche et icône en <code>--lr-danger</code>, comme les alertes du bandeau).</p>
+<p class="note"><b>Validée le 25/11/2026 : variante A</b> (décision du propriétaire). Depuis la US 84, cette explication est déjà ajoutée à la fin du « pourquoi » de <i>chacune</i> des 3 cartes (elle se lit donc 3 fois). Cette maquette propose de l'afficher <b>une seule fois, sous le titre « Ton top 3 »</b>, et de la retirer des cartes (variante A, recommandée). La variante B garde aussi le texte dans les cartes.</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch">
+  <label for="t-clair">Clair</label>
+  <label for="t-sombre">Sombre</label>
+</div>
+
+<div class="states">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+
+  <h2>1. Brochet fermé, catégorie inconnue (critères 1, 2 et 4) — variantes A et B</h2>
+  <p class="note">Le 10/03/2027, position GPS (catégorie inconnue, donc « (si tu es en 2e catégorie) »). Le bandeau « Réglementation » reste tel quel, en bas ; l'explication s'ajoute en plus, au-dessus des cartes.</p>
+  <div class="variantes">
+    <div><p class="note"><b>A (recommandée)</b> : une seule fois, au-dessus des cartes ; les cartes n'ont plus que leur propre pourquoi.</p>
+    <div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><button class="selecteur"><span><span class="lib">Moment</span><span class="val">Maintenant</span></span><span class="chevron">›</span></button><button class="selecteur"><span><span class="lib">Espèce</span><span class="val">Toutes les espèces</span></span><span class="chevron">›</span></button><section class="carte"><h3>Conditions</h3><dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>7,0 °C</dd></div><div class="ligne"><dt>…</dt></div></dl></section><h3 class="section-titre">Ton top 3</h3><p class="ecartes nouveau" role="note"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Naturel</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 7 °C, la perche reste au fond : une animation très lente lui convient.</p></article><article class="carte conseil"><div class="entete"><span class="rang">2</span><h4>Cuillère tournante</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Argent</dd></div><div class="ligne"><dt>Poids :</dt> <dd>4 g</dd></div></dl><p class="pourquoi">Eau froide et claire : une petite cuillère déclenche la perche.</p></article><article class="carte conseil"><div class="entete"><span class="rang">3</span><h4>Micro-jig</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Dandine</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>5 g</dd></div></dl><p class="pourquoi">Le chevesne chasse près du bord quand le soleil chauffe l'eau.</p></article><section class="carte bandeau" style="margin-top:12px"><h3>Réglementation</h3><dl><div class="ligne"><span class="alerte">Brochet fermé en 2e catégorie</span></div><div class="ligne"><span class="alerte">Sandre probablement fermé, vérifie</span></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum</dd></div><div class="ligne"><span class="mention">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Voir la fédération de ton département</a></div></dl></section><button class="bouton" disabled>Préparer ma sortie</button></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div></div>
+    <div><p class="note"><b>B</b> : au-dessus des cartes <i>et</i> toujours à la fin de chaque pourquoi (comme aujourd'hui).</p>
+    <div class="phone" style="height:auto"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Conseil</span></div><div class="content scroll"><button class="selecteur"><span><span class="lib">Moment</span><span class="val">Maintenant</span></span><span class="chevron">›</span></button><button class="selecteur"><span><span class="lib">Espèce</span><span class="val">Toutes les espèces</span></span><span class="chevron">›</span></button><section class="carte"><h3>Conditions</h3><dl><div class="ligne eau"><dt>Température de l'eau :</dt> <dd>7,0 °C</dd></div><div class="ligne"><dt>…</dt></div></dl></section><h3 class="section-titre">Ton top 3</h3><p class="ecartes nouveau" role="note"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Naturel</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 7 °C, la perche reste au fond : une animation très lente lui convient. <span class="barre-txt">Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p></article><article class="carte conseil"><div class="entete"><span class="rang">2</span><h4>Cuillère tournante</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Argent</dd></div><div class="ligne"><dt>Poids :</dt> <dd>4 g</dd></div></dl><p class="pourquoi">Eau froide et claire : une petite cuillère déclenche la perche. <span class="barre-txt">Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p></article><article class="carte conseil"><div class="entete"><span class="rang">3</span><h4>Micro-jig</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Dandine</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>5 g</dd></div></dl><p class="pourquoi">Le chevesne chasse près du bord quand le soleil chauffe l'eau. <span class="barre-txt">Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p></article><section class="carte bandeau" style="margin-top:12px"><h3>Réglementation</h3><dl><div class="ligne"><span class="alerte">Brochet fermé en 2e catégorie</span></div><div class="ligne"><span class="alerte">Sandre probablement fermé, vérifie</span></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum</dd></div><div class="ligne"><span class="mention">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Voir la fédération de ton département</a></div></dl></section><button class="bouton" disabled>Préparer ma sortie</button></div><nav class="tabbar"><div class="tab on"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab"><svg><use href="#i-compte"/></svg>Compte</div></nav></div></div>
+  </div>
+
+  <h2>2. Brochet fermé, catégorie connue (critère 1)</h2>
+  <p class="note">Avec un spot enregistré dont la catégorie est connue (2e catégorie) : la même ligne, sans « (si tu es en 2e catégorie) ». Vue partielle, haut du top 3.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px"><div class="content"><h3 class="section-titre">Ton top 3</h3><p class="ecartes nouveau" role="note"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Brochet fermé : certains leurres sont interdits jusqu'au 24/04.</span></p><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Naturel</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 7 °C, la perche reste au fond : une animation très lente lui convient.</p></article></div></div>
+
+  <h2>3. Brochet ouvert, ou aucun leurre écarté (critère 3)</h2>
+  <p class="note">Le 10/05/2027 : pas d'explication ; l'écran est celui d'aujourd'hui. Même chose si le moteur ne renvoie aucune explication.</p>
+  <div class="phone" style="height:auto; padding-bottom:16px"><div class="content"><h3 class="section-titre">Ton top 3</h3><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Naturel</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 7 °C, la perche reste au fond : une animation très lente lui convient.</p></article><section class="carte bandeau" style="margin-top:12px"><h3>Réglementation</h3><dl><div class="ligne"><dt>2e catégorie :</dt> <dd>Ouvert</dd></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum</dd></div><div class="ligne"><span class="mention">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Voir la fédération de ton département</a></div></dl></section></div></div>
+
+  <h2>4. Bureau (navigateur large), variante A</h2>
+  <p class="note">Même ordre, l'app occupe la largeur de la fenêtre comme aujourd'hui ; l'explication reste juste sous « Ton top 3 ».</p>
+  <div class="desk"><div class="chrome"><i></i><i></i><i></i>&nbsp; leurio.app — Conseil</div><div class="toolbar"><span class="title">Conseil</span></div><div class="content" style="padding:24px"><button class="selecteur"><span><span class="lib">Moment</span><span class="val">Maintenant</span></span><span class="chevron">›</span></button><button class="selecteur"><span><span class="lib">Espèce</span><span class="val">Toutes les espèces</span></span><span class="chevron">›</span></button><h3 class="section-titre">Ton top 3</h3><p class="ecartes nouveau" role="note"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Brochet fermé : certains leurres sont interdits jusqu'au 24/04 (si tu es en 2e catégorie).</span></p><article class="carte conseil"><div class="entete"><span class="rang">1</span><h4>Ver souple finesse</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Drop shot</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Naturel</dd></div><div class="ligne"><dt>Taille :</dt> <dd>6 cm</dd></div></dl><p class="pourquoi">À 7 °C, la perche reste au fond : une animation très lente lui convient.</p></article><article class="carte conseil"><div class="entete"><span class="rang">2</span><h4>Cuillère tournante</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Linéaire</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Argent</dd></div><div class="ligne"><dt>Poids :</dt> <dd>4 g</dd></div></dl><p class="pourquoi">Eau froide et claire : une petite cuillère déclenche la perche.</p></article><article class="carte conseil"><div class="entete"><span class="rang">3</span><h4>Micro-jig</h4></div><dl><div class="ligne"><dt>Animation :</dt> <dd>Dandine</dd></div><div class="ligne"><dt>Couleur :</dt> <dd>Gardon</dd></div><div class="ligne"><dt>Poids :</dt> <dd>5 g</dd></div></dl><p class="pourquoi">Le chevesne chasse près du bord quand le soleil chauffe l'eau.</p></article><section class="carte bandeau" style="margin-top:12px"><h3>Réglementation</h3><dl><div class="ligne"><span class="alerte">Brochet fermé en 2e catégorie</span></div><div class="ligne"><span class="alerte">Sandre probablement fermé, vérifie</span></div><div class="ligne"><dt>Quota :</dt> <dd>3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum</dd></div><div class="ligne"><span class="mention">À vérifier dans l'arrêté de ton département</span><a class="lien-fede" href="#">Voir la fédération de ton département</a></div></dl></section></div></div>
+
+  <h2>5. Chargement, erreur, hors ligne, hors heures légales</h2>
+  <p class="note">Rien de nouveau : l'explication n'apparaît qu'avec les cartes de conseil (pas pendant « Calcul du conseil… », ni avec « Conseil indisponible », ni hors des heures légales). Hors ligne, le moteur tourne en local : même affichage. Android : identique, titre de la barre à gauche.</p>
+</div>
+</body>
+</html>

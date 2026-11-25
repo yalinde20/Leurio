@@ -98,7 +98,7 @@ interface CarteConseil {
 
 type EtatConseil =
   | { type: 'calcul' }
-  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean; limite: string | null }
+  | { type: 'cartes'; cartes: CarteConseil[]; moinsPrecis: boolean; limite: string | null; explications: string[] }
   | { type: 'hors heures'; heures: string; jour: string }
   | { type: 'indisponible' };
 
@@ -238,6 +238,25 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     }
     .conseil {
       margin-bottom: 12px;
+    }
+    .ecartes {
+      display: flex;
+      gap: 10px;
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--lr-bordure);
+      border-left: 4px solid var(--lr-danger);
+      border-radius: 12px;
+      background: var(--lr-surface);
+      color: var(--lr-texte);
+      font-size: 15px;
+      line-height: 1.4;
+    }
+    .ecartes svg {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      color: var(--lr-danger);
     }
     .entete {
       display: flex;
@@ -661,6 +680,15 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
                 <p class="message">Aucun conseil pour cette espèce en ce moment.</p>
               </section>
             }
+            @if (explicationsEcartees().length > 0) {
+              <p class="ecartes" role="note">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                  <path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                </svg>
+                <span>{{ explicationsEcartees().join(' ') }}</span>
+              </p>
+            }
             @for (c of cartesConseil(); track c.rang) {
               <article class="carte conseil touchable">
                 <div class="entete">
@@ -1032,6 +1060,11 @@ export class ConseilPage implements OnInit {
 
   protected readonly lignes = this.detailStore.lignes;
 
+  protected explicationsEcartees(): string[] {
+    const etat = this.conseil();
+    return etat.type === 'cartes' ? etat.explications : [];
+  }
+
   protected cartesConseil(): CarteConseil[] {
     const etat = this.conseil();
     return etat.type === 'cartes' ? etat.cartes : [];
@@ -1297,10 +1330,13 @@ export class ConseilPage implements OnInit {
           ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille, unites) }
           : null,
         tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
-        pourquoi: [premierePhrase(c.pourquoi[0] ?? ''), ...(resultat.explications ?? []).map(finirParUnPoint)].filter(Boolean).join(' '),
+        pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
       }));
       this.contexteAvis = { conditions: releve.conditions, moment };
-      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis, limite });
+      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis,
+        limite,
+        explications: (resultat.explications ?? []).map(finirParUnPoint),
+      });
       this.mesure.envoyer('conseil_affiche', { espece: cible?.code ?? 'toutes', nombre: resultat.conseils.length });
     } catch {
       if (!perime()) this.conseil.set({ type: 'indisponible' });
