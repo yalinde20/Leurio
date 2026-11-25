@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.61.0](https://github.com/yalinde20/Leurio/compare/v1.60.0...v1.61.0) (2026-11-25)
+
+
+### Features
+
+* page d'accueil statique leurio.app/accueil (US 24) ([cc80b4f](https://github.com/yalinde20/Leurio/commit/cc80b4fd7804a3d4c70b8c0b43778e069c3bff65))
+
+
+### Bug Fixes
+
+* boutons de store en https seulement, sans espace vide quand ils sont cachés (US 24) ([1ae0c7e](https://github.com/yalinde20/Leurio/commit/1ae0c7e0db406cd76cf3fac715103176238ad87d))
+
 ## [1.60.0](https://github.com/yalinde20/Leurio/compare/v1.59.1...v1.60.0) (2026-11-25)
 
 
