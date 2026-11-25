@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 22 : icône d'app et écran de démarrage</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule le réglage du téléphone : clair ou sombre. */
+  .states { --lr-fond: #f7f3ea; --lr-surface: #fffdf8; --lr-texte: #10241f; --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be; --lr-primaire: #0e6b5c; --fond-ecran: linear-gradient(160deg, #b8d8e0, #e9dcc0); --libelle: #10241f; }
+  #t-sombre:checked ~ .states { --lr-fond: #0e1714; --lr-surface: #16231f; --lr-texte: #e6e1d6; --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36; --lr-primaire: #5cc8b0; --fond-ecran: linear-gradient(160deg, #123a44, #0e1714); --libelle: #f2f2f2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 820px; line-height: 1.4; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin: 8px 0; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label { min-width: 120px; min-height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #fff; color: #222; font-size: 15px; }
+  #t-clair:checked ~ .switch label[for="t-clair"], #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+  .rang { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+  .legende { font-size: 13px; color: #46554f; margin: 6px 0 0; max-width: 390px; }
+  .phone { width: 390px; max-width: 100%; height: 600px; border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    position: relative; display: flex; flex-direction: column; background: var(--lr-fond); color: var(--lr-texte); }
+  .phone.android { border-radius: 28px; }
+  .statusbar { height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; flex: none; }
+  /* Écran d'accueil */
+  .accueil { background: var(--fond-ecran); color: var(--libelle); }
+  .grille { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px 0; padding: 24px 22px; justify-items: center; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; width: 72px; text-align: center; }
+  .app svg, .app .vide { width: 60px; height: 60px; border-radius: 13.5px; display: block; }
+  .android .app svg, .android .app .vide { border-radius: 50%; }
+  .android .app.carre svg { border-radius: 14px; }
+  .android .app.galet svg { border-radius: 38% 38% 38% 38% / 42% 42% 42% 42%; }
+  .vide { background: rgba(255,255,255,.35); }
+  #t-sombre:checked ~ .states .vide { background: rgba(255,255,255,.12); }
+  .app .nom { font-weight: 500; }
+  .dock { margin: auto 12px 12px; padding: 14px; border-radius: 28px; background: rgba(255,255,255,.3); display: flex; justify-content: space-around; }
+  #t-sombre:checked ~ .states .dock { background: rgba(255,255,255,.1); }
+  /* Démarrage */
+  .demarrage { align-items: center; justify-content: center; }
+  .demarrage .logo-ios { width: 128px; height: 128px; border-radius: 29px; }
+  .demarrage .logo-android { width: 160px; height: 160px; border-radius: 50%; }
+  /* Onglet Conseil */
+  .toolbar { min-height: 44px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure); }
+  .contenu { flex: 1; padding: 16px; font-size: 16px; color: var(--lr-texte-secondaire); }
+  .tabbar { display: flex; border-top: 1px solid var(--lr-bordure); background: var(--lr-surface); padding-bottom: 20px; }
+  .tab { flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--lr-texte-secondaire); }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+  .tab i { width: 24px; height: 24px; border-radius: 6px; border: 2px solid currentColor; margin-bottom: 4px; }
+  .fleche { align-self: center; font-size: 28px; color: #46554f; }
+  .gros svg { width: 180px; height: 180px; border-radius: 40px; display: block; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5cc8b0"/><stop offset="0.5" stop-color="#0e6b5c"/><stop offset="1" stop-color="#0e1714"/></linearGradient>
+    <symbol id="logo" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="url(#g)"/><g transform="matrix(1.4884 0 0 1.4884 -8.93 -5.95)" fill="#f7f3ea">
+<circle cx="346" cy="152" r="30.0"/><path d="M346 152 V250 C346 292 372 306 411.0 329.8 A118 118 0 1 1 235.8 411.5" fill="none" stroke="#f7f3ea" stroke-width="60" stroke-linejoin="round"/>
+<path d="M206.2 406.3 C214.1 362.0 238 318 256 290 L262 395 L285 438 L264.2 425.9 L204.4 421.7 Z"/>
+</g></symbol>
+  </defs>
+</svg>
+
+<h1>US 22 — Icône d'app et écran de démarrage</h1>
+<p class="note">iPhone d'abord. Le logo est celui que tu as validé : l'hameçon crème #f7f3ea sur un dégradé #5cc8b0 → #0e6b5c → #0e1714, dessiné en carré plein ; c'est le téléphone qui arrondit les coins (iOS) ou découpe la forme (Android). L'interrupteur simule le réglage clair ou sombre du téléphone. PLAN §1 (icône d'app et écran de démarrage), §3 (thèmes clair et sombre).</p>
+
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Téléphone clair</label><label for="t-sombre">Téléphone sombre</label></div>
+
+<div class="states">
+
+  <h2>0. Le logo validé</h2>
+  <div class="gros"><svg role="img" aria-label="Icône Leurio"><use href="#logo"/></svg></div>
+
+  <h2>1. iPhone : écran d'accueil (critère 2), et la PWA ajoutée à l'écran d'accueil (critère 3)</h2>
+  <p class="note">L'app iOS et la PWA installée depuis Safari ont la même icône et le même nom, « Leurio ». La PWA reprend le logo en 180 px (icône Apple) et le manifeste déclare 192 px, 512 px et une version « maskable » 512 px.</p>
+  <div class="phone accueil"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div>
+    <div class="grille">
+      <div class="app"><svg role="img" aria-label="Leurio"><use href="#logo"/></svg><span class="nom">Leurio</span></div>
+      <div class="app"><span class="vide"></span><span>Météo</span></div><div class="app"><span class="vide"></span><span>Photos</span></div><div class="app"><span class="vide"></span><span>Plans</span></div>
+      <div class="app"><span class="vide"></span><span>Notes</span></div><div class="app"><span class="vide"></span><span>Réglages</span></div><div class="app"><span class="vide"></span><span>Horloge</span></div><div class="app"><span class="vide"></span><span>Caméra</span></div>
+    </div>
+    <div class="dock"><span class="app"><span class="vide"></span></span><span class="app"><span class="vide"></span></span><span class="app"><span class="vide"></span></span><span class="app"><span class="vide"></span></span></div>
+  </div>
+
+  <h2>2. Android : écran d'accueil, icône adaptative (critère 1)</h2>
+  <p class="note">L'icône adaptative sépare le fond (le dégradé) et le premier plan (l'hameçon, gardé dans la zone sûre centrale) : chaque fabricant la découpe à sa forme. Ci-dessous, la même icône en cercle (Pixel), en carré arrondi (Samsung) et en galet. Le nom affiché est « Leurio ». Pour la PWA sur Android, Chrome utilise l'icône « maskable » de la même façon.</p>
+  <div class="rang">
+    <div class="phone android accueil"><div class="statusbar"><span>9:41</span><span>▾ ▴ 100 %</span></div>
+      <div class="grille">
+        <div class="app"><svg role="img" aria-label="Leurio"><use href="#logo"/></svg><span class="nom">Leurio</span></div>
+        <div class="app carre"><svg role="img" aria-label="Leurio, forme carré arrondi"><use href="#logo"/></svg><span class="nom">Leurio</span></div>
+        <div class="app galet"><svg role="img" aria-label="Leurio, forme galet"><use href="#logo"/></svg><span class="nom">Leurio</span></div>
+        <div class="app"><span class="vide"></span><span>Agenda</span></div>
+        <div class="app"><span class="vide"></span><span>Chrome</span></div><div class="app"><span class="vide"></span><span>Maps</span></div><div class="app"><span class="vide"></span><span>Photos</span></div><div class="app"><span class="vide"></span><span>Fichiers</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="legende">Les trois premières icônes montrent la même icône dans trois formes ; sur un vrai téléphone, une seule apparaît.</p>
+
+  <h2>3. Lancement sur iPhone : écran de démarrage, puis l'onglet « Conseil » (critère 4)</h2>
+  <p class="note">Fond de l'app (#f7f3ea en clair, #0e1714 en sombre), le logo au centre en 128 pt, rien d'autre : pas de texte, pas d'animation. Il suit le réglage du téléphone, puis laisse place à l'onglet « Conseil ».</p>
+  <div class="rang">
+    <div class="phone demarrage"><svg class="logo-ios" role="img" aria-label="Leurio"><use href="#logo"/></svg></div>
+    <span class="fleche">→</span>
+    <div class="phone"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar">Conseil</div><div class="contenu">Le conseil du moment s'affiche ici (inchangé par cette story).</div>
+      <nav class="tabbar"><div class="tab on"><i></i>Conseil</div><div class="tab"><i></i>Boîte</div><div class="tab"><i></i>Spots</div><div class="tab"><i></i>Compte</div></nav></div>
+  </div>
+
+  <h2>4. Lancement sur Android (critère 4)</h2>
+  <p class="note">Android 12 et plus impose sa mise en page : l'icône de l'app dans un cercle, au centre, sur une couleur de fond. On lui donne le fond de l'app, clair ou sombre selon le réglage du téléphone. Les versions plus anciennes affichent la même image.</p>
+  <div class="rang">
+    <div class="phone android demarrage"><svg class="logo-android" role="img" aria-label="Leurio"><use href="#logo"/></svg></div>
+    <span class="fleche">→</span>
+    <div class="phone android"><div class="statusbar"><span>9:41</span><span>▾ ▴ 100 %</span></div><div class="toolbar">Conseil</div><div class="contenu">Le conseil du moment s'affiche ici (inchangé par cette story).</div>
+      <nav class="tabbar"><div class="tab on"><i></i>Conseil</div><div class="tab"><i></i>Boîte</div><div class="tab"><i></i>Spots</div><div class="tab"><i></i>Compte</div></nav></div>
+  </div>
+
+  <h2>Hors maquette</h2>
+  <p class="note">Pas d'état vide, de chargement, d'erreur ni de hors ligne : l'icône et l'écran de démarrage sont embarqués dans l'app et s'affichent toujours, avec ou sans réseau.</p>
+</div>
+</body>
+</html>
