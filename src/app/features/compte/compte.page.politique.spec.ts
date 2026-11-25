@@ -70,4 +70,18 @@ describe('US 23 : « Politique de confidentialité » dans Compte', () => {
     expect(statut, 'message hors ligne').toBeTruthy();
     expect(trouver(page, MESSAGE)).toBeTruthy();
   });
+
+  it('critère 5 : given un premier toucher sans réseau, when je touche à nouveau avec le réseau, then le message disparaît', async () => {
+    reseau(false);
+    const { page, stabiliser } = await ouvrirCompte();
+    const politique = lien(page, 'Politique de confidentialité');
+    politique!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await stabiliser();
+    expect(trouver(page, MESSAGE)).toBeTruthy();
+
+    reseau(true);
+    politique!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await stabiliser();
+    expect(compact(page.textContent)).not.toContain(compact(MESSAGE));
+  });
 });

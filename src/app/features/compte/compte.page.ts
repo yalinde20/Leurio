@@ -459,7 +459,10 @@ interface Reconnexion {
             <span class="chevron" aria-hidden="true">›</span>
           </a>
           <a class="rangee" [routerLink]="['/compte', 'confidentialite']">
-            <span>Confidentialité</span>
+            <span>
+              Confidentialité
+              <span class="sous">Lisible sans réseau, avec ton identifiant</span>
+            </span>
             <span class="chevron" aria-hidden="true">›</span>
           </a>
           <a class="rangee" href="https://leurio.app/confidentialite" target="_blank" rel="noopener" (click)="ouvrirPolitique($event)">

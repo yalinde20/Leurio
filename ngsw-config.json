@@ -34,7 +34,7 @@
       }
     }
   ],
-  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**", "!/confidentialite"],
+  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**", "!/confidentialite", "!/confidentialite/"],
   "dataGroups": [
     {
       "name": "tuiles-osm",
