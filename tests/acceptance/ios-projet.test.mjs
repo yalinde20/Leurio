@@ -109,3 +109,10 @@ test('given la préparation du projet, when elle s\'exécute, then aucune valeur
   const r = lancer(pbx, { GOOGLE_SERVICE_INFO_PLIST: PLIST });
   for (const v of [TEAM, PROFIL, 'cle-sentinelle-Zq9']) assert.ok(!r.out.includes(v), 'une valeur est affichée');
 });
+
+// Décision du propriétaire (question Cockpit, réponse A) : l'app n'utilise que le chiffrement standard (HTTPS),
+// la conformité export est déclarée dans Info.plist pour que chaque build parte aux testeurs sans action manuelle.
+test('given un build envoyé sur TestFlight, when App Store Connect lit Info.plist, then la conformité export est déclarée (ITSAppUsesNonExemptEncryption à false)', () => {
+  const info = readFileSync(join(ROOT, 'ios/App/App/Info.plist'), 'utf8');
+  assert.match(info, /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
+});
