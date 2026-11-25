@@ -1,12 +1,12 @@
 # App Check
 
-App Check prouve à Firebase que les requêtes viennent de la vraie app Leurio. Sans lui, n'importe quel script peut appeler Cloud Firestore et Cloud Storage avec la clé publique du projet.
+App Check prouve à Firebase que les requêtes viennent de la vraie app Leurio. Sans lui, n'importe quel script peut appeler Cloud Firestore, Cloud Storage et Authentication avec la clé publique du projet.
 
 Cette page dit ce que fait l'app, ce que tu dois configurer dans la console Firebase, et comment passer à l'application forcée (enforcement).
 
 ## Ce que fait l'app
 
-App Check est initialisé au démarrage, avant le premier accès à Firestore ou à Storage (`src/app/core/firebase/app-check.ts`).
+App Check est initialisé au démarrage, avant le premier accès à Firestore, à Storage ou à Authentication (`src/app/core/firebase/app-check.ts`).
 
 | Plateforme | Fournisseur | Remarque |
 | --- | --- | --- |
@@ -21,14 +21,16 @@ Console Firebase, projet Leurio, menu Build puis App Check, onglet Apps.
 
 ### Web : créer la clé reCAPTCHA Enterprise
 
-La clé reCAPTCHA v3 classique ne peut plus être créée : l'app web utilise une clé reCAPTCHA Enterprise.
+Leurio utilise reCAPTCHA Enterprise pour l'app web.
 
 1. Ouvre la console Google Cloud, page reCAPTCHA (https://console.cloud.google.com/security/recaptcha), sur le projet Google Cloud de Firebase (même identifiant que le projet Firebase). Si on te le demande, active l'API reCAPTCHA Enterprise.
 2. Crée une clé reCAPTCHA Enterprise : bouton « Créer une clé », nom `Leurio web`, type « Site Web ».
 3. Dans la liste des domaines de la clé, autorise :
    1. `<id-du-projet>.web.app`, le domaine de Firebase Hosting où l'app est déployée (remplace `<id-du-projet>` par l'identifiant du projet Firebase) ;
    2. `leurio.app`, une fois le domaine acheté et relié à Firebase Hosting. Ajoute-le alors à la même clé, sans en créer une nouvelle.
-4. Ne coche pas la case à cocher (« checkbox ») : App Check a besoin d'une clé à score, sans défi visible.
+
+   Firebase Hosting sert aussi l'app sur `<id-du-projet>.firebaseapp.com`. Ce n'est pas l'adresse de l'app : ne la donne pas aux utilisateurs. Elle n'est pas dans la clé, donc l'app n'y fonctionne plus une fois l'application forcée activée.
+4. N'active pas le défi par case à cocher (checkbox) : App Check a besoin d'une clé à score, sans défi visible.
 5. Copie l'identifiant de la clé : c'est la clé de site.
 6. Dans la console Firebase, App Check, onglet Apps : enregistre l'app web avec le fournisseur reCAPTCHA Enterprise et colle cette clé de site.
 7. Mets la même clé de site dans le secret GitHub `FIREBASE_APPCHECK_SITE_KEY` (dépôt, Settings, Secrets and variables, Actions). Le workflow `deploy.yml` l'utilise pour le build de production : le déploiement suivant de `main` embarque la vraie clé.
@@ -51,7 +53,7 @@ Une fois la vraie clé en place et déployée, regarde les métriques puis activ
 
 ## Fichiers de configuration natifs
 
-`google-services.json` (Android) et `GoogleService-Info.plist` (iOS) ne sont pas dans Git. Ils doivent être présents dans les builds natifs de production. Sans eux, l'app n'obtient aucun jeton natif. Une fois l'application forcée activée, chaque appel à Firestore et à Storage est alors refusé.
+`google-services.json` (Android) et `GoogleService-Info.plist` (iOS) ne sont pas dans Git. Ils doivent être présents dans les builds natifs de production. Sans eux, l'app n'obtient aucun jeton natif. Une fois l'application forcée activée, chaque appel à Firestore, à Storage et à Authentication est alors refusé.
 
 ## Avant d'appliquer : regarder les métriques
 
