@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 23 : politique de confidentialité en ligne</title>
+<style>
+  /* Tokens Leurio (src/theme/tokens.scss, PLAN §3). L'interrupteur bascule les phones entre les deux thèmes. */
+  .states {
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-danger: #b42318;
+    --lr-sable: #e9dcc0;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  #t-sombre:checked ~ .states {
+    --lr-fond: #0e1714;
+    --lr-surface: #16231f;
+    --lr-texte: #e6e1d6;
+    --lr-texte-secondaire: #9fb0aa;
+    --lr-bordure: #2b3b36;
+    --lr-primaire: #5cc8b0;
+    --lr-danger: #f97066;
+    --lr-sable: #3a3326;
+    --lr-sur-primaire: #0e1714;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    background: #e9e9ee; color: #222428;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 24px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; }
+  .radio { display: none; }
+  .switch { display: inline-flex; margin-bottom: 8px; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label {
+    min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: #fff; color: #222; font-size: 15px;
+  }
+  #t-clair:checked ~ .switch label[for="t-clair"],
+  #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222; color: #fff; }
+
+  .phone {
+    width: 390px; max-width: 100%; height: 760px;
+    border: 1px solid #888; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  .statusbar {
+    height: 50px; padding: 14px 28px 0; display: flex; justify-content: space-between;
+    font-size: 15px; font-weight: 600; flex: none; background: var(--lr-surface);
+  }
+  .toolbar {
+    min-height: 44px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--lr-surface); border-bottom: 1px solid var(--lr-bordure);
+  }
+  .toolbar .title { font-size: 17px; font-weight: 600; }
+  .content { flex: 1; padding: 16px; overflow: hidden; }
+  .tabbar {
+    flex: none; display: flex; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure);
+    padding-bottom: 34px;
+  }
+  .tab {
+    flex: 1; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; font-size: 11px; font-weight: 500; color: var(--lr-texte-secondaire);
+  }
+  .tab svg { width: 26px; height: 26px; }
+  .tab.on { color: var(--lr-primaire); font-weight: 600; }
+
+  
+  .content { overflow: visible; }
+  .vide { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 420px; gap: 8px; }
+  .vide p { margin: 0; font-size: 17px; }
+  .vide .aide { font-size: 15px; color: var(--lr-texte-secondaire); max-width: 280px; }
+  .bouton {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 16px;
+    border: none; border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .vide .bouton { width: auto; padding: 0 24px; }
+  .bouton.haut { margin: 0 0 16px; }
+  .liste { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: 8px; }
+  .leurre { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 12px 16px; }
+  .leurre h3 { margin: 0 0 4px; font-size: 18px; font-weight: 700; }
+  .leurre .details { margin: 0; font-size: 16px; }
+  .leurre .marque { margin: 2px 0 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .leurre .attente { margin: 6px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .toolbar.modal { justify-content: space-between; padding: 0 8px; }
+  .toolbar .lien { min-width: 48px; min-height: 48px; display:flex; align-items:center; padding: 0 8px; color: var(--lr-primaire); font-size: 17px; }
+  .toolbar .vide-droite { min-width: 80px; }
+  .form .groupe { margin-bottom: 14px; }
+  .form label { display:block; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .form .champ {
+    width: 100%; min-height: 48px; padding: 8px 12px; border: 1px solid var(--lr-bordure); border-radius: 12px;
+    background: var(--lr-surface); color: var(--lr-texte); font: inherit; font-size: 17px; display:flex; align-items:center; justify-content: space-between;
+  }
+  .form .champ .ph { color: var(--lr-texte-secondaire); }
+  .form .champ .chevron { color: var(--lr-primaire); font-size: 22px; }
+  .form .champ.invalide { border: 2px solid var(--lr-danger); }
+  .form .erreur { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--lr-danger); }
+  .form .deux { display:flex; gap: 12px; }
+  .form .deux .groupe { flex: 1; }
+  .voile { position: relative; }
+  .voile::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  .feuille {
+    position: relative; z-index: 2; background: var(--lr-surface); color: var(--lr-texte);
+    border-radius: 16px 16px 0 0; padding: 8px 16px 34px; border-top: 1px solid var(--lr-bordure);
+  }
+  .poignee { width: 36px; height: 5px; border-radius: 3px; background: var(--lr-bordure); margin: 0 auto 12px; }
+  .feuille h3 { margin: 0 0 8px; font-size: 20px; font-weight: 700; }
+  .options { list-style: none; margin: 0; padding: 0; }
+  .options li { display: flex; align-items: center; min-height: 48px; padding: 0 4px; border-top: 1px solid var(--lr-bordure); font-size: 17px; }
+  .options li:first-child { border-top: none; }
+  .options li.on { font-weight: 700; color: var(--lr-primaire); justify-content: space-between; }
+  .chargement { font-size: 16px; color: var(--lr-texte-secondaire); padding: 8px 0; margin: 0; }
+  .hors-ligne { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); font-size: 15px; }
+  .leurre.touchable { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+  .leurre.touchable .corps { flex: 1; min-width: 0; }
+  .leurre.touchable .fleche { color: var(--lr-texte-secondaire); font-size: 22px; }
+  .leurre.presse { background: var(--lr-sable); }
+  .supprimer {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px;
+    border: 1px solid var(--lr-danger); border-radius: 12px; background: transparent; color: var(--lr-danger);
+    font-size: 17px; font-weight: 600; font-family: inherit;
+  }
+  .alerte-zone { position: relative; }
+  .alerte-zone::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 1; }
+  .alerte {
+    position: absolute; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 280px; border-radius: 16px; overflow: hidden; background: var(--lr-surface); color: var(--lr-texte);
+    border: 1px solid var(--lr-bordure); text-align: center;
+  }
+  .alerte .q { padding: 18px 16px 14px; font-size: 17px; font-weight: 600; }
+  .alerte .q small { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; color: var(--lr-texte-secondaire); }
+  .alerte .actions { display: flex; border-top: 1px solid var(--lr-bordure); }
+  .alerte .actions span { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .alerte .actions span + span { border-left: 1px solid var(--lr-bordure); }
+  .alerte .annul { color: var(--lr-primaire); }
+  .alerte .suppr { color: var(--lr-danger); font-weight: 600; }
+
+  .groupe-liste { margin: 0 0 16px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .rangee { display:flex; align-items:center; justify-content:space-between; gap: 12px; min-height:52px; padding: 10px 16px; box-sizing: border-box; font-size:17px; border-top:1px solid var(--lr-bordure); color: var(--lr-texte); }
+  .rangee:first-child { border-top:none; }
+  .rangee .chev { color: var(--lr-texte-secondaire); font-size:22px; }
+  .rangee .ext { flex: none; white-space: nowrap; color: var(--lr-primaire); font-size:15px; font-weight:600; }
+  .rangee .sous { display:block; font-size:14px; color: var(--lr-texte-secondaire); }
+  .titre-groupe { margin: 0 0 6px 4px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .toolbar.retour { justify-content: flex-start; position: relative; }
+  .toolbar.retour .lien { position:absolute; left: 8px; }
+  .toolbar.retour .title { margin: 0 auto; }
+  .texte { font-size: 16px; line-height: 1.45; }
+  .texte h3 { font-size: 18px; margin: 18px 0 6px; }
+  .texte h3:first-child { margin-top: 0; }
+  .texte p, .texte ul { margin: 0 0 10px; }
+  .texte ul { padding-left: 20px; }
+  .texte a, .src a { color: var(--lr-primaire); }
+  .bloc { background: var(--lr-surface); border: 1px solid var(--lr-bordure); border-radius: 16px; padding: 14px 16px; margin: 0 0 12px; }
+  .bloc h4 { margin: 0 0 4px; font-size: 17px; }
+  .bloc p { margin: 0; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .repli { display:flex; justify-content:space-between; align-items:center; min-height:52px; padding: 0 16px; font-size:17px; font-weight:600; border-top:1px solid var(--lr-bordure); }
+  .repli:first-child { border-top: none; }
+  .repli .nb { font-weight: 400; font-size: 15px; color: var(--lr-texte-secondaire); }
+  .src { list-style: none; margin: 0; padding: 0 16px 12px; font-size: 14px; line-height: 1.4; }
+  .src li { padding: 8px 0; border-top: 1px solid var(--lr-bordure); overflow-wrap: anywhere; }
+  .brouillon { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--lr-danger); color: var(--lr-danger); font-size: 14px; font-weight: 600; }
+</style>
+<style>
+  .message-info { margin: 0 0 16px; padding: 10px 12px; border-radius: 12px; background: var(--lr-sable); color: var(--lr-texte); font-size: 15px; }
+  .rangee.presse { background: var(--lr-sable); }
+  .safari-bas { flex:none; background: var(--lr-surface); border-top:1px solid var(--lr-bordure); padding: 8px 16px 30px; }
+  .safari-bas .adresse { min-height: 44px; border-radius: 12px; background: var(--lr-fond); border:1px solid var(--lr-bordure); display:flex; align-items:center; justify-content:center; font-size:15px; color: var(--lr-texte); }
+  .site-entete { display:flex; align-items:center; gap:10px; margin: 0 0 14px; }
+  .site-entete .logo { width:36px; height:36px; border-radius:9px; background: var(--lr-primaire); color: var(--lr-sur-primaire); display:flex; align-items:center; justify-content:center; font-weight:800; }
+  .site-entete .nom { font-size:17px; font-weight:700; }
+  .site h1 { font-size: 26px; line-height:1.2; margin: 0 0 4px; color: var(--lr-texte); }
+  .site .maj { margin: 0 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .sommaire { list-style:none; margin:0 0 16px; padding:0; border:1px solid var(--lr-bordure); border-radius:16px; background: var(--lr-surface); overflow:hidden; }
+  .sommaire li { min-height:48px; display:flex; align-items:center; padding: 0 16px; border-top:1px solid var(--lr-bordure); font-size:16px; color: var(--lr-primaire); }
+  .sommaire li:first-child { border-top:none; }
+  .site h2.rub { font-size: 20px; margin: 22px 0 8px; color: var(--lr-texte); }
+  .pied { margin-top: 24px; padding-top: 12px; border-top:1px solid var(--lr-bordure); font-size:14px; color: var(--lr-texte-secondaire); }
+  .question { max-width: 390px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background:#fff3cd; color:#5c4400; font-size:14px; border:1px solid #e0c36a; }
+</style>
+</head>
+<body>
+<h1>US 23 — Publier la politique de confidentialité en ligne</h1>
+<p class="note">iPhone d’abord (Safari et app installée) ; Android : même affichage. PLAN §2.5, §4, §7, §10 phase 7. La page publique est un fichier HTML statique servi par Firebase Hosting à <strong>https://leurio.app/confidentialite</strong>, sans Angular ni script : lisible par un visiteur sans l’app. Elle suit le thème clair ou sombre du téléphone (interrupteur ci-dessous). La page « Confidentialité » embarquée (US 91) reste telle quelle : elle marche hors ligne et montre l’identifiant du compte.</p>
+<input type="radio" name="t" id="t-clair" class="radio" checked>
+<input type="radio" name="t" id="t-sombre" class="radio">
+<div class="switch"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+<div class="states">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-conseil" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 8.5l-2 5-5 2 2-5z" fill="currentColor"/></symbol>
+      <symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V8M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="i-spots" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
+      <symbol id="i-compte" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-3.6 4-5.2 7.5-5.2s6.3 1.6 7.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    </defs>
+  </svg>
+<h2>1. Onglet Compte : la nouvelle rangée (critère 4)</h2>
+<p class="note">Dans « Informations », sous « Confidentialité ». Rangée entière touchable (52 px), comme « Carte de pêche » : au toucher, https://leurio.app/confidentialite s’ouvre dans le navigateur (nouvel onglet en PWA, navigateur intégré dans l’app installée).</p>
+<div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Mes données… (inchangé, au-dessus)</p><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité<span class="sous">Lisible sans réseau, avec ton identifiant</span></span><span class="chev">›</span></div><div class="rangee "><span>Politique de confidentialité<span class="sous">La version publique, en ligne</span></span><span class="ext">leurio.app ↗</span></div></div><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>2. Sans réseau (critère 5)</h2>
+<p class="note">Au toucher sans réseau, rien ne s’ouvre ; le message s’affiche sous le groupe (annoncé aux lecteurs d’écran) et disparaît au toucher suivant avec réseau.</p>
+<div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>✈︎ 100 %</span></div><div class="toolbar"><span class="title">Compte</span></div><div class="content" style="flex:1"><p class="titre-groupe">Mes données… (inchangé, au-dessus)</p><p class="titre-groupe">Informations</p><div class="groupe-liste"><div class="rangee"><span>À propos et sources</span><span class="chev">›</span></div><div class="rangee"><span>Confidentialité<span class="sous">Lisible sans réseau, avec ton identifiant</span></span><span class="chev">›</span></div><div class="rangee presse"><span>Politique de confidentialité<span class="sous">La version publique, en ligne</span></span><span class="ext">leurio.app ↗</span></div></div><p class="message-info" role="status">Pas de réseau : la politique est sur leurio.app/confidentialite</p><p class="titre-groupe">Réglementation</p><div class="groupe-liste"><div class="rangee"><span>Carte de pêche<span class="sous">Achète ta carte sur le site officiel</span></span><span class="ext">cartedepeche.fr ↗</span></div></div></div><nav class="tabbar"><div class="tab"><svg><use href="#i-conseil"/></svg>Conseil</div><div class="tab"><svg><use href="#i-boite"/></svg>Boîte</div><div class="tab"><svg><use href="#i-spots"/></svg>Spots</div><div class="tab on"><svg><use href="#i-compte"/></svg>Compte</div></nav></div>
+<h2>3. La page publique leurio.app/confidentialite (critères 1, 2 et 3)</h2>
+<p class="note">Safari sur iPhone, visiteur sans l’app. Sommaire cliquable vers les cinq rubriques demandées. Le texte reprend celui de ta page « Confidentialité » (US 91), complété pour les spots, les retours 👍 / 👎 et les consentements : <strong>à relire</strong> (voir la question).</p>
+<div class="phone" style="height:auto;min-height:760px"><div class="statusbar"><span>9:41</span><span>●●● 100 %</span></div><div class="content site" style="flex:1"><div class="site-entete"><span class="logo">L</span><span class="nom">Leurio</span></div><h1>Politique de confidentialité</h1><p class="maj">Mise à jour le 25 novembre 2026</p>
+<ul class="sommaire"><li>Données collectées</li><li>Services utilisés (Firebase)</li><li>Consentements</li><li>Suppression du compte</li><li>Export de tes données</li></ul>
+<div class="texte">
+<p>Leurio conseille un leurre et une animation aux pêcheurs en eau douce. Elle est éditée par Yoan Alindé, responsable de tes données. Pour toute question : <a href="#">yoyoalinde@gmail.com</a>.</p>
+<h2 class="rub">Données collectées</h2>
+<p>À la fin de l’accueil, Leurio te crée un compte anonyme : sans nom, sans e-mail, sans mot de passe. Il garde en ligne :</p>
+<ul><li><strong>Tes préférences</strong> : ton niveau, tes espèces favorites, tes consentements.</li>
+<li><strong>Ta boîte à leurres et ses photos</strong> : type, taille, poids, couleur, marque, date d’ajout ; une photo de plus de 200 Ko est réduite avant l’envoi.</li>
+<li><strong>Tes spots</strong> : nom, position, catégorie et type d’eau. Ils sont privés : personne d’autre ne les voit.</li>
+<li><strong>Tes retours 👍 / 👎</strong> sur un conseil : le leurre noté et les conditions arrondies (eau, vent, département), <strong>sans coordonnées exactes</strong> ni identifiant de compte.</li>
+<li><strong>Les rapports de plantage</strong> de l’app Android et iOS : l’erreur, la version de l’app et du téléphone, sans ta position ni ton compte.</li></ul>
+<p>Ta position sert au conseil, seulement si tu l’autorises : elle part vers Open-Meteo (météo) et Hub’Eau (rivières), mais Leurio ne la garde pas. Ton thème, ta température mesurée et une copie de ta boîte restent sur ton téléphone.</p>
+<h2 class="rub">Services utilisés (Firebase)</h2>
+<ul><li><strong>Firebase</strong> (Google) : compte, base de données (dans l’Union européenne), photos et hébergement du site.</li>
+<li><strong>Firebase App Check</strong> (reCAPTCHA) : vérifie que les demandes viennent bien de l’app.</li>
+<li><strong>Firebase Crashlytics</strong> : les rapports de plantage, effacés au bout de 90 jours.</li>
+<li><strong>Google Analytics</strong> : la mesure d’audience, seulement si tu l’acceptes.</li></ul>
+<p>Google agit pour le compte de l’éditeur et est certifié au Data Privacy Framework UE–États-Unis.</p>
+<h2 class="rub">Consentements</h2>
+<p>La mesure d’audience (Analytics) et les lecteurs vidéo tiers (YouTube, Vimeo, Dailymotion) ne se chargent qu’après ton accord : tous deux sont sur « non » au départ. Tu changes ce choix quand tu veux dans l’onglet <strong>Compte › Consentements</strong> ; il vaut sur tous tes appareils.</p>
+<h2 class="rub">Suppression du compte</h2>
+<p>Dans l’onglet <strong>Compte › Supprimer mon compte</strong> : ton compte, ta boîte, tes spots et tes photos sont effacés. Google les retire de ses sauvegardes sous 180 jours au plus. Sans l’app, écris à l’adresse ci-dessus avec ton identifiant de compte.</p>
+<h2 class="rub">Export de tes données</h2>
+<p>Dans l’onglet <strong>Compte › Exporter mes données</strong> : un fichier avec ton profil, ta boîte et tes spots. Hors ligne, il reprend ce qui est gardé sur ton téléphone.</p>
+<h2 class="rub">Tes droits</h2>
+<p>Accès, correction, suppression, portabilité, opposition : écris à <a href="#">yoyoalinde@gmail.com</a>. Tu peux aussi saisir la CNIL (<a href="#">cnil.fr</a>).</p>
+<p class="pied">Leurio · leurio.app</p></div></div><div class="safari-bas"><div class="adresse">🔒 leurio.app</div></div></div>
+</div>
+</body>
+</html>

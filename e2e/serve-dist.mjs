@@ -32,6 +32,8 @@ createServer(async (req, res) => {
     const { pathname } = new URL(req.url ?? '/', 'http://localhost');
     const demande = normalize(decodeURIComponent(pathname)).replace(/^(\.\.[/\\])+/, '');
     let chemin = await fichier(join(racine, demande));
+    // cleanUrls (comme Firebase Hosting) : /confidentialite sert confidentialite.html avant le repli SPA.
+    if (!chemin && !extname(demande)) chemin = await fichier(join(racine, `${demande}.html`));
     // Repli SPA : toute route sans extension renvoie index.html ; un fichier absent reste un 404.
     if (!chemin && !extname(demande)) chemin = await fichier(join(racine, 'index.html'));
     if (!chemin) {
