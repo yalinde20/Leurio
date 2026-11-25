@@ -1,0 +1,31 @@
+# Vérification hebdomadaire des vidéos (PLAN §9) : chaque lundi, scripts/signaler-videos.ts lance
+# check-videos et ouvre l'issue « Vidéos disparues » si une vidéo a disparu (ou met à jour
+# celle qui est déjà ouverte). Le workflow échoue si la vérification ou l'appel à GitHub échoue.
+# La clé de l'API YouTube Data est le secret de dépôt YOUTUBE_API_KEY, créé par le propriétaire.
+name: Vérification des vidéos
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Installation
+        run: npm ci
+      - name: Vérification et signalement
+        run: node scripts/signaler-videos.ts
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
