@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.60.0](https://github.com/yalinde20/Leurio/compare/v1.59.1...v1.60.0) (2026-11-25)
+
+
+### Features
+
+* **US 22:** icône Leurio et écran de démarrage clair et sombre ([ac8b2a3](https://github.com/yalinde20/Leurio/commit/ac8b2a3ca9dd0a84e05fe2c692bf861ac7a8ab7a))
+* **US 23:** politique de confidentialité en ligne sur leurio.app ([cefda07](https://github.com/yalinde20/Leurio/commit/cefda075bb17a978e881511a9d0f40056b7d6840))
+
+
+### Bug Fixes
+
+* **US 22:** suites de la revue (hameçon adaptatif plus petit, storyboard, tests du libellé et de la zone sûre) ([131bd0e](https://github.com/yalinde20/Leurio/commit/131bd0ee92325fb4b82f21ac5b1456b91a7338c5))
+* **US 23:** sous-titre de Confidentialité et exclusion /confidentialite/ ([527e191](https://github.com/yalinde20/Leurio/commit/527e191995d4be94126a9c9c1f72be638823b037))
+
 ## [1.59.1](https://github.com/yalinde20/Leurio/compare/v1.59.0...v1.59.1) (2026-11-25)
 
 
