@@ -1,0 +1,127 @@
+# Bundle Android signé envoyé sur la piste de test interne du Play Store (US 25).
+# Déclencheurs : appelé par release-please.yml à la création d'une release (une release créée avec
+# GITHUB_TOKEN ne déclenche pas d'autre workflow), release publiée à la main depuis main, ou lancement manuel.
+# Lint, type check et tests passent avant le build ; s'ils échouent, rien n'est envoyé.
+# Secrets à créer dans le dépôt (scripts/verifier-secrets-android.mjs nomme celui qui manque) :
+# - ANDROID_KEYSTORE_BASE64 : keystore de signature encodé en base64 ;
+# - ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD : mot de passe du keystore, alias et mot de passe de la clé ;
+# - PLAY_SERVICE_ACCOUNT_JSON : JSON d'un compte de service autorisé à publier sur Google Play ;
+# - FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET,
+#   FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_APPCHECK_SITE_KEY : configuration du build.
+# Facultatif : GOOGLE_SERVICES_JSON (contenu de google-services.json de l'app Android app.leurio), pour Crashlytics.
+name: Android Play
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      tag:
+        description: Balise de la release (donne le versionName)
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-play
+  cancel-in-progress: false
+
+jobs:
+  bundle-play:
+    if: github.event_name != 'release' || github.event.release.target_commitish == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Lancement manuel : la balise choisie dans « Use workflow from », sinon versionName 0.0.0-manuel.
+      TAG: ${{ inputs.tag || github.event.release.tag_name || (github.ref_type == 'tag' && github.ref_name) || '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Vérification des secrets
+        run: node scripts/verifier-secrets-android.mjs
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APPCHECK_SITE_KEY: ${{ secrets.FIREBASE_APPCHECK_SITE_KEY }}
+      - uses: gradle/actions/wrapper-validation@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+      - name: Installation
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      - name: Build de production
+        run: npm run build
+        env:
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_APPCHECK_SITE_KEY: ${{ secrets.FIREBASE_APPCHECK_SITE_KEY }}
+      - name: Synchronisation des projets natifs
+        run: npm run cap:sync
+      - name: Keystore de signature
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/leurio-release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/leurio-release.jks" >> "$GITHUB_ENV"
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      - name: Configuration Firebase Android (facultative)
+        # Sans google-services.json, les plugins Firebase natifs (Crashlytics) restent inactifs dans le bundle.
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else
+            echo "::warning::Secret GOOGLE_SERVICES_JSON absent : Crashlytics sera inactif dans ce bundle."
+          fi
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      - name: Numéro de version
+        id: version
+        run: node scripts/version-android.mjs >> "$GITHUB_OUTPUT"
+      - name: Bundle signé
+        working-directory: android
+        run: ./gradlew bundleRelease -PversionCode=${{ steps.version.outputs.versionCode }} -PversionName=${{ steps.version.outputs.versionName }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      - name: Bundle en artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leurio-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - name: Envoi sur la piste de test interne
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.leurio
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
