@@ -52,7 +52,7 @@ test('critère 3 : given la documentation du projet, when je cherche où renseig
 });
 
 test('critère 4 : given la documentation du projet, when je cherche les étapes suivant la mise en place de la vraie clé, then elle indique d\'activer l\'application forcée App Check pour Firestore, Storage et Authentication dans la console Firebase', () => {
-  const s = section(lireDoc(), /^##\s.*(application forcée|appliquer)/i);
+  const s = section(lireDoc(), /^##\s.*application forcée/i);
   assert.match(s, /application forcée/i);
   assert.match(s, /console Firebase/i);
   assert.match(s, /Firestore/);
