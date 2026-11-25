@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politique de confidentialité — Leurio</title>
+<style>
+  /* Tokens de src/theme/tokens.scss : clair par défaut, sombre selon le téléphone. */
+  :root {
+    color-scheme: light;
+    --lr-fond: #f7f3ea;
+    --lr-surface: #fffdf8;
+    --lr-texte: #10241f;
+    --lr-texte-secondaire: #46554f;
+    --lr-bordure: #d9d0be;
+    --lr-primaire: #0e6b5c;
+    --lr-sur-primaire: #f7f3ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --lr-fond: #0e1714;
+      --lr-surface: #16231f;
+      --lr-texte: #e6e1d6;
+      --lr-texte-secondaire: #9fb0aa;
+      --lr-bordure: #2b3b36;
+      --lr-primaire: #5cc8b0;
+      --lr-sur-primaire: #0e1714;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Segoe UI", sans-serif;
+    font-size: 16px; line-height: 1.45;
+    background: var(--lr-fond); color: var(--lr-texte);
+  }
+  main { max-width: 680px; margin: 0 auto; }
+  a { color: var(--lr-primaire); }
+  .entete { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+  .logo { width: 36px; height: 36px; border-radius: 9px; background: var(--lr-primaire); color: var(--lr-sur-primaire); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .nom { font-size: 17px; font-weight: 700; }
+  h1 { font-size: 26px; line-height: 1.2; margin: 0 0 4px; }
+  .maj { margin: 0 0 12px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .sommaire { list-style: none; margin: 0 0 16px; padding: 0; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); overflow: hidden; }
+  .sommaire li { border-top: 1px solid var(--lr-bordure); }
+  .sommaire li:first-child { border-top: none; }
+  .sommaire a { display: flex; align-items: center; min-height: 48px; padding: 0 16px; text-decoration: none; }
+  h2 { font-size: 20px; margin: 22px 0 8px; scroll-margin-top: 16px; }
+  p, ul { margin: 0 0 10px; }
+  ul { padding-left: 20px; }
+  .pied { margin-top: 24px; padding-top: 12px; border-top: 1px solid var(--lr-bordure); font-size: 14px; color: var(--lr-texte-secondaire); }
+</style>
+</head>
+<body>
+<main>
+<div class="entete"><span class="logo" aria-hidden="true">L</span><span class="nom">Leurio</span></div>
+<h1>Politique de confidentialité</h1>
+<p class="maj">Mise à jour le 25 novembre 2026</p>
+<nav aria-label="Sommaire">
+<ul class="sommaire">
+<li><a href="#donnees">Données collectées</a></li>
+<li><a href="#services">Services utilisés (Firebase)</a></li>
+<li><a href="#consentements">Consentements</a></li>
+<li><a href="#suppression">Suppression du compte</a></li>
+<li><a href="#export">Export de tes données</a></li>
+</ul>
+</nav>
+<p>Leurio conseille un leurre et une animation aux pêcheurs en eau douce. Elle est éditée par Yoan Alindé, responsable de tes données. Pour toute question : <a href="mailto:yoyoalinde@gmail.com">yoyoalinde@gmail.com</a>.</p>
+<h2 id="donnees">Données collectées</h2>
+<p>À la fin de l’accueil, Leurio te crée un compte anonyme : sans nom, sans e-mail, sans mot de passe. Il garde en ligne :</p>
+<ul>
+<li><strong>Tes préférences</strong> : ton niveau, tes espèces favorites, tes consentements.</li>
+<li><strong>Ta boîte à leurres et ses photos</strong> : type, taille, poids, couleur, marque, date d’ajout ; une photo de plus de 200 Ko est réduite avant l’envoi.</li>
+<li><strong>Tes spots</strong> : nom, position, catégorie et type d’eau. Ils sont privés : personne d’autre ne les voit.</li>
+<li><strong>Tes retours 👍 / 👎</strong> sur un conseil : le leurre noté et les conditions arrondies (eau, vent, département), <strong>sans coordonnées exactes</strong> ni identifiant de compte.</li>
+<li><strong>Les rapports de plantage</strong> de l’app Android et iOS : l’erreur, la version de l’app et du téléphone, sans ta position ni ton compte.</li>
+</ul>
+<p>Ta position sert au conseil, seulement si tu l’autorises : elle part vers Open-Meteo (météo) et Hub’Eau (rivières), mais Leurio ne la garde pas. Ton thème, ta température mesurée et une copie de ta boîte restent sur ton téléphone.</p>
+<h2 id="services">Services utilisés (Firebase)</h2>
+<ul>
+<li><strong>Firebase</strong> (Google) : compte, base de données (dans l’Union européenne), photos et hébergement du site.</li>
+<li><strong>Firebase App Check</strong> (reCAPTCHA) : vérifie que les demandes viennent bien de l’app.</li>
+<li><strong>Firebase Crashlytics</strong> : les rapports de plantage, effacés au bout de 90 jours.</li>
+<li><strong>Google Analytics</strong> : la mesure d’audience, seulement si tu l’acceptes.</li>
+</ul>
+<p>Google agit pour le compte de l’éditeur et est certifié au Data Privacy Framework UE–États-Unis.</p>
+<h2 id="consentements">Consentements</h2>
+<p>La mesure d’audience (Analytics) et les lecteurs vidéo tiers (YouTube, Vimeo, Dailymotion) ne se chargent qu’après ton accord : tous deux sont sur « non » au départ. Tu changes ce choix quand tu veux dans l’onglet <strong>Compte › Consentements</strong> ; il vaut sur tous tes appareils.</p>
+<h2 id="suppression">Suppression du compte</h2>
+<p>Dans l’onglet <strong>Compte › Supprimer mon compte</strong> : ton compte, ta boîte, tes spots et tes photos sont effacés. Google les retire de ses sauvegardes sous 180 jours au plus. Sans l’app, écris à l’adresse ci-dessus avec ton identifiant de compte.</p>
+<h2 id="export">Export de tes données</h2>
+<p>Dans l’onglet <strong>Compte › Exporter mes données</strong> : un fichier avec ton profil, ta boîte et tes spots. Hors ligne, il reprend ce qui est gardé sur ton téléphone.</p>
+<h2 id="droits">Tes droits</h2>
+<p>Accès, correction, suppression, portabilité, opposition : écris à <a href="mailto:yoyoalinde@gmail.com">yoyoalinde@gmail.com</a>. Tu peux aussi saisir la CNIL (<a href="https://www.cnil.fr">cnil.fr</a>).</p>
+<p class="pied">Leurio · leurio.app</p>
+</main>
+</body>
+</html>

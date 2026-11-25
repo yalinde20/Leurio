@@ -462,6 +462,18 @@ interface Reconnexion {
             <span>Confidentialité</span>
             <span class="chevron" aria-hidden="true">›</span>
           </a>
+          <a class="rangee" href="https://leurio.app/confidentialite" target="_blank" rel="noopener" (click)="ouvrirPolitique($event)">
+            <span>
+              Politique de confidentialité
+              <span class="sous">La version publique, en ligne</span>
+            </span>
+            <span class="externe">leurio.app <span aria-hidden="true">↗</span></span>
+          </a>
+        </div>
+        <div aria-live="polite">
+          @if (politiqueHorsLigne()) {
+            <p class="message info" role="status">Pas de réseau : la politique est sur leurio.app/confidentialite</p>
+          }
         </div>
         <h2 class="titre-groupe">Mes données</h2>
         <div class="groupe">
@@ -602,6 +614,15 @@ export class ComptePage {
   protected readonly confirmation = signal(false);
   protected readonly reconnexion = signal<Reconnexion | null>(null);
   protected readonly suppressionEnCours = signal(false);
+  protected readonly politiqueHorsLigne = signal(false);
+
+  /** Sans réseau, la page en ligne ne s'ouvrirait pas : on garde l'écran et on dit où la lire. */
+  protected ouvrirPolitique(evenement: Event): void {
+    const horsLigne = navigator.onLine === false;
+    if (horsLigne) evenement.preventDefault();
+    this.politiqueHorsLigne.set(horsLigne);
+  }
+
   protected readonly messageSuppression = signal<MessageSuppression | null>(null);
   protected readonly motDePasseSuppression = signal('');
   private readonly injecteur = inject(Injector);
