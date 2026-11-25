@@ -1,5 +1,7 @@
 # Starting point written by Cockpit from what this repository holds.
 # Edit it freely: it is yours. Commits must follow Conventional Commits.
+# Une release créée avec GITHUB_TOKEN ne déclenche pas d'autre workflow : on appelle donc
+# directement le pipeline Android (android-play.yml) quand release-please vient d'en créer une.
 name: Release Please
 
 on:
@@ -13,8 +15,22 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: simple
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  android-play:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/android-play.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
