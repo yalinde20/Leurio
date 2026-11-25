@@ -5,11 +5,14 @@
 # Secrets à créer dans le dépôt (scripts/verifier-secrets-ios.mjs nomme celui qui manque) :
 # - IOS_CERTIFICATE_P12_BASE64, IOS_CERTIFICATE_PASSWORD : certificat « Apple Distribution » exporté en .p12 (encodé en base64) et son mot de passe ;
 # - IOS_PROVISIONING_PROFILE_BASE64 : profil de provisionnement App Store de l'app app.leurio, encodé en base64
-#   (l'identifiant d'équipe et le nom du profil en sont lus, rien d'autre à configurer) ;
+#   (l'identifiant d'équipe et le nom du profil en sont lus, rien d'autre à configurer). Il doit inclure la capacité
+#   App Attest (App.entitlements fixe appattest-environment = production), sinon l'archive est refusée ;
 # - APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_API_ISSUER_ID : identifiants de la clé d'API App Store Connect ;
 # - APP_STORE_CONNECT_API_KEY_P8 : contenu de la clé .p8 (texte brut ou encodé en base64) ;
 # - FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET,
 #   FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_APPCHECK_SITE_KEY : configuration du build.
+# Facultatif : GOOGLE_SERVICE_INFO_PLIST (contenu de GoogleService-Info.plist de l'app iOS app.leurio), pour App Check et
+# Crashlytics ; sans lui, la version part quand même, avec un avertissement.
 # Le trousseau temporaire n'est pas supprimé en fin de job : le runner macOS est détruit après l'exécution,
 # et une étape de nettoyage exigerait de contourner l'échec des étapes précédentes.
 name: iOS TestFlight
@@ -102,7 +105,11 @@ jobs:
       - name: Version de Xcode
         # Capacitor 8 exige Xcode 26 ; on prend la plus récente installée sur l'image.
         run: |
-          XCODE="$(ls -d /Applications/Xcode_26*.app | sort -V | tail -n 1)"
+          XCODE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)"
+          if [ -z "$XCODE" ]; then
+            echo "::error::Aucune Xcode 26 n'est installée sur l'image du runner (Capacitor 8 l'exige)."
+            exit 1
+          fi
           echo "Xcode : $XCODE"
           sudo xcode-select -s "$XCODE"
       - name: Numéro de version
@@ -133,6 +140,11 @@ jobs:
           IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
           IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      - name: Préparation du projet Xcode
+        # Signature manuelle limitée à la cible App (pas aux paquets SPM) et GoogleService-Info.plist facultatif.
+        run: node scripts/preparer-projet-ios.mjs
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
       - name: Archive signée
         run: |
           xcodebuild archive \
@@ -141,10 +153,6 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Leurio.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             MARKETING_VERSION="$VERSION_NAME"
         env:

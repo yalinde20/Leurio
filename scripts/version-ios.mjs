@@ -3,6 +3,7 @@
 // buildNumber = minutes écoulées depuis le 2026-01-01 UTC : entier, strictement croissant d'une exécution à l'autre
 // (App Store Connect exige un numéro supérieur au précédent pour une même version).
 // versionName = la balise TAG sans le « v » ; sans TAG (lancement manuel) : la dernière balise du dépôt, sinon 0.0.0.
+// Une balise qui n'est pas X.Y.Z (avec ou sans suffixe) fait échouer le script.
 // Apple n'accepte que des nombres séparés par des points : un suffixe de pré-version (-rc.1, +build) est retiré.
 // VERSION_DATE (ISO 8601) remplace l'heure courante, pour les tests.
 import { execFileSync } from 'node:child_process';
@@ -27,12 +28,17 @@ function derniereBalise() {
   }
 }
 
-const brut = (process.env.TAG?.trim() || derniereBalise() || '0.0.0').replace(/^v/, '');
+const balise = process.env.TAG?.trim() || derniereBalise();
+const brut = (balise ?? '0.0.0').replace(/^v/, '');
 // Un nom de balise peut contenir des caractères de shell : on n'accepte qu'une version (chiffres, lettres, points, tirets).
 if (!/^[0-9A-Za-z.+-]+$/.test(brut)) {
   console.error('Balise invalide pour un versionName (attendu : X.Y.Z).');
   process.exit(1);
 }
-const versionName = brut.match(/^\d+(\.\d+){0,2}/)?.[0] ?? '0.0.0';
+const versionName = brut.match(/^\d+\.\d+\.\d+/)?.[0];
+if (!versionName) {
+  console.error(`::error::La balise « ${balise} » n'est pas une version X.Y.Z : Apple refuse une autre version affichée.`);
+  process.exit(1);
+}
 console.log(`buildNumber=${buildNumber}`);
 console.log(`versionName=${versionName}`);
