@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.59.1](https://github.com/yalinde20/Leurio/compare/v1.59.0...v1.59.1) (2026-11-25)
+
+
+### Bug Fixes
+
+* US 132 rétablit le budget initial de angular.json (1MB), modifié par erreur ([7656db6](https://github.com/yalinde20/Leurio/commit/7656db6a3a79544e7f968908d6ca19a066bdf836))
+
 ## [1.59.0](https://github.com/yalinde20/Leurio/compare/v1.58.0...v1.59.0) (2026-11-24)
 
 
