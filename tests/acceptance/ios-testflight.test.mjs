@@ -286,3 +286,15 @@ test('critère 4 : given plusieurs secrets manquants, when on lance la vérifica
   assert.match(r.out, /IOS_PROVISIONING_PROFILE_BASE64/);
   assert.match(r.out, /APP_STORE_CONNECT_API_KEY_ID/);
 });
+
+test('critère 1 : given le pipeline, when il archive, then le projet Xcode est préparé avant (signature limitée à la cible App) et la commande xcodebuild ne force aucun réglage de signature', () => {
+  const text = lire(IOS);
+  const prep = text.indexOf('node scripts/preparer-projet-ios.mjs');
+  const archive = text.search(/xcodebuild archive/);
+  assert.ok(prep >= 0, 'étape de préparation du projet absente');
+  assert.ok(archive > prep, 'la préparation du projet doit précéder l\'archive');
+  const etape = text.slice(archive, text.indexOf('- name:', archive));
+  for (const reglage of ['CODE_SIGN_STYLE', 'PROVISIONING_PROFILE_SPECIFIER', 'DEVELOPMENT_TEAM', 'CODE_SIGN_IDENTITY']) {
+    assert.ok(!etape.includes(reglage), `${reglage} ne doit pas être passé à xcodebuild : il s'appliquerait aussi aux paquets SPM`);
+  }
+});
