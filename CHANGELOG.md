@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.59.0](https://github.com/yalinde20/Leurio/compare/v1.58.0...v1.59.0) (2026-11-24)
+
+
+### Features
+
+* US 47 script check-videos qui liste les vidéos disparues ([5f91a96](https://github.com/yalinde20/Leurio/commit/5f91a96cd60a6ddd1e1c0a4b8192e9e1c7f17db8))
+
+
+### Bug Fixes
+
+* US 47 suites de la revue (code 3, délai des requêtes, self = fichier, test 401/403) ([efa275a](https://github.com/yalinde20/Leurio/commit/efa275a2f686ec4986dd95bc5c7ad2724a4c6725))
+
 ## [1.58.0](https://github.com/yalinde20/Leurio/compare/v1.57.0...v1.58.0) (2026-11-24)
 
 
