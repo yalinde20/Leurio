@@ -39,7 +39,7 @@ const DENSITES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
 for (const [densite, f] of Object.entries(DENSITES)) {
   ajouter(`${ANDROID}/mipmap-${densite}/ic_launcher.png`, 48 * f, { forme: 'arrondi' });
   ajouter(`${ANDROID}/mipmap-${densite}/ic_launcher_round.png`, 48 * f, { forme: 'rond' });
-  ajouter(`${ANDROID}/mipmap-${densite}/ic_launcher_foreground.png`, 108 * f, { svg: logoReduit(0.78, { sansFond: true }) });
+  ajouter(`${ANDROID}/mipmap-${densite}/ic_launcher_foreground.png`, 108 * f, { svg: logoReduit(0.64, { sansFond: true }) });
 }
 // Android : icône de l'écran de démarrage (Android 12+ : 288 dp, dont un disque de 192 dp visible), le logo dans le disque
 ajouter(`${ANDROID}/drawable-nodpi/splash_icon.png`, 1152, { forme: 'rond', marge: 192 });

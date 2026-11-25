@@ -31,6 +31,9 @@ test('critère 1 : given le projet Android, when on lit le nom de l\'app, then l
   assert.match(lire(`${RES}/values/strings.xml`), /<string name="app_name">Leurio<\/string>/);
   assert.match(lire('android/app/src/main/AndroidManifest.xml'), /android:label="@string\/app_name"/);
   assert.match(lire('android/app/src/main/AndroidManifest.xml'), /android:icon="@mipmap\/ic_launcher"/);
+  // Le libellé de l'activité principale l'emporte dans le lanceur.
+  assert.match(lire(`${RES}/values/strings.xml`), /<string name="title_activity_main">Leurio<\/string>/);
+  assert.match(lire('android/app/src/main/AndroidManifest.xml'), /<activity[^>]*android:label="@string\/title_activity_main"/);
 });
 
 test('critère 1 : given l\'icône adaptative Android, when on lit ses couches, then le premier plan est l\'hameçon crème dans la zone sûre de 66 % sur fond transparent', () => {
@@ -45,13 +48,14 @@ test('critère 1 : given l\'icône adaptative Android, when on lit ses couches, 
     assert.ok(img.hasAlpha, `${rel} doit avoir un canal alpha`);
     assert.equal(img.pixel(1, 1).a, 0, `${rel} : le coin doit être transparent`);
     assert.ok(contientCouleur(img, CREME, 12), `${rel} : aucun pixel crème de l'hameçon`);
-    let minX = img.width, minY = img.height, maxX = 0, maxY = 0;
+    // Les lanceurs n'affichent que le cercle de 66 dp centré : tout pixel opaque doit y tenir.
+    const cx = (img.width - 1) / 2, cy = (img.height - 1) / 2;
+    let maxDist = 0;
     for (let y = 0; y < img.height; y++) for (let x = 0; x < img.width; x++) {
-      if (img.pixel(x, y).a > 20) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+      if (img.pixel(x, y).a > 20) maxDist = Math.max(maxDist, Math.hypot(x - cx, y - cy));
     }
-    const m = 0.16;
-    assert.ok(minX >= img.width * m && maxX <= img.width * (1 - m) && minY >= img.height * m && maxY <= img.height * (1 - m),
-      `${rel} : le dessin sort de la zone sûre (${minX},${minY})-(${maxX},${maxY}) sur ${img.width}`);
+    assert.ok(maxDist <= 0.306 * img.width,
+      `${rel} : le dessin sort de la zone sûre (distance au centre ${maxDist.toFixed(1)} px, maximum ${(0.306 * img.width).toFixed(1)} px sur ${img.width})`);
   }
 });
 
