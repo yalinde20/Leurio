@@ -49,7 +49,8 @@
     border-radius: 12px; background: var(--lr-primaire); color: var(--lr-sur-primaire);
     font-size: 18px; font-weight: 700; text-decoration: none;
   }
-  .stores { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .stores { display: flex; flex-direction: column; gap: 8px; }
+  .stores:has(> a:not([hidden])) { margin-top: 10px; }
   .store {
     display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px;
     border: 1px solid var(--lr-texte); border-radius: 12px; color: var(--lr-texte); text-decoration: none; background: var(--lr-surface);
@@ -93,12 +94,12 @@
 </div>
 </main>
 <script>
-  // Les liens des stores viennent de stores.json ; un lien vide, un fichier absent ou illisible ne montre aucun bouton.
+  // Les liens des stores viennent de stores.json ; un lien vide ou non https, un fichier absent ou illisible ne montre aucun bouton.
   fetch('stores.json')
     .then(function (r) { return r.ok ? r.json() : {}; })
     .then(function (stores) {
       [['app-store', stores.appStore], ['google-play', stores.googlePlay]].forEach(function (s) {
-        if (typeof s[1] === 'string' && s[1].trim()) {
+        if (typeof s[1] === 'string' && /^https:\/\//.test(s[1].trim())) {
           var a = document.getElementById(s[0]);
           a.href = s[1].trim();
           a.hidden = false;
