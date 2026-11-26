@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, Injector, afterNextRender, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { AccesPhotoRefuse, OriginePhoto, SOURCE_PHOTO } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre } from '../../core/data/tackle-box.service';
+import { FEATURE_FLAGS } from '../../core/firebase/feature-flags';
 import { erreurNombre, erreurTexte, nombrePositif } from './saisie-leurre';
 
 /** Un type de leurre proposé dans « Type » : le contenu le fournit, la page le transmet. */
@@ -377,13 +378,16 @@ export interface ChoixType {
             (change)="marque.set($any($event.target).value)"
           />
         </div>
+        @if (photosActives || apercu()) {
         <div class="groupe" role="group" aria-labelledby="etiquette-photo">
           <span id="etiquette-photo" class="etiquette">Photo (facultatif)</span>
           @if (apercu(); as source) {
             <div class="apercu">
               <img [src]="source" alt="Photo du leurre" />
               <div class="actions-photo">
-                <button #changer type="button" class="lien-photo" (click)="ouvrirChoix()">Changer la photo</button>
+                @if (photosActives) {
+                  <button #changer type="button" class="lien-photo" (click)="ouvrirChoix()">Changer la photo</button>
+                }
                 <button type="button" class="lien-photo retirer" (click)="retirerPhoto()">Retirer la photo</button>
               </div>
             </div>
@@ -400,6 +404,7 @@ export interface ChoixType {
             <p class="erreur" role="alert">{{ message }}</p>
           }
         </div>
+        }
         @if (echec()) {
           <p class="erreur" role="alert">Impossible d'enregistrer le leurre. Réessaie.</p>
         }
@@ -514,6 +519,8 @@ export class LeurreFormulaireComponent implements OnInit, AfterViewInit, OnDestr
   /** La confirmation vient d'être acceptée : le focus revient sur « Supprimer » quand la suppression est finie (échec compris). */
   private focusSupprimerApres = false;
   private readonly sourcePhoto = inject(SOURCE_PHOTO);
+  /** Sans stockage (forfait Spark, flag `photosLeurres` désactivé), aucune photo ne peut être ajoutée ni remplacée (US 288) ; lu à l'ouverture, la valeur par défaut est la sûre. */
+  protected readonly photosActives = inject(FEATURE_FLAGS).estActif('photosLeurres');
   /** Le bouton qui a ouvert la feuille de choix, pour lui rendre le focus à sa fermeture sans choix. */
   private declencheurPhoto: Element | null = null;
 
