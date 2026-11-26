@@ -23,6 +23,7 @@ import { provideIonicAngular } from '@ionic/angular';
 import { CatalogService, TypeLeurre } from '../../core/data/catalog.service';
 import { AccesPhotoRefuse, OriginePhoto, SOURCE_PHOTO } from '../../core/data/photo-leurre';
 import { DocumentLeurre, SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { FEATURE_FLAGS } from '../../core/firebase/feature-flags';
 import { BoitePage } from './boite.page';
 
 const TYPES = [
@@ -96,6 +97,7 @@ async function afficher({ initiaux = [], enLigne = true, choix = 'photo', echecE
       { provide: SOURCE_TACKLE_BOX, useValue: source },
       { provide: SOURCE_PHOTO, useValue: sourcePhoto },
       { provide: CatalogService, useValue: { typesDeLeurres: async () => TYPES } },
+      { provide: FEATURE_FLAGS, useValue: { initialiser: async () => undefined, estActif: (n: string) => n === 'photosLeurres' } },
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(BoitePage);

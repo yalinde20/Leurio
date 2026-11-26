@@ -1,7 +1,7 @@
 // US 102 (revue) : sans réseau, supprimer un leurre qui a une photo ne fait pas attendre l'écran (Storage réessaie longtemps).
 // Contrat du DOM : voir e2e/boite-photo.spec.ts et e2e/boite-modification.spec.ts.
 import { test, expect, type Page } from '@playwright/test';
-import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
+import { EMULATEURS, PROJET, attendreFirebase, estLocal, photosLeurresActives } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -10,6 +10,7 @@ test.use({ viewport: { width: 390, height: 844 } });
 
 test.beforeEach(async ({ page }) => {
   await onboardingTermine(page);
+  await photosLeurresActives(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
 });
 

@@ -18,6 +18,23 @@ export const FLAGS = {
   photosLeurres: false,
 };
 
+/**
+ * Sur les émulateurs seulement, les e2e forcent des flags : JSON `{"photosLeurres": true}` sous cette clé de `localStorage`.
+ * Aucun émulateur Remote Config n'existe ; hors émulateurs, la clé est ignorée.
+ */
+export const CLE_FLAGS_EMULATEURS = 'leurio.flags-emulateurs';
+
+function flagsForces(flags: Record<string, boolean>): Record<string, boolean> {
+  try {
+    const brut = localStorage.getItem(CLE_FLAGS_EMULATEURS);
+    const valeurs: unknown = brut ? JSON.parse(brut) : null;
+    if (typeof valeurs !== 'object' || valeurs === null) return {};
+    return Object.fromEntries(Object.entries(valeurs).filter(([nom, v]) => Object.hasOwn(flags, nom) && typeof v === 'boolean'));
+  } catch {
+    return {};
+  }
+}
+
 /** Durée maximale d'attente de Remote Config au lancement ; passé ce délai, l'app garde ce qu'elle a. */
 const DELAI_MAX_MS = 10_000;
 /** Délai propre au SDK pour la requête, plus court que `DELAI_MAX_MS`. */
@@ -121,6 +138,7 @@ export function creerPortFeatureFlags(
     estActif(nom) {
       if (!Object.hasOwn(flags, nom)) return false;
       const defaut = flags[nom];
+      if (contexte.emulateurs) return flagsForces(flags)[nom] ?? defaut;
       if (!pret) return defaut;
       try {
         const valeur = pret.module.getValue(pret.remoteConfig, nom);

@@ -53,3 +53,11 @@ export async function lireSurEmulateur(uid: string): Promise<{ status: number; b
 export async function exigerAucuneRequeteExterne(urls: string[]): Promise<void> {
   expect(externes(urls), 'requêtes vers un service réel').toEqual([]);
 }
+
+/** Clé du localStorage où les émulateurs lisent des flags forcés (US 288, CLE_FLAGS_EMULATEURS de feature-flags.ts). */
+const CLE_FLAGS_EMULATEURS = 'leurio.flags-emulateurs';
+
+/** Ouvre le flag `photosLeurres` avant le chargement de chaque page (aucun Remote Config sur les émulateurs). À appeler avant `page.goto`. */
+export async function photosLeurresActives(page: Page): Promise<void> {
+  await page.addInitScript((cle) => localStorage.setItem(cle, JSON.stringify({ photosLeurres: true })), CLE_FLAGS_EMULATEURS);
+}

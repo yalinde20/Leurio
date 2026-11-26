@@ -17,7 +17,7 @@ import type { FirebaseApp } from 'firebase/app';
 import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { appConfig } from '../../app.config';
-import { creerPortFeatureFlags, FEATURE_FLAGS, FLAGS, ModuleRemoteConfig, PortFeatureFlags } from './feature-flags';
+import { CLE_FLAGS_EMULATEURS, creerPortFeatureFlags, FEATURE_FLAGS, FLAGS, ModuleRemoteConfig, PortFeatureFlags } from './feature-flags';
 
 type Source = 'remote' | 'default' | 'static';
 interface RC {
@@ -173,5 +173,39 @@ describe('US 21 : feature flags Remote Config', () => {
     const port = lancer();
     await port.initialiser();
     expect(port.estActif('inconnu')).toBe(false);
+  });
+});
+
+describe('US 288 : flags forcés sur émulateurs (e2e)', () => {
+  const inutile = async (): Promise<never> => {
+    throw new Error('inerte');
+  };
+  const flags = { photosLeurres: false, autre: false };
+  afterEach(() => localStorage.removeItem(CLE_FLAGS_EMULATEURS));
+
+  it('given une clé valide sur émulateurs, when on lit un flag déclaré, then la valeur forcée est rendue', () => {
+    localStorage.setItem(CLE_FLAGS_EMULATEURS, JSON.stringify({ photosLeurres: true }));
+    const port = creerPortFeatureFlags({ emulateurs: true }, inutile, flags);
+    expect(port.estActif('photosLeurres')).toBe(true);
+    expect(port.estActif('autre')).toBe(false);
+  });
+
+  it('given un flag non déclaré forcé, when on le lit, then il reste désactivé', () => {
+    localStorage.setItem(CLE_FLAGS_EMULATEURS, JSON.stringify({ inconnu: true }));
+    expect(creerPortFeatureFlags({ emulateurs: true }, inutile, flags).estActif('inconnu')).toBe(false);
+  });
+
+  it('given une clé absente ou illisible, when on lit un flag, then la valeur par défaut est rendue', () => {
+    const port = creerPortFeatureFlags({ emulateurs: true }, inutile, flags);
+    expect(port.estActif('photosLeurres')).toBe(false);
+    for (const brut of ['pas du json', 'null', '[true]', '{"photosLeurres":"oui"}']) {
+      localStorage.setItem(CLE_FLAGS_EMULATEURS, brut);
+      expect(port.estActif('photosLeurres')).toBe(false);
+    }
+  });
+
+  it('given la clé hors émulateurs, when on lit un flag, then elle est ignorée', () => {
+    localStorage.setItem(CLE_FLAGS_EMULATEURS, JSON.stringify({ photosLeurres: true }));
+    expect(creerPortFeatureFlags({ emulateurs: false }, inutile, flags).estActif('photosLeurres')).toBe(false);
   });
 });
