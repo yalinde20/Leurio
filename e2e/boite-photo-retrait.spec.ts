@@ -1,7 +1,7 @@
 // US 102 : « Retirer la photo » d'un leurre enregistré, sur les émulateurs : le champ photoUrl disparaît du document
 // (deleteField) et le fichier disparaît de Storage. Contrat du DOM : voir e2e/boite-photo.spec.ts.
 import { test, expect } from '@playwright/test';
-import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
+import { EMULATEURS, PROJET, attendreFirebase, estLocal, photosLeurresActives } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -12,6 +12,7 @@ const BUCKET = 'demo-leurio.appspot.test'; // storageBucket de src/app/core/fire
 
 test.beforeEach(async ({ page }) => {
   await onboardingTermine(page);
+  await photosLeurresActives(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
 });
 

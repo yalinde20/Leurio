@@ -2,7 +2,7 @@
 // Contrat du DOM : voir src/app/features/boite/boite.page.photo.spec.ts. Sur le web, « Prendre une photo » et « Choisir dans la
 // galerie » aboutissent à un sélecteur de fichier (`input[type=file][accept="image/*"]`, avec `capture` pour l'appareil photo).
 import { test, expect, type Page } from '@playwright/test';
-import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
+import { EMULATEURS, PROJET, attendreFirebase, estLocal, photosLeurresActives } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,6 +14,7 @@ const BUCKET = 'demo-leurio.appspot.test'; // storageBucket de src/app/core/fire
 
 test.beforeEach(async ({ page }) => {
   await onboardingTermine(page);
+  await photosLeurresActives(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
 });
 
