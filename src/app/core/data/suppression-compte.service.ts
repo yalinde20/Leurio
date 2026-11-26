@@ -17,7 +17,10 @@ export interface SourceSuppression {
   reconnecter(fournisseur: 'google' | 'apple'): Promise<void>;
   /** Reconnexion par mot de passe ; rejette avec un objet portant `code`. */
   reconnecterEmail(motDePasse: string): Promise<void>;
-  /** Supprime les photos de `users/{uid}/lures` dans Storage, les documents de `users/{uid}/tackleBox` et `users/{uid}/spots`, puis `users/{uid}`. */
+  /**
+   * Supprime les photos de `users/{uid}/lures` dans Storage (seulement si le flag `photosLeurres` est activé : sur le forfait Spark,
+   * Storage n'existe pas), les documents de `users/{uid}/tackleBox` et `users/{uid}/spots`, puis `users/{uid}`.
+   */
   supprimerDonnees(): Promise<void>;
   /** Supprime le compte d'authentification ; rejette avec `{ code: 'auth/requires-recent-login' }` si la connexion n'est plus récente. */
   supprimerCompte(): Promise<void>;
