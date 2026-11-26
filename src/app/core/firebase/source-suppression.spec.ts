@@ -14,6 +14,7 @@
  */
 import type { Injector } from '@angular/core';
 import type { SourceSuppression } from '../data/suppression-compte.service';
+import { FEATURE_FLAGS } from './feature-flags';
 
 const { journal, auth, deleteDoc, getDocs, deleteObject, listAll, deleteUser, reauthenticateWithPopup, reauthenticateWithCredential, credential } = vi.hoisted(() => {
   const journal: string[] = [];
@@ -58,7 +59,7 @@ describe('creerSourceSuppressionFirebase', () => {
     vi.clearAllMocks();
     auth.currentUser = { uid: 'u1', email: null, providerData: [], metadata: { lastSignInTime: ILYA(0) } };
     const { creerSourceSuppressionFirebase } = await import('./source-suppression');
-    source = creerSourceSuppressionFirebase({ get: () => ({ auth, db: {}, storage: {} }) } as unknown as Injector);
+    source = creerSourceSuppressionFirebase({ get: (jeton: unknown) => (jeton === FEATURE_FLAGS ? { estActif: (nom: string) => nom === 'photosLeurres' } : { auth, db: {}, storage: {} }) } as unknown as Injector);
   });
 
   it('critère 3 : given un compte avec des photos, des leurres et des spots, when je supprime les données, then les photos, les leurres, les spots puis users/{uid} sont supprimés, dans cet ordre', async () => {

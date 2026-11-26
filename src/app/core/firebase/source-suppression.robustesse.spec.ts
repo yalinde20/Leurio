@@ -3,6 +3,7 @@
  */
 import type { Injector } from '@angular/core';
 import type { SourceSuppression } from '../data/suppression-compte.service';
+import { FEATURE_FLAGS } from './feature-flags';
 
 const { journal, auth, deleteDoc, getDocs, etat } = vi.hoisted(() => {
   const journal: string[] = [];
@@ -34,7 +35,7 @@ describe('creerSourceSuppressionFirebase : robustesse de supprimerDonnees', () =
     etat.cache = false;
     etat.bloquer = false;
     const { creerSourceSuppressionFirebase } = await import('./source-suppression');
-    source = creerSourceSuppressionFirebase({ get: () => ({ auth, db: {}, storage: {} }) } as unknown as Injector);
+    source = creerSourceSuppressionFirebase({ get: (jeton: unknown) => (jeton === FEATURE_FLAGS ? { estActif: (nom: string) => nom === 'photosLeurres' } : { auth, db: {}, storage: {} }) } as unknown as Injector);
   });
   afterEach(() => vi.useRealTimers());
 

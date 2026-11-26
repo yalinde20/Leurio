@@ -24,7 +24,7 @@ function verifierDuServeur(instantane: { metadata?: { fromCache?: boolean } }): 
 }
 
 /**
- * Suppression du compte dans Firebase (PLAN §2.5, §4, §7) : photos de `users/{uid}/lures` (Storage), documents de `tackleBox` et `spots`,
+ * Suppression du compte dans Firebase (PLAN §2.5, §4, §7) : photos de `users/{uid}/lures` (Storage, si le flag `photosLeurres` est actif), documents de `tackleBox` et `spots`,
  * `users/{uid}`, puis le compte d'authentification. `FirebaseService` et `firebase/*` ne se chargent qu'au premier appel (import dynamique).
  */
 export function creerSourceSuppressionFirebase(injector: Injector): SourceSuppression {
@@ -62,20 +62,23 @@ export function creerSourceSuppressionFirebase(injector: Injector): SourceSuppre
     },
     async supprimerDonnees() {
       const { uid } = await utilisateur();
-      const { storage, db } = await firebase();
-      const [{ ref, listAll, deleteObject }, { collection, doc, getDocs, deleteDoc }] = await Promise.all([
-        import('firebase/storage'),
+      const service = await firebase();
+      const { db } = service;
+      // Cloud Storage n'existe pas sur le forfait gratuit (Spark) : flag `photosLeurres` désactivé, on n'y touche pas (US 287).
+      const avecPhotos = injector.get((await import('./feature-flags')).FEATURE_FLAGS).estActif('photosLeurres');
+      const [stockage, { collection, doc, getDocs, deleteDoc }] = await Promise.all([
+        avecPhotos ? import('firebase/storage') : null,
         import('firebase/firestore'),
       ]);
       // Tout est lu avant de supprimer quoi que ce soit : une liste venue du cache fait échouer l'opération sans rien effacer.
-      const photos = await avecDelai(listAll(ref(storage, `users/${uid}/lures`)));
+      const photos = stockage ? (await avecDelai(stockage.listAll(stockage.ref(service.storage, `users/${uid}/lures`)))).items : [];
       const listes = [];
       for (const nom of ['tackleBox', 'spots']) {
         const instantane = await avecDelai(getDocs(collection(db, 'users', uid, nom)));
         verifierDuServeur(instantane);
         listes.push(instantane.docs);
       }
-      for (const photo of photos.items) await avecDelai(deleteObject(photo));
+      for (const photo of photos) await avecDelai(stockage!.deleteObject(photo));
       for (const documents of listes) for (const document of documents) await avecDelai(deleteDoc(document.ref));
       await avecDelai(deleteDoc(doc(db, 'users', uid)));
     },
