@@ -14,6 +14,8 @@ import { emulateurs } from './config';
 export const FLAGS = {
   /** Flag de test de l'US 21 : aucune fonctionnalité derrière. */
   flagDeTest: false,
+  /** Photos de leurres dans Cloud Storage, absent du forfait gratuit (US 287) : fermé, la suppression du compte n'appelle pas Storage. */
+  photosLeurres: false,
 };
 
 /** Durée maximale d'attente de Remote Config au lancement ; passé ce délai, l'app garde ce qu'elle a. */
