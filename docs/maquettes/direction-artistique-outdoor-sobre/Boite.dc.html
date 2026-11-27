@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Boîte</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:1346px;height:1500px;box-sizing:border-box;padding:40px;background:#dedacc;display:flex;gap:48px;align-items:flex-start}
+.cap{margin:0 0 12px 8px;font:600 14px 'Inter',sans-serif;color:#4a4a42}
+.app{width:390px;height:1300px;box-sizing:border-box;border-radius:44px;border:1px solid rgba(0,0,0,.14);overflow:hidden;display:flex;flex-direction:column;background:var(--fond);color:var(--texte)}
+.app.clair{--fond:#f4f0e6;--surface:#fffdf8;--surface2:#ece6d6;--texte:#10241f;--texte2:#46554f;--bord:#dcd4c2;--prim:#0e6b5c;--foret:#0c3a33;--surforet:#f4f0e6;--foret2:#17564b;--acc:#e8590c;--suracc:#1a1206;--tabact:rgba(14,107,92,.14)}
+.app.sombre{--fond:#0b1411;--surface:#13211d;--surface2:#1c2d28;--texte:#e8e3d8;--texte2:#a3b3ad;--bord:#263833;--prim:#5cc8b0;--foret:#123a33;--surforet:#e8e3d8;--foret2:#1b4f45;--acc:#ff8a3d;--suracc:#1a1206;--tabact:rgba(92,200,176,.18)}
+.scroll{flex:1;padding:58px 20px 24px;display:flex;flex-direction:column;gap:20px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.pic{fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.t{font-family:'Bricolage Grotesque','Inter',sans-serif;letter-spacing:-.02em;margin:0}
+.add{height:48px;box-sizing:border-box;border-radius:24px;padding:0 18px;background:var(--acc);color:var(--suracc);border:0;display:flex;align-items:center;gap:6px;font:700 15px 'Inter',sans-serif;cursor:pointer}
+.fil{height:48px;flex:none;box-sizing:border-box;border-radius:24px;padding:0 16px;background:var(--surface);color:var(--texte);border:1px solid var(--bord);display:flex;align-items:center;gap:8px;font:500 15px 'Inter',sans-serif;cursor:pointer}
+.fil .pic{color:var(--prim)}
+.fil.on{background:var(--foret);color:var(--surforet);border-color:var(--foret);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--bord);border-radius:24px}
+.row{display:flex;align-items:center;gap:14px;min-height:88px;padding:12px 16px;border-top:1px solid var(--bord);box-sizing:border-box}
+.row:first-child{border-top:0}
+.vig{width:56px;height:56px;flex:none;border-radius:16px;background:var(--surface2);color:var(--prim);display:flex;align-items:center;justify-content:center}
+.btn{height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 16px 'Inter',sans-serif;cursor:pointer;width:100%;box-sizing:border-box}
+.tabs{height:88px;box-sizing:border-box;background:var(--surface);border-top:1px solid var(--bord);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:8px 8px 24px}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:500 12px 'Inter',sans-serif;color:var(--texte2)}
+.tab span{width:56px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.tab .ic{width:24px;height:24px}
+.tab.on{color:var(--prim);font-weight:700}
+.tab.on span{background:var(--tabact)}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="p-souples" viewBox="0 0 64 64"><circle cx="13" cy="30" r="5" style="fill:var(--acc);stroke:none"/><path d="M11 35c-1 7 4 11 10 8"/><path d="M19 27l19-3 12-8v28l-12-8-19-3z"/><path d="M27 27v7M33 26v9"/></symbol>
+<symbol id="p-durs" viewBox="0 0 64 64"><ellipse cx="35" cy="29" rx="19" ry="9"/><path d="M17 33L9 40"/><circle cx="25" cy="27" r="2" style="fill:var(--acc);stroke:none"/><path d="M30 21c-3 5-3 11 0 16"/><path d="M33 38v7a3 3 0 0 1-6 0M47 36v7a3 3 0 0 0 6 0"/></symbol>
+<symbol id="p-surface" viewBox="0 0 64 64"><path d="M14 21h30q9 0 9 6t-9 6H14q5-6 0-12z"/><circle cx="42" cy="26" r="2" style="fill:var(--acc);stroke:none"/><path d="M6 41q5-4 10 0t10 0 10 0 10 0 10 0"/><path d="M16 49q4-3 8 0t8 0 8 0"/></symbol>
+<symbol id="p-metal" viewBox="0 0 64 64"><path d="M10 38h30"/><circle cx="7" cy="38" r="3"/><ellipse cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)" style="fill:var(--acc)"/><path d="M23 38l1-5"/><ellipse cx="45" cy="38" rx="5" ry="4"/><path d="M50 38h3q7 0 7 8M60 46q-3 4-6 1"/></symbol>
+<symbol id="p-jupe" viewBox="0 0 64 64"><circle cx="16" cy="29" r="6" style="fill:var(--acc)"/><circle cx="16" cy="14" r="2.5"/><path d="M16 16.5V23"/><path d="M22 29c10-7 20-9 32-9M22 29c12-2 24-2 34-1M22 29c12 3 24 5 34 6M22 29c10 6 20 13 30 15"/><path d="M21 24v10"/><path d="M13 34c0 8 4 11 9 11"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-boussole" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+<symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3 13h18"/></symbol>
+<symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol>
+</svg>
+
+<sc-for list="{{phones}}" as="p" hint-placeholder-count="2">
+<div>
+<p class="cap">{{p.cap}}</p>
+<div class="app {{p.cls}}">
+<div class="scroll">
+
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><h1 class="t" style="font-size:32px;line-height:36px;font-weight:700">Ma boîte</h1><p style="margin:2px 0 0;font-size:15px;line-height:22px;color:var(--texte2)">6 leurres</p></div>
+<button class="add"><svg class="ic"><use href="#i-plus"/></svg>Ajouter</button>
+</div>
+
+<div style="display:flex;gap:8px;margin:0 -20px;padding:0 20px;overflow:hidden" aria-label="Filtrer par famille">
+<sc-for list="{{filtres}}" as="f" hint-placeholder-count="5">
+<button class="fil {{f.cls}}"><sc-if value="{{f.aPic}}"><svg class="pic" width="26" height="26"><use href="{{f.pic}}"/></svg></sc-if>{{f.nom}}</button>
+</sc-for>
+</div>
+
+<div class="card" style="overflow:hidden">
+<sc-for list="{{leurres}}" as="r" hint-placeholder-count="6">
+<a class="row" href="#" style="color:inherit;text-decoration:none">
+<div class="vig"><svg class="pic" width="42" height="42"><use href="{{r.pic}}"/></svg></div>
+<div style="flex:1;min-width:0"><div style="font:600 17px/22px 'Inter',sans-serif">{{r.nom}}</div><div style="font-size:14px;line-height:20px;color:var(--texte2)">{{r.sous}}</div></div>
+<svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg>
+</a>
+</sc-for>
+</div>
+
+<section class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px;margin-top:auto">
+<h2 class="t" style="font-size:20px;line-height:26px;font-weight:700">Kit de départ</h2>
+<p style="margin:0;font-size:15px;line-height:22px;color:var(--texte2)">Les leurres de base pour pêcher en eau douce.</p>
+<button class="btn" style="background:var(--foret);color:var(--surforet);border:0">Ajouter le kit</button>
+</section>
+
+</div>
+<nav class="tabs" aria-label="Navigation">
+<sc-for list="{{onglets}}" as="o" hint-placeholder-count="4">
+<a class="tab {{o.cls}}" href="#" style="text-decoration:none"><span><svg class="ic"><use href="{{o.icone}}"/></svg></span>{{o.nom}}</a>
+</sc-for>
+</nav>
+</div>
+</div>
+</sc-for>
+
+<div>
+<p class="cap">Boîte vide · thème clair</p>
+<div class="app clair">
+<div class="scroll">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><h1 class="t" style="font-size:32px;line-height:36px;font-weight:700">Ma boîte</h1><p style="margin:2px 0 0;font-size:15px;line-height:22px;color:var(--texte2)">Aucun leurre</p></div>
+<button class="add"><svg class="ic"><use href="#i-plus"/></svg>Ajouter</button>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px;padding:0 8px">
+<div style="width:176px;height:176px;border-radius:56px;background:var(--surface2);color:var(--prim);display:flex;align-items:center;justify-content:center;position:relative">
+<svg class="ic" style="width:96px;height:96px;stroke-width:1.4"><use href="#i-boite"/></svg>
+<svg class="pic" width="64" height="64" style="position:absolute;right:-12px;top:-12px;background:var(--surface);border:1px solid var(--bord);border-radius:22px;padding:8px;box-sizing:content-box"><use href="#p-souples"/></svg>
+</div>
+<h2 class="t" style="font-size:28px;line-height:32px;font-weight:700">Ta boîte est vide</h2>
+<p style="margin:0;font-size:16px;line-height:24px;color:var(--texte2);max-width:300px">Ajoute les leurres que tu as : Leurio te dit lequel sortir.</p>
+<div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:8px">
+<button class="btn" style="background:var(--foret);color:var(--surforet);border:0">Ajouter le kit de départ</button>
+<button class="btn" style="background:var(--surface);color:var(--texte);border:1px solid var(--bord)">Ajouter un leurre</button>
+</div>
+</div>
+</div>
+<nav class="tabs" aria-label="Navigation">
+<sc-for list="{{onglets}}" as="o" hint-placeholder-count="4">
+<a class="tab {{o.cls}}" href="#" style="text-decoration:none"><span><svg class="ic"><use href="{{o.icone}}"/></svg></span>{{o.nom}}</a>
+</sc-for>
+</nav>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1346,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      phones: [
+        { cls: 'clair', cap: 'Ma boîte · thème clair' },
+        { cls: 'sombre', cap: 'Ma boîte · thème sombre' }
+      ],
+      filtres: [
+        { cls: 'on', aPic: false, pic: '', nom: 'Tous' },
+        { cls: '', aPic: true, pic: '#p-souples', nom: 'Souples' },
+        { cls: '', aPic: true, pic: '#p-durs', nom: 'Durs' },
+        { cls: '', aPic: true, pic: '#p-surface', nom: 'Surface' },
+        { cls: '', aPic: true, pic: '#p-metal', nom: 'Métalliques' },
+        { cls: '', aPic: true, pic: '#p-jupe', nom: 'À jupe' }
+      ],
+      leurres: [
+        { pic: '#p-souples', nom: 'Shad', sous: 'Souples · 8 cm · Gardon' },
+        { pic: '#p-jupe', nom: 'Jig à jupe', sous: 'À jupe · 10 g · Gardon' },
+        { pic: '#p-metal', nom: 'Cuillère tournante', sous: 'Métalliques · 4 cm · Ablette' },
+        { pic: '#p-surface', nom: 'Popper', sous: 'Surface · 6 cm · Gardon' },
+        { pic: '#p-durs', nom: 'Crankbait', sous: 'Durs · 5 cm · Ablette' },
+        { pic: '#p-souples', nom: 'Ver souple finesse', sous: 'Souples · 6 cm · Gardon' }
+      ],
+      onglets: [
+        { cls: '', icone: '#i-boussole', nom: 'Conseil' },
+        { cls: 'on', icone: '#i-boite', nom: 'Boîte' },
+        { cls: '', icone: '#i-pin', nom: 'Spots' },
+        { cls: '', icone: '#i-personne', nom: 'Compte' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

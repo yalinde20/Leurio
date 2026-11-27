@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Écran Conseil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:908px;height:2000px;box-sizing:border-box;padding:40px;background:#dedacc;display:flex;gap:48px;align-items:flex-start}
+.cap{margin:0 0 12px 8px;font:600 14px 'Inter',sans-serif;color:#4a4a42}
+.app{width:390px;height:1880px;box-sizing:border-box;border-radius:44px;border:1px solid rgba(0,0,0,.14);overflow:hidden;display:flex;flex-direction:column;background:var(--fond);color:var(--texte)}
+.app.clair{--fond:#f4f0e6;--surface:#fffdf8;--surface2:#ece6d6;--texte:#10241f;--texte2:#46554f;--bord:#dcd4c2;--prim:#0e6b5c;--foret:#0c3a33;--surforet:#f4f0e6;--foret2:#17564b;--acc:#e8590c;--suracc:#1a1206;--danger:#b42318;--dangerbg:#fbe4e1;--okbg:#d7ece6;--tabact:rgba(14,107,92,.14);--contour:rgba(244,240,230,.12)}
+.app.sombre{--fond:#0b1411;--surface:#13211d;--surface2:#1c2d28;--texte:#e8e3d8;--texte2:#a3b3ad;--bord:#263833;--prim:#5cc8b0;--foret:#123a33;--surforet:#e8e3d8;--foret2:#1b4f45;--acc:#ff8a3d;--suracc:#1a1206;--danger:#f97066;--dangerbg:#3b1b18;--okbg:#17352e;--tabact:rgba(92,200,176,.18);--contour:rgba(92,200,176,.20)}
+.scroll{flex:1;padding:58px 20px 24px;display:flex;flex-direction:column;gap:20px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.pic{fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.t{font-family:'Bricolage Grotesque','Inter',sans-serif;letter-spacing:-.02em;margin:0}
+.pill{height:48px;box-sizing:border-box;border-radius:24px;background:var(--surface);border:1px solid var(--bord);color:var(--texte);display:flex;align-items:center;gap:8px;padding:0 16px;font:500 15px 'Inter',sans-serif;cursor:pointer}
+.pill .ic{color:var(--prim)}
+.card{background:var(--surface);border:1px solid var(--bord);border-radius:24px;padding:20px}
+.hero{position:relative;overflow:hidden;background:var(--foret);color:var(--surforet);border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.badge{height:28px;box-sizing:border-box;border-radius:14px;padding:0 12px;display:flex;align-items:center;gap:6px;font:700 13px 'Inter',sans-serif}
+.facts{background:var(--foret2);border-radius:18px;padding:12px 16px}
+.facts small{display:block;font:500 12px 'Inter',sans-serif;opacity:.8;margin-bottom:2px}
+.tile{background:var(--surface2);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.tile small{font:500 12px 'Inter',sans-serif;color:var(--texte2)}
+.tile b{font:600 15px 'Inter',sans-serif;line-height:20px}
+.row{display:flex;align-items:center;gap:14px;min-height:80px;padding:12px 16px;border-top:1px solid var(--bord);box-sizing:border-box}
+.row:first-child{border-top:0}
+.vig{width:56px;height:56px;flex:none;border-radius:16px;background:var(--surface2);color:var(--prim);display:flex;align-items:center;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;box-sizing:border-box;border-radius:14px;padding:0 10px;font:600 13px 'Inter',sans-serif}
+.chip.ko{background:var(--dangerbg);color:var(--danger)}
+.chip.ok{background:var(--okbg);color:var(--prim)}
+.cta{height:56px;border-radius:28px;background:var(--acc);color:var(--suracc);display:flex;align-items:center;justify-content:center;gap:10px;font:700 17px 'Inter',sans-serif;border:0;width:100%;cursor:pointer}
+.tabs{height:88px;box-sizing:border-box;background:var(--surface);border-top:1px solid var(--bord);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:8px 8px 24px}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:500 12px 'Inter',sans-serif;color:var(--texte2)}
+.tab span{width:56px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.tab .ic{width:24px;height:24px}
+.tab.on{color:var(--prim);font-weight:700}
+.tab.on span{background:var(--tabact)}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="p-souples" viewBox="0 0 64 64"><circle cx="13" cy="30" r="5" style="fill:var(--acc);stroke:none"/><path d="M11 35c-1 7 4 11 10 8"/><path d="M19 27l19-3 12-8v28l-12-8-19-3z"/><path d="M27 27v7M33 26v9"/></symbol>
+<symbol id="p-durs" viewBox="0 0 64 64"><ellipse cx="35" cy="29" rx="19" ry="9"/><path d="M17 33L9 40"/><circle cx="25" cy="27" r="2" style="fill:var(--acc);stroke:none"/><path d="M30 21c-3 5-3 11 0 16"/><path d="M33 38v7a3 3 0 0 1-6 0M47 36v7a3 3 0 0 0 6 0"/></symbol>
+<symbol id="p-surface" viewBox="0 0 64 64"><path d="M14 21h30q9 0 9 6t-9 6H14q5-6 0-12z"/><circle cx="42" cy="26" r="2" style="fill:var(--acc);stroke:none"/><path d="M6 41q5-4 10 0t10 0 10 0 10 0 10 0"/><path d="M16 49q4-3 8 0t8 0 8 0"/></symbol>
+<symbol id="p-metal" viewBox="0 0 64 64"><path d="M10 38h30"/><circle cx="7" cy="38" r="3"/><ellipse cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)" style="fill:var(--acc)"/><path d="M23 38l1-5"/><ellipse cx="45" cy="38" rx="5" ry="4"/><path d="M50 38h3q7 0 7 8M60 46q-3 4-6 1"/></symbol>
+<symbol id="p-jupe" viewBox="0 0 64 64"><circle cx="16" cy="29" r="6" style="fill:var(--acc)"/><circle cx="16" cy="14" r="2.5"/><path d="M16 16.5V23"/><path d="M22 29c10-7 20-9 32-9M22 29c12-2 24-2 34-1M22 29c12 3 24 5 34 6M22 29c10 6 20 13 30 15"/><path d="M21 24v10"/><path d="M13 34c0 8 4 11 9 11"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+<symbol id="i-horloge" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-poisson" viewBox="0 0 24 24"><path d="M2.5 12C6 6.5 12 6 15.5 9.5L21.5 6.5 20 12l1.5 5.5-6-3C12 18 6 17.5 2.5 12z"/><circle cx="7.5" cy="11" r=".6"/></symbol>
+<symbol id="i-chev-bas" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-thermo" viewBox="0 0 24 24"><path d="M10 4a2 2 0 0 1 4 0v10.2a4 4 0 1 1-4 0z"/><path d="M12 9v7"/></symbol>
+<symbol id="i-eau" viewBox="0 0 24 24"><path d="M12 3S5 10.5 5 15a7 7 0 0 0 14 0c0-4.5-7-12-7-12z"/></symbol>
+<symbol id="i-debit" viewBox="0 0 24 24"><path d="M3 9q3-3 6 0t6 0 6 0M3 15q3-3 6 0t6 0 6 0"/></symbol>
+<symbol id="i-pression" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l3.5-6"/><circle cx="12" cy="17" r="1"/></symbol>
+<symbol id="i-ciel" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 18z"/></symbol>
+<symbol id="i-vent" viewBox="0 0 24 24"><path d="M3 9h10a3 3 0 1 0-3-3M3 15h14a3 3 0 1 1-3 3M3 12h6"/></symbol>
+<symbol id="i-lune" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-alerte" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v5M12 18v.2"/></symbol>
+<symbol id="i-livre" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol>
+<symbol id="i-externe" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+<symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></symbol>
+<symbol id="i-boussole" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+<symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3 13h18"/></symbol>
+<symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol>
+</svg>
+
+<sc-for list="{{phones}}" as="p" hint-placeholder-count="2">
+<div>
+<p class="cap">{{p.cap}}</p>
+<div class="app {{p.cls}}">
+<div class="scroll">
+
+<div>
+<h1 class="t" style="font-size:32px;line-height:36px;font-weight:700">Conseil</h1>
+<p style="margin:2px 0 0;font-size:15px;line-height:22px;color:var(--texte2)">Voici quoi lancer maintenant.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:8px">
+<button class="pill" style="width:100%"><svg class="ic"><use href="#i-pin"/></svg><span style="flex:1;text-align:left">Angers · Maine-et-Loire</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev-bas"/></svg></button>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<button class="pill"><svg class="ic"><use href="#i-horloge"/></svg><span style="flex:1;text-align:left">Maintenant</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev-bas"/></svg></button>
+<button class="pill"><svg class="ic"><use href="#i-poisson"/></svg><span style="flex:1;text-align:left">Sandre</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev-bas"/></svg></button>
+</div>
+</div>
+
+<section class="hero" aria-label="Meilleur choix">
+<svg width="350" height="220" viewBox="0 0 350 220" style="position:absolute;right:0;top:0;fill:none;stroke:var(--contour);stroke-width:1.5" aria-hidden="true">
+<ellipse cx="310" cy="40" rx="46" ry="26" transform="rotate(-20 310 40)"/>
+<ellipse cx="310" cy="40" rx="86" ry="50" transform="rotate(-20 310 40)"/>
+<ellipse cx="310" cy="40" rx="130" ry="76" transform="rotate(-20 310 40)"/>
+<ellipse cx="310" cy="40" rx="176" ry="104" transform="rotate(-20 310 40)"/>
+<ellipse cx="310" cy="40" rx="224" ry="134" transform="rotate(-20 310 40)"/>
+</svg>
+<div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px">
+<span class="badge" style="background:var(--acc);color:var(--suracc)">Meilleur choix</span>
+<span class="badge" style="border:1px solid rgba(244,240,230,.4);font-weight:500"><svg class="ic" style="width:14px;height:14px"><use href="#i-check"/></svg>Dans ta boîte</span>
+</div>
+<div style="position:relative;display:flex;align-items:center;gap:16px">
+<div style="width:88px;height:88px;flex:none;border-radius:28px;background:var(--foret2);display:flex;align-items:center;justify-content:center;color:var(--surforet)">
+<svg class="pic" width="68" height="68"><use href="#p-souples"/></svg>
+</div>
+<div>
+<h2 class="t" style="font-size:36px;line-height:38px;font-weight:700">Shad</h2>
+<p style="margin:4px 0 0;font-size:14px;line-height:20px;opacity:.82">Souples · pour le sandre</p>
+</div>
+</div>
+<div style="position:relative;display:flex;flex-direction:column;gap:8px">
+<div class="facts" style="display:flex;align-items:center;gap:12px">
+<svg class="ic" style="width:24px;height:24px"><use href="#i-debit"/></svg>
+<div><small>Animation</small><b class="t" style="font-size:22px;line-height:26px;font-weight:600">Tirée-relâchée</b></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<div class="facts"><small>Couleur</small><b class="t" style="font-size:20px;line-height:24px;font-weight:600">Gardon</b></div>
+<div class="facts"><small>Taille</small><b class="t" style="font-size:20px;line-height:24px;font-weight:600">8 cm</b></div>
+</div>
+</div>
+<p style="position:relative;margin:0;font-size:15px;line-height:22px;opacity:.92">À 11,5 °C, l'activité du sandre est ralentie : une animation lente lui convient.</p>
+<button style="position:relative;height:52px;border:0;border-radius:26px;background:var(--surforet);color:var(--foret);display:flex;align-items:center;justify-content:center;gap:8px;font:600 16px 'Inter',sans-serif;cursor:pointer">Voir le détail<svg class="ic"><use href="#i-chev"/></svg></button>
+</section>
+
+<section class="card" aria-label="Conditions">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<div>
+<p style="margin:0;font-size:13px;line-height:18px;color:var(--texte2);display:flex;align-items:center;gap:6px"><svg class="ic" style="width:16px;height:16px;color:var(--prim)"><use href="#i-eau"/></svg>Température de l'eau</p>
+<p class="t" style="font-size:48px;line-height:52px;font-weight:700;margin-top:2px">11,5 °C</p>
+<p style="margin:4px 0 0;font-size:13px;line-height:18px;color:var(--texte2)">Station Hub'Eau La Maine à Angers, à 4 km</p>
+</div>
+<button aria-label="Saisir la température de l'eau" style="width:48px;height:48px;flex:none;border-radius:24px;border:1px solid var(--bord);background:var(--surface2);color:var(--prim);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg class="ic" style="width:24px;height:24px"><use href="#i-thermo"/></svg></button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px">
+<sc-for list="{{tuiles}}" as="u" hint-placeholder-count="6">
+<div class="tile"><small style="display:flex;align-items:center;gap:6px"><svg class="ic" style="width:16px;height:16px;color:var(--prim)"><use href="{{u.icone}}"/></svg>{{u.label}}</small><b>{{u.valeur}}</b></div>
+</sc-for>
+</div>
+</section>
+
+<section aria-label="À essayer aussi">
+<h2 class="t" style="font-size:20px;line-height:26px;font-weight:700;margin-bottom:10px">À essayer aussi</h2>
+<div class="card" style="padding:0;overflow:hidden">
+<sc-for list="{{autres}}" as="r" hint-placeholder-count="2">
+<a class="row" href="#" style="color:inherit;text-decoration:none">
+<div class="vig"><svg class="pic" width="42" height="42"><use href="{{r.pic}}"/></svg></div>
+<div style="flex:1;min-width:0"><div style="font:600 17px/22px 'Inter',sans-serif">{{r.nom}}</div><div style="font-size:14px;line-height:20px;color:var(--texte2)">{{r.sous}}</div></div>
+<svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg>
+</a>
+</sc-for>
+</div>
+</section>
+
+<section class="card" aria-label="Réglementation">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><svg class="ic" style="width:24px;height:24px;color:var(--prim)"><use href="#i-livre"/></svg><h2 class="t" style="font-size:20px;line-height:26px;font-weight:700">Réglementation</h2></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;border-top:1px solid var(--bord)"><span style="font-size:15px;font-weight:500">1re catégorie</span><span class="chip ko"><svg class="ic" style="width:16px;height:16px"><use href="#i-alerte"/></svg>Fermé jusqu'au 13/03</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;border-top:1px solid var(--bord)"><span style="font-size:15px;font-weight:500">2e catégorie</span><span class="chip ok"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg>Ouvert</span></div>
+<p style="margin:8px 0 0;font-size:13px;line-height:18px;color:var(--texte2)">À vérifier dans l'arrêté de ton département.</p>
+<a href="#" style="display:flex;align-items:center;gap:8px;min-height:48px;color:var(--prim);font:600 15px 'Inter',sans-serif;text-decoration:underline">Fédération de pêche de Maine-et-Loire<svg class="ic"><use href="#i-externe"/></svg></a>
+</section>
+
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:auto">
+<button class="cta"><svg class="ic" style="width:24px;height:24px"><use href="#i-telecharger"/></svg>Préparer ma sortie</button>
+<p style="margin:0;text-align:center;font-size:13px;line-height:18px;color:var(--texte2)">Télécharge les conditions des 48 prochaines heures pour pêcher sans réseau.</p>
+</div>
+
+</div>
+<nav class="tabs" aria-label="Navigation">
+<sc-for list="{{onglets}}" as="o" hint-placeholder-count="4">
+<a class="tab {{o.cls}}" href="#" style="text-decoration:none"><span><svg class="ic"><use href="{{o.icone}}"/></svg></span>{{o.nom}}</a>
+</sc-for>
+</nav>
+</div>
+</div>
+</sc-for>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":908,"height":2000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      phones: [
+        { cls: 'clair', cap: 'Thème clair : plein soleil' },
+        { cls: 'sombre', cap: 'Thème sombre : aube, crépuscule, nuit' }
+      ],
+      tuiles: [
+        { icone: '#i-debit', label: 'Débit', valeur: 'Normal' },
+        { icone: '#i-pression', label: 'Pression', valeur: '1016 hPa, stable' },
+        { icone: '#i-ciel', label: 'Ciel', valeur: 'Nuageux' },
+        { icone: '#i-vent', label: 'Vent', valeur: '12 km/h' },
+        { icone: '#i-lune', label: 'Lune', valeur: 'Premier croissant' },
+        { icone: '#i-horloge', label: 'Heures légales', valeur: '7 h 02 – 18 h 39' }
+      ],
+      autres: [
+        { pic: '#p-jupe', nom: 'Jig à jupe', sous: 'Gratté · Gardon · 10 g' },
+        { pic: '#p-souples', nom: 'Ver souple finesse', sous: 'Drop shot · Gardon · 6 cm' }
+      ],
+      onglets: [
+        { cls: 'on', icone: '#i-boussole', nom: 'Conseil' },
+        { cls: '', icone: '#i-boite', nom: 'Boîte' },
+        { cls: '', icone: '#i-pin', nom: 'Spots' },
+        { cls: '', icone: '#i-personne', nom: 'Compte' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
