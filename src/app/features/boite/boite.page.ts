@@ -3,6 +3,7 @@ import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { EchecEnvoiPhoto } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
+import { PictogrammeFamilleComponent } from '../../shared/pictogramme-famille/pictogramme-famille.component';
 import { formaterLongueur, formaterPoids } from '../../shared/unites';
 import { UnitesService } from '../../shared/unites.service';
 import { KitDepartComponent } from './kit-depart.component';
@@ -10,7 +11,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 
 @Component({
   selector: 'app-boite',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent, KitDepartComponent],
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent, KitDepartComponent, PictogrammeFamilleComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -135,6 +136,21 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       border-radius: 10px;
       object-fit: cover;
     }
+    .vignette-famille {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border: 1px solid var(--lr-bordure);
+      border-radius: 12px;
+      background: var(--lr-sable);
+    }
+    .vignette-famille app-pictogramme-famille {
+      width: 46px;
+      height: 46px;
+    }
     .corps {
       flex: 1;
       min-width: 0;
@@ -243,9 +259,11 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
             @if (affiches.length > 0) {
               <ul class="liste">
                 @for (leurre of affiches; track leurre.id) {
-                  <li class="leurre" [class.avec-photo]="leurre.photoUrl">
+                  <li class="leurre" [class.avec-photo]="leurre.photoUrl || familleDe(leurre.typeId)">
                     @if (leurre.photoUrl) {
                       <img class="vignette" [src]="leurre.photoUrl" alt="Photo du leurre" />
+                    } @else if (familleDe(leurre.typeId); as famille) {
+                      <span class="vignette-famille"><app-pictogramme-famille [famille]="famille" /></span>
                     }
                     <div class="corps">
                       <h3>
@@ -303,6 +321,7 @@ export class BoitePage implements OnInit {
   /** Identifiant de la famille choisie ; null = « Toutes ». Repart de « Toutes » à chaque ouverture de l'onglet. */
   protected readonly familleChoisie = signal<string | null>(null);
   private readonly famillesParType = computed(() => new Map(this.typesDuContenu().map((t) => [t.id, t.famille])));
+  private readonly famillesParId = computed(() => new Map(this.famillesDuContenu().map((f) => [f.id, f])));
   protected readonly formulaireOuvert = signal(false);
   protected readonly echec = signal(false);
   protected readonly echecPhoto = signal(false);
@@ -345,6 +364,12 @@ export class BoitePage implements OnInit {
     const famille = this.familleChoisie();
     if (famille === null) return leurres;
     return leurres.filter((l) => this.famillesParType().get(l.typeId) === famille);
+  }
+
+  /** Famille du type de leurre, pour son pictogramme (US 293) ; absente si le contenu des familles est illisible. */
+  protected familleDe(typeId: string): FamilleLeurre | undefined {
+    const id = this.famillesParType().get(typeId);
+    return id === undefined ? undefined : this.famillesParId().get(id);
   }
 
   protected taille(cm: number): string {

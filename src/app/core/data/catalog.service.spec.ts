@@ -128,3 +128,28 @@ describe('CatalogService', () => {
     expect(await second).toEqual(species);
   });
 });
+
+describe('CatalogService : pictogrammes (US 293)', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('given un chemin de pictogramme, when on le demande deux fois, then le SVG est lu une seule fois dans assets/', async () => {
+    const { service, http } = mise_en_place();
+    const premier = service.pictogramme('pictogrammes/souples.svg');
+    const second = service.pictogramme('pictogrammes/souples.svg');
+    const requete = http.expectOne('assets/pictogrammes/souples.svg');
+    expect(requete.request.responseType).toBe('text');
+    requete.flush('<svg/>');
+    expect(await premier).toBe('<svg/>');
+    expect(await second).toBe('<svg/>');
+  });
+
+  it('given un SVG illisible, when on le redemande, then la lecture est retentée', async () => {
+    const { service, http } = mise_en_place();
+    const echec = service.pictogramme('pictogrammes/durs.svg');
+    http.expectOne('assets/pictogrammes/durs.svg').error(new ProgressEvent('error'));
+    await expect(echec).rejects.toBeTruthy();
+    const reessai = service.pictogramme('pictogrammes/durs.svg');
+    http.expectOne('assets/pictogrammes/durs.svg').flush('<svg/>');
+    expect(await reessai).toBe('<svg/>');
+  });
+});
