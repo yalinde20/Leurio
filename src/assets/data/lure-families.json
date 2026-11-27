@@ -2,6 +2,7 @@
   {
     "id": "souples",
     "nom": "Souples",
+    "pictogramme": "pictogrammes/souples.svg",
     "sources": [
       "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
     ],
@@ -10,6 +11,7 @@
   {
     "id": "durs",
     "nom": "Durs",
+    "pictogramme": "pictogrammes/durs.svg",
     "sources": [
       "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
     ],
@@ -18,6 +20,7 @@
   {
     "id": "surface",
     "nom": "Surface",
+    "pictogramme": "pictogrammes/surface.svg",
     "sources": [
       "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
     ],
@@ -26,6 +29,7 @@
   {
     "id": "metalliques",
     "nom": "Métalliques",
+    "pictogramme": "pictogrammes/metalliques.svg",
     "sources": [
       "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
     ],
@@ -34,6 +38,7 @@
   {
     "id": "a-jupe",
     "nom": "À jupe",
+    "pictogramme": "pictogrammes/a-jupe.svg",
     "sources": [
       "Familles de leurres proposées pendant l'US 100, non relues en ligne ; validées par le propriétaire"
     ],

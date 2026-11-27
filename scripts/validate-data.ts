@@ -133,6 +133,12 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
     for (const id of new Set((t['techniques'] as string[] | undefined) ?? []))
       if (!animations.has(id)) messages.push(`${lieu} : animation inconnue « ${id} » (absente de techniques.json)`);
   }
+  // Les pictogrammes se résolvent depuis la racine des assets, parent du dossier de données.
+  for (const f of contenu['lure-families'] ?? []) {
+    const fichier = String(f['pictogramme']);
+    if (!existsSync(join(dirname(dossier), fichier)))
+      messages.push(`lure-families.json, famille de leurres ${String(f['id'])} : pictogramme « ${fichier} » absent des assets`);
+  }
   for (const k of contenu['starter-kit'] ?? []) {
     const id = String(k['typeId']);
     if (!types.has(id))

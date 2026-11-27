@@ -7,6 +7,7 @@
     "required": [
       "id",
       "nom",
+      "pictogramme",
       "sources",
       "dateVerif"
     ],
@@ -20,6 +21,11 @@
         "type": "string",
         "minLength": 1,
         "description": "Libellé de la puce du filtre de la boîte."
+      },
+      "pictogramme": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9/_-]*\\.svg$",
+        "description": "Chemin du pictogramme SVG, relatif à src/assets/ (ex. pictogrammes/souples.svg)."
       },
       "sources": {
         "type": "array",
