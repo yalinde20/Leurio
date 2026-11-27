@@ -89,6 +89,8 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
 });
 
 test('US 292 critère 3 : given l\'écran Conseil, when on lit la police des chiffres, then la température de l\'eau et les pastilles de rang sont en Barlow Condensed', async ({ page }) => {
+  // Midi : dans les heures légales, sinon l'écran avertit au lieu de conseiller et n'a pas de pastille de rang.
+  await page.clock.setFixedTime(new Date('2026-11-09T12:00:00Z'));
   await onboardingTermine(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
   await page.goto('/');
