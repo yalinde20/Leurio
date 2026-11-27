@@ -134,11 +134,13 @@ html[data-theme='sombre'] {
   }
 }
 
-/* US 294 : Boîte, Spots et Compte n'ont plus de barre d'onglets, qui réservait la zone de l'indicateur d'accueil iOS.
+/* US 294 : Boîte, Spots, Compte, le détail d'un conseil et la fiche animation n'ont plus de barre d'onglets, qui réservait la zone de l'indicateur d'accueil iOS.
    Leur contenu garde cette marge en bas ; le Conseil la porte dans son dock, il n'est pas concerné. */
 app-boite,
 app-spots,
-app-compte {
+app-compte,
+app-conseil-detail,
+app-animation {
   ion-content {
     --padding-bottom: var(--ion-safe-area-bottom, 0px);
   }

@@ -6,6 +6,7 @@ import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.
 import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { SOURCE_SUPPRESSION, SuppressionCompteService } from '../../core/data/suppression-compte.service';
+import { ConseilChoixStore } from '../conseil/conseil-choix.store';
 import { PortailDirective } from '../../shared/portail/portail.directive';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
@@ -615,6 +616,7 @@ export class ComptePage {
   private readonly export = inject(ExportService);
   private readonly suppression = inject(SOURCE_SUPPRESSION);
   private readonly etatLocal = inject(SuppressionCompteService);
+  private readonly choixConseil = inject(ConseilChoixStore);
 
   protected readonly confirmation = signal(false);
   protected readonly reconnexion = signal<Reconnexion | null>(null);
@@ -784,6 +786,7 @@ export class ComptePage {
       return;
     }
     this.etatLocal.effacerEtatLocal();
+    this.choixConseil.reinitialiser(); // le spot et la sortie préparée du Conseil appartiennent au compte supprimé
     await this.router.navigateByUrl('/onboarding');
   }
 

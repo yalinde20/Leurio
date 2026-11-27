@@ -1,4 +1,4 @@
-import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -35,7 +35,7 @@ import {
   formaterTempEau,
   formaterVent,
 } from './conditions-format';
-import { ConseilChoixStore, MessageSortie, MomentChoisi } from './conseil-choix.store';
+import { ConseilChoixStore, MomentChoisi, SortiePrete } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
 import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 import { LigneBoiteComponent } from './ligne-boite.component';
@@ -888,6 +888,7 @@ export class ConseilPage implements OnInit {
   private readonly injector = inject(Injector);
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => (this.detruit = true));
     // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
     const gardé = this.choix.moment();
     if (gardé) {
@@ -957,7 +958,8 @@ export class ConseilPage implements OnInit {
 
   protected readonly preparationEnCours = signal(false);
   /** Le résultat de la dernière préparation, sous le bouton ; effacé quand le lieu change. */
-  protected readonly messageSortie = this.choix.messageSortie;
+  /** Le message de « Ma sortie » affiché ; seul le succès « Sortie prête » est gardé par le store pour le retour sur l'écran. */
+  protected readonly messageSortie = signal<{ type: 'prete' | 'hors ligne' | 'echec'; texte: string } | null>(null);
 
   /** Le spot qui sert de lieu ; `null` = « Ma position ». État du composant, jamais mémorisé. */
   protected readonly spotChoisi = this.choix.spot;
@@ -968,6 +970,8 @@ export class ConseilPage implements OnInit {
   private readonly boutonLieu = viewChild<ElementRef<HTMLButtonElement>>('boutonLieu');
   /** Numéro du dernier choix de lieu : une position obtenue pour un choix plus ancien est ignorée. */
   private choixLieu = 0;
+  /** Vrai une fois l'écran détruit : une lecture ou une préparation en retard n'écrit plus rien. */
+  private detruit = false;
   /** Numéro de la dernière lecture des spots. */
   private lectureSpots = 0;
   /**
@@ -1135,34 +1139,43 @@ export class ConseilPage implements OnInit {
   }
 
   /**
-   * Retour sur l'écran (Boîte, Spots ou Compte puis « Conseil ») : le spot choisi et le message de « Ma sortie » sont repris, sans position GPS
-   * quand un spot était choisi.
-   * Un spot supprimé entre-temps (ou sans lecture possible : le spot gardé sert alors) : retour sur « Ma position ».
+   * Retour sur l'écran (Boîte, Spots ou Compte puis « Conseil ») : le spot choisi est appliqué tout de suite (il a déjà ses coordonnées, sans
+   * position GPS) et la sortie préparée dont les conditions courent encore est reprise. Le spot est ensuite vérifié en arrière-plan :
+   * supprimé, retour sur « Ma position » ; renommé, son nom est mis à jour. Rien n'est écrit si l'utilisateur a choisi un autre lieu entre-temps
+   * ou si l'écran est détruit.
    */
   private async reprendreOuCharger(): Promise<void> {
     const gardé = this.spotChoisi();
-    const message: MessageSortie | null = this.messageSortie();
-    if (!gardé) {
-      const chargement = this.charger();
-      this.messageSortie.set(message); // le chargement vide l'écran, mais le lieu reste « Ma position » : le message reste vrai
-      return chargement;
-    }
-    let spot: SpotEnregistre | null = gardé;
+    const sortie = this.choix.sortiePrete();
+    const chargement = gardé ? this.appliquerLieu(gardé) : this.charger();
+    this.reprendreSortie(sortie); // le chargement vide l'écran, mais le lieu reste le même : le message reste vrai
+    if (!gardé) return chargement;
+    const numero = this.choixLieu;
+    let spots: SpotEnregistre[];
     try {
-      spot = (await this.spots.mesSpots()).find((s) => s.id === gardé.id) ?? null;
+      spots = await this.spots.mesSpots();
     } catch {
-      // Lecture impossible : on garde le spot choisi.
+      return chargement; // Lecture impossible : on garde le spot choisi.
     }
-    if (this.lieuDemande.demande() !== null) return; // « Voir le conseil » a pris la main pendant la lecture.
-    if (!spot) {
+    if (this.detruit || numero !== this.choixLieu) return chargement;
+    const lu = spots.find((s) => s.id === gardé.id);
+    if (!lu) {
       this.spotChoisi.set(null);
-      this.messageSortie.set(null);
       return this.charger();
     }
-    this.spotChoisi.set(spot);
-    const appliquer = this.appliquerLieu(spot);
-    this.messageSortie.set(message); // appliquerLieu vide l'écran, mais le lieu est le même : le message reste vrai.
-    return appliquer;
+    if (lu.lat === gardé.lat && lu.lng === gardé.lng && lu.categorie === gardé.categorie && lu.departement === gardé.departement) {
+      this.spotChoisi.set(lu); // renommé : le nom suit
+      return chargement;
+    }
+    this.spotChoisi.set(lu);
+    return this.appliquerLieu(lu);
+  }
+
+  /** Remet le message « Sortie prête » d'avant le départ de l'écran, tant que ses conditions courent ; sinon l'oublie. */
+  private reprendreSortie(sortie: SortiePrete | null): void {
+    if (!sortie || sortie.jusquA.getTime() <= Date.now()) return;
+    this.choix.sortiePrete.set(sortie);
+    this.messageSortie.set({ type: 'prete', texte: sortie.texte });
   }
 
   /** Le spot demandé par « Voir le conseil » devient le lieu, comme un choix dans la feuille « Lieu ». */
@@ -1194,12 +1207,16 @@ export class ConseilPage implements OnInit {
     if (!lieu || this.preparationEnCours()) return;
     this.preparationEnCours.set(true);
     this.messageSortie.set(null);
+    this.choix.sortiePrete.set(null);
     const choixLieu = this.choixLieu;
     const resultat = await this.sortie.preparer({ latitude: lieu.latitude, longitude: lieu.longitude });
     this.preparationEnCours.set(false);
     // Le lieu a changé pendant la préparation : son message ne concerne plus l'écran.
-    if (choixLieu !== this.choixLieu) return;
-    this.messageSortie.set(messagePreparation(resultat));
+    if (this.detruit || choixLieu !== this.choixLieu) return;
+    const message = messagePreparation(resultat);
+    this.messageSortie.set(message);
+    // Seul le succès est gardé pour le retour sur l'écran ; une erreur ne doit pas être relue à chaque retour.
+    this.choix.sortiePrete.set(resultat.statut === 'prete' ? { texte: message.texte, jusquA: resultat.jusquA } : null);
   }
 
   protected ouvrirSaisie(): void {
@@ -1278,6 +1295,7 @@ export class ConseilPage implements OnInit {
     this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
     this.messageSortie.set(null);
+    this.choix.sortiePrete.set(null);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
   }

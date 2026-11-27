@@ -66,6 +66,9 @@ test('US 293 critère 3 : given un pictogramme affiché, when on passe du thème
       };
     });
 
+  // Les formes du SVG sont dessinées après l'affichage de l'élément : on les attend avant de lire les couleurs.
+  await expect(pictogramme(page).locator('[data-point]')).toHaveCount(1);
+  await expect(pictogramme(page).locator(':is(path, line, circle, rect, polyline, polygon, ellipse):not([data-point])').first()).toBeAttached();
   expect(await couleurs()).toEqual({ trait: rgb(themes.clair['--lr-trait']), point: rgb(themes.clair['--lr-accent']) });
   await page.emulateMedia({ colorScheme: 'dark' });
   await expect.poll(couleurs).toEqual({ trait: rgb(themes.sombre['--lr-trait']), point: rgb(themes.sombre['--lr-accent']) });
