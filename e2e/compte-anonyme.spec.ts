@@ -113,7 +113,7 @@ test.describe('US 90 : compte anonyme en silence', () => {
     // La création a bien été tentée (puis a échoué), sans rien montrer.
     await expect.poll(() => tentatives.length, { timeout: 20_000 }).toBeGreaterThan(0);
 
-    await expect(page.getByRole('heading', { name: /conseil/i }).first().or(page.getByRole('tab', { name: /conseil/i }))).toBeVisible();
+    await expect(page.getByRole('heading', { name: /conseil/i }).first().or(page.getByRole('navigation', { name: 'Navigation' }))).toBeVisible();
     await aucunMessage(page);
     expect(await uidAnonyme(page)).toBeNull();
   });

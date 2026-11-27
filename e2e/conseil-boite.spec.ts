@@ -6,6 +6,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -80,7 +81,7 @@ const echapper = (t: string): string => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /** Ajoute dans l'onglet « Boîte » un leurre du type donné (10 cm, 12 g, perche), puis revient sur « Conseil ». */
 async function ajouterUnLeurre(page: Page, nomType: string): Promise<void> {
-  await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
+  await ouvrirEcran(page, 'Boîte');
   await page.getByRole('button', { name: 'Ajouter un leurre', exact: true }).click();
   const f = page.locator('[role="dialog"]');
   await f.getByLabel('Type').selectOption({ label: nomType });
@@ -90,7 +91,7 @@ async function ajouterUnLeurre(page: Page, nomType: string): Promise<void> {
   await f.getByRole('button', { name: 'Enregistrer', exact: true }).click();
   await expect(f).toHaveCount(0);
   await expect(page.locator('li').first()).toContainText(nomType);
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
 }
 
 test("critère 3 : given ma boîte est vide, when j'ouvre l'écran Conseil, then chacune des 3 cartes affiche une ligne « Il te manque : » avec un article, une couleur et pas de « Dans ta boîte »", async ({
@@ -163,9 +164,9 @@ test("critère 6 : given je n'ai pas de réseau après avoir lu ma boîte, when 
   await expect(cartesConseil(page).first()).toContainText(motif);
 
   await context.setOffline(true);
-  await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
+  await ouvrirEcran(page, 'Boîte');
   await expect(page.locator('li').first()).toContainText(type);
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
 
   await expect(cartesConseil(page)).toHaveCount(3);
   await expect(cartesConseil(page).first()).toContainText(motif);

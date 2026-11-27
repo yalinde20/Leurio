@@ -58,7 +58,7 @@ test('US 86 critère 1 : given l\'écran Conseil avec 3 cartes, when je touche l
   await expect(page.getByText(/Où le lancer\s*:/)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Pourquoi ce conseil' })).toBeVisible();
   expect(await page.locator('li').count()).toBeGreaterThanOrEqual(1);
-  await expect(page.getByRole('tab', { name: 'Conseil', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/\/conseil\/detail\//);
 });
 
 test('US 86 critère 2 : given le détail ouvert, when je touche « Voir l\'animation », then la fiche de l\'animation s\'ouvre avec le geste, la vitesse et l\'erreur à éviter', async ({ page }) => {

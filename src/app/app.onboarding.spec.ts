@@ -60,7 +60,8 @@ describe('App et onboarding (US 89)', () => {
 
     expect(router.url).toBe('/conseil');
     expect(page.textContent).not.toContain('Leurio, ton conseil de pêche au leurre');
-    expect(page.querySelectorAll('[role="tab"]')).toHaveLength(4);
+    expect(page.querySelector('nav[aria-label="Navigation"]')).not.toBeNull();
+    expect(page.querySelectorAll('[role="tab"]')).toHaveLength(0);
   });
 
   it("critère 8 : given j'ai terminé l'onboarding, when j'ouvre l'adresse /onboarding, then je suis renvoyé vers l'écran « Conseil »", async () => {

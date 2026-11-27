@@ -124,7 +124,7 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await expect.poll(async () => (await leurresSurEmulateur(uid)).length + (await spotsSurEmulateur(uid)).length, { timeout: 20_000 }).toBe(2);
   await onglet(page, 'Conseil');
   await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /^Préparer ma sortie$/ }).click();
+  await page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: /^Ma sortie$/ }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Sortie prête' })).toBeVisible();
 
   await modeAvion(page, true);

@@ -2,6 +2,7 @@
 // Le mode avion est `context.setOffline(true)` : il coupe aussi les émulateurs locaux (Firestore, Auth).
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -26,7 +27,8 @@ export async function attendreCompte(page: Page): Promise<string> {
   return (await lireUid(page))!;
 }
 
-export const onglet = (page: Page, nom: 'Conseil' | 'Boîte' | 'Spots' | 'Compte') => page.getByRole('tab', { name: nom, exact: true }).click();
+/** US 294 : ouvre un écran par le dock, l'avatar ou le retour « Conseil » (voir dock-helpers.ts). */
+export const onglet = ouvrirEcran;
 
 export async function ouvrirOnglet(page: Page, nom: 'Boîte' | 'Spots'): Promise<void> {
   await onglet(page, nom);

@@ -198,7 +198,7 @@ test.describe('US 89 : onboarding', () => {
     await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
     await expect(page).toHaveURL(/\/conseil$/);
     await expect(titre(page, 'Leurio, ton conseil de pêche au leurre')).toHaveCount(0);
-    await expect(page.getByRole('tab', { name: 'Conseil', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('navigation', { name: 'Navigation' })).toBeVisible();
   });
 
   test("critère 1 : given l'onboarding quitté après la page 2, when je relance l'app, then il recommence à la page 1", async ({ page }) => {

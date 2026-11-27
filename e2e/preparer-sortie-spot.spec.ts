@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 // US 15 : « Préparer ma sortie » depuis un spot (PLAN §3, §4). Maquette : docs/maquettes/us-15-preparer-ma-sortie-spot.html.
 // Spot créé par l'interface (émulateurs, comme spots-ajout.spec.ts). Aucun service réel : Open-Meteo répond par une prévision
@@ -55,7 +56,7 @@ async function ouvrirLeSpot(page: Page, requetesMeteo: string[] = []): Promise<v
   await attendreFirebase(page);
   // L'app s'ouvre sur « Conseil » : on attend son top 3 en ligne (contenu du moteur chargé), puis on va sur « Spots ».
   await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
-  await page.getByRole('tab', { name: 'Spots', exact: true }).click();
+  await ouvrirEcran(page, 'Spots');
   await page.getByRole('button', { name: 'Ajouter un spot', exact: true }).click();
   await formulaire(page).getByLabel('Nom').fill('Pont de Cé');
   await formulaire(page).getByRole('radio', { name: '2e catégorie' }).click();

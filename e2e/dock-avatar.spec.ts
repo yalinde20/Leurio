@@ -180,3 +180,40 @@ for (const [chemin, nom] of [['/boite', 'Boîte'], ['/spots', 'Spots'], ['/compt
     await expect(page.getByRole('button', { name: /^Ma sortie$/ })).toHaveCount(0);
   });
 }
+
+// Reprise de e2e/onglets.spec.ts (supprimé avec la barre d'onglets) : adresses directes et adresse inconnue.
+test("US 294 extra : given une URL inconnue, when on l'ouvre, then l'écran Conseil s'affiche", async ({ page }) => {
+  await ouvrirLApp(page, '/nimporte-quoi/du-tout');
+
+  await expect(titreVisible(page)).toHaveText('Conseil');
+  await expect(page).toHaveURL(/\/conseil$/);
+  await expect(dock(page)).toBeVisible();
+});
+
+test("US 294 extra : given l'URL /conseil ouverte directement, when l'app s'affiche, then l'écran Conseil et son dock s'affichent", async ({ page }) => {
+  await ouvrirLApp(page, '/conseil');
+
+  await expect(titreVisible(page)).toHaveText('Conseil');
+  await expect(dock(page)).toBeVisible();
+});
+
+// Reprise du critère 7 des onglets : les couleurs du dock sont celles des tokens, en thème clair et en thème sombre.
+for (const [theme, scheme] of [['clair', 'dark'], ['sombre', 'light']] as const) {
+  test(`US 294 couleurs (${theme}) : given le dock, when on l'affiche en thème ${theme}, then ses couleurs sont celles des tokens du thème ${theme}`, async ({ page }) => {
+    const tokens = lireThemes()[theme];
+    await page.emulateMedia({ colorScheme: scheme }); // le thème choisi l'emporte sur le réglage du téléphone
+    await page.addInitScript(([k, v]) => localStorage.setItem(k, v), ['leurio.theme', theme]);
+    await ouvrirLApp(page);
+    await expect(dock(page)).toBeVisible();
+
+    const couleur = (cible: ReturnType<Page['locator']>, prop: 'backgroundColor' | 'color' | 'borderTopColor') =>
+      cible.evaluate((el, p) => getComputedStyle(el)[p], prop);
+    const barre = dock(page).locator('xpath=..'); // la zone du dock : fond et filet du haut
+    expect(await couleur(barre, 'backgroundColor')).toBe(rgb(tokens['--lr-surface']));
+    expect(await couleur(barre, 'borderTopColor')).toBe(rgb(tokens['--lr-bordure']));
+    expect(await couleur(lienBoite(page), 'color')).toBe(rgb(tokens['--lr-texte']));
+    expect(await couleur(lienBoite(page), 'borderTopColor')).toBe(rgb(tokens['--lr-bordure']));
+    expect(await couleur(boutonSortie(page), 'backgroundColor')).toBe(rgb(tokens['--lr-primaire']));
+    expect(await couleur(boutonSortie(page), 'color')).toBe(rgb(tokens['--lr-sur-primaire']));
+  });
+}

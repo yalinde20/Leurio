@@ -44,10 +44,10 @@ async function ouvrirLApp(page: Page): Promise<void> {
 const cartesConseil = (page: Page) =>
   page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') });
 
-test('US 81 critère 1 : given l\'onboarding terminé, la localisation autorisée et un moment dans les heures légales, when j\'ouvre l\'app, then l\'onglet « Conseil » montre la carte « Conditions » et 3 cartes de conseil sans aucun tap', async ({ page }) => {
+test('US 81 critère 1 : given l\'onboarding terminé, la localisation autorisée et un moment dans les heures légales, when j\'ouvre l\'app, then l\'écran « Conseil » montre la carte « Conditions » et 3 cartes de conseil sans aucun tap', async ({ page }) => {
   await ouvrirLApp(page);
 
-  await expect(page.getByRole('tab', { name: 'Conseil', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
   await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
   await expect(cartesConseil(page)).toHaveCount(3);
@@ -57,12 +57,12 @@ test('US 81 critère 1 : given l\'onboarding terminé, la localisation autorisé
 test('US 81 critère 8 : given l\'écran Conseil affiché sur un téléphone, when on mesure ses boutons, then chaque bouton mesure au moins 48 × 48 px', async ({ page }) => {
   await ouvrirLApp(page);
   await expect(cartesConseil(page)).toHaveCount(3);
-  const bouton = page.getByRole('button', { name: 'Préparer ma sortie' });
+  const bouton = page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: 'Ma sortie' });
   await expect(bouton).toBeVisible();
 
-  const cibles = page.locator('button:visible, a:visible, ion-button:visible, [role="button"]:visible, ion-tab-button:visible');
+  const cibles = page.locator('button:visible, a:visible, ion-button:visible, [role="button"]:visible');
   const nombre = await cibles.count();
-  expect(nombre).toBeGreaterThan(4); // 4 onglets et « Préparer ma sortie » au moins
+  expect(nombre).toBeGreaterThan(3); // 3 boutons du dock et l'avatar au moins
   for (let i = 0; i < nombre; i++) {
     const cible = cibles.nth(i);
     await cible.scrollIntoViewIfNeeded();

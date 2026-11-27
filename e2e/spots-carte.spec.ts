@@ -6,6 +6,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { lireThemes } from './tokens';
 import { attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
 test.beforeEach(async ({ page }) => onboardingTermine(page));
@@ -50,7 +51,7 @@ async function ouvrirSpots(page: Page, spots: Record<string, unknown>): Promise<
     for (const [id, data] of Object.entries(docs)) await setDoc(doc(f.db, 'users', uid, 'spots', id), data);
     await waitForPendingWrites(f.db);
   }, spots);
-  await page.getByRole('tab', { name: 'Spots', exact: true }).click();
+  await ouvrirEcran(page, 'Spots');
   await expect(page.getByRole('region', { name: 'Carte des spots' })).toBeVisible();
 }
 

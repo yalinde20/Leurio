@@ -4,6 +4,7 @@
 // (les écrans sont chargés à la demande), puis on coupe le réseau et on repasse par les quatre onglets.
 import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { estLocal } from './firebase-helpers';
 
 test.use({
@@ -17,15 +18,13 @@ test.beforeEach(async ({ page }) => {
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
 });
 
-const ONGLETS = ['Conseil', 'Boîte', 'Spots', 'Compte'];
-const onglet = (page: Page, nom: string) => page.getByRole('tab', { name: nom, exact: true });
+const ONGLETS = ['Conseil', 'Boîte', 'Spots', 'Compte'] as const;
 const bandeau = (page: Page) => page.getByRole('status').filter({ hasText: /^\s*Hors ligne\s*$/ });
 
 async function visiterLesOnglets(page: Page): Promise<void> {
   await page.goto('/');
   for (const nom of ONGLETS) {
-    await onglet(page, nom).click();
-    await expect(onglet(page, nom)).toHaveAttribute('aria-selected', 'true');
+    await ouvrirEcran(page, nom);
     await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText(nom);
   }
 }
@@ -37,12 +36,12 @@ const reseau = async (page: Page, coupe: boolean) => {
 
 test("critère 1 : given l'app ouverte avec du réseau, when le réseau est coupé, then un indicateur « Hors ligne » s'affiche en haut de chaque onglet (Conseil, Boîte, Spots, Compte)", async ({ page }) => {
   await visiterLesOnglets(page);
-  await onglet(page, 'Conseil').click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(bandeau(page)).toHaveCount(0);
 
   await reseau(page, true);
   for (const nom of ONGLETS) {
-    await onglet(page, nom).click();
+    await ouvrirEcran(page, nom);
     await expect(page.locator('ion-toolbar ion-title:visible'), nom).toHaveText(nom);
     await expect(bandeau(page), `bandeau sur ${nom}`).toBeVisible();
     // En haut de l'écran : au-dessus de la barre de titre de la page, sans la recouvrir (l'écran est poussé vers le bas).
@@ -53,14 +52,14 @@ test("critère 1 : given l'app ouverte avec du réseau, when le réseau est coup
 
 test("critère 2 : given l'indicateur « Hors ligne » affiché, when le réseau revient, then l'indicateur disparaît", async ({ page }) => {
   await visiterLesOnglets(page);
-  await onglet(page, 'Conseil').click();
+  await ouvrirEcran(page, 'Conseil');
   await reseau(page, true);
   await expect(bandeau(page)).toBeVisible();
 
   await reseau(page, false);
   await expect(bandeau(page)).toHaveCount(0);
   for (const nom of ONGLETS) {
-    await onglet(page, nom).click();
+    await ouvrirEcran(page, nom);
     await expect(page.locator('ion-toolbar ion-title:visible'), nom).toHaveText(nom);
     await expect(bandeau(page), `pas de bandeau sur ${nom}`).toHaveCount(0);
   }

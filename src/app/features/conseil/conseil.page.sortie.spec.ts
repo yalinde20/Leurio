@@ -6,7 +6,7 @@
  * Hub'Eau, Astro, Catalogue, Moteur (il enregistre les conditions reçues). Le réseau est `navigator.onLine`.
  *
  * Contrat du DOM supposé :
- *  - la carte « Conditions » (section/article/ion-card titrée « Conditions ») contient un `button` « Préparer ma sortie »
+ *  - la carte « Conditions » (section/article/ion-card titrée « Conditions ») et le dock « Navigation » contient un `button` « Ma sortie »
  *    (actif ; « Préparation… » et désactivé pendant la préparation) ;
  *  - succès : un `[role="status"]` « Sortie prête : conditions jusqu'au 26/11 à 9 h » ;
  *  - erreurs : un `[role="alert"]` « Pas de réseau : prépare ta sortie avant de partir » ou « La préparation a échoué, réessaie » ;
@@ -212,7 +212,7 @@ async function ouvrir() {
   return { fixture, page: fixture.nativeElement as HTMLElement, stabiliser };
 }
 
-/** Ouvre l'app en ligne, touche « Préparer ma sortie » et attend la fin ; rend la fabrique IndexedDB qui garde la sortie. */
+/** Ouvre l'app en ligne, touche « Ma sortie » et attend la fin ; rend la fabrique IndexedDB qui garde la sortie. */
 async function preparerAvant(fabrique: IDBFactory): Promise<void> {
   await installer(fabrique, { enLigne: true, previsions: async () => previsions() }, PREPAREE_A);
   const env = await ouvrir();
@@ -237,8 +237,9 @@ function carte(page: HTMLElement): HTMLElement | null {
 const texteCarte = (page: HTMLElement): string => compact(carte(page)?.textContent);
 
 function boutonPreparer(page: HTMLElement): HTMLElement {
-  const trouve = boutons(carte(page) ?? page).find((b) => compact(b.textContent).startsWith(compact('Préparer')) || compact(b.textContent).startsWith(compact('Préparation')));
-  if (!trouve) throw new Error('Aucun bouton « Préparer ma sortie » dans la carte « Conditions »');
+  const dock = page.querySelector('nav[aria-label="Navigation"]');
+  const trouve = boutons(dock ?? page).find((b) => compact(b.textContent).startsWith(compact('Ma sortie')) || compact(b.textContent).startsWith(compact('Préparation')));
+  if (!trouve) throw new Error('Aucun bouton « Ma sortie » dans le dock');
   return trouve;
 }
 const estDesactive = (b: HTMLElement): boolean => b.hasAttribute('disabled') || (b as HTMLButtonElement).disabled === true;
@@ -303,10 +304,10 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     vi.restoreAllMocks();
   });
 
-  it("critère 1 : given l'onglet Conseil avec du réseau et un lieu choisi, when l'utilisateur touche « Préparer ma sortie », then les prévisions des 48 h du lieu sont téléchargées et « Sortie prête : conditions jusqu'au 26/11 à 9 h » s'affiche", async () => {
+  it("critère 1 : given l'écran Conseil avec du réseau et un lieu choisi, when l'utilisateur touche « Ma sortie », then les prévisions des 48 h du lieu sont téléchargées et « Sortie prête : conditions jusqu'au 26/11 à 9 h » s'affiche", async () => {
     const { previsions48h } = await installer(new IDBFactory(), EN_LIGNE, PREPAREE_A);
     const env = await ouvrir();
-    expect(estDesactive(boutonPreparer(env.page)), 'le bouton « Préparer ma sortie » doit être actif').toBe(false);
+    expect(estDesactive(boutonPreparer(env.page)), 'le bouton « Ma sortie » doit être actif').toBe(false);
 
     await toucherEtAttendre(env, () => expect(message(env.page, 'status', MESSAGE_PRETE), `« ${MESSAGE_PRETE} » (role=status) absent`).toBeDefined());
 
@@ -315,7 +316,7 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     expect(env.page.querySelector('[role="alert"]')).toBeNull();
   });
 
-  it("critère 1 : given une préparation en cours, when elle n'est pas finie, then le bouton affiche « Préparation… » et est désactivé, puis redevient « Préparer ma sortie » actif", async () => {
+  it("critère 1 : given une préparation en cours, when elle n'est pas finie, then le bouton affiche « Préparation… » et est désactivé, puis redevient « Ma sortie » actif", async () => {
     let terminer!: () => void;
     const attente = new Promise<void>((resolve) => (terminer = resolve));
     await installer(new IDBFactory(), { enLigne: true, previsions: async () => (await attente, previsions()) }, PREPAREE_A);
@@ -329,12 +330,12 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     terminer();
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(compact(boutonPreparer(env.page).textContent)).toBe(compact('Préparer ma sortie'));
+      expect(compact(boutonPreparer(env.page).textContent)).toBe(compact('Ma sortie'));
     });
     expect(estDesactive(boutonPreparer(env.page))).toBe(false);
   });
 
-  it("critère 2 : given une sortie préparée puis le mode avion, when l'utilisateur ouvre l'onglet Conseil maintenant, then le top 3 s'affiche, calculé avec les conditions préparées de l'heure, avec la mention « Conditions du 24/11 à 9 h »", async () => {
+  it("critère 2 : given une sortie préparée puis le mode avion, when l'utilisateur ouvre l'écran Conseil maintenant, then le top 3 s'affiche, calculé avec les conditions préparées de l'heure, avec la mention « Conditions du 24/11 à 9 h »", async () => {
     const fabrique = new IDBFactory();
     await preparerAvant(fabrique);
     const { appelsMoteur } = await installer(fabrique, AVION, new Date('2026-11-25T11:20:00Z')); // 12 h 20 Paris : heure préparée 11:00Z
@@ -416,7 +417,7 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     expect(texteCarte(env.page)).not.toContain(compact('Vent : 12 km/h'));
   });
 
-  it("critère 4 : given l'appareil sans réseau, when l'utilisateur touche « Préparer ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async () => {
+  it("critère 4 : given l'appareil sans réseau, when l'utilisateur touche « Ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async () => {
     const { previsions48h } = await installer(new IDBFactory(), AVION, PREPAREE_A);
     const env = await ouvrir();
 
@@ -426,7 +427,7 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     expect(env.page.querySelector('[role="status"]')?.textContent ?? '').not.toContain('Sortie prête');
   });
 
-  it("critère 5 : given le téléchargement des conditions qui échoue, when l'utilisateur touche « Préparer ma sortie », then « La préparation a échoué, réessaie » s'affiche et le bouton reste actif", async () => {
+  it("critère 5 : given le téléchargement des conditions qui échoue, when l'utilisateur touche « Ma sortie », then « La préparation a échoué, réessaie » s'affiche et le bouton reste actif", async () => {
     await installer(new IDBFactory(), { enLigne: true, previsions: async () => ({ disponible: false }) }, PREPAREE_A);
     const env = await ouvrir();
 
