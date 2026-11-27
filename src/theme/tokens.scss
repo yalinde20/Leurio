@@ -1,31 +1,48 @@
-/* Tokens de couleur de Leurio (PLAN §3). Seul fichier où les couleurs sont écrites en dur.
+/* Tokens de Leurio (PLAN §3), direction « jeu sérieux ». Seul fichier, avec ionic.scss, où les couleurs sont écrites en dur.
    Thème clair par défaut ; thème sombre quand le téléphone est réglé en mode sombre.
    Le choix de l'utilisateur (ThemeService) pose data-theme="clair" ou "sombre" sur <html> et l'emporte
    sur le téléphone ; sans attribut (choix « système »), le thème suit prefers-color-scheme.
-   Chaque série de valeurs n'est écrite qu'une fois, dans un mixin. */
+   Chaque série de valeurs n'est écrite qu'une fois, dans un mixin.
+   Références : maquette docs/maquettes/us-292-tokens-et-polices.html (US 292).
+   Ajouts de l'US 292 : --lr-trait (traits, icônes et grands chiffres), --lr-ok (ouvert, favorable),
+   --lr-attention (à surveiller), --lr-police-texte et --lr-police-titre.
+   --lr-primaire est la couleur d'action unique (boutons, liens, onglet actif, marqueur de carte) ;
+   --lr-accent sert aux mises en avant, jamais au texte courant.
+   Valeurs choisies pour la palette (hors maquette) : --lr-voile (noir, 35 % clair et 55 % sombre), --lr-carte-eau et
+   --lr-carte-terre (bleu-vert et vert-gris clairs, ou foncés la nuit), --lr-carte-marqueur = action,
+   --lr-graphique-1 = trait, --lr-graphique-2 = action, --lr-graphique-grille = bordure. */
+:root {
+  /* Polices embarquées (src/theme/polices.scss), avec une pile de secours système. */
+  --lr-police-texte: 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --lr-police-titre: 'Barlow Condensed', 'Barlow', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
 @mixin clair {
   color-scheme: light;
 
-  --lr-fond: #f7f3ea;
-  --lr-surface: #fffdf8;
-  --lr-texte: #10241f;
-  --lr-texte-secondaire: #46554f;
-  --lr-bordure: #d9d0be;
-  --lr-primaire: #0e6b5c;
-  --lr-sur-primaire: #f7f3ea;
-  --lr-sable: #e9dcc0;
-  --lr-bandeau: #e9dcc0;
-  --lr-sur-bandeau: #10241f;
-  --lr-accent: #e8590c;
-  --lr-sur-accent: #1a1206;
+  --lr-fond: #eef3f1;
+  --lr-surface: #fbfdfc;
+  --lr-texte: #0f1e22;
+  --lr-texte-secondaire: #45585b;
+  --lr-bordure: #c9d5d2;
+  --lr-trait: #0f1e22;
+  --lr-primaire: #a85309; /* action */
+  --lr-sur-primaire: #fbfdfc;
+  --lr-sable: #dfe9e6;
+  --lr-bandeau: #e3ecea;
+  --lr-sur-bandeau: #0f1e22;
+  --lr-accent: #e8822e;
+  --lr-sur-accent: #0f1e22;
+  --lr-ok: #1f7a55;
+  --lr-attention: #8a4300;
   --lr-danger: #b42318;
   --lr-voile: rgb(0 0 0 / 35%);
-  --lr-carte-eau: #9cc9d6;
-  --lr-carte-terre: #e9e2cf;
-  --lr-carte-marqueur: #e8590c;
-  --lr-graphique-1: #0e6b5c;
-  --lr-graphique-2: #e8590c;
-  --lr-graphique-grille: #d9d0be;
+  --lr-carte-eau: #b3d4da;
+  --lr-carte-terre: #e3ebe7;
+  --lr-carte-marqueur: #a85309;
+  --lr-graphique-1: #0f1e22;
+  --lr-graphique-2: #a85309;
+  --lr-graphique-grille: #c9d5d2;
 }
 
 :root,
@@ -36,26 +53,29 @@ html[data-theme='clair'] {
 @mixin sombre {
   color-scheme: dark;
 
-  --lr-fond: #0e1714;
-  --lr-surface: #16231f;
-  --lr-texte: #e6e1d6;
-  --lr-texte-secondaire: #9fb0aa;
-  --lr-bordure: #2b3b36;
-  --lr-primaire: #5cc8b0;
-  --lr-sur-primaire: #0e1714;
-  --lr-sable: #3a3326;
-  --lr-bandeau: #1f3b34;
-  --lr-sur-bandeau: #e6e1d6;
-  --lr-accent: #ff8a3d;
-  --lr-sur-accent: #1a1206;
+  --lr-fond: #071318;
+  --lr-surface: #0f262d;
+  --lr-texte: #e3efec;
+  --lr-texte-secondaire: #93aaa7;
+  --lr-bordure: #24403f;
+  --lr-trait: #cfe3e0;
+  --lr-primaire: #f0a24b; /* action */
+  --lr-sur-primaire: #071318;
+  --lr-sable: #12303a;
+  --lr-bandeau: #0f262d;
+  --lr-sur-bandeau: #e3efec;
+  --lr-accent: #f0a24b;
+  --lr-sur-accent: #071318;
+  --lr-ok: #5fd3a0;
+  --lr-attention: #f0a24b;
   --lr-danger: #f97066;
   --lr-voile: rgb(0 0 0 / 55%);
-  --lr-carte-eau: #123a44;
-  --lr-carte-terre: #1b2622;
-  --lr-carte-marqueur: #ff8a3d;
-  --lr-graphique-1: #5cc8b0;
-  --lr-graphique-2: #ff8a3d;
-  --lr-graphique-grille: #2b3b36;
+  --lr-carte-eau: #0e3340;
+  --lr-carte-terre: #0c1f25;
+  --lr-carte-marqueur: #f0a24b;
+  --lr-graphique-1: #cfe3e0;
+  --lr-graphique-2: #f0a24b;
+  --lr-graphique-grille: #24403f;
 }
 
 @media (prefers-color-scheme: dark) {

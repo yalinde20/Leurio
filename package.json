@@ -7,7 +7,7 @@
     "build": "node scripts/build-reel.mjs",
     "build:emulateurs": "ng build --configuration emulateurs",
     "watch": "ng build --watch --configuration development",
-    "lint": "ng lint && stylelint \"src/**/*.{css,scss}\"",
+    "lint": "ng lint && stylelint \"src/**/*.{css,scss}\" && node scripts/verifier-couleurs-ts.mjs",
     "typecheck": "ngc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "ng test --watch=false",
     "validate-data": "node scripts/validate-data.ts",

@@ -223,6 +223,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-weight: 600;
     }
     .eau dd {
+      font-family: var(--lr-police-titre);
       font-size: 22px;
       font-weight: 700;
     }
