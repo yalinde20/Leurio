@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
 import { estLocal } from './firebase-helpers';
 import { lireThemes } from './tokens';
+import { attendreCompte } from './hors-ligne-donnees-helpers';
 
 // US 294 : le dock (Boîte · Ma sortie · Spots) et l'avatar Compte remplacent la barre de 4 onglets (PLAN §3).
 // Maquette validée : docs/maquettes/us-294-dock-et-avatar.html.
@@ -230,3 +231,49 @@ for (const [theme, scheme] of [['clair', 'dark'], ['sombre', 'light']] as const)
     expect(await couleur(boutonSortie(page), 'color')).toBe(rgb(tokens['--lr-sur-primaire']));
   });
 }
+
+// Décision A du propriétaire : au retour, le Conseil garde le spot choisi dans la feuille « Lieu » et le message de « Ma sortie ».
+async function choisirUnSpot(page: Page): Promise<void> {
+  await attendreCompte(page);
+  await page.evaluate(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const f = (window as any).leurioFirebase;
+    const { doc, setDoc, waitForPendingWrites } = f.sdk.firestore;
+    await setDoc(doc(f.db, 'users', f.auth.currentUser.uid, 'spots', 'spot-294'), {
+      nom: 'Pont de Cé', lat: 47.43, lng: -0.52, categorie: 2, milieu: 'riviere', departement: '49', prive: true,
+    });
+    await waitForPendingWrites(f.db);
+  });
+  await page.getByRole('button', { name: /^Lieu/ }).click();
+  await page.getByRole('dialog').getByRole('radio', { name: /Pont de Cé/ }).click();
+  await expect(page.getByRole('button', { name: /^Lieu/ })).toContainText('Pont de Cé');
+}
+
+test("US 294 maquette : given un spot choisi dans la feuille Lieu, when on ouvre Boîte puis on revient par « Conseil », then le lieu affiché est toujours ce spot", async ({ page }) => {
+  await ouvrirLApp(page);
+  await choisirUnSpot(page);
+
+  await lienBoite(page).click();
+  await expect(titreVisible(page)).toHaveText('Boîte');
+  await retour(page).click();
+
+  await expect(titreVisible(page)).toHaveText('Conseil');
+  await expect(page.getByRole('button', { name: /^Lieu/ })).toContainText('Pont de Cé');
+});
+
+test("US 294 maquette : given le message « Sortie prête » affiché, when on ouvre Spots puis on revient par « Conseil », then le message est toujours là", async ({ page }) => {
+  await ouvrirLApp(page);
+  await choisirUnSpot(page);
+  await expect(boutonSortie(page)).toBeEnabled();
+  await boutonSortie(page).click();
+  const message = page.getByRole('status').filter({ hasText: 'Sortie prête' });
+  await expect(message).toBeVisible();
+
+  await lienSpots(page).click();
+  await expect(titreVisible(page)).toHaveText('Spots');
+  await retour(page).click();
+
+  await expect(titreVisible(page)).toHaveText('Conseil');
+  await expect(message).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Lieu/ })).toContainText('Pont de Cé');
+});

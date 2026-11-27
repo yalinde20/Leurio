@@ -35,7 +35,7 @@ import {
   formaterTempEau,
   formaterVent,
 } from './conditions-format';
-import { ConseilChoixStore, MomentChoisi } from './conseil-choix.store';
+import { ConseilChoixStore, MessageSortie, MomentChoisi } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
 import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 import { LigneBoiteComponent } from './ligne-boite.component';
@@ -957,10 +957,10 @@ export class ConseilPage implements OnInit {
 
   protected readonly preparationEnCours = signal(false);
   /** Le résultat de la dernière préparation, sous le bouton ; effacé quand le lieu change. */
-  protected readonly messageSortie = signal<{ type: 'prete' | 'hors ligne' | 'echec'; texte: string } | null>(null);
+  protected readonly messageSortie = this.choix.messageSortie;
 
   /** Le spot qui sert de lieu ; `null` = « Ma position ». État du composant, jamais mémorisé. */
-  protected readonly spotChoisi = signal<SpotEnregistre | null>(null);
+  protected readonly spotChoisi = this.choix.spot;
   protected readonly lieuOuvert = signal(false);
   protected readonly spotsEnregistres = signal<SpotEnregistre[]>([]);
   protected readonly etatSpots = signal<EtatSpots>('chargement');
@@ -1131,7 +1131,38 @@ export class ConseilPage implements OnInit {
 
   ngOnInit(): void {
     // Un spot demandé par l'écran « Spots » est le lieu de départ : la position GPS n'est pas demandée (l'effet du constructeur l'applique).
-    if (this.lieuDemande.demande() === null) void this.charger();
+    if (this.lieuDemande.demande() === null) void this.reprendreOuCharger();
+  }
+
+  /**
+   * Retour sur l'écran (Boîte, Spots ou Compte puis « Conseil ») : le spot choisi et le message de « Ma sortie » sont repris, sans position GPS
+   * quand un spot était choisi.
+   * Un spot supprimé entre-temps (ou sans lecture possible : le spot gardé sert alors) : retour sur « Ma position ».
+   */
+  private async reprendreOuCharger(): Promise<void> {
+    const gardé = this.spotChoisi();
+    const message: MessageSortie | null = this.messageSortie();
+    if (!gardé) {
+      const chargement = this.charger();
+      this.messageSortie.set(message); // le chargement vide l'écran, mais le lieu reste « Ma position » : le message reste vrai
+      return chargement;
+    }
+    let spot: SpotEnregistre | null = gardé;
+    try {
+      spot = (await this.spots.mesSpots()).find((s) => s.id === gardé.id) ?? null;
+    } catch {
+      // Lecture impossible : on garde le spot choisi.
+    }
+    if (this.lieuDemande.demande() !== null) return; // « Voir le conseil » a pris la main pendant la lecture.
+    if (!spot) {
+      this.spotChoisi.set(null);
+      this.messageSortie.set(null);
+      return this.charger();
+    }
+    this.spotChoisi.set(spot);
+    const appliquer = this.appliquerLieu(spot);
+    this.messageSortie.set(message); // appliquerLieu vide l'écran, mais le lieu est le même : le message reste vrai.
+    return appliquer;
   }
 
   /** Le spot demandé par « Voir le conseil » devient le lieu, comme un choix dans la feuille « Lieu ». */
