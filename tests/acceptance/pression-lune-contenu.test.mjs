@@ -1,10 +1,10 @@
 // US 70 : seuil de pression et phases de lune viennent du contenu (PLAN §8.3, §7, §9).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const FICHIER = 'src/assets/data/engine-weights.json';
 const PHASES = [
@@ -18,7 +18,7 @@ function valider(mutate) {
   // Le rejet doit venir d'une propriété déclarée dans le schéma, pas du simple « additionalProperties: number ».
   const schema = JSON.parse(readFileSync(join(ROOT, 'schemas/engine-weights.schema.json'), 'utf8'));
   assert.ok(schema.properties?.seuilPression && schema.properties?.phasesLuneBonus, 'le schéma ne déclare pas seuilPression et phasesLuneBonus');
-  const dir = mkdtempSync(join(tmpdir(), `poids-${process.pid}-`));
+  const dir = creerDossierDonnees(`poids-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -27,7 +27,7 @@ function valider(mutate) {
     writeFileSync(join(dir, 'engine-weights.json'), JSON.stringify(poids, null, 2));
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

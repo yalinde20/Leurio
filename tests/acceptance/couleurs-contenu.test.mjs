@@ -1,17 +1,17 @@
 // US 68 : le classement des couleurs de leurre vient du contenu (PLAN §8.3, §7, §9).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const FICHIER = 'src/assets/data/couleurs.json';
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 
 /** Copie du contenu réel dans un dossier temporaire, couleurs modifiées par `mutate(couleurs)` (ou fichier retiré), puis validée. */
 function valider(mutate, { retirer = false } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), `couleurs-${process.pid}-`));
+  const dir = creerDossierDonnees(`couleurs-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -23,7 +23,7 @@ function valider(mutate, { retirer = false } = {}) {
     }
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

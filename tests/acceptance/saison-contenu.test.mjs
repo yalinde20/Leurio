@@ -1,17 +1,17 @@
 // US 67 : les saisons favorables sont lues dans le contenu (PLAN §8.3, §7).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 const SAISONS = ['hiver', 'printemps', 'été', 'automne'];
 
 /** Copie du contenu réel dans un dossier temporaire, modifié par `mutate(fichiers)`, puis validé. */
 function valider(mutate) {
-  const dir = mkdtempSync(join(tmpdir(), `saison-${process.pid}-`));
+  const dir = creerDossierDonnees(`saison-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -24,7 +24,7 @@ function valider(mutate) {
     writeFileSync(join(dir, 'techniques.json'), JSON.stringify(fichiers.tech, null, 2));
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

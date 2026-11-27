@@ -1,15 +1,15 @@
 // US 100 : famille de chaque type de leurre, lue dans le contenu (PLAN §3 Boîte, §7).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees, PICTOGRAMME } from '../helpers/dossier-donnees.mjs';
 
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 
 function valider(mutate) {
-  const dir = mkdtempSync(join(tmpdir(), `famille-${process.pid}-`));
+  const dir = creerDossierDonnees(`famille-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -18,7 +18,7 @@ function valider(mutate) {
     writeFileSync(join(dir, 'lure-types.json'), JSON.stringify(lure, null, 2));
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 
