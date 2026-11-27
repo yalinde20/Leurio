@@ -65,14 +65,16 @@ Leurio répond à la question « **quel leurre, quelle animation, maintenant, ic
 
 ## 3. Écrans et navigation
 
-**Barre d'onglets (4)** : Conseil · Boîte · Spots · Compte. La fiche animation s'ouvre depuis un conseil.
+**Navigation** (décision du propriétaire du 27/11/2026, refonte « jeu sérieux ») : Conseil est l'écran de base. Un dock en bas ouvre **Boîte**, **Ma sortie** (« Préparer ma sortie ») et **Spots** ; l'avatar en haut ouvre **Compte**. La fiche animation s'ouvre depuis un conseil. Ce dock remplace l'ancienne barre de 4 onglets (Conseil · Boîte · Spots · Compte).
+
+**Direction artistique** : un juste milieu entre une application et un jeu vidéo sérieux, façon écran de sondeur (traits fins, chiffres en Barlow Condensed, texte en Barlow, une seule couleur d'action). Référence : `docs/maquettes/direction-artistique-jeu-serieux/`.
 
 | Écran | Contenu |
 |---|---|
 | **Onboarding** (3 pages, au 1er lancement) | 1. Ce que fait Leurio. 2. Tes espèces préférées et ton niveau. 3. Autorisation GPS expliquée, puis compte anonyme créé en silence. |
-| **Conseil** | Sélecteur lieu et moment ; carte « conditions » (température de l'eau et sa source, tendance du débit, pression, ciel, vent, lune, heures légales) ; 3 cartes de conseil ; bandeau réglementation ; boutons thermomètre et « Préparer ma sortie » |
+| **Conseil** | La rivière vue en coupe, sur un seul écran sans défilement : lieu et espèce en haut ; ligne d'état réglementaire (pêche ouverte, fermeture proche, fermée) qui ouvre la réglementation ; température de l'eau et sa source, avec une ligne qui ouvre les conditions complètes (tendance du débit, pression, ciel, vent, lune, heures légales) ; le meilleur coup posé à la profondeur où le pêcher (zone de nage du leurre), les 2 autres coups à un tap ; réglette du moment qui montre les heures légales ; bouton thermomètre ; dock |
 | **Détail d'un conseil** | Le pourquoi complet (chaque règle déclenchée), la couleur, la taille, le poids de tête, le poste où le lancer, le lien vers la fiche animation, le leurre de ta boîte ou « Il te manque » |
-| **Fiche animation** | Geste, vitesse, erreur à éviter, vidéo lue dans l'app (boucle courte hors ligne, vidéo complète en ligne) |
+| **Fiche animation** | Geste en étapes numérotées avec sa trajectoire, vitesse, erreur à éviter, vidéo lue dans l'app (boucle courte hors ligne, vidéo complète en ligne) |
 | **Boîte** | Liste filtrable par famille ; formulaire d'ajout ; kit de départ |
 | **Spots** | Carte Leaflet ; liste ; formulaire ; « Préparer ma sortie » sur un spot |
 | **Compte** | Connexion, préférences (espèces, unités), À propos et sources, confidentialité, export, suppression du compte |

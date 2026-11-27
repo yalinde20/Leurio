@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Fondations visuelles</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:1280px;height:2250px;box-sizing:border-box;padding:64px;background:#f1eee5;color:#10241f;display:flex;flex-direction:column;gap:56px}
+.t{font-family:'Bricolage Grotesque','Inter',sans-serif;letter-spacing:-.02em;margin:0}
+.k{margin:0;font:600 13px 'Inter',sans-serif;color:#46554f;letter-spacing:.06em;text-transform:uppercase}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.pic{fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.pan{border-radius:28px;padding:32px;display:flex;flex-direction:column;gap:28px;background:var(--fond);color:var(--texte);border:1px solid rgba(0,0,0,.12)}
+.pan.clair{--fond:#f4f0e6;--surface:#fffdf8;--surface2:#ece6d6;--texte:#10241f;--texte2:#46554f;--bord:#dcd4c2;--prim:#0e6b5c;--foret:#0c3a33;--surforet:#f4f0e6;--foret2:#17564b;--acc:#e8590c;--suracc:#1a1206;--danger:#b42318;--dangerbg:#fbe4e1;--okbg:#d7ece6;--warn:#6b4a00;--warnbg:#fdf0c2}
+.pan.sombre{--fond:#0b1411;--surface:#13211d;--surface2:#1c2d28;--texte:#e8e3d8;--texte2:#a3b3ad;--bord:#263833;--prim:#5cc8b0;--foret:#123a33;--surforet:#e8e3d8;--foret2:#1b4f45;--acc:#ff8a3d;--suracc:#1a1206;--danger:#f97066;--dangerbg:#3b1b18;--okbg:#17352e;--warn:#ffce31;--warnbg:#3b3012}
+.pan .sub{margin:0;font:600 13px 'Inter',sans-serif;color:var(--texte2)}
+.vig{width:88px;height:88px;border-radius:24px;background:var(--surface2);color:var(--prim);display:flex;align-items:center;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;box-sizing:border-box;border-radius:14px;padding:0 12px;font:600 13px 'Inter',sans-serif}
+.btn{height:52px;box-sizing:border-box;border-radius:26px;padding:0 24px;display:inline-flex;align-items:center;gap:8px;font:700 16px 'Inter',sans-serif;border:0;cursor:pointer}
+.sw{width:84px;height:36px;border-radius:10px;border:1px solid rgba(0,0,0,.18);flex:none}
+.rowp{display:grid;grid-template-columns:200px 1fr 190px 190px;align-items:center;gap:16px;min-height:44px;border-top:1px solid #d9d3c3;font-size:14px}
+.hex{font:500 13px/18px 'Inter',sans-serif;color:#46554f;font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="p-souples" viewBox="0 0 64 64"><circle cx="13" cy="30" r="5" style="fill:var(--acc);stroke:none"/><path d="M11 35c-1 7 4 11 10 8"/><path d="M19 27l19-3 12-8v28l-12-8-19-3z"/><path d="M27 27v7M33 26v9"/></symbol>
+<symbol id="p-durs" viewBox="0 0 64 64"><ellipse cx="35" cy="29" rx="19" ry="9"/><path d="M17 33L9 40"/><circle cx="25" cy="27" r="2" style="fill:var(--acc);stroke:none"/><path d="M30 21c-3 5-3 11 0 16"/><path d="M33 38v7a3 3 0 0 1-6 0M47 36v7a3 3 0 0 0 6 0"/></symbol>
+<symbol id="p-surface" viewBox="0 0 64 64"><path d="M14 21h30q9 0 9 6t-9 6H14q5-6 0-12z"/><circle cx="42" cy="26" r="2" style="fill:var(--acc);stroke:none"/><path d="M6 41q5-4 10 0t10 0 10 0 10 0 10 0"/><path d="M16 49q4-3 8 0t8 0 8 0"/></symbol>
+<symbol id="p-metal" viewBox="0 0 64 64"><path d="M10 38h30"/><circle cx="7" cy="38" r="3"/><ellipse cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)" style="fill:var(--acc)"/><path d="M23 38l1-5"/><ellipse cx="45" cy="38" rx="5" ry="4"/><path d="M50 38h3q7 0 7 8M60 46q-3 4-6 1"/></symbol>
+<symbol id="p-jupe" viewBox="0 0 64 64"><circle cx="16" cy="29" r="6" style="fill:var(--acc)"/><circle cx="16" cy="14" r="2.5"/><path d="M16 16.5V23"/><path d="M22 29c10-7 20-9 32-9M22 29c12-2 24-2 34-1M22 29c12 3 24 5 34 6M22 29c10 6 20 13 30 15"/><path d="M21 24v10"/><path d="M13 34c0 8 4 11 9 11"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+<symbol id="i-horloge" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+<symbol id="i-poisson" viewBox="0 0 24 24"><path d="M2.5 12C6 6.5 12 6 15.5 9.5L21.5 6.5 20 12l1.5 5.5-6-3C12 18 6 17.5 2.5 12z"/><circle cx="7.5" cy="11" r=".6"/></symbol>
+<symbol id="i-thermo" viewBox="0 0 24 24"><path d="M10 4a2 2 0 0 1 4 0v10.2a4 4 0 1 1-4 0z"/><path d="M12 9v7"/></symbol>
+<symbol id="i-eau" viewBox="0 0 24 24"><path d="M12 3S5 10.5 5 15a7 7 0 0 0 14 0c0-4.5-7-12-7-12z"/></symbol>
+<symbol id="i-debit" viewBox="0 0 24 24"><path d="M3 9q3-3 6 0t6 0 6 0M3 15q3-3 6 0t6 0 6 0"/></symbol>
+<symbol id="i-pression" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l3.5-6"/><circle cx="12" cy="17" r="1"/></symbol>
+<symbol id="i-ciel" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8 5.5 5.5 0 0 0-10.6-1A4.5 4.5 0 0 0 7 18z"/></symbol>
+<symbol id="i-vent" viewBox="0 0 24 24"><path d="M3 9h10a3 3 0 1 0-3-3M3 15h14a3 3 0 1 1-3 3M3 12h6"/></symbol>
+<symbol id="i-lune" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+<symbol id="i-alerte" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v5M12 18v.2"/></symbol>
+<symbol id="i-livre" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol>
+<symbol id="i-telecharger" viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 20h14"/></symbol>
+<symbol id="i-boussole" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+<symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3 13h18"/></symbol>
+<symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol>
+<symbol id="i-hors-ligne" viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M3 3l18 18"/><circle cx="12" cy="19.5" r=".6"/></symbol>
+</svg>
+
+<header style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:48px;align-items:end">
+<div>
+<p class="k">Direction artistique · Leurio</p>
+<h1 class="t" style="font-size:76px;line-height:78px;font-weight:700;margin-top:12px">Outdoor sobre</h1>
+<p style="margin:20px 0 0;font-size:18px;line-height:28px;max-width:560px;color:#2c3d38">Un vert profond qui pose l'app, un orange réservé à ce qu'on fait, des dessins de leurres à la place des listes de texte. Lisible en plein soleil comme à l'aube.</p>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<sc-for list="{{principes}}" as="p" hint-placeholder-count="3">
+<div style="background:#fffdf8;border:1px solid #dcd4c2;border-radius:20px;padding:18px;min-height:150px">
+<p class="t" style="font-size:36px;line-height:36px;font-weight:700;color:#0e6b5c">{{p.num}}</p>
+<p style="margin:10px 0 4px;font:700 16px/22px 'Inter',sans-serif">{{p.titre}}</p>
+<p style="margin:0;font-size:14px;line-height:20px;color:#46554f">{{p.texte}}</p>
+</div>
+</sc-for>
+</div>
+</header>
+
+<section>
+<p class="k" style="margin-bottom:6px">Couleurs : mêmes noms que les tokens du projet, deux thèmes</p>
+<div class="rowp" style="border-top:0;min-height:32px;font:600 12px 'Inter',sans-serif;color:#46554f"><span>Token</span><span>Rôle</span><span>Thème clair</span><span>Thème sombre</span></div>
+<sc-for list="{{couleurs}}" as="c" hint-placeholder-count="14">
+<div class="rowp"><b style="font-weight:600">{{c.nom}}</b><span style="color:#46554f">{{c.role}}</span><span style="display:flex;align-items:center;gap:10px"><span class="sw" style="background:{{c.clair}}"></span><span class="hex">{{c.clair}}</span></span><span style="display:flex;align-items:center;gap:10px"><span class="sw" style="background:{{c.sombre}}"></span><span class="hex">{{c.sombre}}</span></span></div>
+</sc-for>
+</section>
+
+<section style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:48px">
+<div>
+<p class="k" style="margin-bottom:10px">Typographie : Bricolage Grotesque (titres, chiffres) et Inter (texte)</p>
+<sc-for list="{{styles}}" as="s" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:180px 1fr;align-items:baseline;gap:16px;border-top:1px solid #d9d3c3;padding:12px 0">
+<span class="hex">{{s.nom}}<br>{{s.spec}}</span>
+<span style="font-family:{{s.famille}};font-size:{{s.taille}};line-height:{{s.ligne}};font-weight:{{s.graisse}};letter-spacing:{{s.interlettre}};color:#10241f">{{s.exemple}}</span>
+</div>
+</sc-for>
+</div>
+<div>
+<p class="k" style="margin-bottom:10px">Formes et mesures</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<sc-for list="{{formes}}" as="f" hint-placeholder-count="4">
+<div style="background:#fffdf8;border:1px solid #dcd4c2;padding:14px;display:flex;flex-direction:column;gap:10px;border-radius:{{f.rayon}}">
+<div style="height:44px;background:#0c3a33;border-radius:{{f.rayon}}"></div>
+<p style="margin:0;font:600 14px/18px 'Inter',sans-serif">{{f.nom}}</p>
+<p style="margin:0;font-size:13px;line-height:18px;color:#46554f">{{f.usage}}</p>
+</div>
+</sc-for>
+</div>
+<p style="margin:16px 0 0;font-size:14px;line-height:22px;color:#2c3d38">Pas d'ombres : un filet de 1 px suffit. Cibles tactiles de 48 px minimum. Espacements : 8, 12, 16, 20, 24.</p>
+</div>
+</section>
+
+<section style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<sc-for list="{{themes}}" as="th" hint-placeholder-count="2">
+<div class="pan {{th.cls}}">
+<p class="k" style="color:var(--texte2)">{{th.nom}}</p>
+
+<div>
+<p class="sub" style="margin-bottom:12px">Pictogrammes : un dessin par famille de leurres</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<sc-for list="{{familles}}" as="f" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:92px"><div class="vig"><svg class="pic" width="64" height="64"><use href="{{f.pic}}"/></svg></div><span style="font:500 13px/18px 'Inter',sans-serif">{{f.nom}}</span></div>
+</sc-for>
+</div>
+</div>
+
+<div>
+<p class="sub" style="margin-bottom:12px">Icônes d'interface : trait de 1,75 px, coins arrondis</p>
+<div style="display:flex;gap:18px;flex-wrap:wrap;color:var(--prim)">
+<sc-for list="{{icones}}" as="i" hint-placeholder-count="12">
+<svg class="ic" role="img" aria-label="{{i.nom}}" style="width:28px;height:28px"><use href="{{i.id}}"/></svg>
+</sc-for>
+</div>
+</div>
+
+<div>
+<p class="sub" style="margin-bottom:12px">Boutons</p>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+<button class="btn" style="background:var(--acc);color:var(--suracc)"><svg class="ic"><use href="#i-telecharger"/></svg>Préparer ma sortie</button>
+<button class="btn" style="background:var(--foret);color:var(--surforet)">Voir le détail</button>
+<button class="btn" style="background:var(--surface);color:var(--texte);border:1px solid var(--bord);font-weight:600">Annuler</button>
+</div>
+</div>
+
+<div>
+<p class="sub" style="margin-bottom:12px">Pastilles d'état : toujours une icône, jamais la couleur seule</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<span class="chip" style="background:var(--acc);color:var(--suracc)">Meilleur choix</span>
+<span class="chip" style="background:var(--okbg);color:var(--prim)"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg>Dans ta boîte</span>
+<span class="chip" style="background:var(--warnbg);color:var(--warn)"><svg class="ic" style="width:16px;height:16px"><use href="#i-alerte"/></svg>Moins précis</span>
+<span class="chip" style="background:var(--dangerbg);color:var(--danger)"><svg class="ic" style="width:16px;height:16px"><use href="#i-alerte"/></svg>Fermé jusqu'au 13/03</span>
+<span class="chip" style="background:var(--okbg);color:var(--prim)"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg>Ouvert</span>
+</div>
+</div>
+</div>
+</sc-for>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2250}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      principes: [
+        { num: '1', titre: 'Un seul meilleur choix', texte: 'Le conseil n°1 est grand. Les autres suivent, plus petits.' },
+        { num: '2', titre: 'Le vert pose, l\'orange agit', texte: 'L\'orange sert au meilleur choix et à l\'action principale. Rien d\'autre.' },
+        { num: '3', titre: 'Un dessin avant le mot', texte: 'On reconnaît la famille d\'un leurre d\'un coup d\'œil, même mains mouillées.' }
+      ],
+      couleurs: [
+        { nom: 'fond', role: 'Fond des écrans', clair: '#f4f0e6', sombre: '#0b1411' },
+        { nom: 'surface', role: 'Cartes, barre d\'onglets', clair: '#fffdf8', sombre: '#13211d' },
+        { nom: 'surface-2', role: 'Tuiles, vignettes, champs', clair: '#ece6d6', sombre: '#1c2d28' },
+        { nom: 'bordure', role: 'Filets et contours', clair: '#dcd4c2', sombre: '#263833' },
+        { nom: 'texte', role: 'Texte principal', clair: '#10241f', sombre: '#e8e3d8' },
+        { nom: 'texte-secondaire', role: 'Libellés, détails', clair: '#46554f', sombre: '#a3b3ad' },
+        { nom: 'primaire', role: 'Marque, icônes, liens', clair: '#0e6b5c', sombre: '#5cc8b0' },
+        { nom: 'foret', role: 'Carte « meilleur choix »', clair: '#0c3a33', sombre: '#123a33' },
+        { nom: 'foret-2', role: 'Pastilles dans la carte forêt', clair: '#17564b', sombre: '#1b4f45' },
+        { nom: 'accent', role: 'Action principale, meilleur choix', clair: '#e8590c', sombre: '#ff8a3d' },
+        { nom: 'sur-accent', role: 'Texte sur l\'accent', clair: '#1a1206', sombre: '#1a1206' },
+        { nom: 'danger', role: 'Fermé, erreur', clair: '#b42318', sombre: '#f97066' },
+        { nom: 'danger-fond', role: 'Fond des pastilles « fermé »', clair: '#fbe4e1', sombre: '#3b1b18' },
+        { nom: 'ok-fond', role: 'Fond des pastilles « ouvert »', clair: '#d7ece6', sombre: '#17352e' }
+      ],
+      styles: [
+        { nom: 'Nom du leurre', spec: 'Bricolage 700 · 36/38', famille: "'Bricolage Grotesque',sans-serif", taille: '36px', ligne: '38px', graisse: '700', interlettre: '-0.02em', exemple: 'Shad' },
+        { nom: 'Chiffre clé', spec: 'Bricolage 700 · 48/52', famille: "'Bricolage Grotesque',sans-serif", taille: '48px', ligne: '52px', graisse: '700', interlettre: '-0.02em', exemple: '11,5 °C' },
+        { nom: 'Titre d\'écran', spec: 'Bricolage 700 · 32/36', famille: "'Bricolage Grotesque',sans-serif", taille: '32px', ligne: '36px', graisse: '700', interlettre: '-0.02em', exemple: 'Conseil' },
+        { nom: 'Titre de carte', spec: 'Bricolage 700 · 20/26', famille: "'Bricolage Grotesque',sans-serif", taille: '20px', ligne: '26px', graisse: '700', interlettre: '-0.02em', exemple: 'Conditions' },
+        { nom: 'Texte', spec: 'Inter 400 · 15/22', famille: "'Inter',sans-serif", taille: '15px', ligne: '22px', graisse: '400', interlettre: '0', exemple: 'À 11,5 °C, l\'activité du sandre est ralentie : une animation lente lui convient.' },
+        { nom: 'Bouton', spec: 'Inter 700 · 17', famille: "'Inter',sans-serif", taille: '17px', ligne: '22px', graisse: '700', interlettre: '0', exemple: 'Préparer ma sortie' },
+        { nom: 'Détail', spec: 'Inter 500 · 13/18', famille: "'Inter',sans-serif", taille: '13px', ligne: '18px', graisse: '500', interlettre: '0', exemple: 'Station Hub\'Eau La Maine à Angers, à 4 km' }
+      ],
+      formes: [
+        { nom: 'Pastilles · 14 px', usage: 'Étiquettes et états', rayon: '14px' },
+        { nom: 'Tuiles · 16 px', usage: 'Vignettes, conditions', rayon: '16px' },
+        { nom: 'Cartes · 24 px', usage: 'Conditions, réglementation', rayon: '24px' },
+        { nom: 'Héros · 28 px', usage: 'Carte du meilleur choix', rayon: '28px' }
+      ],
+      themes: [
+        { cls: 'clair', nom: 'Thème clair' },
+        { cls: 'sombre', nom: 'Thème sombre' }
+      ],
+      familles: [
+        { pic: '#p-souples', nom: 'Souples' },
+        { pic: '#p-durs', nom: 'Durs' },
+        { pic: '#p-surface', nom: 'Surface' },
+        { pic: '#p-metal', nom: 'Métalliques' },
+        { pic: '#p-jupe', nom: 'À jupe' }
+      ],
+      icones: [
+        { id: '#i-pin', nom: 'Lieu' },
+        { id: '#i-horloge', nom: 'Moment' },
+        { id: '#i-poisson', nom: 'Espèce' },
+        { id: '#i-thermo', nom: 'Thermomètre' },
+        { id: '#i-eau', nom: 'Eau' },
+        { id: '#i-debit', nom: 'Débit' },
+        { id: '#i-pression', nom: 'Pression' },
+        { id: '#i-ciel', nom: 'Ciel' },
+        { id: '#i-vent', nom: 'Vent' },
+        { id: '#i-lune', nom: 'Lune' },
+        { id: '#i-livre', nom: 'Réglementation' },
+        { id: '#i-hors-ligne', nom: 'Hors ligne' },
+        { id: '#i-boussole', nom: 'Conseil' },
+        { id: '#i-boite', nom: 'Boîte' },
+        { id: '#i-personne', nom: 'Compte' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

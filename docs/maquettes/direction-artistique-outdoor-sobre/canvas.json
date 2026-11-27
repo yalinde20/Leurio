@@ -1,0 +1,18 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-26T12:00:00Z" },
+  "title": "Leurio – Direction artistique",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Fondations.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 2250, "title": "1 · Fondations" },
+    "Main.dc.html": { "x": 0, "y": 2370, "w": 908, "h": 2000, "title": "2 · Écran Conseil (clair et sombre)" },
+    "Boite.dc.html": { "x": 988, "y": 2370, "w": 1346, "h": 1500, "title": "4 · Boîte : liste, sombre, vide" },
+    "Etats.dc.html": { "x": 0, "y": 4490, "w": 1346, "h": 1530, "title": "3 · États du Conseil" }
+  },
+  "order": ["Fondations.dc.html", "Main.dc.html", "Boite.dc.html", "Etats.dc.html"],
+  "notes": {
+    "titre": { "x": 0, "y": -320, "text": "Leurio : direction artistique « outdoor sobre »", "kind": "title1", "maxW": 1280 }
+  },
+  "designSystems": []
+}
