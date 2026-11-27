@@ -1,0 +1,3 @@
+Polices Barlow et Barlow Condensed (The Barlow Project Authors, licence SIL OFL 1.1).
+Source : paquets npm @fontsource/barlow et @fontsource/barlow-condensed 5.3.0 (sous-ensemble latin, woff2).
+Barlow 500, 600, 700 ; Barlow Condensed 600, 700. Les licences sont dans ce dossier.

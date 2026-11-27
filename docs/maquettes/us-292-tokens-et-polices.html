@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 292 : tokens et polices « jeu sérieux »</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens proposés pour l'US 292 (direction « jeu sérieux », docs/maquettes/direction-artistique-jeu-serieux/Kit.dc.html).
+     Les noms --lr-* existants sont gardés ; nouveaux : --lr-trait, --lr-ok, --lr-attention, --lr-police-texte, --lr-police-titre. */
+  .theme-clair {
+    --lr-fond: #eef3f1;
+    --lr-surface: #fbfdfc;
+    --lr-texte: #0f1e22;
+    --lr-texte-secondaire: #45585b;
+    --lr-bordure: #c9d5d2;
+    --lr-trait: #0f1e22;
+    --lr-primaire: #a85309;
+    --lr-sur-primaire: #fbfdfc;
+    --lr-accent: #e8822e;
+    --lr-sur-accent: #0f1e22;
+    --lr-sable: #dfe9e6;
+    --lr-bandeau: #e3ecea;
+    --lr-sur-bandeau: #0f1e22;
+    --lr-ok: #1f7a55;
+    --lr-attention: #8a4300;
+    --lr-danger: #b42318;
+  }
+  .theme-sombre {
+    --lr-fond: #071318;
+    --lr-surface: #0f262d;
+    --lr-texte: #e3efec;
+    --lr-texte-secondaire: #93aaa7;
+    --lr-bordure: #24403f;
+    --lr-trait: #cfe3e0;
+    --lr-primaire: #f0a24b;
+    --lr-sur-primaire: #071318;
+    --lr-accent: #f0a24b;
+    --lr-sur-accent: #071318;
+    --lr-sable: #12303a;
+    --lr-bandeau: #0f262d;
+    --lr-sur-bandeau: #e3efec;
+    --lr-ok: #5fd3a0;
+    --lr-attention: #f0a24b;
+    --lr-danger: #f97066;
+  }
+  .phone, .tokens { --lr-police-texte: 'Barlow', system-ui, sans-serif; --lr-police-titre: 'Barlow Condensed', 'Barlow', sans-serif; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; line-height: 1.4; }
+  .radio { position: absolute; opacity: 0; }
+  .switch { display: inline-flex; margin: 8px 0; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label { min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; background: #fff; }
+  #t-clair:checked ~ .switch label[for="t-clair"], #t-sombre:checked ~ .switch label[for="t-sombre"] { background: #222428; color: #fff; }
+  #t-clair:checked ~ .zone .phone, #t-clair:checked ~ .zone .tokens { --x: 0; }
+  /* Le thème choisi s'applique aux téléphones et au tableau. */
+  #t-clair:checked ~ .zone .themed { }
+
+  .phone { width: 390px; border-radius: 44px; overflow: hidden; border: 1px solid #b9b9c0; background: var(--lr-fond); color: var(--lr-texte); font-family: var(--lr-police-texte); }
+  .status { height: 50px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 6px; font: 600 15px var(--lr-police-texte); }
+  .toolbar { height: 48px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--lr-bordure); background: var(--lr-surface); font: 700 20px var(--lr-police-titre); letter-spacing: .01em; }
+  .contenu { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .champ { min-height: 56px; border: 1px solid var(--lr-bordure); border-radius: 14px; background: var(--lr-surface); padding: 8px 14px; }
+  .champ small { display: block; font: 600 12px var(--lr-police-titre); letter-spacing: .1em; text-transform: uppercase; color: var(--lr-texte-secondaire); }
+  .champ span { font: 600 16px var(--lr-police-texte); }
+  .carte { border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); padding: 16px; }
+  .carte h3 { margin: 0 0 8px; font: 700 22px var(--lr-police-titre); letter-spacing: .01em; }
+  .ligne { display: flex; justify-content: space-between; gap: 8px; padding: 9px 0; border-top: 1px solid var(--lr-bordure); font-size: 15px; }
+  .ligne b { font-weight: 600; }
+  .chiffre { font: 700 40px/1 var(--lr-police-titre); }
+  .source { font-size: 13px; color: var(--lr-texte-secondaire); margin: 4px 0 8px; }
+  .section { margin: 8px 0 0; font: 700 22px var(--lr-police-titre); }
+  .rang { width: 30px; height: 30px; border-radius: 15px; background: var(--lr-primaire); color: var(--lr-sur-primaire); display: inline-flex; align-items: center; justify-content: center; font: 700 17px var(--lr-police-titre); margin-right: 8px; }
+  .pourquoi { font-size: 14px; color: var(--lr-texte-secondaire); margin: 8px 0 0; line-height: 1.4; }
+  .lien { display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-top: 1px solid var(--lr-bordure); margin: 10px -16px -16px; padding: 0 16px; color: var(--lr-primaire); font-weight: 700; text-decoration: none; }
+  .ferme { color: var(--lr-danger); font-weight: 700; }
+  .ouvert { color: var(--lr-ok); font-weight: 700; }
+  .avert { font-size: 13px; color: var(--lr-texte-secondaire); margin: 8px 0 0; }
+  .fede { color: var(--lr-primaire); font-weight: 700; display: inline-flex; min-height: 48px; align-items: center; }
+  .bouton { min-height: 56px; border: 0; border-radius: 14px; background: var(--lr-primaire); color: var(--lr-sur-primaire); font: 700 17px var(--lr-police-texte); width: 100%; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--lr-bordure); background: var(--lr-surface); padding: 6px 0 22px; }
+  .tab { min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 600 12px var(--lr-police-texte); color: var(--lr-texte-secondaire); }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .tab.on { color: var(--lr-primaire); font-weight: 700; }
+
+  .tokens { width: 390px; border-collapse: collapse; background: #fff; font-size: 13px; }
+  .tokens th, .tokens td { border: 1px solid #ddd; padding: 6px; text-align: left; vertical-align: middle; }
+  .sw { display: inline-block; width: 18px; height: 18px; border-radius: 4px; border: 1px solid #0003; vertical-align: middle; margin-right: 4px; }
+  .phones { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+</style>
+</head>
+<body>
+<h1>US 292 — Nouveaux tokens et polices Barlow</h1>
+<p class="note">iPhone, app installée. PLAN §3. L'écran Conseil <b>actuel</b> (même structure qu'aujourd'hui), avec les tokens et les polices de la direction « jeu sérieux ». Les titres et les chiffres sont en Barlow Condensed, le texte en Barlow. Les deux polices sont embarquées dans l'app pour marcher hors ligne. Ici elles viennent de Google Fonts, seulement pour la maquette.</p>
+
+<input class="radio" type="radio" name="theme" id="t-clair" checked>
+<input class="radio" type="radio" name="theme" id="t-sombre">
+<div class="switch" role="radiogroup" aria-label="Thème"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+
+
+<div class="zone">
+<h2>1. Écran Conseil, structure inchangée</h2>
+<p class="note">Moment, espèce, conditions, top 3, réglementation, « Préparer ma sortie » et barre d'onglets, comme aujourd'hui. Seules les couleurs, les polices et les traits changent. L'ambre est la seule couleur d'action : boutons, liens, rang du conseil, onglet actif.</p>
+<div class="phones">
+<div class="phone themed">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar">Conseil</div>
+<div class="contenu">
+<div class="champ"><small>Moment</small><span>Maintenant</span></div>
+<div class="champ"><small>Espèce</small><span>Sandre</span></div>
+<section class="carte">
+<h3>Conditions</h3>
+<div>Température de l'eau</div>
+<div class="chiffre">11,5 °C</div>
+<p class="source">Station Hub'Eau La Maine à Angers, à 4 km</p>
+<div class="ligne"><b>Débit</b><span>Normal</span></div>
+<div class="ligne"><b>Pression</b><span>1016 hPa, stable</span></div>
+<div class="ligne"><b>Ciel</b><span>Nuageux</span></div>
+<div class="ligne"><b>Heures légales</b><span>7 h 02 – 18 h 39</span></div>
+</section>
+<p class="section">Ton top 3</p>
+<section class="carte">
+<h3><span class="rang">1</span>Shad</h3>
+<div class="ligne"><b>Animation</b><span>Tirée-relâchée</span></div>
+<div class="ligne"><b>Couleur</b><span>Gardon</span></div>
+<div class="ligne"><b>Taille</b><span>8 cm</span></div>
+<p class="pourquoi">À 11,5 °C, l'activité du poisson (sandre) est ralentie : une animation lente lui convient.</p>
+<a class="lien" href="#">Voir le détail <span aria-hidden="true">›</span></a>
+</section>
+<section class="carte">
+<h3><span class="rang">2</span>Jig à jupe</h3>
+<div class="ligne"><b>Animation</b><span>Gratté</span></div>
+<a class="lien" href="#">Voir le détail <span aria-hidden="true">›</span></a>
+</section>
+<section class="carte">
+<h3>Réglementation</h3>
+<div class="ligne"><b>1re catégorie</b><span class="ferme">Fermé jusqu'au 13/03</span></div>
+<div class="ligne"><b>2e catégorie</b><span class="ouvert">Ouvert</span></div>
+<p class="avert">À vérifier dans l'arrêté de ton département.</p>
+<a class="fede" href="#">Fédération de pêche de Maine-et-Loire ↗</a>
+</section>
+<button class="bouton">Préparer ma sortie</button>
+</div>
+<nav class="tabs" aria-label="Navigation">
+<span class="tab on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Conseil</span>
+<span class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3 13h18"/></svg>Boîte</span>
+<span class="tab"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Spots</span>
+<span class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></svg>Compte</span>
+</nav>
+</div>
+</div>
+
+<h2>2. Les tokens et leurs contrastes</h2>
+<p class="note">Contraste calculé sur le fond de l’écran (<code>--lr-fond</code>) ; « sur-primaire » est mesuré sur l’action. Objectif : 4,5:1 pour le texte et 3:1 pour les grands chiffres et les icônes.</p>
+<table class="tokens">
+<thead><tr><th>Token</th><th>Rôle</th><th>Clair</th><th>Sombre</th></tr></thead>
+<tbody>
+<tr><td>fond</td><td>Fond des écrans</td><td><span class="sw" style="background:#eef3f1"></span>#eef3f1</td><td><span class="sw" style="background:#071318"></span>#071318</td></tr>
+<tr><td>surface</td><td>Cartes, barres</td><td><span class="sw" style="background:#fbfdfc"></span>#fbfdfc</td><td><span class="sw" style="background:#0f262d"></span>#0f262d</td></tr>
+<tr><td>texte</td><td>Texte principal</td><td><span class="sw" style="background:#0f1e22"></span>#0f1e22 · 15,2:1</td><td><span class="sw" style="background:#e3efec"></span>#e3efec · 16:1</td></tr>
+<tr><td>texte-secondaire</td><td>Libellés, sources</td><td><span class="sw" style="background:#45585b"></span>#45585b · 6,7:1</td><td><span class="sw" style="background:#93aaa7"></span>#93aaa7 · 7,7:1</td></tr>
+<tr><td>trait <i>(nouveau)</i></td><td>Traits fins, contours</td><td><span class="sw" style="background:#0f1e22"></span>#0f1e22</td><td><span class="sw" style="background:#cfe3e0"></span>#cfe3e0</td></tr>
+<tr><td>bordure</td><td>Filets entre lignes</td><td><span class="sw" style="background:#c9d5d2"></span>#c9d5d2</td><td><span class="sw" style="background:#24403f"></span>#24403f</td></tr>
+<tr><td>primaire (action)</td><td>Boutons, liens, sélection</td><td><span class="sw" style="background:#a85309"></span>#a85309 · 4,8:1</td><td><span class="sw" style="background:#f0a24b"></span>#f0a24b · 8,9:1</td></tr>
+<tr><td>sur-primaire</td><td>Texte sur l'action</td><td><span class="sw" style="background:#fbfdfc"></span>#fbfdfc · 5,3:1</td><td><span class="sw" style="background:#071318"></span>#071318 · 8,9:1</td></tr>
+<tr><td>accent</td><td>Point des pictogrammes</td><td><span class="sw" style="background:#e8822e"></span>#e8822e</td><td><span class="sw" style="background:#f0a24b"></span>#f0a24b</td></tr>
+<tr><td>ok <i>(nouveau)</i></td><td>Ouvert, dans ta boîte</td><td><span class="sw" style="background:#1f7a55"></span>#1f7a55 · 4,7:1</td><td><span class="sw" style="background:#5fd3a0"></span>#5fd3a0 · 10,1:1</td></tr>
+<tr><td>attention <i>(nouveau)</i></td><td>Fermeture proche</td><td><span class="sw" style="background:#8a4300"></span>#8a4300 · 6,5:1</td><td><span class="sw" style="background:#f0a24b"></span>#f0a24b · 8,9:1</td></tr>
+<tr><td>danger</td><td>Fermé, erreur</td><td><span class="sw" style="background:#b42318"></span>#b42318 · 5,9:1</td><td><span class="sw" style="background:#f97066"></span>#f97066 · 6,8:1</td></tr>
+</tbody>
+</table>
+
+<h2>3. Écart avec le kit visuel</h2>
+<p class="note">Dans le kit, l'action en thème clair vaut <b>#c4620c</b>. Cet ambre ne fait que 3,7:1 sur le fond et 4,1:1 avec du texte foncé : c'est trop peu pour un lien ou un bouton. Je propose un ambre plus profond, <b>#a85309</b> (4,8:1), avec du texte clair sur les boutons. Le thème sombre garde l'ambre du kit, #f0a24b.</p>
+</div>
+
+<style>
+  /* Bascule clair / sombre sans script : le thème choisi s'applique au téléphone. */
+  body:has(#t-clair:checked) .phone { --lr-fond:#eef3f1;--lr-surface:#fbfdfc;--lr-texte:#0f1e22;--lr-texte-secondaire:#45585b;--lr-bordure:#c9d5d2;--lr-trait:#0f1e22;--lr-primaire:#a85309;--lr-sur-primaire:#fbfdfc;--lr-accent:#e8822e;--lr-sur-accent:#0f1e22;--lr-ok:#1f7a55;--lr-attention:#8a4300;--lr-danger:#b42318; }
+  body:has(#t-sombre:checked) .phone { --lr-fond:#071318;--lr-surface:#0f262d;--lr-texte:#e3efec;--lr-texte-secondaire:#93aaa7;--lr-bordure:#24403f;--lr-trait:#cfe3e0;--lr-primaire:#f0a24b;--lr-sur-primaire:#071318;--lr-accent:#f0a24b;--lr-sur-accent:#071318;--lr-ok:#5fd3a0;--lr-attention:#f0a24b;--lr-danger:#f97066; }
+</style>
+</body>
+</html>

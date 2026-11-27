@@ -1,0 +1,53 @@
+/* Polices embarquées (US 292, licence SIL OFL : src/assets/fonts) : aucune requête vers un service de polices, tout marche hors ligne.
+   Sous-ensemble latin (français). Barlow Condensed pour les titres et grands chiffres, Barlow pour le texte. */
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/assets/fonts/barlow-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/assets/fonts/barlow-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/barlow-latin-700-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/assets/fonts/barlow-condensed-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/assets/fonts/barlow-condensed-latin-700-normal.woff2') format('woff2');
+}
+
+body {
+  font-family: var(--lr-police-texte);
+}
+
+/* Titres : barre de titre et h1 à h3 (la structure des écrans ne change pas). */
+ion-title,
+h1,
+h2,
+h3 {
+  font-family: var(--lr-police-titre);
+}

@@ -19,7 +19,7 @@ import { LigneBoite } from './conseil-format';
       line-height: 1.35;
     }
     :host(.manque) {
-      border: 1px dashed var(--lr-accent);
+      border: 1px dashed var(--lr-primaire);
       background: transparent;
     }
     svg {
@@ -30,7 +30,7 @@ import { LigneBoite } from './conseil-format';
       color: var(--lr-primaire);
     }
     :host(.manque) svg {
-      color: var(--lr-accent);
+      color: var(--lr-primaire);
     }
     b {
       font-weight: 700;

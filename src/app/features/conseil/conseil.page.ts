@@ -149,7 +149,11 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     }
     .lib {
       display: block;
-      font-size: 14px;
+      font-family: var(--lr-police-titre);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       color: var(--lr-texte-secondaire);
     }
     .val {
@@ -223,6 +227,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-weight: 600;
     }
     .eau dd {
+      font-family: var(--lr-police-titre);
       font-size: 22px;
       font-weight: 700;
     }
@@ -274,6 +279,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       justify-content: center;
       background: var(--lr-primaire);
       color: var(--lr-sur-primaire);
+      font-family: var(--lr-police-titre);
       font-weight: 700;
       font-size: 16px;
     }

@@ -35,6 +35,7 @@ import { LigneBoiteComponent } from './ligne-boite.component';
       justify-content: center;
       background: var(--lr-primaire);
       color: var(--lr-sur-primaire);
+      font-family: var(--lr-police-titre);
       font-weight: 700;
       font-size: 16px;
     }
