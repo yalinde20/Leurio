@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 294 : dock et avatar Compte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; line-height: 1.4; }
+  .radio { position: absolute; opacity: 0; }
+  .switch { display: inline-flex; margin: 8px 0; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label { min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; background: #fff; }
+  body:has(#t-clair:checked) .switch label[for="t-clair"], body:has(#t-sombre:checked) .switch label[for="t-sombre"] { background: #222428; color: #fff; }
+  body:has(#t-clair:checked) .theme { --lr-fond:#eef3f1;--lr-surface:#fbfdfc;--lr-texte:#0f1e22;--lr-texte-secondaire:#45585b;--lr-bordure:#c9d5d2;--lr-trait:#0f1e22;--lr-primaire:#a85309;--lr-sur-primaire:#fbfdfc;--lr-sable:#dfe9e6;--lr-ok:#1f7a55; }
+  body:has(#t-sombre:checked) .theme { --lr-fond:#071318;--lr-surface:#0f262d;--lr-texte:#e3efec;--lr-texte-secondaire:#93aaa7;--lr-bordure:#24403f;--lr-trait:#cfe3e0;--lr-primaire:#f0a24b;--lr-sur-primaire:#071318;--lr-sable:#12303a;--lr-ok:#5fd3a0; }
+  .theme { --lr-police-texte: 'Barlow', system-ui, sans-serif; --lr-police-titre: 'Barlow Condensed', 'Barlow', sans-serif; }
+  .phones { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+  .cap { margin: 0 0 8px 4px; font-weight: 600; font-size: 14px; }
+
+  .phone { width: 390px; height: 844px; border-radius: 44px; overflow: hidden; border: 1px solid #b9b9c0; background: var(--lr-fond); color: var(--lr-texte); font-family: var(--lr-police-texte); display: flex; flex-direction: column; position: relative; }
+  .status { height: 50px; flex: none; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 6px; font-weight: 600; font-size: 15px; }
+  .toolbar { height: 56px; flex: none; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; border-bottom: 1px solid var(--lr-bordure); background: var(--lr-surface); padding: 0 8px; }
+  .toolbar .titre { text-align: center; font: 700 21px var(--lr-police-titre); }
+  .retour { min-height: 48px; min-width: 48px; display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; color: var(--lr-primaire); font: 600 16px var(--lr-police-texte); padding: 0 6px; }
+  .avatar { justify-self: end; width: 48px; height: 48px; border-radius: 24px; border: 1.5px solid var(--lr-bordure); background: transparent; color: var(--lr-texte); display: flex; align-items: center; justify-content: center; }
+  .ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .contenu { flex: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .carte { border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); padding: 14px 16px; }
+  .carte h3 { margin: 0 0 6px; font: 700 21px var(--lr-police-titre); }
+  .ligne { display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid var(--lr-bordure); font-size: 15px; }
+  .chiffre { font: 700 36px/1 var(--lr-police-titre); }
+  .src { font-size: 13px; color: var(--lr-texte-secondaire); margin: 4px 0 6px; }
+  .rang { width: 28px; height: 28px; border-radius: 14px; background: var(--lr-primaire); color: var(--lr-sur-primaire); display: inline-flex; align-items: center; justify-content: center; font: 700 16px var(--lr-police-titre); margin-right: 8px; }
+  .fondu { color: var(--lr-texte-secondaire); font-size: 14px; text-align: center; margin-top: 4px; }
+
+  .dock { flex: none; display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 8px; padding: 10px 16px 30px; border-top: 1px solid var(--lr-bordure); background: var(--lr-surface); }
+  .dock a, .dock button { min-height: 56px; border-radius: 14px; border: 1.5px solid var(--lr-bordure); background: transparent; color: var(--lr-texte); display: flex; align-items: center; justify-content: center; gap: 8px; font: 600 16px var(--lr-police-texte); text-decoration: none; }
+  .dock .action { background: var(--lr-primaire); border-color: var(--lr-primaire); color: var(--lr-sur-primaire); font-weight: 700; }
+  .message { margin: 0 16px 8px; padding: 10px 14px; border-radius: 12px; background: var(--lr-sable); color: var(--lr-texte); font-size: 14px; display: flex; gap: 8px; align-items: center; }
+  .message .ic { color: var(--lr-ok); }
+  .mesure { outline: 2px dashed #e8590c; outline-offset: -2px; }
+  .cote { position: absolute; font: 700 11px system-ui; color: #fff; background: #e8590c; padding: 1px 4px; border-radius: 4px; }
+  .liste { border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .liste div { min-height: 52px; display: flex; align-items: center; padding: 0 16px; border-top: 1px solid var(--lr-bordure); font-size: 16px; }
+  .liste div:first-child { border-top: 0; }
+  .carto { height: 260px; border-radius: 16px; border: 1px solid var(--lr-bordure); background: repeating-linear-gradient(0deg, var(--lr-sable) 0 18px, var(--lr-fond) 18px 20px); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol>
+<symbol id="i-boite" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3 13h18"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+<symbol id="i-sac" viewBox="0 0 24 24"><path d="M8.5 7V5.5A2.5 2.5 0 0 1 11 3h2a2.5 2.5 0 0 1 2.5 2.5V7"/><rect x="4.5" y="7" width="15" height="14" rx="4"/><path d="M8.5 13.5h7M12 13.5v3"/></symbol>
+<symbol id="i-retour" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+</svg>
+
+<h1>US 294 — Naviguer avec le dock et l'avatar Compte</h1>
+<p class="note">iPhone, app installée ; Android identique. PLAN §3 (navigation mise à jour le 27/11/2026). La barre de 4 onglets disparaît. Conseil est l'écran de base. Le dock en bas ouvre Boîte, lance « Ma sortie » et ouvre Spots. L'avatar en haut à droite ouvre Compte. Boîte, Spots et Compte ont un bouton « Conseil » de retour. Le contenu des écrans ne change pas dans cette story.</p>
+
+<input class="radio" type="radio" name="theme" id="t-clair" checked>
+<input class="radio" type="radio" name="theme" id="t-sombre">
+<div class="switch" role="radiogroup" aria-label="Thème"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+
+<div class="theme">
+<h2>1. Ouverture : Conseil, avec le dock et l'avatar</h2>
+<p class="note">Aucune barre d'onglets. Le bouton « Préparer ma sortie » du bas du Conseil devient « Ma sortie » dans le dock, dans la couleur d'action. Le dock reste visible sur le Conseil, mais pas dans le détail d'un conseil ni dans la fiche animation, qui ont leur propre retour.</p>
+<div class="phones">
+<div>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar"><span></span><span class="titre">Conseil</span><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="contenu">
+<section class="carte"><h3>Conditions</h3><div>Température de l'eau</div><div class="chiffre">11,5 °C</div><p class="src">Station Hub'Eau La Maine à Angers, à 4 km</p><div class="ligne"><b>Débit</b><span>Normal</span></div><div class="ligne"><b>Heures légales</b><span>7 h 53 – 17 h 45</span></div></section>
+<section class="carte"><h3><span class="rang">1</span>Shad</h3><div class="ligne"><b>Animation</b><span>Tirée-relâchée</span></div><div class="ligne"><b>Couleur</b><span>Gardon</span></div></section>
+<p class="fondu">… le reste du Conseil, inchangé, défile au-dessus du dock</p>
+</div>
+<nav class="dock" aria-label="Navigation">
+<a href="#"><svg class="ic"><use href="#i-boite"/></svg>Boîte</a>
+<button class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</button>
+<a href="#"><svg class="ic"><use href="#i-pin"/></svg>Spots</a>
+</nav>
+</div>
+</div>
+
+<div>
+<p class="cap">Après « Ma sortie » : même parcours qu'avant (US 14)</p>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar"><span></span><span class="titre">Conseil</span><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="contenu">
+<section class="carte"><h3>Conditions</h3><div>Température de l'eau</div><div class="chiffre">11,5 °C</div><p class="src">Station Hub'Eau La Maine à Angers, à 4 km</p></section>
+<p class="fondu">…</p>
+</div>
+<p class="message" role="status"><svg class="ic"><use href="#i-check"/></svg>Sortie prête : conditions gardées jusqu'au 29/11 à 20 h.</p>
+<nav class="dock" aria-label="Navigation">
+<a href="#"><svg class="ic"><use href="#i-boite"/></svg>Boîte</a>
+<button class="action" disabled style="opacity:.75"><svg class="ic"><use href="#i-sac"/></svg>Préparation…</button>
+<a href="#"><svg class="ic"><use href="#i-pin"/></svg>Spots</a>
+</nav>
+</div>
+</div>
+</div>
+
+<h2>2. Boîte, Spots et Compte, avec le retour au Conseil</h2>
+<p class="note">Chaque écran garde son contenu actuel. Le dock n'y est pas affiché. Le bouton « Conseil » en haut à gauche ramène au Conseil, dans l'état où on l'a laissé. Les adresses directes (#/boite, #/spots, #/compte) marchent toujours.</p>
+<div class="phones">
+<div>
+<p class="cap">Boîte</p>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar"><button class="retour"><svg class="ic"><use href="#i-retour"/></svg>Conseil</button><span class="titre">Boîte</span><span></span></div>
+<div class="contenu"><div class="liste"><div>Shad · 8 cm · Gardon</div><div>Jig à jupe · 10 g · Gardon</div><div>Cuillère tournante · 6 g</div></div><p class="fondu">… contenu actuel de la Boîte</p></div>
+</div>
+</div>
+<div>
+<p class="cap">Spots</p>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar"><button class="retour"><svg class="ic"><use href="#i-retour"/></svg>Conseil</button><span class="titre">Spots</span><span></span></div>
+<div class="contenu"><div class="carto" role="img" aria-label="Carte"></div><div class="liste"><div>Pont de Cé</div><div>Gué de la Sarthe</div></div><p class="fondu">… contenu actuel des Spots</p></div>
+</div>
+</div>
+<div>
+<p class="cap">Compte (ouvert par l'avatar)</p>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar"><button class="retour"><svg class="ic"><use href="#i-retour"/></svg>Conseil</button><span class="titre">Compte</span><span></span></div>
+<div class="contenu"><div class="liste"><div>Préférences</div><div>Thème</div><div>À propos et sources</div><div>Confidentialité</div></div><p class="fondu">… contenu actuel du Compte</p></div>
+</div>
+</div>
+</div>
+
+<h2>3. Zones tactiles (390 px)</h2>
+<p class="note">Avatar : 48 × 48. Boutons du dock : 56 px de haut, environ 100, 140 et 100 px de large. Retour : au moins 48 × 48.</p>
+<div class="phone" style="height:auto">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar" style="position:relative"><span></span><span class="titre">Conseil</span><button class="avatar mesure" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button><span class="cote" style="right:12px;top:-8px">48 × 48</span></div>
+<div style="height:80px"></div>
+<nav class="dock" aria-label="Navigation" style="position:relative">
+<a href="#" class="mesure"><svg class="ic"><use href="#i-boite"/></svg>Boîte</a>
+<button class="action mesure"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</button>
+<a href="#" class="mesure"><svg class="ic"><use href="#i-pin"/></svg>Spots</a>
+<span class="cote" style="left:18px;top:2px">≈ 100 × 56</span><span class="cote" style="left:150px;top:2px">≈ 140 × 56</span>
+</nav>
+</div>
+</div>
+</body>
+</html>
