@@ -1,5 +1,6 @@
 import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 import { CatalogService, FamilleLeurre, TypeLeurre } from '../../core/data/catalog.service';
 import { EchecEnvoiPhoto } from '../../core/data/photo-leurre';
 import { Leurre, SaisieLeurre, TackleBoxService } from '../../core/data/tackle-box.service';
@@ -11,7 +12,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
 
 @Component({
   selector: 'app-boite',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent, KitDepartComponent, PictogrammeFamilleComponent],
+  imports: [BoutonRetourComponent, IonHeader, IonToolbar, IonTitle, IonContent, LeurreFormulaireComponent, KitDepartComponent, PictogrammeFamilleComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -228,6 +229,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
   template: `
     <ion-header>
       <ion-toolbar>
+        <app-bouton-retour slot="start" libelle="Conseil" destination="/conseil" />
         <ion-title>Boîte</ion-title>
       </ion-toolbar>
     </ion-header>

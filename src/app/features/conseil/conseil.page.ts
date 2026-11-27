@@ -2,7 +2,9 @@ import { afterNextRender, Component, computed, effect, ElementRef, inject, Injec
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonContent, IonHeader, IonIcon, IonTitle, IonToolbar } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { bagHandleOutline, briefcaseOutline, locationOutline, personOutline } from 'ionicons/icons';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
@@ -110,6 +112,8 @@ type Etat =
 /** Une explication du moteur finit par un point, comme les phrases du pourquoi. */
 const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phrase : `${phrase}.`);
 
+addIcons({ bagHandleOutline, briefcaseOutline, locationOutline, personOutline });
+
 @Component({
   selector: 'app-conseil',
   imports: [
@@ -123,6 +127,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     EspeceFeuilleComponent,
     LieuFeuilleComponent,
     RouterOutlet,
+    IonIcon,
   ],
   host: { class: 'ion-page' },
   styles: `
@@ -305,36 +310,33 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-weight: 700;
       color: var(--lr-danger);
     }
-    .bloc-sortie {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--lr-bordure);
-    }
-    .bloc-sortie .aide {
-      margin: 0 0 8px;
-      font-size: 14px;
-      color: var(--lr-texte-secondaire);
-    }
-    .bouton-sortie {
+    .avatar {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      min-height: 48px;
-      border: 1px solid var(--lr-primaire);
-      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      margin-right: 8px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 24px;
       background: transparent;
-      color: var(--lr-primaire);
-      font-size: 16px;
-      font-weight: 600;
-      font-family: inherit;
+      color: var(--lr-texte);
+      font-size: 24px;
     }
-    .bouton-sortie[disabled] {
-      opacity: 0.5;
+    .zone-dock {
+      flex: none;
+      border-top: 1px solid var(--lr-bordure);
+      background: var(--lr-surface);
     }
     .message-sortie {
-      margin: 8px 0 0;
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 16px 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--lr-sable);
+      font-size: 14px;
       font-weight: 600;
     }
     .message-sortie.prete {
@@ -342,6 +344,38 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     }
     .message-sortie.echec {
       color: var(--lr-danger);
+    }
+    .dock {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 8px;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
+    }
+    .dock a,
+    .dock button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 56px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .dock .action {
+      border-color: var(--lr-primaire);
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+      font-weight: 700;
+    }
+    .dock .action[disabled] {
+      opacity: 0.5;
     }
     .bouton-mesure {
       display: flex;
@@ -497,6 +531,9 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     <ion-header>
       <ion-toolbar>
         <ion-title>Conseil</ion-title>
+        <button slot="end" type="button" class="avatar" aria-label="Compte" (click)="ouvrir($event, '/compte')">
+          <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        </button>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -639,17 +676,6 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
             }
           }
         }
-        <div class="bloc-sortie">
-          <p class="aide">Garde les conditions des 48 h à venir pour ce lieu : tu auras un conseil sans réseau.</p>
-          <button type="button" class="bouton-sortie" [disabled]="!lieuPret() || preparationEnCours()" (click)="preparerSortie()">
-            {{ preparationEnCours() ? 'Préparation…' : 'Préparer ma sortie' }}
-          </button>
-          @if (messageSortie(); as m) {
-            <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
-              {{ m.texte }}
-            </p>
-          }
-        </div>
       </section>
       <h2 class="titre-section">Ton top 3</h2>
       @if (etat().type === 'position introuvable') {
@@ -764,6 +790,20 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
         />
       }
     </ion-content>
+    <div class="zone-dock">
+      @if (messageSortie(); as m) {
+        <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
+          {{ m.texte }}
+        </p>
+      }
+      <nav class="dock" aria-label="Navigation">
+        <a href="/boite" (click)="ouvrir($event, '/boite')"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>Boîte</a>
+        <button type="button" class="action" [disabled]="!lieuPret() || preparationEnCours()" (click)="preparerSortie()">
+          <ion-icon name="bag-handle-outline" aria-hidden="true"></ion-icon>{{ preparationEnCours() ? 'Préparation…' : 'Ma sortie' }}
+        </button>
+        <a href="/spots" (click)="ouvrir($event, '/spots')"><ion-icon name="location-outline" aria-hidden="true"></ion-icon>Spots</a>
+      </nav>
+    </div>
     @if (feuilleOuverte()) {
       <app-moment-feuille
         [jourInitial]="jourBrouillon()"
@@ -1099,6 +1139,12 @@ export class ConseilPage implements OnInit {
     this.jourBrouillon.set(courant?.jour ?? 'aujourdhui');
     this.heureBrouillon.set(courant?.heure ?? 0);
     this.feuilleOuverte.set(true);
+  }
+
+  /** Ouvre un écran du dock ou de l'avatar sans recharger la page (le lien garde son href pour le clic droit et les lecteurs d'écran). */
+  protected ouvrir(evenement: Event, chemin: string): void {
+    evenement.preventDefault();
+    void this.router.navigateByUrl(chemin);
   }
 
   /** « Préparer ma sortie » : garde les conditions des 48 h à venir du lieu affiché pour le conseil sans réseau (US 14). */

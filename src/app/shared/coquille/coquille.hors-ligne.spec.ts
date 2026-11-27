@@ -1,23 +1,23 @@
 /*
- * US 13 : indicateur « Hors ligne » dans la coque à onglets. Maquette : docs/maquettes/us-13-indicateur-hors-ligne.html.
+ * US 13 : indicateur « Hors ligne » dans la coquille. Maquette : docs/maquettes/us-13-indicateur-hors-ligne.html.
  * Le bandeau a le rôle accessible « status » (élément <output>, rôle implicite, ou attribut role="status") et porte le texte « Hors ligne », au-dessus de la page (donc avant le contenu
  * des onglets) ; il suit les événements `offline` / `online` de la fenêtre (navigator.onLine), sans recharger.
  * Choix du propriétaire (option B) : un <output> sans attribut role, pour que les tests US 97/98, qui lisent le premier
  * `[role="status"]` de l'écran, trouvent toujours leur message.
- * La coque est partagée par les quatre onglets : l'e2e (e2e/hors-ligne.spec.ts) vérifie chacun d'eux.
+ * La coque est partagée par les écrans : l'e2e (e2e/hors-ligne.spec.ts) vérifie chacun d'eux.
  */
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
-import { OngletsComponent } from './onglets.component';
+import { CoquilleComponent } from './coquille.component';
 
 async function ouvrir(enLigne: boolean) {
   const reseau = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(enLigne);
   await TestBed.configureTestingModule({
-    imports: [OngletsComponent],
+    imports: [CoquilleComponent],
     providers: [provideIonicAngular(), provideRouter([])],
   }).compileComponents();
-  const fixture = TestBed.createComponent(OngletsComponent);
+  const fixture = TestBed.createComponent(CoquilleComponent);
   fixture.autoDetectChanges();
   await fixture.whenStable();
   const coque = fixture.nativeElement as HTMLElement;
@@ -26,10 +26,10 @@ async function ouvrir(enLigne: boolean) {
   return { coque, bandeau, reseau };
 }
 
-describe('OngletsComponent : indicateur « Hors ligne » (US 13)', () => {
+describe('CoquilleComponent : indicateur « Hors ligne » (US 13)', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("critère 1 : given l'app ouverte avec du réseau, when le réseau est coupé, then un bandeau de rôle status « Hors ligne » s'affiche avant le contenu de l'onglet", async () => {
+  it("critère 1 : given l'app ouverte avec du réseau, when le réseau est coupé, then un bandeau de rôle status « Hors ligne » s'affiche avant le contenu de l'écran", async () => {
     const { coque, bandeau, reseau } = await ouvrir(true);
     expect(bandeau()).toBeNull();
 
@@ -38,7 +38,7 @@ describe('OngletsComponent : indicateur « Hors ligne » (US 13)', () => {
     await vi.waitFor(() => expect(bandeau()).not.toBeNull());
 
     const contenu = coque.querySelector('.contenu, router-outlet');
-    expect(contenu, 'le contenu des onglets est introuvable').not.toBeNull();
+    expect(contenu, 'le contenu des écrans est introuvable').not.toBeNull();
     expect(bandeau()!.compareDocumentPosition(contenu!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

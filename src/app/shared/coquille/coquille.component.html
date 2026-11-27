@@ -8,18 +8,3 @@
 <div class="contenu" [class.contenu-hors-ligne]="horsLigne()">
   <router-outlet></router-outlet>
 </div>
-<ion-tab-bar>
-  @for (onglet of onglets; track onglet.chemin) {
-    <a
-      class="onglet"
-      role="tab"
-      [routerLink]="onglet.chemin"
-      routerLinkActive="onglet-selectionne"
-      #actif="routerLinkActive"
-      [attr.aria-selected]="actif.isActive"
-    >
-      <ion-icon [name]="onglet.icone" aria-hidden="true"></ion-icon>
-      <span class="onglet-libelle">{{ onglet.libelle }}</span>
-    </a>
-  }
-</ion-tab-bar>
