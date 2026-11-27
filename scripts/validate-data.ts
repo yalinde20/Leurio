@@ -3,7 +3,7 @@
 // Usage : node scripts/validate-data.ts [dossier]   (par défaut : src/assets/data)
 // Code de sortie : 0 si tout est conforme, 1 sinon. Syntaxe TypeScript effaçable seulement
 // (Node la exécute directement, sans compilation).
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Ajv } from 'ajv';
@@ -136,8 +136,11 @@ function verifierReferences(contenu: Record<string, Entrees>): string[] {
   // Les pictogrammes se résolvent depuis la racine des assets, parent du dossier de données.
   for (const f of contenu['lure-families'] ?? []) {
     const fichier = String(f['pictogramme']);
-    if (!existsSync(join(dirname(dossier), fichier)))
-      messages.push(`lure-families.json, famille de leurres ${String(f['id'])} : pictogramme « ${fichier} » absent des assets`);
+    const chemin = join(dirname(dossier), fichier);
+    const lieu = `lure-families.json, famille de leurres ${String(f['id'])}`;
+    if (!existsSync(chemin)) messages.push(`${lieu} : pictogramme « ${fichier} » absent des assets`);
+    else if (!statSync(chemin).isFile() || !/<svg[\s>]/.test(readFileSync(chemin, 'utf8')))
+      messages.push(`${lieu} : pictogramme « ${fichier} » n'est pas un fichier SVG (il doit contenir <svg)`);
   }
   for (const k of contenu['starter-kit'] ?? []) {
     const id = String(k['typeId']);

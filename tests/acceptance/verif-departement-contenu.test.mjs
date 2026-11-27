@@ -1,16 +1,16 @@
 // US 75 : le champ verifDepartementPrintemps des fiches espèces (PLAN §6, §7). Vrai pour le black-bass seul.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 
 /** Copie du contenu réel dans un dossier temporaire, avec species.json modifié par `mutate`, puis validé. */
 function valider(mutate) {
-  const dir = mkdtempSync(join(tmpdir(), `verif-dep-${process.pid}-`));
+  const dir = creerDossierDonnees(`verif-dep-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -19,7 +19,7 @@ function valider(mutate) {
     writeFileSync(join(dir, 'species.json'), JSON.stringify(especes, null, 2));
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

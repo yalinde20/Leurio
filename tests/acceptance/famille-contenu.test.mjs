@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
-import { creerDossierDonnees, supprimerDossierDonnees, PICTOGRAMME } from '../helpers/dossier-donnees.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 

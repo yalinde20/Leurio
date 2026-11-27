@@ -122,7 +122,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
       outline: 2px solid var(--lr-primaire);
       outline-offset: 2px;
     }
-    .avec-photo {
+    .avec-vignette {
       display: flex;
       align-items: center;
       gap: 12px;
@@ -259,7 +259,7 @@ import { LeurreFormulaireComponent } from './leurre-formulaire.component';
             @if (affiches.length > 0) {
               <ul class="liste">
                 @for (leurre of affiches; track leurre.id) {
-                  <li class="leurre" [class.avec-photo]="leurre.photoUrl || familleDe(leurre.typeId)">
+                  <li class="leurre" [class.avec-vignette]="leurre.photoUrl || familleDe(leurre.typeId)">
                     @if (leurre.photoUrl) {
                       <img class="vignette" [src]="leurre.photoUrl" alt="Photo du leurre" />
                     } @else if (familleDe(leurre.typeId); as famille) {

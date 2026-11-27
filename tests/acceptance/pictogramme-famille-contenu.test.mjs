@@ -63,3 +63,17 @@ test('US 293 critère 1 : given une famille dont le fichier de pictogramme est a
   assert.match(r.output, /durs/i, r.output);
   assert.match(r.output, /inexistant-us293\.svg/, r.output);
 });
+
+test('US 293 critère 1 : given un pictogramme qui est un dossier ou un fichier sans <svg, when on lance la validation du contenu, then la validation échoue en nommant la famille et le fichier', () => {
+  for (const [id, fichier, ecrire] of [
+    ['durs', 'pictogrammes/dossier-us293.svg', (chemin) => mkdirSync(chemin, { recursive: true })],
+    ['surface', 'pictogrammes/texte-us293.svg', (chemin) => (mkdirSync(dirname(chemin), { recursive: true }), writeFileSync(chemin, 'pas un dessin'))],
+  ]) {
+    const r = valider((liste, racine) => {
+      liste.find((f) => f.id === id).pictogramme = fichier;
+      ecrire(join(racine, 'assets', fichier));
+    });
+    assert.notEqual(r.status, 0, r.output);
+    assert.match(r.output, new RegExp(`${id}.*${fichier.replace('.', '\\.')}.*SVG`, 'is'), r.output);
+  }
+});

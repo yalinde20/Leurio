@@ -25,7 +25,7 @@
       "pictogramme": {
         "type": "string",
         "pattern": "^[a-z0-9][a-z0-9/_-]*\\.svg$",
-        "description": "Chemin du pictogramme SVG, relatif à src/assets/ (ex. pictogrammes/souples.svg)."
+        "description": "Chemin du pictogramme SVG, relatif à src/assets/ (ex. pictogrammes/souples.svg). Format du fichier : formes à plat (path, circle, ellipse, line, rect, polyline, polygon), viewBox 64×64, sans couleur ni style (le trait et le point sont colorés par l'app), point coloré marqué par l'attribut data-point=\"\"."
       },
       "sources": {
         "type": "array",
