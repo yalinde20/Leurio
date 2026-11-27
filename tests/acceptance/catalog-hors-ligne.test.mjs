@@ -13,3 +13,12 @@ test('given ngsw-config.json, when on le lit, then /assets/data/** est précharg
   const iAssets = groupes.findIndex((g) => g.resources?.files?.includes('/assets/**'));
   assert.ok(iAssets === -1 || iContenu < iAssets, 'le groupe du contenu doit précéder celui de /assets/** (le premier qui correspond l\'emporte)');
 });
+
+test('US 293 : given ngsw-config.json, when on le lit, then /assets/pictogrammes/** est préchargé par un groupe placé avant le groupe paresseux des assets', () => {
+  const groupes = JSON.parse(readFileSync(join(ROOT, 'ngsw-config.json'), 'utf8')).assetGroups;
+  const iPictogrammes = groupes.findIndex((g) => g.resources?.files?.includes('/assets/pictogrammes/**'));
+  assert.notEqual(iPictogrammes, -1, 'aucun groupe ne déclare /assets/pictogrammes/**');
+  assert.equal(groupes[iPictogrammes].installMode, 'prefetch');
+  const iAssets = groupes.findIndex((g) => g.resources?.files?.includes('/assets/**'));
+  assert.ok(iAssets === -1 || iPictogrammes < iAssets, 'le groupe des pictogrammes doit précéder celui de /assets/**');
+});

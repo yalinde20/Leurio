@@ -90,6 +90,8 @@ export interface Animation extends Fiche {
 export interface FamilleLeurre extends Fiche {
   id: string;
   nom: string;
+  /** Chemin du pictogramme SVG, relatif à assets/ (ex. « pictogrammes/souples.svg »), US 293. */
+  pictogramme: string;
 }
 
 /** Couleur de leurre (PLAN §8.3) : vive pour l'eau trouble, naturelle pour l'eau claire. La première du contenu est la couleur par défaut. */

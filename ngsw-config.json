@@ -14,7 +14,7 @@
       "installMode": "prefetch",
       "updateMode": "prefetch",
       "resources": {
-        "files": ["/assets/data/**"]
+        "files": ["/assets/data/**", "/assets/pictogrammes/**"]
       }
     },
     {

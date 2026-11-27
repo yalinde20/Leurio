@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leurio — US 293 : un pictogramme par famille de leurres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Tokens de l'app (US 292). Le trait suit --lr-trait, le point suit --lr-accent (décoratif, décision B de l'US 292). */
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #e9e9ee; color: #222428; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 28px 0 4px; }
+  p.note { font-size: 14px; margin: 0 0 12px; max-width: 390px; line-height: 1.4; }
+  .radio { position: absolute; opacity: 0; }
+  .switch { display: inline-flex; margin: 8px 0; border: 1px solid #888; border-radius: 8px; overflow: hidden; }
+  .switch label { min-width: 96px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; background: #fff; }
+  body:has(#t-clair:checked) .switch label[for="t-clair"], body:has(#t-sombre:checked) .switch label[for="t-sombre"] { background: #222428; color: #fff; }
+  body:has(#t-clair:checked) .theme { --lr-fond:#eef3f1;--lr-surface:#fbfdfc;--lr-texte:#0f1e22;--lr-texte-secondaire:#45585b;--lr-bordure:#c9d5d2;--lr-trait:#0f1e22;--lr-primaire:#a85309;--lr-sur-primaire:#fbfdfc;--lr-accent:#e8822e;--lr-sable:#dfe9e6; }
+  body:has(#t-sombre:checked) .theme { --lr-fond:#071318;--lr-surface:#0f262d;--lr-texte:#e3efec;--lr-texte-secondaire:#93aaa7;--lr-bordure:#24403f;--lr-trait:#cfe3e0;--lr-primaire:#f0a24b;--lr-sur-primaire:#071318;--lr-accent:#f0a24b;--lr-sable:#12303a; }
+  .theme { --lr-police-texte: 'Barlow', system-ui, sans-serif; --lr-police-titre: 'Barlow Condensed', 'Barlow', sans-serif; }
+
+  .planche { width: 390px; border-radius: 24px; border: 1px solid #b9b9c0; background: var(--lr-fond); color: var(--lr-texte); font-family: var(--lr-police-texte); padding: 20px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 8px; }
+  .fam { display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+  .vig { width: 72px; height: 72px; border-radius: 18px; background: var(--lr-sable); border: 1px solid var(--lr-bordure); display: flex; align-items: center; justify-content: center; }
+  .pic { fill: none; stroke: var(--lr-trait); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .pt { fill: var(--lr-accent); stroke: none; }
+
+  .phone { width: 390px; border-radius: 44px; overflow: hidden; border: 1px solid #b9b9c0; background: var(--lr-fond); color: var(--lr-texte); font-family: var(--lr-police-texte); }
+  .status { height: 50px; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 28px 6px; font-weight: 600; font-size: 15px; }
+  .toolbar { height: 48px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid var(--lr-bordure); background: var(--lr-surface); font: 700 20px var(--lr-police-titre); }
+  .contenu { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .puces { display: flex; gap: 8px; overflow: hidden; }
+  .puce { min-height: 48px; padding: 0 16px; display: flex; align-items: center; border-radius: 24px; border: 1px solid var(--lr-bordure); background: var(--lr-surface); font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .puce.on { background: var(--lr-primaire); color: var(--lr-sur-primaire); border-color: var(--lr-primaire); }
+  .leurre { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--lr-bordure); border-radius: 16px; background: var(--lr-surface); }
+  .leurre .vig { width: 56px; height: 56px; border-radius: 12px; flex: none; }
+  .photo { width: 56px; height: 56px; border-radius: 10px; flex: none; border: 1px solid var(--lr-bordure); background: repeating-linear-gradient(135deg, #8a9a96 0 6px, #a7b5b1 6px 12px); }
+  .nom { font: 700 19px/1.2 var(--lr-police-titre); margin: 0; }
+  .det { margin: 2px 0 0; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--lr-bordure); background: var(--lr-surface); padding: 6px 0 22px; }
+  .tab { min-height: 56px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--lr-texte-secondaire); }
+  .tab.on { color: var(--lr-primaire); font-weight: 700; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="p-souples" viewBox="0 0 64 64"><circle class="pt" cx="13" cy="30" r="5"/><path d="M11 35c-1 7 4 11 10 8"/><path d="M19 27l19-3 12-8v28l-12-8-19-3z"/><path d="M27 27v7M33 26v9"/></symbol>
+<symbol id="p-durs" viewBox="0 0 64 64"><ellipse cx="35" cy="29" rx="19" ry="9"/><path d="M17 33L9 40"/><circle class="pt" cx="25" cy="27" r="2.5"/><path d="M30 21c-3 5-3 11 0 16"/><path d="M33 38v7a3 3 0 0 1-6 0M47 36v7a3 3 0 0 0 6 0"/></symbol>
+<symbol id="p-surface" viewBox="0 0 64 64"><path d="M14 21h30q9 0 9 6t-9 6H14q5-6 0-12z"/><circle class="pt" cx="42" cy="26" r="2.5"/><path d="M6 41q5-4 10 0t10 0 10 0 10 0 10 0"/><path d="M16 49q4-3 8 0t8 0 8 0"/></symbol>
+<symbol id="p-metalliques" viewBox="0 0 64 64"><path d="M10 38h30"/><circle cx="7" cy="38" r="3"/><ellipse class="pt" cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)"/><ellipse cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)"/><path d="M23 38l1-5"/><ellipse cx="45" cy="38" rx="5" ry="4"/><path d="M50 38h3q7 0 7 8M60 46q-3 4-6 1"/></symbol>
+<symbol id="p-a-jupe" viewBox="0 0 64 64"><circle class="pt" cx="16" cy="29" r="6"/><circle cx="16" cy="29" r="6"/><circle cx="16" cy="14" r="2.5"/><path d="M16 16.5V23"/><path d="M22 29c10-7 20-9 32-9M22 29c12-2 24-2 34-1M22 29c12 3 24 5 34 6M22 29c10 6 20 13 30 15"/><path d="M21 24v10"/><path d="M13 34c0 8 4 11 9 11"/></symbol>
+</svg>
+
+<h1>US 293 — Un pictogramme par famille de leurres</h1>
+<p class="note">iPhone, app installée. PLAN §3, §7, §9. Chaque famille de <code>lure-families.json</code> nomme son pictogramme SVG : ajouter une famille ne demande qu'un JSON et un SVG. Le trait suit le token de trait du thème. Le point coloré suit l'accent, décoratif depuis la décision B de l'US 292.</p>
+
+<input class="radio" type="radio" name="theme" id="t-clair" checked>
+<input class="radio" type="radio" name="theme" id="t-sombre">
+<div class="switch" role="radiogroup" aria-label="Thème"><label for="t-clair">Clair</label><label for="t-sombre">Sombre</label></div>
+
+<div class="theme">
+<h2>1. Les 5 pictogrammes</h2>
+<p class="note">Dessin de 64 × 64, trait de 2,5, dans une vignette sur le fond « sable ». Chaque pictogramme a pour nom accessible le nom de sa famille.</p>
+<div class="planche">
+<div class="fam"><span class="vig"><svg class="pic" width="56" height="56" role="img" aria-label="Souples"><use href="#p-souples"/></svg></span>Souples</div>
+<div class="fam"><span class="vig"><svg class="pic" width="56" height="56" role="img" aria-label="Durs"><use href="#p-durs"/></svg></span>Durs</div>
+<div class="fam"><span class="vig"><svg class="pic" width="56" height="56" role="img" aria-label="Surface"><use href="#p-surface"/></svg></span>Surface</div>
+<div class="fam"><span class="vig"><svg class="pic" width="56" height="56" role="img" aria-label="Métalliques"><use href="#p-metalliques"/></svg></span>Métalliques</div>
+<div class="fam"><span class="vig"><svg class="pic" width="56" height="56" role="img" aria-label="À jupe"><use href="#p-a-jupe"/></svg></span>À jupe</div>
+</div>
+
+<h2>2. Un leurre affiché avec son pictogramme : la Boîte</h2>
+<p class="note">Un leurre sans photo montre le pictogramme de sa famille à la place de la vignette. Un leurre avec photo garde sa photo (premier leurre, rayé ici). La structure de l'écran Boîte ne change pas.</p>
+<div class="phone">
+<div class="status"><span>9:41</span><span>100 %</span></div>
+<div class="toolbar">Boîte</div>
+<div class="contenu">
+<div class="puces"><span class="puce on">Toutes</span><span class="puce">Souples</span><span class="puce">Durs</span><span class="puce">Surface</span></div>
+<div class="leurre"><span class="photo" role="img" aria-label="Photo du leurre"></span><div><p class="nom">Shad</p><p class="det">8 cm · 10 g · Gardon</p></div></div>
+<div class="leurre"><span class="vig"><svg class="pic" width="46" height="46" role="img" aria-label="Souples"><use href="#p-souples"/></svg></span><div><p class="nom">Ver souple finesse</p><p class="det">6 cm · 3 g · Gardon</p></div></div>
+<div class="leurre"><span class="vig"><svg class="pic" width="46" height="46" role="img" aria-label="À jupe"><use href="#p-a-jupe"/></svg></span><div><p class="nom">Jig à jupe</p><p class="det">10 g · Gardon</p></div></div>
+<div class="leurre"><span class="vig"><svg class="pic" width="46" height="46" role="img" aria-label="Métalliques"><use href="#p-metalliques"/></svg></span><div><p class="nom">Cuillère tournante</p><p class="det">4 cm · 6 g · Ablette</p></div></div>
+<div class="leurre"><span class="vig"><svg class="pic" width="46" height="46" role="img" aria-label="Surface"><use href="#p-surface"/></svg></span><div><p class="nom">Popper</p><p class="det">6 cm · 8 g · Gardon</p></div></div>
+<div class="leurre"><span class="vig"><svg class="pic" width="46" height="46" role="img" aria-label="Durs"><use href="#p-durs"/></svg></span><div><p class="nom">Crankbait</p><p class="det">5 cm · 7 g · Ablette</p></div></div>
+</div>
+<nav class="tabs"><span class="tab">Conseil</span><span class="tab on">Boîte</span><span class="tab">Spots</span><span class="tab">Compte</span></nav>
+</div>
+</div>
+</body>
+</html>

@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees, PICTOGRAMME } from '../helpers/dossier-donnees.mjs';
 
 const SCRIPT = 'scripts/validate-data.ts';
 const POIDS = ['temperature', 'saison', 'clarte', 'luminosite', 'pression', 'lune', 'penaliteDifficulte'];
@@ -41,7 +41,7 @@ const base = () => ({
   ],
   'techniques.json': [technique('tiree-relachee', 'Tirée-relâchée'), technique('lineaire', 'Linéaire')],
   'starter-kit.json': [kit('shad'), kit('spinnerbait')],
-  'lure-families.json': [{ id: 'souples', nom: 'Souples', sources: ['https://exemple.fr/famille'], dateVerif: DATE }],
+  'lure-families.json': [{ id: 'souples', nom: 'Souples', pictogramme: PICTOGRAMME, sources: ['https://exemple.fr/famille'], dateVerif: DATE }],
   'couleurs.json': [
     { id: 'naturelle-a', nom: 'Naturelle A', classe: 'naturelle', sources: ['https://exemple.fr/couleur'], dateVerif: DATE },
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: DATE },
@@ -51,7 +51,7 @@ const base = () => ({
 });
 
 function dossier(mutate = () => {}) {
-  const dir = mkdtempSync(join(tmpdir(), `validate-refs-${uid}-`));
+  const dir = creerDossierDonnees(`validate-refs-${uid}-`);
   const donnees = base();
   mutate(donnees);
   for (const [nom, contenu] of Object.entries(donnees)) {
@@ -69,7 +69,7 @@ function accepte(mutate) {
     const r = valider(dir);
     assert.equal(r.status, 0, `la validation aurait dû réussir :\n${r.output}`);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 
@@ -83,7 +83,7 @@ function refuse(mutate, motifs, fichier) {
     for (const m of motifs) assert.ok(r.output.includes(m), `le message devrait contenir « ${m} » :\n${r.output}`);
     if (fichier) assert.ok(r.output.includes(fichier), `le message devrait nommer ${fichier} :\n${r.output}`);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

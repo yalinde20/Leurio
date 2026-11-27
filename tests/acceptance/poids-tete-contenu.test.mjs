@@ -1,17 +1,17 @@
 // US 86 : poids de tête (poidsTeteG) des leurres souples montés sur tête plombée, lu dans le contenu (PLAN §3, §8.3, §7).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync, writeFileSync, cpSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const lire = (f) => JSON.parse(readFileSync(join(ROOT, f), 'utf8'));
 const AVEC_TETE = ['shad', 'creature', 'shad-silure', 'micro-leurre-souple', 'ver-finesse'];
 
 /** Copie du contenu réel dans un dossier temporaire, modifié par `mutate(lures)`, puis validé. */
 function valider(mutate) {
-  const dir = mkdtempSync(join(tmpdir(), `poids-tete-${process.pid}-`));
+  const dir = creerDossierDonnees(`poids-tete-${process.pid}-`);
   try {
     const src = join(ROOT, 'src/assets/data');
     for (const f of readdirSync(src)) if (f.endsWith('.json')) cpSync(join(src, f), join(dir, f));
@@ -20,7 +20,7 @@ function valider(mutate) {
     writeFileSync(join(dir, 'lure-types.json'), JSON.stringify(lures, null, 2));
     return run('node', ['scripts/validate-data.ts', dir], 60_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

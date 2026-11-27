@@ -19,6 +19,7 @@ export type * from './catalog.types';
 export class CatalogService {
   private readonly http = inject(HttpClient);
   private readonly cache = new Map<string, Promise<unknown>>();
+  private readonly pictogrammes = new Map<string, Promise<string>>();
 
   especes(): Promise<Espece[]> {
     return this.charger<Espece>('species');
@@ -30,6 +31,18 @@ export class CatalogService {
 
   famillesDeLeurres(): Promise<FamilleLeurre[]> {
     return this.charger<FamilleLeurre>('lure-families');
+  }
+
+  /** Texte d'un SVG de assets/ (pictogramme d'une famille), chargé une seule fois par chemin. */
+  pictogramme(chemin: string): Promise<string> {
+    let promesse = this.pictogrammes.get(chemin);
+    if (!promesse) {
+      promesse = firstValueFrom(this.http.get(`assets/${chemin}`, { responseType: 'text' }));
+      // Une erreur n'est pas mise en cache : le prochain appel réessaie.
+      promesse.catch(() => this.pictogrammes.delete(chemin));
+      this.pictogrammes.set(chemin, promesse);
+    }
+    return promesse;
   }
 
   animations(): Promise<Animation[]> {

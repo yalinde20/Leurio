@@ -1,10 +1,10 @@
 // US 46 : les poids initiaux du moteur (engine-weights.json, PLAN §8) respectent les critères.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run } from '../helpers/run.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees } from '../helpers/dossier-donnees.mjs';
 
 const DATA = join(ROOT, 'src/assets/data');
 const poids = () => JSON.parse(readFileSync(join(DATA, 'engine-weights.json'), 'utf8'));
@@ -12,13 +12,13 @@ const FACTEURS = ['temperature', 'saison', 'clarte', 'luminosite', 'pression', '
 
 /** Lance validate-data sur une copie du contenu dont engine-weights.json est modifié. */
 function validerAvec(modif) {
-  const dir = mkdtempSync(join(tmpdir(), `engine-weights-${process.pid}-${Math.random().toString(36).slice(2)}-`));
+  const dir = creerDossierDonnees(`engine-weights-${process.pid}-${Math.random().toString(36).slice(2)}-`);
   try {
     cpSync(DATA, dir, { recursive: true });
     writeFileSync(join(dir, 'engine-weights.json'), JSON.stringify({ ...poids(), ...modif }));
     return run('node', ['scripts/validate-data.ts', dir], 120_000);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 

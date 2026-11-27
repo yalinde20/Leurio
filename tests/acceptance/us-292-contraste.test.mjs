@@ -61,11 +61,39 @@ function sources(dossier) {
   });
 }
 
+// Décision du propriétaire du 27/11/2026 (US 293) : l'accent est réservé au point des pictogrammes de famille.
+// Seule exception : la règle `fill: var(--lr-accent)` dont le sélecteur est exactement `app-pictogramme-famille svg [data-point]`, dans ce composant.
+/** Sélecteur exact de la règle du point dans le composant. */
+const SELECTEUR_POINT = 'app-pictogramme-famille svg [data-point]';
+const COMPOSANT_PICTOGRAMME = 'src/app/shared/pictogramme-famille/pictogramme-famille.component.ts';
+
+/** Utilisations de --lr-accent en color, stroke ou fill dans `src`, hors l'exception du point des pictogrammes. */
+function usagesAccentInterdits(src, chemin) {
+  const fautifs = [];
+  for (const m of src.matchAll(/(?:^|[;{\s])(color|stroke|fill)\s*:\s*[^;}]*var\(\s*--lr-accent\b/g)) {
+    const avant = src.slice(0, m.index + m[0].indexOf(m[1]));
+    const ouverture = avant.lastIndexOf('{');
+    const debut = Math.max(avant.lastIndexOf('}', ouverture), avant.lastIndexOf('{', ouverture - 1), avant.lastIndexOf('`', ouverture)) + 1;
+    const selecteur = avant.slice(debut, ouverture);
+    if (chemin === COMPOSANT_PICTOGRAMME && m[1] === 'fill' && selecteur.trim() === SELECTEUR_POINT) continue;
+    fautifs.push(`${chemin} : ${m[1]}`);
+  }
+  return fautifs;
+}
+
 test('US 292 critère 2 : given le code de l\'app, when on cherche --lr-accent, then il n\'est jamais utilisé pour une couleur de texte, d\'icône (color, stroke, fill)', () => {
   const fautifs = [];
-  for (const f of sources(join(ROOT, 'src/app'))) {
-    const src = readFileSync(f, 'utf8');
-    for (const m of src.matchAll(/(?:^|[;{\s])(color|stroke|fill)\s*:\s*[^;}]*var\(\s*--lr-accent\b/g)) fautifs.push(`${f.slice(ROOT.length + 1)} : ${m[1]}`);
-  }
+  for (const f of sources(join(ROOT, 'src/app'))) fautifs.push(...usagesAccentInterdits(readFileSync(f, 'utf8'), f.slice(ROOT.length + 1)));
   assert.deepEqual(fautifs, []);
+});
+
+test('US 292 critère 2 : given l\'exception du point des pictogrammes, when on cherche --lr-accent, then elle reste étroite', () => {
+  const point = `${SELECTEUR_POINT} {\n  fill: var(--lr-accent);\n  stroke: none;\n}`;
+  assert.deepEqual(usagesAccentInterdits(point, COMPOSANT_PICTOGRAMME), []);
+  assert.deepEqual(usagesAccentInterdits(point, 'src/app/autre.ts'), ['src/app/autre.ts : fill']);
+  assert.deepEqual(usagesAccentInterdits(`${point}\n.titre {\n  color: var(--lr-accent);\n}`, COMPOSANT_PICTOGRAMME), [`${COMPOSANT_PICTOGRAMME} : color`]);
+  assert.deepEqual(usagesAccentInterdits('svg {\n  fill: var(--lr-accent);\n}', COMPOSANT_PICTOGRAMME), [`${COMPOSANT_PICTOGRAMME} : fill`]);
+  assert.deepEqual(usagesAccentInterdits(`${SELECTEUR_POINT} {\n  stroke: var(--lr-accent);\n}`, COMPOSANT_PICTOGRAMME), [`${COMPOSANT_PICTOGRAMME} : stroke`]);
+  for (const selecteur of ['svg:not([data-point])', '.titre, svg [data-point]', 'svg [data-point] ~ path', 'svg [data-point]'])
+    assert.deepEqual(usagesAccentInterdits(`${selecteur} {\n  fill: var(--lr-accent);\n}`, COMPOSANT_PICTOGRAMME), [`${COMPOSANT_PICTOGRAMME} : fill`], selecteur);
 });

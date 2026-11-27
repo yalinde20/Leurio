@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, run, readPackageJson } from '../helpers/run.mjs';
 import { readWorkflowText, parseSteps, simulate } from '../helpers/workflow.mjs';
+import { creerDossierDonnees, supprimerDossierDonnees, PICTOGRAMME } from '../helpers/dossier-donnees.mjs';
 
 const SCRIPT = 'scripts/validate-data.ts';
 const FICHIERS = ['species', 'lure-types', 'techniques', 'starter-kit', 'federations', 'engine-weights', 'couleurs', 'lure-families'];
@@ -35,7 +35,7 @@ const base = () => ({
     sources: ['https://exemple.fr/technique'], dateVerif: '2026-10-28',
   }],
   'starter-kit.json': [{ typeId: 'shad', raison: 'Polyvalent', sources: ['https://exemple.fr/kit'], dateVerif: '2026-10-28' }],
-  'lure-families.json': [{ id: 'souples', nom: 'Souples', sources: ['https://exemple.fr/famille'], dateVerif: '2026-10-28' }],
+  'lure-families.json': [{ id: 'souples', nom: 'Souples', pictogramme: PICTOGRAMME, sources: ['https://exemple.fr/famille'], dateVerif: '2026-10-28' }],
   'couleurs.json': [
     { id: 'naturelle-a', nom: 'Naturelle A', classe: 'naturelle', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
     { id: 'vive-a', nom: 'Vive A', classe: 'vive', sources: ['https://exemple.fr/couleur'], dateVerif: '2026-10-28' },
@@ -46,7 +46,7 @@ const base = () => ({
 
 /** Dossier temporaire contenant le jeu conforme modifié par `mutate(donnees)`. Retourne { dir, nettoyer }. */
 function dossier(mutate = () => {}) {
-  const dir = mkdtempSync(join(tmpdir(), `validate-data-${uid}-`));
+  const dir = creerDossierDonnees(`validate-data-${uid}-`);
   const donnees = base();
   mutate(donnees);
   for (const [nom, contenu] of Object.entries(donnees)) {
@@ -63,7 +63,7 @@ function refuse(mutate, motifs, { fichier } = {}) {
   assert.ok(existsSync(join(ROOT, SCRIPT)), `${SCRIPT} n'existe pas`);
   const bon = dossier();
   const ok = valider(bon);
-  rmSync(bon, { recursive: true, force: true });
+  supprimerDossierDonnees(bon);
   assert.equal(ok.status, 0, `le jeu conforme devrait réussir :\n${ok.output}`);
   const dir = dossier(mutate);
   try {
@@ -76,7 +76,7 @@ function refuse(mutate, motifs, { fichier } = {}) {
     if (fichier) assert.ok(r.output.includes(fichier), `le message devrait nommer ${fichier} :\n${r.output}`);
     return r;
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 
@@ -87,7 +87,7 @@ function accepte(mutate) {
     const r = valider(dir);
     assert.equal(r.status, 0, `la validation aurait dû réussir :\n${r.output}`);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    supprimerDossierDonnees(dir);
   }
 }
 
