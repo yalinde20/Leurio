@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ROOT } from '../helpers/run.mjs';
 import { lireThemes, contraste } from '../helpers/contrast.mjs';
 
 // US 292, critère 2 : les valeurs sont lues dans src/theme/tokens.scss, jamais écrites ici.
@@ -15,7 +18,8 @@ const TEXTE_COURANT = [
   ['--lr-sur-bandeau', '--lr-bandeau'],
 ];
 // Grands chiffres et icônes : 3:1.
-const GRANDS_ELEMENTS = [['--lr-trait', '--lr-fond'], ['--lr-trait', '--lr-surface'], ['--lr-accent', '--lr-fond']];
+// --lr-accent est décoratif (jamais une icône ni un texte) : la couleur d'action --lr-primaire porte les icônes.
+const GRANDS_ELEMENTS = [['--lr-trait', '--lr-fond'], ['--lr-trait', '--lr-surface'], ['--lr-primaire', '--lr-fond'], ['--lr-primaire', '--lr-surface']];
 
 for (const theme of ['clair', 'sombre']) {
   test(`US 292 critère 2 : given chaque couple texte/fond de texte courant, when on calcule leur contraste en thème ${theme}, then il est d'au moins 4,5:1`, () => {
@@ -47,4 +51,21 @@ test('US 292 critères 0 et 1 : given tokens.scss, when on le compile, then les 
     assert.ok(clair[n], `${n} absent du thème clair`);
     assert.ok(sombre[n], `${n} absent du thème sombre`);
   }
+});
+
+function sources(dossier) {
+  return readdirSync(dossier, { withFileTypes: true }).flatMap((e) => {
+    const p = join(dossier, e.name);
+    if (e.isDirectory()) return sources(p);
+    return /\.(ts|html|scss)$/.test(e.name) && !e.name.endsWith('.spec.ts') ? [p] : [];
+  });
+}
+
+test('US 292 critère 2 : given le code de l\'app, when on cherche --lr-accent, then il n\'est jamais utilisé pour une couleur de texte, d\'icône (color, stroke, fill)', () => {
+  const fautifs = [];
+  for (const f of sources(join(ROOT, 'src/app'))) {
+    const src = readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/(?:^|[;{\s])(color|stroke|fill)\s*:\s*[^;}]*var\(\s*--lr-accent\b/g)) fautifs.push(`${f.slice(ROOT.length + 1)} : ${m[1]}`);
+  }
+  assert.deepEqual(fautifs, []);
 });

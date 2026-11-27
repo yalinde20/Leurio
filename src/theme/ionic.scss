@@ -1,7 +1,7 @@
 /* Les tokens --lr-* alimentent les variables d'Ionic.
    Les triplets rgb, ombres (shade) et teintes (tint) sont écrits en dur : à garder
    synchronisés avec tokens.scss (palette « jeu sérieux », US 292). L'action (--lr-primaire) est la couleur « primary » ;
-   l'accent passe par « secondary » ; success = --lr-ok et warning = --lr-attention ; tertiary est un bleu discret. */
+   l'accent passe par « secondary » ; success = --lr-ok et warning = --lr-attention. */
 @use 'sass:math';
 
 :root {
@@ -37,21 +37,15 @@
   --ion-color-secondary-contrast-rgb: 15, 30, 34;
   --ion-color-secondary-shade: #cc7228;
   --ion-color-secondary-tint: #ea8e43;
-  --ion-color-tertiary: #4a5f8a;
-  --ion-color-tertiary-rgb: 74, 95, 138;
-  --ion-color-tertiary-contrast: #fbfdfc;
-  --ion-color-tertiary-contrast-rgb: 251, 253, 252;
-  --ion-color-tertiary-shade: #415479;
-  --ion-color-tertiary-tint: #5c6f96;
-  --ion-color-success: #1f7a55;
+  --ion-color-success: var(--lr-ok);
   --ion-color-success-rgb: 31, 122, 85;
-  --ion-color-success-contrast: #fbfdfc;
+  --ion-color-success-contrast: var(--lr-sur-primaire);
   --ion-color-success-contrast-rgb: 251, 253, 252;
   --ion-color-success-shade: #1b6b4b;
   --ion-color-success-tint: #358766;
-  --ion-color-warning: #8a4300;
+  --ion-color-warning: var(--lr-attention);
   --ion-color-warning-rgb: 138, 67, 0;
-  --ion-color-warning-contrast: #fbfdfc;
+  --ion-color-warning-contrast: var(--lr-sur-primaire);
   --ion-color-warning-contrast-rgb: 251, 253, 252;
   --ion-color-warning-shade: #793b00;
   --ion-color-warning-tint: #96561a;
@@ -93,21 +87,11 @@
   --ion-color-secondary-contrast-rgb: 7, 19, 24;
   --ion-color-secondary-shade: #d38f42;
   --ion-color-secondary-tint: #f2ab5d;
-  --ion-color-tertiary: #a9b8f0;
-  --ion-color-tertiary-rgb: 169, 184, 240;
-  --ion-color-tertiary-contrast: #071318;
-  --ion-color-tertiary-contrast-rgb: 7, 19, 24;
-  --ion-color-tertiary-shade: #95a2d3;
-  --ion-color-tertiary-tint: #b2bff2;
-  --ion-color-success: #5fd3a0;
   --ion-color-success-rgb: 95, 211, 160;
-  --ion-color-success-contrast: #071318;
   --ion-color-success-contrast-rgb: 7, 19, 24;
   --ion-color-success-shade: #54ba8d;
   --ion-color-success-tint: #6fd7aa;
-  --ion-color-warning: #f0a24b;
   --ion-color-warning-rgb: 240, 162, 75;
-  --ion-color-warning-contrast: #071318;
   --ion-color-warning-contrast-rgb: 7, 19, 24;
   --ion-color-warning-shade: #d38f42;
   --ion-color-warning-tint: #f2ab5d;

@@ -7,7 +7,8 @@
    Ajouts de l'US 292 : --lr-trait (traits, icônes et grands chiffres), --lr-ok (ouvert, favorable),
    --lr-attention (à surveiller), --lr-police-texte et --lr-police-titre.
    --lr-primaire est la couleur d'action unique (boutons, liens, onglet actif, marqueur de carte) ;
-   --lr-accent sert aux mises en avant, jamais au texte courant.
+   --lr-accent est purement décoratif (point des pictogrammes) : jamais un texte, une icône ni un trait porteur de sens
+   (son contraste sur le fond est inférieur à 3:1 en clair).
    Valeurs choisies pour la palette (hors maquette) : --lr-voile (noir, 35 % clair et 55 % sombre), --lr-carte-eau et
    --lr-carte-terre (bleu-vert et vert-gris clairs, ou foncés la nuit), --lr-carte-marqueur = action,
    --lr-graphique-1 = trait, --lr-graphique-2 = action, --lr-graphique-grille = bordure. */

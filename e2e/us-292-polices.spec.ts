@@ -87,3 +87,17 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
 
   expect(externes.filter((u) => /fonts\.(googleapis|gstatic)\.com/.test(u))).toEqual([]);
 });
+
+test('US 292 critère 3 : given l\'écran Conseil, when on lit la police des chiffres, then la température de l\'eau et les pastilles de rang sont en Barlow Condensed', async ({ page }) => {
+  await onboardingTermine(page);
+  await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
+  await page.goto('/');
+  await expect(page.locator('ion-title:visible')).toHaveText('Conseil');
+  const famille = (loc: ReturnType<Page['locator']>) => loc.evaluateAll((els) => els.map((el) => getComputedStyle(el).fontFamily.toLowerCase()));
+  const rangs = page.locator('ion-content:visible .rang');
+  await expect(rangs.first()).toBeVisible();
+  for (const f of await famille(rangs)) expect(f).toContain('barlow condensed');
+  const eau = page.locator('ion-content:visible .eau dd');
+  await expect(eau.first()).toBeVisible();
+  for (const f of await famille(eau)) expect(f).toContain('barlow condensed');
+});

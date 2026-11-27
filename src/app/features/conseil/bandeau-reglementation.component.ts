@@ -54,6 +54,10 @@ import { composerReglementation } from './bandeau-reglementation-format';
       display: block;
       font-size: 16px;
     }
+    .ouvert {
+      color: var(--lr-ok);
+      font-weight: 700;
+    }
     .mention {
       display: block;
       color: var(--lr-texte-secondaire);
@@ -80,7 +84,7 @@ import { composerReglementation } from './bandeau-reglementation-format';
             } @else {
               <dt>{{ l.libelle }} :</dt>
               &ngsp;
-              <dd [class.ferme]="l.ferme">{{ l.valeur }}</dd>
+              <dd [class.ferme]="l.ferme" [class.ouvert]="l.valeur === 'Ouvert'">{{ l.valeur }}</dd>
             }
           </div>
         }
