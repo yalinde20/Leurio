@@ -83,8 +83,8 @@ test("US 294 critère 1 : given l'écran Conseil, when on regarde le bas de l'é
   const boite = await dock(page).boundingBox();
   expect(boite!.y + boite!.height).toBeGreaterThan(844 - 10);
 
-  const clair = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
-  const tokens = lireThemes()[clair ? 'sombre' : 'clair'];
+  const sombre = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
+  const tokens = lireThemes()[sombre ? 'sombre' : 'clair'];
   const style = await boutonSortie(page).evaluate((el) => {
     const s = getComputedStyle(el);
     return { fond: s.backgroundColor, texte: s.color };
@@ -132,6 +132,19 @@ test("US 294 critère 5 : given l'écran Conseil, when on touche « Ma sortie »
   await boutonSortie(page).click();
 
   await expect(page.getByRole('status').filter({ hasText: 'Sortie prête : conditions jusqu\'au 11/11 à 13 h' })).toBeVisible();
+});
+
+test("US 294 critère 5 : given la sortie prête, when le message s'affiche au-dessus du dock, then son texte est en --lr-texte avec une icône coche", async ({ page }) => {
+  await ouvrirLApp(page);
+  await expect(boutonSortie(page)).toBeEnabled();
+  await boutonSortie(page).click();
+
+  const message = page.getByRole('status').filter({ hasText: 'Sortie prête' });
+  await expect(message).toBeVisible();
+  await expect(message.locator('ion-icon')).toHaveCount(1);
+  const sombre = await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches);
+  const tokens = lireThemes()[sombre ? 'sombre' : 'clair'];
+  expect(await message.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(tokens['--lr-texte']));
 });
 
 test("US 294 critère 5 : given la préparation en cours, when on a touché « Ma sortie », then le bouton du dock affiche « Préparation… »", async ({ page }) => {

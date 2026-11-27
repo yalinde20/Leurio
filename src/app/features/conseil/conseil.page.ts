@@ -4,7 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 import { IonContent, IonHeader, IonIcon, IonTitle, IonToolbar } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { bagHandleOutline, briefcaseOutline, locationOutline, personOutline } from 'ionicons/icons';
+import { bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline } from 'ionicons/icons';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
@@ -112,7 +112,7 @@ type Etat =
 /** Une explication du moteur finit par un point, comme les phrases du pourquoi. */
 const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phrase : `${phrase}.`);
 
-addIcons({ bagHandleOutline, briefcaseOutline, locationOutline, personOutline });
+addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline });
 
 @Component({
   selector: 'app-conseil',
@@ -340,7 +340,12 @@ addIcons({ bagHandleOutline, briefcaseOutline, locationOutline, personOutline })
       font-weight: 600;
     }
     .message-sortie.prete {
-      color: var(--lr-primaire);
+      color: var(--lr-texte);
+    }
+    .message-sortie ion-icon {
+      flex: none;
+      font-size: 20px;
+      color: var(--lr-ok);
     }
     .message-sortie.echec {
       color: var(--lr-danger);
@@ -793,6 +798,9 @@ addIcons({ bagHandleOutline, briefcaseOutline, locationOutline, personOutline })
     <div class="zone-dock">
       @if (messageSortie(); as m) {
         <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
+          @if (m.type === 'prete') {
+            <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+          }
           {{ m.texte }}
         </p>
       }
@@ -1142,7 +1150,9 @@ export class ConseilPage implements OnInit {
   }
 
   /** Ouvre un écran du dock ou de l'avatar sans recharger la page (le lien garde son href pour le clic droit et les lecteurs d'écran). */
-  protected ouvrir(evenement: Event, chemin: string): void {
+  protected ouvrir(evenement: MouseEvent, chemin: string): void {
+    // Ctrl, Cmd, Maj ou Alt-clic et clic non principal : le lien garde son comportement natif (nouvel onglet ou fenêtre).
+    if (evenement.button !== 0 || evenement.ctrlKey || evenement.metaKey || evenement.shiftKey || evenement.altKey) return;
     evenement.preventDefault();
     void this.router.navigateByUrl(chemin);
   }

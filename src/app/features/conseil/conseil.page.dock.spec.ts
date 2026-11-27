@@ -3,7 +3,7 @@
  * Les services sont doublés ; le réseau est `navigator.onLine`.
  */
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 import { IDBFactory } from 'fake-indexeddb';
 import { AstroService } from '../../core/data/astro.service';
@@ -77,7 +77,7 @@ describe('ConseilPage : dock et avatar (US 294)', () => {
     expect([...dock!.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/boite', '/spots']);
   });
 
-  it('given le Conseil, when il s\'affiche, then l\'avatar « Compte » mène à /compte et aucun bouton « Préparer ma sortie » n\'est dans le contenu', async () => {
+  it('given le Conseil, when il s\'affiche, then l\'avatar « Compte » est dans la barre du haut et aucun bouton « Préparer ma sortie » n\'est dans le contenu', async () => {
     const { page } = await ouvrir();
     const avatar = page.querySelector<HTMLElement>('button[aria-label="Compte"]');
     expect(avatar).not.toBeNull();
@@ -99,5 +99,22 @@ describe('ConseilPage : dock et avatar (US 294)', () => {
       expect(compact(alerte?.textContent)).toBe('Pas de réseau : prépare ta sortie avant de partir');
       expect(alerte!.compareDocumentPosition(page.querySelector('nav[aria-label="Navigation"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
+  });
+
+  it('given les liens Boîte et Spots, when on clique avec Ctrl, Cmd, Maj ou le bouton du milieu, then le lien garde son comportement natif, et un clic simple ouvre l\'écran sans recharger', async () => {
+    const { page } = await ouvrir();
+    const navigation = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const lien = page.querySelector<HTMLAnchorElement>('nav a[href="/boite"]')!;
+    const cliquer = (init: MouseEventInit) => {
+      const clic = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ...init });
+      lien.dispatchEvent(clic);
+      return clic.defaultPrevented;
+    };
+
+    for (const init of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { button: 1 }]) expect(cliquer(init), JSON.stringify(init)).toBe(false);
+    expect(navigation).not.toHaveBeenCalled();
+
+    expect(cliquer({})).toBe(true);
+    expect(navigation).toHaveBeenCalledWith('/boite');
   });
 });
