@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Kit visuel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:1280px;height:820px;box-sizing:border-box;padding:48px;background:#d9ddd9;color:#0f1e22;display:flex;flex-direction:column;gap:28px}
+.c{font-family:'Barlow Condensed','Barlow',sans-serif;margin:0}
+.jour{--fond:#eef3f1;--eau1:#d8e9e8;--eau2:#c6dfdf;--eau3:#b3d2d3;--lit:#93aba8;--ligne:#0f1e22;--fin:rgba(15,30,34,.22);--texte:#0f1e22;--texte2:#45585b;--accent:#c4620c;--suraccent:#0f1e22;--accentvif:#e8822e;--panneau:#fbfdfc;--ok:#1f7a55;--warn:#8a4300}
+.nuit{--fond:#071318;--eau1:#0d242b;--eau2:#0b1e24;--eau3:#08171c;--lit:#2a3a3c;--ligne:#cfe3e0;--fin:rgba(160,210,205,.24);--texte:#e3efec;--texte2:#93aaa7;--accent:#f0a24b;--suraccent:#071318;--accentvif:#f0a24b;--panneau:#0f262d;--ok:#5fd3a0;--warn:#f0a24b}
+.zone{border-radius:24px;padding:26px;background:var(--fond);color:var(--texte);display:flex;flex-direction:column;gap:20px;border:1px solid var(--fin)}
+.lbl{font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--texte2);margin:0 0 8px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.pic{fill:none;stroke:var(--ligne);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.sw{width:40px;height:40px;border-radius:10px;border:1px solid var(--fin)}
+.btn{height:52px;box-sizing:border-box;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 18px;font:700 16px 'Barlow',sans-serif;cursor:pointer}
+.seg{display:inline-flex;gap:3px}
+.seg i{width:18px;height:5px;border-radius:2px;background:var(--fin)}
+.seg i.on{background:var(--accent)}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="p-souples" viewBox="0 0 64 64"><circle cx="13" cy="30" r="5" style="fill:var(--accentvif);stroke:none"/><path d="M11 35c-1 7 4 11 10 8"/><path d="M19 27l19-3 12-8v28l-12-8-19-3z"/><path d="M27 27v7M33 26v9"/></symbol>
+<symbol id="p-durs" viewBox="0 0 64 64"><ellipse cx="35" cy="29" rx="19" ry="9"/><path d="M17 33L9 40"/><circle cx="25" cy="27" r="2" style="fill:var(--accentvif);stroke:none"/><path d="M30 21c-3 5-3 11 0 16"/><path d="M33 38v7a3 3 0 0 1-6 0M47 36v7a3 3 0 0 0 6 0"/></symbol>
+<symbol id="p-surface" viewBox="0 0 64 64"><path d="M14 21h30q9 0 9 6t-9 6H14q5-6 0-12z"/><circle cx="42" cy="26" r="2" style="fill:var(--accentvif);stroke:none"/><path d="M6 41q5-4 10 0t10 0 10 0 10 0 10 0"/><path d="M16 49q4-3 8 0t8 0 8 0"/></symbol>
+<symbol id="p-metal" viewBox="0 0 64 64"><path d="M10 38h30"/><circle cx="7" cy="38" r="3"/><ellipse cx="25" cy="27" rx="12" ry="6.5" transform="rotate(-18 25 27)" style="fill:var(--accentvif)"/><path d="M23 38l1-5"/><ellipse cx="45" cy="38" rx="5" ry="4"/><path d="M50 38h3q7 0 7 8M60 46q-3 4-6 1"/></symbol>
+<symbol id="p-jupe" viewBox="0 0 64 64"><circle cx="16" cy="29" r="6" style="fill:var(--accentvif)"/><circle cx="16" cy="14" r="2.5"/><path d="M16 16.5V23"/><path d="M22 29c10-7 20-9 32-9M22 29c12-2 24-2 34-1M22 29c12 3 24 5 34 6M22 29c10 6 20 13 30 15"/><path d="M21 24v10"/><path d="M13 34c0 8 4 11 9 11"/></symbol>
+<symbol id="i-sac" viewBox="0 0 24 24"><path d="M8.5 7V5.5A2.5 2.5 0 0 1 11 3h2a2.5 2.5 0 0 1 2.5 2.5V7"/><rect x="4.5" y="7" width="15" height="14" rx="4"/><path d="M8.5 13.5h7M12 13.5v3"/></symbol>
+<symbol id="i-livre" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol>
+<symbol id="i-alerte" viewBox="0 0 24 24"><path d="M12 3.5l9.5 17h-19z"/><path d="M12 10v5M12 18v.2"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+</svg>
+
+<header style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px">
+<div>
+<h1 class="c" style="font-size:60px;line-height:60px;font-weight:700">Kit visuel · jeu sérieux</h1>
+<p style="margin:10px 0 0;font:500 17px/25px 'Barlow',sans-serif;max-width:660px">Traits fins, chiffres en Barlow Condensed, texte en Barlow. Une seule couleur d'action, l'ambre. Le réticule marque le meilleur coup, comme sur un écran de sondeur.</p>
+</div>
+</header>
+
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="2">
+<section class="zone {{t.cls}}">
+<p class="c" style="font-size:24px;font-weight:700">{{t.nom}}</p>
+<div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start">
+<div>
+<p class="lbl">Couleurs</p>
+<div style="display:grid;grid-template-columns:repeat(5,40px);gap:8px">
+<span class="sw" title="fond" style="background:var(--fond)"></span><span class="sw" title="surface" style="background:var(--eau1)"></span><span class="sw" title="mi-eau" style="background:var(--eau2)"></span><span class="sw" title="fond de l'eau" style="background:var(--eau3)"></span><span class="sw" title="lit" style="background:var(--lit)"></span>
+<span class="sw" title="trait" style="background:var(--ligne)"></span><span class="sw" title="texte secondaire" style="background:var(--texte2)"></span><span class="sw" title="action" style="background:var(--accent)"></span><span class="sw" title="ouvert" style="background:var(--ok)"></span><span class="sw" title="attention" style="background:var(--warn)"></span>
+</div>
+</div>
+<div>
+<p class="lbl">Chiffres et textes</p>
+<p class="c" style="font-size:44px;line-height:44px;font-weight:700">11,5<span style="font-size:22px"> °C</span></p>
+<p style="margin:6px 0 0;font:500 15px/21px 'Barlow',sans-serif">Texte courant en Barlow, 15 px.</p>
+</div>
+</div>
+<div>
+<p class="lbl">Pictogrammes des familles</p>
+<div style="display:flex;gap:18px">
+<sc-for list="{{familles}}" as="f" hint-placeholder-count="5">
+<span style="display:flex;flex-direction:column;align-items:center;gap:4px"><svg class="pic" width="48" height="48" role="img" aria-label="{{f.nom}}"><use href="{{f.pic}}"/></svg><span style="font:500 12px 'Barlow',sans-serif;color:var(--texte2)">{{f.nom}}</span></span>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<button class="btn" style="background:var(--accent);color:var(--suraccent);border:0"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</button>
+<button class="btn" style="background:transparent;color:var(--texte);border:1.5px solid var(--fin)">Compléter le kit</button>
+<svg width="48" height="48" viewBox="0 0 48 48" role="img" aria-label="Réticule du meilleur coup"><circle cx="24" cy="24" r="16" style="fill:none;stroke:var(--accent);stroke-width:2"/><path d="M24 2v8M24 38v8M2 24h8M38 24h8" style="stroke:var(--accent);stroke-width:2;stroke-linecap:round"/></svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--fin);border-radius:14px;background:var(--panneau)"><span class="c" style="font-size:26px;font-weight:700;color:var(--accent)">01</span><span class="c" style="flex:1;font-size:22px;font-weight:700">Shad · tirée-relâchée</span><svg class="ic"><use href="#i-chev"/></svg></span>
+<span style="display:flex;gap:20px;flex-wrap:wrap;font:600 15px 'Barlow',sans-serif"><span style="display:flex;align-items:center;gap:6px;color:var(--ok)"><svg class="ic"><use href="#i-livre"/></svg>Pêche ouverte</span><span style="display:flex;align-items:center;gap:6px;color:var(--warn)"><svg class="ic"><use href="#i-alerte"/></svg>Fermeture dans 9 min</span><span style="display:flex;align-items:center;gap:8px">Vitesse <span class="seg"><i class="on"></i><i></i><i></i><i></i><i></i></span></span></span>
+</div>
+</section>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      familles: [
+        { nom: 'Souples', pic: '#p-souples' },
+        { nom: 'Durs', pic: '#p-durs' },
+        { nom: 'Surface', pic: '#p-surface' },
+        { nom: 'Métalliques', pic: '#p-metal' },
+        { nom: 'À jupe', pic: '#p-jupe' }
+      ],
+      themes: [
+        { cls: 'jour', nom: 'Thème clair' },
+        { cls: 'nuit', nom: 'Thème sombre' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

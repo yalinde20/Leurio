@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Les spots</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:470px;height:960px;box-sizing:border-box;padding:40px;background:#d9ddd9}
+.cap{margin:0 0 12px 8px;font:600 14px 'Barlow',sans-serif;color:#33403e}
+.jour{--fond:#eef3f1;--terre:#e7ece8;--courbe:rgba(15,30,34,.10);--eau:#c6dfdf;--route:#fbfdfc;--ligne:#0f1e22;--fin:rgba(15,30,34,.22);--texte:#0f1e22;--texte2:#45585b;--accent:#c4620c;--suraccent:#0f1e22;--panneau:#fbfdfc;--ok:#1f7a55}
+.ecran{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;border:1px solid rgba(0,0,0,.2);color:var(--texte);background:var(--terre)}
+.abs{position:absolute}
+.c{font-family:'Barlow Condensed','Barlow',sans-serif;margin:0}
+.lbl{font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--texte2);margin:0}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.rond{width:48px;height:48px;box-sizing:border-box;border-radius:24px;background:var(--panneau);color:var(--texte);border:1.5px solid var(--fin);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.spot{display:flex;align-items:center;gap:8px;min-height:48px;text-decoration:none;color:var(--texte)}
+.point{width:16px;height:16px;box-sizing:border-box;border-radius:8px;background:var(--panneau);border:2.5px solid var(--ligne);flex:none}
+.nom{font:700 15px 'Barlow Condensed',sans-serif;letter-spacing:.04em;text-transform:uppercase;background:var(--panneau);padding:2px 6px;border-radius:6px}
+.btn{height:56px;box-sizing:border-box;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;font:700 16px 'Barlow',sans-serif;cursor:pointer;text-decoration:none}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-retour" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-cadenas" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-sac" viewBox="0 0 24 24"><path d="M8.5 7V5.5A2.5 2.5 0 0 1 11 3h2a2.5 2.5 0 0 1 2.5 2.5V7"/><rect x="4.5" y="7" width="15" height="14" rx="4"/><path d="M8.5 13.5h7M12 13.5v3"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></symbol>
+</svg>
+
+<p class="cap">Les spots · thème clair</p>
+<div class="ecran jour">
+
+<svg class="abs" width="390" height="844" viewBox="0 0 390 844" style="left:0;top:0" aria-hidden="true">
+<rect width="390" height="844" style="fill:var(--terre)"/>
+<g style="fill:none;stroke:var(--courbe);stroke-width:1.2">
+<path d="M-20 120Q120 70 230 130T420 110"/><path d="M-20 150Q120 100 230 160T420 140"/><path d="M-20 180Q120 130 230 190T420 170"/>
+<path d="M-20 520Q100 470 220 540T420 500"/><path d="M-20 550Q100 500 220 570T420 530"/><path d="M-20 580Q100 530 220 600T420 560"/>
+</g>
+<path d="M-10 470L120 420L260 470L400 430" style="fill:none;stroke:var(--route);stroke-width:6;stroke-linecap:round"/>
+<path d="M60 -10Q80 200 40 420" style="fill:none;stroke:var(--route);stroke-width:5;stroke-linecap:round"/>
+<path d="M150 -20C165 80 140 220 230 360M-30 300C80 270 140 350 230 360S340 330 420 400" style="fill:none;stroke:var(--eau);stroke-width:24;stroke-linecap:round"/>
+<path d="M150 -20C165 80 140 220 230 360M-30 300C80 270 140 350 230 360S340 330 420 400" style="fill:none;stroke:var(--fin);stroke-width:1;stroke-dasharray:2 6"/>
+<ellipse cx="104" cy="520" rx="62" ry="36" style="fill:var(--eau)"/>
+</svg>
+
+<div class="abs" style="left:20px;right:20px;top:52px;display:flex;align-items:center;gap:12px">
+<a class="rond" href="Main.dc.html" aria-label="Retour à la rivière"><svg class="ic"><use href="#i-retour"/></svg></a>
+<div style="flex:1"><h1 class="c" style="font-size:30px;line-height:32px;font-weight:700">Mes spots</h1><p class="lbl" style="display:flex;align-items:center;gap:4px"><svg class="ic" style="width:13px;height:13px"><use href="#i-cadenas"/></svg>3 spots privés</p></div>
+<button class="rond" aria-label="Ajouter un spot"><svg class="ic"><use href="#i-plus"/></svg></button>
+</div>
+
+<a class="abs spot" href="#" style="left:150px;top:150px"><span class="point"></span><span class="nom">Gué de la Sarthe</span></a>
+<a class="abs spot" href="#" style="left:96px;top:496px"><span class="point"></span><span class="nom">Lac de Maine</span></a>
+<a class="abs spot" href="#" aria-current="true" style="left:212px;top:336px">
+<svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true" style="margin-left:-16px"><circle cx="24" cy="24" r="18" style="fill:none;stroke:var(--accent);stroke-width:2"/><path d="M24 0v8M24 40v8M0 24h8M40 24h8" style="stroke:var(--accent);stroke-width:2;stroke-linecap:round"/><circle cx="24" cy="24" r="6" style="fill:var(--accent)"/></svg>
+<span class="nom" style="color:var(--texte)">Pont de Cé</span>
+</a>
+<div class="abs" role="img" aria-label="Tu es ici" style="left:300px;top:466px;width:14px;height:14px;border-radius:7px;background:#2f7fd1;border:3px solid var(--panneau);box-shadow:0 0 0 1px var(--ligne)"></div>
+
+<span class="abs" style="left:12px;top:606px;font:500 12px 'Barlow',sans-serif;color:var(--texte2);background:var(--panneau);padding:2px 6px;border-radius:6px">© contributeurs OpenStreetMap</span>
+
+<section class="abs" aria-label="Spot choisi" style="left:0;right:0;bottom:0;top:632px;background:var(--fond);border-top:1px solid var(--fin);padding:18px 20px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<h2 class="c" style="font-size:28px;line-height:30px;font-weight:700">Pont de Cé</h2>
+<p class="c" style="font-size:24px;font-weight:700">11,5<span style="font-size:15px"> °C</span></p>
+</div>
+<p style="margin:0;font:500 14px/19px 'Barlow',sans-serif;color:var(--texte2)">Loire · 2e catégorie · <span style="color:var(--ok);font-weight:700">ouverte</span></p>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-top:10px">
+<a class="btn" href="Main.dc.html" style="background:var(--accent);color:var(--suraccent)"><svg class="ic" style="fill:currentColor"><use href="#i-play"/></svg>Pêcher ici</a>
+<button class="btn" style="background:transparent;border:1.5px solid var(--fin);color:var(--texte)"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</button>
+</div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":470,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

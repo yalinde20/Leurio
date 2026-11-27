@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Compte et paramètres</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Barlow',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.board{width:470px;height:960px;box-sizing:border-box;padding:40px;background:#d9ddd9}
+.cap{margin:0 0 12px 8px;font:600 14px 'Barlow',sans-serif;color:#33403e}
+.nuit{--fond:#071318;--ligne:#cfe3e0;--fin:rgba(160,210,205,.24);--texte:#e3efec;--texte2:#93aaa7;--accent:#f0a24b;--suraccent:#071318;--panneau:#0f262d;--danger:#f97066}
+.ecran{position:relative;width:390px;height:844px;border-radius:44px;overflow:hidden;border:1px solid rgba(0,0,0,.2);color:var(--texte);background:var(--fond);box-sizing:border-box;padding:52px 20px 0;display:flex;flex-direction:column;gap:14px}
+.c{font-family:'Barlow Condensed','Barlow',sans-serif;margin:0}
+.lbl{font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--texte2);margin:0 0 2px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.rond{width:48px;height:48px;box-sizing:border-box;border-radius:24px;background:transparent;color:var(--texte);border:1.5px solid var(--fin);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.liste{border-top:1px solid var(--fin)}
+.ligne{display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px solid var(--fin);color:var(--texte);text-decoration:none;font:600 16px 'Barlow',sans-serif}
+.ligne small{font:500 14px 'Barlow',sans-serif;color:var(--texte2)}
+</style>
+</helmet>
+<div class="board">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-retour" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-personne" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6"/></symbol>
+<symbol id="i-externe" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+</svg>
+
+<p class="cap">Compte et paramètres · thème sombre</p>
+<div class="ecran nuit">
+
+<div style="display:flex;align-items:center;gap:12px">
+<a class="rond" href="Main.dc.html" aria-label="Retour à la rivière"><svg class="ic"><use href="#i-retour"/></svg></a>
+<h1 class="c" style="font-size:30px;line-height:32px;font-weight:700">Compte</h1>
+</div>
+
+<section style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--fin);border-radius:16px;background:var(--panneau)">
+<span style="width:52px;height:52px;flex:none;border-radius:26px;border:1.5px solid var(--fin);display:flex;align-items:center;justify-content:center"><svg class="ic" style="width:26px;height:26px"><use href="#i-personne"/></svg></span>
+<div style="flex:1;min-width:0"><p style="margin:0;font:700 16px/20px 'Barlow',sans-serif">Compte anonyme</p><p style="margin:2px 0 0;font:500 13px/18px 'Barlow',sans-serif;color:var(--texte2)">Connecte-toi pour retrouver ta boîte sur un autre téléphone.</p></div>
+</section>
+<button style="height:48px;margin-top:-4px;border:1.5px solid var(--accent);border-radius:14px;background:transparent;color:var(--accent);font:700 15px 'Barlow',sans-serif;cursor:pointer">Se connecter</button>
+
+<div>
+<p class="lbl">Réglages</p>
+<div class="liste">
+<a class="ligne" href="#"><span style="flex:1">Préférences<br><small>Espèces, niveau, unités</small></span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg></a>
+<a class="ligne" href="#"><span style="flex:1">Thème</span><small>Suivre le téléphone</small><svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg></a>
+</div>
+</div>
+
+<div>
+<p class="lbl">Informations</p>
+<div class="liste">
+<a class="ligne" href="#"><span style="flex:1">À propos et sources</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg></a>
+<a class="ligne" href="#"><span style="flex:1">Confidentialité et consentements</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg></a>
+<a class="ligne" href="#"><span style="flex:1">Carte de pêche<br><small>Achète ta carte sur le site officiel</small></span><span style="display:flex;align-items:center;gap:4px;font:600 14px 'Barlow',sans-serif;color:var(--accent)">cartedepeche.fr<svg class="ic" style="width:16px;height:16px"><use href="#i-externe"/></svg></span></a>
+</div>
+</div>
+
+<div>
+<p class="lbl">Mes données</p>
+<div class="liste">
+<a class="ligne" href="#"><span style="flex:1">Exporter mes données</span><svg class="ic" style="color:var(--texte2)"><use href="#i-chev"/></svg></a>
+<a class="ligne" href="#" style="color:var(--danger)"><span style="flex:1">Supprimer mon compte</span><svg class="ic"><use href="#i-chev"/></svg></a>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":470,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
