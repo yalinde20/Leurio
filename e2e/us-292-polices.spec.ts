@@ -49,7 +49,7 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
   await onboardingTermine(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
   await page.goto('/');
-  await expect(page.getByRole('tab', { name: 'Conseil', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('navigation', { name: 'Navigation' })).toBeVisible();
   await expect(page.locator('ion-title:visible')).toHaveText('Conseil');
 
   // Les tokens de police nomment les deux familles.

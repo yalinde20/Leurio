@@ -5,6 +5,7 @@
 // « Intermédiaire », « Métriques (°C, cm, g) » et « Impériales (°F, po, oz) », mention « Pas encore synchronisé : ce sera fait au retour du réseau. ».
 import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { attendreFirebase, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
 
 test.use({
@@ -77,7 +78,7 @@ async function avecProfil(page: Page): Promise<string> {
 }
 
 async function ouvrirPreferences(page: Page): Promise<void> {
-  await page.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await ouvrirEcran(page, 'Compte');
   await expect(page.getByText('Réglages', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: /Préférences/ }).click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Préférences');
@@ -115,7 +116,7 @@ test('critère 2 : given « Préférences » est ouvert en « Débutant », when
   expect(JSON.parse((await page.evaluate((k) => localStorage.getItem(k), CLE_ONBOARDING)) ?? 'null').niveau).toBe('intermediaire');
 
   // Le conseil suivant est calculé pour ce niveau : l'écran Conseil s'affiche sans erreur avec le nouveau niveau gardé.
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(page.getByText('Ton top 3')).toBeVisible();
 });
 
@@ -152,7 +153,7 @@ test('critère 4 : given « Préférences » est ouvert, when je choisis « Imp�
   const conseil = page.locator('ion-content:visible');
 
   await avecProfil(page);
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(conseil).toContainText(eauMetrique);
   await expect(conseil).toContainText(tailleMetrique);
 
@@ -161,7 +162,7 @@ test('critère 4 : given « Préférences » est ouvert, when je choisis « Imp�
   await expect(page.getByRole('radio', { name: /Impériales/ })).toBeChecked();
   expect(await page.evaluate(() => localStorage.getItem('leurio.unites'))).toBe('imperiales');
 
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(conseil).toContainText(eauImperiale);
   await expect(conseil).toContainText(tailleImperiale);
   await expect(conseil).not.toContainText(eauMetrique);
@@ -169,7 +170,7 @@ test('critère 4 : given « Préférences » est ouvert, when je choisis « Imp�
 
   await ouvrirPreferences(page);
   await page.getByRole('radio', { name: /Métriques/ }).check({ force: true });
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(conseil).toContainText(eauMetrique);
   await expect(conseil).toContainText(tailleMetrique);
   await expect(conseil).not.toContainText('°F');

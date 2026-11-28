@@ -116,7 +116,7 @@ describe('ConseilPage : conseil indisponible (US 81, écart validé)', () => {
       expect(texte).not.toContain(compact('Calcul du conseil…'));
       expect(texte).not.toContain(compact('Animation :'));
       expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
-      expect(texte).toContain(compact('Préparer ma sortie'));
+      expect(texte).toContain(compact('Ma sortie'));
     });
   }
 });

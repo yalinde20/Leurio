@@ -33,5 +33,5 @@ test('given le build de production, when on ouvre directement l\'adresse d\'un o
   await page.goto('/spots');
 
   await expect(titreVisible(page)).toHaveText('Spots');
-  await expect(page.getByRole('tab', { name: 'Spots', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/\/spots$/);
 });

@@ -3,6 +3,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { lireThemes } from './tokens';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { estLocal } from './firebase-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
@@ -33,7 +34,7 @@ test.beforeEach(async ({ page }) => {
 
 async function ouvrirTheme(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await ouvrirEcran(page, 'Compte');
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Compte');
   await expect(page.getByText('Réglages', { exact: true })).toBeVisible();
   await page.getByText('Thème', { exact: true }).first().click();
@@ -45,13 +46,13 @@ const option = (page: Page, nom: string) => page.getByRole('radio', { name: nom 
 test("critère 1 : given je n'ai jamais changé le thème, when j'ouvre « Thème » dans Compte, then « Suivre le téléphone » est sélectionné parmi « Suivre le téléphone », « Clair » et « Sombre »", async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await ouvrirEcran(page, 'Compte');
   // La ligne « Thème » montre le choix courant.
   await expect(page.getByRole('link', { name: /Thème/ })).toContainText('Suivre le téléphone');
   await page.getByRole('link', { name: /Thème/ }).click();
 
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Thème');
-  await expect(page.getByRole('tab', { name: 'Compte', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/\/compte\/theme$/);
   await expect(page.getByRole('radiogroup')).toBeVisible();
   await expect(page.getByRole('radio')).toHaveCount(3);
   await expect(option(page, 'Suivre le téléphone')).toBeChecked();
@@ -77,7 +78,7 @@ test("critère 2 : given le téléphone est en mode sombre, when je choisis « C
   expect(await fondDe(page)).toBe(fonds().clair);
 
   // Un autre onglet est aussi en thème clair, sans recharger.
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   await expect(page.locator('ion-content:visible').first()).toBeVisible();
   await expect.poll(() => fondDe(page)).toBe(fonds().clair);
 });
@@ -104,7 +105,7 @@ test("critère 3 : given j'ai choisi « Sombre », when je relance l'app, then e
   expect(await fondDe(autre)).toBe(fonds().sombre);
 
   // La page Thème relue montre « Sombre » coché.
-  await autre.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await autre.getByRole('button', { name: 'Compte', exact: true }).click();
   await autre.getByRole('link', { name: /Thème/ }).click();
   await expect(option(autre, 'Sombre')).toBeChecked();
 });

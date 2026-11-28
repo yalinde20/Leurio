@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -31,7 +32,7 @@ async function ouvrirBoite(page: Page): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lireUid = () => page.evaluate(() => (((window as any).leurioFirebase.auth.currentUser?.uid ?? null) as string | null));
   await expect.poll(lireUid, { timeout: 20_000 }).not.toBeNull();
-  await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
+  await ouvrirEcran(page, 'Boîte');
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Boîte');
 }
 

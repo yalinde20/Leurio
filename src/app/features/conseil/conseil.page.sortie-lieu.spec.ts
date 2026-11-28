@@ -72,7 +72,7 @@ describe('ConseilPage : préparer ma sortie, changement de lieu (US 14)', () => 
     await stabiliser();
     const boutons = () => [...page.querySelectorAll<HTMLButtonElement>('button')];
 
-    boutons().find((b) => compact(b.textContent) === compact('Préparer ma sortie'))!.click();
+    boutons().find((b) => compact(b.textContent) === compact('Ma sortie'))!.click();
     await stabiliser();
     boutons().find((b) => compact(b.textContent).startsWith('Lieu'))!.click();
     await stabiliser();

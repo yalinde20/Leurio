@@ -9,7 +9,7 @@
  *    ligne « Voir le détail » ; le tap sur cet élément (ou sur la carte) ouvre le détail.
  *  - Le détail : un titre « Détail du conseil » ; les lignes « Couleur : », « Taille : » ou « Poids : », « Poids de tête : »
  *    (seulement pour un type qui a `poidsTeteG`), « Où le lancer : » ; une liste `li` avec une phrase par entrée de `pourquoi` ;
- *    un bouton « Voir l'animation » ; un bouton de retour dont le texte est « Conseil » (hors de la barre d'onglets).
+ *    un bouton « Voir l'animation » ; un bouton de retour dont le texte est « Conseil » (le dock n'est pas affiché dans le détail).
  *  - La fiche animation : un titre avec le nom de l'animation, « Le geste », « Vitesse », « Erreur à éviter » (intitulés renommés par l'US 8), pas
  *    d'encadré « La vidéo de l'animation arrive bientôt. » (retiré, décision du propriétaire à l'US 9) et un bouton de retour « Détail ».
  *  - Le retour (bouton « Conseil » ou retour du navigateur) ne rappelle ni ConditionsService ni MoteurService.
@@ -296,14 +296,17 @@ describe('Détail d\'un conseil (US 86)', () => {
     ]);
   });
 
-  it("critère 1 : given le détail ouvert, when je regarde l'écran, then l'onglet Conseil reste actif, un bouton de retour « Conseil » et un bouton « Voir l'animation » existent", async () => {
+  it("critère 1 : given le détail ouvert, when je regarde l'écran, then le dock est masqué (et revient au retour), un bouton de retour « Conseil » et un bouton « Voir l'animation » existent", async () => {
     const env = await ouvrirLApp();
     await ouvrirDetail(env, 1);
 
     expect(bouton(env.page, 'Conseil')).toBeDefined();
-    const ongletConseil = [...env.page.querySelectorAll<HTMLElement>('[role="tab"]')].find((o) => compact(o.textContent) === 'Conseil');
-    expect(ongletConseil?.getAttribute('aria-selected')).toBe('true');
+    expect(env.page.querySelector('nav[aria-label="Navigation"]')).toBeNull();
     expect(bouton(env.page, "Voir l'animation")).toBeDefined();
+
+    bouton(env.page, 'Conseil').click();
+    await env.stabiliser();
+    expect(env.page.querySelector('nav[aria-label="Navigation"]')).not.toBeNull();
   });
 
   it("critère 2 : given le détail du shad ouvert, when je touche « Voir l'animation », then la fiche de l'animation « Tirée-relâchée » s'ouvre avec le geste, la vitesse, l'erreur à éviter et la vidéo à venir", async () => {

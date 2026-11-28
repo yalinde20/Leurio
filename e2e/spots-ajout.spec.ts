@@ -3,6 +3,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -23,7 +24,7 @@ async function ouvrirSpots(page: Page): Promise<string> {
   await attendreFirebase(page);
   await expect.poll(() => lireUid(page), { timeout: 20_000 }).not.toBeNull();
   const uid = (await lireUid(page))!;
-  await page.getByRole('tab', { name: 'Spots', exact: true }).click();
+  await ouvrirEcran(page, 'Spots');
   await expect(ajouter(page)).toBeVisible();
   return uid;
 }

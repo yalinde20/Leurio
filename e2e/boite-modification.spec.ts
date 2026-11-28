@@ -3,6 +3,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -19,7 +20,7 @@ async function ouvrirBoite(page: Page): Promise<string> {
   const lireUid = () => page.evaluate(() => ((window as any).leurioFirebase.auth.currentUser?.uid ?? null) as string | null);
   await expect.poll(lireUid, { timeout: 20_000 }).not.toBeNull();
   const uid = (await lireUid())!;
-  await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
+  await ouvrirEcran(page, 'Boîte');
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Boîte');
   return uid;
 }

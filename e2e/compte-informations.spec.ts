@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { estLocal } from './firebase-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
@@ -28,7 +29,7 @@ test.beforeEach(async ({ page }) => {
 
 async function ouvrirCompte(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await ouvrirEcran(page, 'Compte');
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Compte');
 }
 
@@ -92,7 +93,7 @@ test("critère 3 : given l'onglet « Compte » affiché, when je touche « Confi
   await expect(page.getByRole('heading', { name: 'Qui s’occupe de tes données' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ton identifiant de compte' })).toBeAttached();
   await expect(page.getByRole('link', { name: /yoyoalinde@gmail\.com/ }).first()).toHaveAttribute('href', 'mailto:yoyoalinde@gmail.com');
-  await expect(page.getByRole('tab', { name: 'Compte', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page).toHaveURL(/\/compte\/confidentialite$/);
 
   await page.getByRole('button', { name: /Compte/ }).first().click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Compte');

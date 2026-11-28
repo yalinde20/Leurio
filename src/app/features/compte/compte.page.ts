@@ -2,9 +2,11 @@ import { afterNextRender, Component, computed, effect, ElementRef, inject, Injec
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
+import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 import { ExportAnnule, ExportService } from '../../core/data/export.service';
 import { CompteLie, FournisseurLiaison, SOURCE_LIAISON } from '../../core/data/liaison-compte';
 import { SOURCE_SUPPRESSION, SuppressionCompteService } from '../../core/data/suppression-compte.service';
+import { ConseilChoixStore } from '../conseil/conseil-choix.store';
 import { PortailDirective } from '../../shared/portail/portail.directive';
 import { CHOIX_THEME, ThemeService } from '../../shared/theme.service';
 
@@ -50,7 +52,7 @@ interface Reconnexion {
 
 @Component({
   selector: 'app-compte',
-  imports: [IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet, PortailDirective],
+  imports: [BoutonRetourComponent, IonHeader, IonToolbar, IonTitle, IonContent, RouterLink, RouterOutlet, PortailDirective],
   host: { class: 'ion-page' },
   styles: `
     /* Dès que la page enfant est dans le DOM (avant le prochain passage de détection de changements), l'écran « Compte » lui laisse la place. */
@@ -356,6 +358,7 @@ interface Reconnexion {
     @if (!enfantOuvert()) {
       <ion-header>
         <ion-toolbar>
+          <app-bouton-retour slot="start" libelle="Conseil" destination="/conseil" />
           <ion-title>Compte</ion-title>
         </ion-toolbar>
       </ion-header>
@@ -613,6 +616,7 @@ export class ComptePage {
   private readonly export = inject(ExportService);
   private readonly suppression = inject(SOURCE_SUPPRESSION);
   private readonly etatLocal = inject(SuppressionCompteService);
+  private readonly choixConseil = inject(ConseilChoixStore);
 
   protected readonly confirmation = signal(false);
   protected readonly reconnexion = signal<Reconnexion | null>(null);
@@ -782,6 +786,7 @@ export class ComptePage {
       return;
     }
     this.etatLocal.effacerEtatLocal();
+    this.choixConseil.reinitialiser(); // le spot et la sortie préparée du Conseil appartiennent au compte supprimé
     await this.router.navigateByUrl('/onboarding');
   }
 

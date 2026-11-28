@@ -50,13 +50,13 @@ async function ouvrirLApp(page: Page, requetesMeteo: string[] = []): Promise<voi
   await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
 }
 
-const boutonPreparer = (page: Page) => page.getByRole('button', { name: /^Préparer ma sortie$/ });
+const boutonPreparer = (page: Page) => page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: /^Ma sortie$/ });
 const reseau = async (page: Page, coupe: boolean) => {
   await page.context().setOffline(coupe);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(!coupe);
 };
 
-test("critère 1 : given l'onglet Conseil avec du réseau et un lieu choisi, when l'utilisateur touche « Préparer ma sortie », then « Sortie prête : conditions jusqu'au 26/11 à 9 h » s'affiche", async ({ page }) => {
+test("critère 1 : given l'écran Conseil avec du réseau et un lieu choisi, when l'utilisateur touche « Ma sortie », then « Sortie prête : conditions jusqu'au 26/11 à 9 h » s'affiche", async ({ page }) => {
   await ouvrirLApp(page);
   await expect(boutonPreparer(page)).toBeEnabled();
 
@@ -65,7 +65,7 @@ test("critère 1 : given l'onglet Conseil avec du réseau et un lieu choisi, whe
   await expect(page.getByRole('status').filter({ hasText: "Sortie prête : conditions jusqu'au 26/11 à 9 h" })).toBeVisible();
 });
 
-test("critère 2 : given une sortie préparée puis le mode avion, when l'utilisateur choisit demain 12 h sur l'onglet Conseil, then le top 3 s'affiche avec la mention « Conditions du 24/11 à 9 h »", async ({ page }) => {
+test("critère 2 : given une sortie préparée puis le mode avion, when l'utilisateur choisit demain 12 h sur l'écran Conseil, then le top 3 s'affiche avec la mention « Conditions du 24/11 à 9 h »", async ({ page }) => {
   await ouvrirLApp(page);
   await boutonPreparer(page).click();
   await expect(page.getByRole('status').filter({ hasText: 'Sortie prête' })).toBeVisible();
@@ -83,7 +83,7 @@ test("critère 2 : given une sortie préparée puis le mode avion, when l'utilis
   await expect(page.getByText('Conseil moins précis')).toHaveCount(0);
 });
 
-test("critère 4 : given l'appareil sans réseau, when l'utilisateur touche « Préparer ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async ({ page }) => {
+test("critère 4 : given l'appareil sans réseau, when l'utilisateur touche « Ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async ({ page }) => {
   const requetesMeteo: string[] = [];
   await ouvrirLApp(page, requetesMeteo);
   await reseau(page, true);

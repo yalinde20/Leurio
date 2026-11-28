@@ -1,8 +1,10 @@
-import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, Injector, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonContent, IonHeader, IonIcon, IonTitle, IonToolbar } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline } from 'ionicons/icons';
 import { AstroService } from '../../core/data/astro.service';
 import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
@@ -33,7 +35,7 @@ import {
   formaterTempEau,
   formaterVent,
 } from './conditions-format';
-import { ConseilChoixStore, MomentChoisi } from './conseil-choix.store';
+import { ConseilChoixStore, MomentChoisi, SortiePrete } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
 import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
 import { LigneBoiteComponent } from './ligne-boite.component';
@@ -110,6 +112,8 @@ type Etat =
 /** Une explication du moteur finit par un point, comme les phrases du pourquoi. */
 const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phrase : `${phrase}.`);
 
+addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline });
+
 @Component({
   selector: 'app-conseil',
   imports: [
@@ -123,6 +127,7 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     EspeceFeuilleComponent,
     LieuFeuilleComponent,
     RouterOutlet,
+    IonIcon,
   ],
   host: { class: 'ion-page' },
   styles: `
@@ -305,43 +310,77 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
       font-weight: 700;
       color: var(--lr-danger);
     }
-    .bloc-sortie {
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--lr-bordure);
-    }
-    .bloc-sortie .aide {
-      margin: 0 0 8px;
-      font-size: 14px;
-      color: var(--lr-texte-secondaire);
-    }
-    .bouton-sortie {
+    .avatar {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      min-height: 48px;
-      border: 1px solid var(--lr-primaire);
-      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      margin-right: 8px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 24px;
       background: transparent;
-      color: var(--lr-primaire);
-      font-size: 16px;
-      font-weight: 600;
-      font-family: inherit;
+      color: var(--lr-texte);
+      font-size: 24px;
     }
-    .bouton-sortie[disabled] {
-      opacity: 0.5;
+    .zone-dock {
+      flex: none;
+      border-top: 1px solid var(--lr-bordure);
+      background: var(--lr-surface);
     }
     .message-sortie {
-      margin: 8px 0 0;
-      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 16px 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--lr-sable);
+      font-size: 14px;
       font-weight: 600;
     }
     .message-sortie.prete {
-      color: var(--lr-primaire);
+      color: var(--lr-texte);
+    }
+    .message-sortie ion-icon {
+      flex: none;
+      font-size: 20px;
+      color: var(--lr-ok);
     }
     .message-sortie.echec {
       color: var(--lr-danger);
+    }
+    .dock {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 8px;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
+    }
+    .dock a,
+    .dock button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 56px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .dock .action {
+      border-color: var(--lr-primaire);
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+      font-weight: 700;
+    }
+    .dock .action[disabled] {
+      opacity: 0.5;
     }
     .bouton-mesure {
       display: flex;
@@ -497,6 +536,9 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
     <ion-header>
       <ion-toolbar>
         <ion-title>Conseil</ion-title>
+        <button slot="end" type="button" class="avatar" aria-label="Compte" (click)="ouvrir($event, '/compte')">
+          <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+        </button>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
@@ -639,17 +681,6 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
             }
           }
         }
-        <div class="bloc-sortie">
-          <p class="aide">Garde les conditions des 48 h à venir pour ce lieu : tu auras un conseil sans réseau.</p>
-          <button type="button" class="bouton-sortie" [disabled]="!lieuPret() || preparationEnCours()" (click)="preparerSortie()">
-            {{ preparationEnCours() ? 'Préparation…' : 'Préparer ma sortie' }}
-          </button>
-          @if (messageSortie(); as m) {
-            <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
-              {{ m.texte }}
-            </p>
-          }
-        </div>
       </section>
       <h2 class="titre-section">Ton top 3</h2>
       @if (etat().type === 'position introuvable') {
@@ -764,6 +795,23 @@ const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phr
         />
       }
     </ion-content>
+    <div class="zone-dock">
+      @if (messageSortie(); as m) {
+        <p class="message-sortie" [class.prete]="m.type === 'prete'" [class.echec]="m.type !== 'prete'" [attr.role]="m.type === 'prete' ? 'status' : 'alert'">
+          @if (m.type === 'prete') {
+            <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+          }
+          {{ m.texte }}
+        </p>
+      }
+      <nav class="dock" aria-label="Navigation">
+        <a href="/boite" (click)="ouvrir($event, '/boite')"><ion-icon name="briefcase-outline" aria-hidden="true"></ion-icon>Boîte</a>
+        <button type="button" class="action" [disabled]="!lieuPret() || preparationEnCours()" (click)="preparerSortie()">
+          <ion-icon name="bag-handle-outline" aria-hidden="true"></ion-icon>{{ preparationEnCours() ? 'Préparation…' : 'Ma sortie' }}
+        </button>
+        <a href="/spots" (click)="ouvrir($event, '/spots')"><ion-icon name="location-outline" aria-hidden="true"></ion-icon>Spots</a>
+      </nav>
+    </div>
     @if (feuilleOuverte()) {
       <app-moment-feuille
         [jourInitial]="jourBrouillon()"
@@ -840,6 +888,7 @@ export class ConseilPage implements OnInit {
   private readonly injector = inject(Injector);
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => (this.detruit = true));
     // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
     const gardé = this.choix.moment();
     if (gardé) {
@@ -909,10 +958,11 @@ export class ConseilPage implements OnInit {
 
   protected readonly preparationEnCours = signal(false);
   /** Le résultat de la dernière préparation, sous le bouton ; effacé quand le lieu change. */
+  /** Le message de « Ma sortie » affiché ; seul le succès « Sortie prête » est gardé par le store pour le retour sur l'écran. */
   protected readonly messageSortie = signal<{ type: 'prete' | 'hors ligne' | 'echec'; texte: string } | null>(null);
 
   /** Le spot qui sert de lieu ; `null` = « Ma position ». État du composant, jamais mémorisé. */
-  protected readonly spotChoisi = signal<SpotEnregistre | null>(null);
+  protected readonly spotChoisi = this.choix.spot;
   protected readonly lieuOuvert = signal(false);
   protected readonly spotsEnregistres = signal<SpotEnregistre[]>([]);
   protected readonly etatSpots = signal<EtatSpots>('chargement');
@@ -920,6 +970,8 @@ export class ConseilPage implements OnInit {
   private readonly boutonLieu = viewChild<ElementRef<HTMLButtonElement>>('boutonLieu');
   /** Numéro du dernier choix de lieu : une position obtenue pour un choix plus ancien est ignorée. */
   private choixLieu = 0;
+  /** Vrai une fois l'écran détruit : une lecture ou une préparation en retard n'écrit plus rien. */
+  private detruit = false;
   /** Numéro de la dernière lecture des spots. */
   private lectureSpots = 0;
   /**
@@ -1083,7 +1135,47 @@ export class ConseilPage implements OnInit {
 
   ngOnInit(): void {
     // Un spot demandé par l'écran « Spots » est le lieu de départ : la position GPS n'est pas demandée (l'effet du constructeur l'applique).
-    if (this.lieuDemande.demande() === null) void this.charger();
+    if (this.lieuDemande.demande() === null) void this.reprendreOuCharger();
+  }
+
+  /**
+   * Retour sur l'écran (Boîte, Spots ou Compte puis « Conseil ») : le spot choisi est appliqué tout de suite (il a déjà ses coordonnées, sans
+   * position GPS) et la sortie préparée dont les conditions courent encore est reprise. Le spot est ensuite vérifié en arrière-plan :
+   * supprimé, retour sur « Ma position » ; renommé, son nom est mis à jour. Rien n'est écrit si l'utilisateur a choisi un autre lieu entre-temps
+   * ou si l'écran est détruit.
+   */
+  private async reprendreOuCharger(): Promise<void> {
+    const gardé = this.spotChoisi();
+    const sortie = this.choix.sortiePrete();
+    const chargement = gardé ? this.appliquerLieu(gardé) : this.charger();
+    this.reprendreSortie(sortie); // le chargement vide l'écran, mais le lieu reste le même : le message reste vrai
+    if (!gardé) return chargement;
+    const numero = this.choixLieu;
+    let spots: SpotEnregistre[];
+    try {
+      spots = await this.spots.mesSpots();
+    } catch {
+      return chargement; // Lecture impossible : on garde le spot choisi.
+    }
+    if (this.detruit || numero !== this.choixLieu) return chargement;
+    const lu = spots.find((s) => s.id === gardé.id);
+    if (!lu) {
+      this.spotChoisi.set(null);
+      return this.charger();
+    }
+    if (lu.lat === gardé.lat && lu.lng === gardé.lng && lu.categorie === gardé.categorie && lu.departement === gardé.departement) {
+      this.spotChoisi.set(lu); // renommé : le nom suit
+      return chargement;
+    }
+    this.spotChoisi.set(lu);
+    return this.appliquerLieu(lu);
+  }
+
+  /** Remet le message « Sortie prête » d'avant le départ de l'écran, tant que ses conditions courent ; sinon l'oublie. */
+  private reprendreSortie(sortie: SortiePrete | null): void {
+    if (!sortie || sortie.jusquA.getTime() <= Date.now()) return;
+    this.choix.sortiePrete.set(sortie);
+    this.messageSortie.set({ type: 'prete', texte: sortie.texte });
   }
 
   /** Le spot demandé par « Voir le conseil » devient le lieu, comme un choix dans la feuille « Lieu ». */
@@ -1101,18 +1193,30 @@ export class ConseilPage implements OnInit {
     this.feuilleOuverte.set(true);
   }
 
+  /** Ouvre un écran du dock ou de l'avatar sans recharger la page (le lien garde son href pour le clic droit et les lecteurs d'écran). */
+  protected ouvrir(evenement: MouseEvent, chemin: string): void {
+    // Ctrl, Cmd, Maj ou Alt-clic et clic non principal : le lien garde son comportement natif (nouvel onglet ou fenêtre).
+    if (evenement.button !== 0 || evenement.ctrlKey || evenement.metaKey || evenement.shiftKey || evenement.altKey) return;
+    evenement.preventDefault();
+    void this.router.navigateByUrl(chemin);
+  }
+
   /** « Préparer ma sortie » : garde les conditions des 48 h à venir du lieu affiché pour le conseil sans réseau (US 14). */
   protected async preparerSortie(): Promise<void> {
     const lieu = this.lieu;
     if (!lieu || this.preparationEnCours()) return;
     this.preparationEnCours.set(true);
     this.messageSortie.set(null);
+    this.choix.sortiePrete.set(null);
     const choixLieu = this.choixLieu;
     const resultat = await this.sortie.preparer({ latitude: lieu.latitude, longitude: lieu.longitude });
     this.preparationEnCours.set(false);
     // Le lieu a changé pendant la préparation : son message ne concerne plus l'écran.
-    if (choixLieu !== this.choixLieu) return;
-    this.messageSortie.set(messagePreparation(resultat));
+    if (this.detruit || choixLieu !== this.choixLieu) return;
+    const message = messagePreparation(resultat);
+    this.messageSortie.set(message);
+    // Seul le succès est gardé pour le retour sur l'écran ; une erreur ne doit pas être relue à chaque retour.
+    this.choix.sortiePrete.set(resultat.statut === 'prete' ? { texte: message.texte, jusquA: resultat.jusquA } : null);
   }
 
   protected ouvrirSaisie(): void {
@@ -1191,6 +1295,7 @@ export class ConseilPage implements OnInit {
     this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
     this.messageSortie.set(null);
+    this.choix.sortiePrete.set(null);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
   }

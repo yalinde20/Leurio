@@ -14,7 +14,7 @@ describe('App', () => {
   beforeEach(() => localStorage.setItem('leurio.onboarding', JSON.stringify({ niveau: 'debutant', especesFavorites: [] })));
   afterEach(() => localStorage.clear());
 
-  it('affiche les 4 onglets Conseil, Boîte, Spots, Compte et ouvre le Conseil', async () => {
+  it('ouvre le Conseil avec son dock Boîte, Ma sortie, Spots et son avatar Compte, sans barre d\'onglets', async () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -31,8 +31,10 @@ describe('App', () => {
     await fixture.whenStable();
 
     const page = fixture.nativeElement as HTMLElement;
-    const onglets = [...page.querySelectorAll('[role="tab"]')];
-    expect(onglets.map((o) => o.textContent?.trim())).toEqual(['Conseil', 'Boîte', 'Spots', 'Compte']);
+    expect(page.querySelectorAll('[role="tab"], ion-tab-bar')).toHaveLength(0);
+    const dock = page.querySelector('nav[aria-label="Navigation"]');
+    expect([...dock!.querySelectorAll('a, button')].map((e) => e.textContent?.trim())).toEqual(['Boîte', 'Ma sortie', 'Spots']);
+    expect(page.querySelector('button[aria-label="Compte"]')).not.toBeNull();
     expect(TestBed.inject(Router).url).toBe('/conseil');
   });
 });

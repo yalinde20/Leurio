@@ -6,6 +6,7 @@
 // et « Lecteurs vidéo tiers » (rôle `switch` ou `checkbox`), mention « Pas encore synchronisé : ce sera fait au retour du réseau. ».
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 import { attendreFirebase, enregistrerRequetes, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
 
 test.use({
@@ -81,7 +82,7 @@ async function avecProfil(page: Page, analytics = false, video = false): Promise
 }
 
 async function ouvrirConsentements(page: Page): Promise<void> {
-  await page.getByRole('tab', { name: 'Compte', exact: true }).click();
+  await ouvrirEcran(page, 'Compte');
   await expect(page.getByText('Réglages', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: /Consentements/ }).click();
   await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Consentements');
@@ -117,9 +118,9 @@ test('critère 2 : given « Mesure d’audience (Analytics) » est désactivé, 
   await ouvrirConsentements(page);
   await expect(interrupteur(page, ANALYTICS)).not.toBeChecked();
 
-  for (const onglet of ['Conseil', 'Boîte', 'Spots', 'Compte']) {
-    await page.getByRole('tab', { name: onglet, exact: true }).click();
-    await expect(page.getByRole('tab', { name: onglet, exact: true })).toHaveAttribute('aria-selected', 'true');
+  for (const onglet of ['Conseil', 'Boîte', 'Spots', 'Compte'] as const) {
+    await ouvrirEcran(page, onglet);
+    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText(onglet);
   }
 
   expect(versDomaines(urls, DOMAINES_ANALYTICS)).toEqual([]);
@@ -143,7 +144,7 @@ test('critère 4 : given « Lecteurs vidéo tiers » est désactivé, when j\'ou
   await ouvrirConsentements(page);
   await expect(interrupteur(page, VIDEO)).not.toBeChecked();
 
-  await page.getByRole('tab', { name: 'Conseil', exact: true }).click();
+  await ouvrirEcran(page, 'Conseil');
   const carte = page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
   await carte.getByText('Voir le détail').click();
   await page.getByRole('button', { name: "Voir l'animation" }).click();

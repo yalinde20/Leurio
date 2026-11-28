@@ -3,6 +3,7 @@ import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, H
 import { Router } from '@angular/router';
 import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ionic/angular';
 import * as L from 'leaflet';
+import { BoutonRetourComponent } from '../../shared/bouton-retour/bouton-retour.component';
 import { CatalogService } from '../../core/data/catalog.service';
 import type { Federation } from '../../core/data/catalog.types';
 import { etatOuverture, prochaineOuverture1reCategorie } from '../../core/regulation/calendar';
@@ -47,7 +48,7 @@ interface LigneSpot {
 
 @Component({
   selector: 'app-spots',
-  imports: [NgTemplateOutlet, IonHeader, IonToolbar, IonTitle, IonContent, SpotFormulaireComponent],
+  imports: [BoutonRetourComponent, NgTemplateOutlet, IonHeader, IonToolbar, IonTitle, IonContent, SpotFormulaireComponent],
   host: { class: 'ion-page' },
   styles: `
     .contenu {
@@ -239,6 +240,7 @@ interface LigneSpot {
   template: `
     <ion-header>
       <ion-toolbar>
+        <app-bouton-retour slot="start" libelle="Conseil" destination="/conseil" />
         <ion-title>Spots</ion-title>
       </ion-toolbar>
     </ion-header>

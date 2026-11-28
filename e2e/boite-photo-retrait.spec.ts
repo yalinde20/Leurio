@@ -3,6 +3,7 @@
 import { test, expect } from '@playwright/test';
 import { EMULATEURS, PROJET, attendreFirebase, estLocal, photosLeurresActives } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ouvrirEcran } from './dock-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,7 +23,7 @@ test('given un leurre avec photo, when je touche « Retirer la photo » puis « 
   const lireUid = () => page.evaluate(() => ((window as any).leurioFirebase.auth.currentUser?.uid ?? null) as string | null);
   await expect.poll(lireUid, { timeout: 20_000 }).not.toBeNull();
   const uid = (await lireUid())!;
-  await page.getByRole('tab', { name: 'Boîte', exact: true }).click();
+  await ouvrirEcran(page, 'Boîte');
 
   const leurres = async (): Promise<Record<string, any>[]> => {
     const r = await fetch(`http://127.0.0.1:${EMULATEURS.firestore}/v1/projects/${PROJET}/databases/(default)/documents/users/${uid}/tackleBox`, {

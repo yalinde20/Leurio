@@ -12,6 +12,8 @@ import { ComptePage } from './compte.page';
 afterEach(() => vi.restoreAllMocks());
 
 const erreur = (code: string) => Object.assign(new Error(code), { code });
+/** Un bouton par son nom accessible : le bouton de retour « Conseil » (US 294) précède les boutons de connexion dans l'écran. */
+const bouton = (page: HTMLElement, nom: string) => Array.from(page.querySelectorAll('button')).find((b) => b.textContent?.trim() === nom)!;
 /** Les boutons de connexion seulement : le bouton « Exporter mes données » (US 97) est aussi sur l'écran (décision du propriétaire, US 97). */
 const boutons = (page: HTMLElement) =>
   Array.from(page.querySelectorAll('button'))
@@ -58,7 +60,7 @@ describe('US 95 : cas limites de la liaison du compte', () => {
         return new Promise<CompteLie>(() => undefined);
       },
     });
-    const [apple] = Array.from(page.querySelectorAll('button'));
+    const apple = bouton(page, 'Continuer avec Apple');
     apple.click();
     apple.click();
     await stabiliser();
@@ -71,7 +73,7 @@ describe('US 95 : cas limites de la liaison du compte', () => {
       compteLie: async () => (lu++ === 0 ? null : { fournisseur: 'google', email: null }),
       lier: async () => Promise.reject(erreur('auth/provider-already-linked')),
     });
-    page.querySelectorAll('button')[1].click();
+    bouton(page, 'Continuer avec Google').click();
     await stabiliser();
     expect(page.textContent).toContain('Connecté avec Google');
     expect(page.querySelector('[role="alert"]')).toBeNull();
@@ -79,7 +81,7 @@ describe('US 95 : cas limites de la liaison du compte', () => {
 
   it("given aucun compte anonyme n'existe encore (auth/no-current-user), when je touche « Continuer avec Google », then le message générique s'affiche en role=\"alert\" et les boutons restent actifs", async () => {
     const { page, stabiliser } = await ouvrir({ compteLie: async () => null, lier: async () => Promise.reject(erreur('auth/no-current-user')) });
-    page.querySelectorAll('button')[1].click();
+    bouton(page, 'Continuer avec Google').click();
     await stabiliser();
     expect(page.querySelector('[role="alert"]')?.textContent?.trim()).toBe('La connexion n’a pas abouti. Réessaie.');
     expect(Array.from(page.querySelectorAll('button')).every((b) => !b.disabled)).toBe(true);

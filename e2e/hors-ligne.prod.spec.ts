@@ -33,17 +33,19 @@ test.beforeEach(async ({ page, context }) => {
   await bloquerLeReseauExterne(context);
 });
 
-test('US 12 critère 1 : given l\'app ouverte une fois avec du réseau, when l\'utilisateur la rouvre en mode avion, then elle s\'affiche avec ses 4 onglets « Conseil », « Boîte », « Spots » et « Compte »', async ({ page, context }) => {
+test('US 12 critère 1 : given l\'app ouverte une fois avec du réseau, when l\'utilisateur la rouvre en mode avion, then elle s\'affiche avec son dock « Boîte », « Ma sortie », « Spots » et son avatar « Compte »', async ({ page, context }) => {
   await ouvrirUneFoisEnLigne(page);
 
   await context.setOffline(true);
   await page.goto('/');
 
   await expect(titreVisible(page)).toHaveText('Conseil');
-  for (const nom of ['Conseil', 'Boîte', 'Spots', 'Compte']) {
-    await expect(page.getByRole('tab', { name: nom, exact: true })).toBeVisible();
-  }
-  await expect(page.getByRole('tab')).toHaveCount(4);
+  const dock = page.getByRole('navigation', { name: 'Navigation' });
+  await expect(dock.getByRole('link', { name: 'Boîte', exact: true })).toBeVisible();
+  await expect(dock.getByRole('button', { name: 'Ma sortie', exact: true })).toBeVisible();
+  await expect(dock.getByRole('link', { name: 'Spots', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Compte', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab')).toHaveCount(0);
 });
 
 test('US 12 critère 2 : given l\'app ouverte une fois avec du réseau, sans avoir visité de fiche animation, when l\'utilisateur ouvre une fiche animation en mode avion, then le geste, la vitesse, l\'erreur à éviter et la boucle courte « self » s\'affichent', async ({ page, context }) => {
