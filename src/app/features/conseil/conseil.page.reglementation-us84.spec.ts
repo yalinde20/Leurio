@@ -2,15 +2,17 @@
  * US 84 : compléments du bandeau « Réglementation » sur l'écran Conseil (PLAN §6, §8.4).
  * Maquette de référence : docs/maquettes/us-84-bandeau-reglementation-complements.html.
  *
+ * US 295 : le bandeau est le contenu de la feuille « Réglementation », que la ligne d'état réglementaire ouvre ; les cartes de conseil
+ * n'affichent plus la taille minimale (elle est dans la feuille).
  * Contrat du DOM (neutre sur les balises autres que ceux-ci) :
- *  - le bandeau est l'élément `section`/`article` qui porte le titre `h2`/`h3` « Réglementation » ;
+ *  - le bandeau est le contenu (`app-bandeau-reglementation`) de la feuille « Réglementation » ;
  *  - dans le bandeau : la ligne « Quota : 3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum » ;
  *    une ligne « 2e catégorie : Ouvert » hors fermeture du brochet, jamais de ligne « 1re catégorie » (catégorie inconnue) ;
  *    des alertes (texte seul) « Brochet fermé en 2e catégorie », « Sandre probablement fermé, vérifie »,
  *    « Black-bass : vérifie ton département » ; la mention « À vérifier dans l'arrêté de ton département » ;
- *    un `a` « Voir la fédération de ton département » (href = url de CatalogService.federation(departement),
+ *    un `a` « <nom de la fédération> ↗ » (href = url de CatalogService.federation(departement),
  *    target="_blank"), absent si la fédération est inconnue (pas de repli national) ;
- *  - chaque carte de conseil (`article` qui contient « Animation : ») affiche « Taille minimale : 60 cm » si l'espèce choisie a une tailleMinCm.
+ *  - le bandeau affiche « Taille minimale : 60 cm » si l'espèce choisie a une tailleMinCm.
  * Le moment « maintenant » est la date système simulée ; « Demain 7 h » passe par la feuille Moment (US 82).
  */
 import { TestBed } from '@angular/core/testing';
@@ -25,6 +27,7 @@ import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import especesReelles from '../../../assets/data/species.json';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { compact, ecranDe, ouvrirReglementation, textesDesCoups } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -47,7 +50,7 @@ const VEILLE_DE_LA_FERMETURE = new Date('2027-01-24T13:00:00Z');
 
 const QUOTA = 'Quota : 3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum';
 const MENTION = "À vérifier dans l'arrêté de ton département";
-const LIEN = 'Voir la fédération de ton département';
+const LIEN = `${FEDERATION_49.nom} ↗`;
 
 const ESPECES = especesReelles as unknown as Espece[];
 const ESPECES_BROCHET_60 = ESPECES.map((e) => (e.code === 'BRO' ? { ...e, tailleMinCm: 60 } : e));
@@ -147,28 +150,34 @@ async function afficher(reglages: Reglages = {}) {
     }
   };
   await stabiliser();
-  return { page: fixture.nativeElement as HTMLElement, stabiliser, demandesFederation };
+  const page = fixture.nativeElement as HTMLElement;
+  courant = ecranDe(fixture);
+  return { page, stabiliser, demandesFederation };
 }
+/** L'écran de la dernière spec affichée : `bandeau` y ouvre la feuille « Réglementation ». */
+let courant: ReturnType<typeof ecranDe>;
 type Env = Awaited<ReturnType<typeof afficher>>;
 
 afterEach(() => vi.useRealTimers());
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 const contient = (texte: string | null | undefined, voulu: string): boolean => compact(texte).includes(compact(voulu));
 
-function bandeau(page: HTMLElement): HTMLElement {
-  const titre = [...page.querySelectorAll('h2, h3')].find((t) => t.textContent?.trim() === 'Réglementation');
-  const racine = titre?.closest('section, article, ion-card');
+/** Le bandeau « Réglementation » : ouvre la feuille de la ligne d'état si elle est fermée, et la referme avant de rendre la main à l'appelant suivant. */
+async function bandeau(page: HTMLElement): Promise<HTMLElement> {
+  const ouverte = page.querySelector<HTMLElement>('app-feuille-conseil app-bandeau-reglementation');
+  if (!ouverte) await ouvrirReglementation(courant);
+  const racine = page.querySelector<HTMLElement>('app-bandeau-reglementation');
   if (!racine) throw new Error('aucun bandeau « Réglementation »');
-  return racine as HTMLElement;
+  return racine;
 }
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => contient(e.textContent, 'Animation :') && !e.querySelector('section, article, ion-card'),
-  );
+/** Referme la feuille « Réglementation » (la feuille Moment ou Espèce se pose par-dessus la page, pas par-dessus une autre feuille). */
+async function fermerReglementation(page: HTMLElement): Promise<void> {
+  page.querySelector<HTMLElement>('app-feuille-conseil .fermer')?.click();
+  await courant.stabiliser();
+}
 const boutons = (page: HTMLElement): HTMLElement[] => [...page.querySelectorAll<HTMLElement>('button, ion-button')];
 const feuille = (page: HTMLElement): HTMLElement => {
-  const f = page.querySelector<HTMLElement>('[role="dialog"]');
+  const f = page.querySelector<HTMLElement>('app-moment-feuille [role="dialog"], app-espece-feuille [role="dialog"]');
   if (!f) throw new Error('aucune feuille ouverte');
   return f;
 };
@@ -204,16 +213,16 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
   it('critère 1 : given l\'écran Conseil affiché hors fermeture, when je regarde le bandeau, then il rappelle le quota « 3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum », porte la mention et le lien « Voir la fédération de ton département »', async () => {
     const { page } = await afficher();
 
-    const texte = bandeau(page).textContent;
+    const texte = (await bandeau(page)).textContent;
     expect(contient(texte, QUOTA)).toBe(true);
     expect(contient(texte, MENTION)).toBe(true);
-    expect(bandeau(page).querySelector('a')?.textContent?.trim()).toBe(LIEN);
+    expect((await bandeau(page)).querySelector('a')?.textContent?.trim()).toBe(LIEN);
   });
 
   it('critère 1 : given la catégorie inconnue (position GPS) hors fermeture, when je regarde le bandeau, then il applique la 2e catégorie : « 2e catégorie : Ouvert » et aucune ligne « 1re catégorie »', async () => {
     const { page } = await afficher();
 
-    const texte = bandeau(page).textContent;
+    const texte = (await bandeau(page)).textContent;
     expect(contient(texte, '2e catégorie : Ouvert')).toBe(true);
     expect(contient(texte, '1re catégorie')).toBe(false);
     expect(contient(texte, 'Quota en 2e catégorie')).toBe(false);
@@ -223,7 +232,7 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
     const { page, demandesFederation } = await afficher();
 
     expect(demandesFederation).toContain('49');
-    const lien = bandeau(page).querySelector('a');
+    const lien = (await bandeau(page)).querySelector('a');
     expect(lien?.textContent?.trim()).toBe(LIEN);
     expect(lien?.getAttribute('href')).toBe(FEDERATION_49.url);
     expect(lien?.getAttribute('target')).toBe('_blank');
@@ -233,15 +242,15 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
   it('critère 2 : given aucune fédération connue pour le département, when je regarde le bandeau, then la mention reste mais il n\'y a aucun lien (pas de repli sur la fédération nationale)', async () => {
     const { page } = await afficher({ federation: undefined });
 
-    expect(contient(bandeau(page).textContent, MENTION)).toBe(true);
-    expect(bandeau(page).querySelector('a')).toBeNull();
-    expect(bandeau(page).textContent).not.toContain('nationale');
+    expect(contient((await bandeau(page)).textContent, MENTION)).toBe(true);
+    expect((await bandeau(page)).querySelector('a')).toBeNull();
+    expect((await bandeau(page)).textContent).not.toContain('nationale');
   });
 
   it('critère 3 : given un moment dans la fermeture du brochet, when je regarde le bandeau, then il indique « Brochet fermé en 2e catégorie » (et plus « jusqu\'au »)', async () => {
     const { page } = await afficher({ maintenant: FERMETURE_BROCHET });
 
-    const texte = bandeau(page).textContent;
+    const texte = (await bandeau(page)).textContent;
     expect(contient(texte, 'Brochet fermé en 2e catégorie')).toBe(true);
     expect(contient(texte, "Brochet fermé jusqu'au")).toBe(false);
     expect(contient(texte, '2e catégorie : Ouvert')).toBe(false);
@@ -251,28 +260,29 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
 
   it('critère 3 : given la veille de la fermeture, when je choisis « Demain 7 h » (premier jour de fermeture), then le bandeau suit le moment choisi et indique « Brochet fermé en 2e catégorie »', async () => {
     const env = await afficher({ maintenant: VEILLE_DE_LA_FERMETURE });
-    expect(contient(bandeau(env.page).textContent, 'Brochet fermé en 2e catégorie')).toBe(false);
-    expect(contient(bandeau(env.page).textContent, '2e catégorie : Ouvert')).toBe(true);
+    expect(contient((await bandeau(env.page)).textContent, 'Brochet fermé en 2e catégorie')).toBe(false);
+    expect(contient((await bandeau(env.page)).textContent, '2e catégorie : Ouvert')).toBe(true);
+    await fermerReglementation(env.page);
 
     await choisirDemain7h(env);
 
-    expect(contient(bandeau(env.page).textContent, 'Brochet fermé en 2e catégorie')).toBe(true);
+    expect(contient((await bandeau(env.page)).textContent, 'Brochet fermé en 2e catégorie')).toBe(true);
   });
 
   // US 205 (validée par le propriétaire) : l'explication des leurres écartés n'est plus ajoutée au pourquoi de chaque
-  // carte ; elle s'affiche une seule fois sous « Ton top 3 » (voir conseil.page.explications-us205.spec.ts).
+  // carte ; elle s'affiche une seule fois dans la feuille « 2 autres coups » (voir conseil.page.explications-us205.spec.ts).
 
   it('critère 3 : given aucune explication du moteur (hors fermeture), when je regarde les cartes, then aucune ne parle de brochet fermé', async () => {
-    const { page } = await afficher({ explications: [] });
+    await afficher({ explications: [] });
 
-    for (const carte of cartesConseil(page)) expect(contient(carte.textContent, 'Brochet fermé')).toBe(false);
+    for (const texte of await textesDesCoups(courant)) expect(contient(texte, 'Brochet fermé')).toBe(false);
   });
 
   it('critère 4 : given la fermeture du brochet et l\'espèce visée « Sandre », when je regarde le bandeau, then il indique « Sandre probablement fermé, vérifie »', async () => {
     const env = await afficher({ maintenant: FERMETURE_BROCHET });
     await choisirEspece(env, 'Sandre');
 
-    const texte = bandeau(env.page).textContent;
+    const texte = (await bandeau(env.page)).textContent;
     expect(contient(texte, 'Sandre probablement fermé, vérifie')).toBe(true);
     expect(contient(texte, 'Sandre : probablement')).toBe(false);
   });
@@ -280,7 +290,7 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
   it('critère 4 : given la fermeture du brochet et « Toutes les espèces », when je regarde le bandeau, then il indique « Sandre probablement fermé, vérifie » (lu dans le contenu) sans avertissement « Brochet probablement fermé »', async () => {
     const { page } = await afficher({ maintenant: FERMETURE_BROCHET });
 
-    const texte = bandeau(page).textContent;
+    const texte = (await bandeau(page)).textContent;
     expect(contient(texte, 'Sandre probablement fermé, vérifie')).toBe(true);
     expect(contient(texte, 'Brochet probablement fermé')).toBe(false);
   });
@@ -289,55 +299,56 @@ describe('ConseilPage : bandeau « Réglementation », compléments (US 84)', ()
     const env = await afficher({ maintenant: FERMETURE_BROCHET });
     await choisirEspece(env, 'Perche');
 
-    expect(contient(bandeau(env.page).textContent, 'Sandre')).toBe(false);
+    expect(contient((await bandeau(env.page)).textContent, 'Sandre')).toBe(false);
   });
 
   it('critère 5 : given le printemps et l\'espèce visée « Black-bass », when je regarde le bandeau, then il indique « Black-bass : vérifie ton département »', async () => {
     const env = await afficher({ maintenant: PRINTEMPS_BROCHET_OUVERT });
     await choisirEspece(env, 'Black-bass');
 
-    expect(contient(bandeau(env.page).textContent, 'Black-bass : vérifie ton département')).toBe(true);
+    expect(contient((await bandeau(env.page)).textContent, 'Black-bass : vérifie ton département')).toBe(true);
   });
 
   it('critère 5 : given le printemps et « Toutes les espèces », when je regarde le bandeau, then il indique « Black-bass : vérifie ton département »', async () => {
     const { page } = await afficher({ maintenant: PRINTEMPS_BROCHET_OUVERT });
 
-    expect(contient(bandeau(page).textContent, 'Black-bass : vérifie ton département')).toBe(true);
+    expect(contient((await bandeau(page)).textContent, 'Black-bass : vérifie ton département')).toBe(true);
   });
 
   it('critère 5 : given le printemps et l\'espèce visée « Perche », ou l\'automne et « Toutes les espèces », when je regarde le bandeau, then aucune alerte « Black-bass »', async () => {
     const env = await afficher({ maintenant: PRINTEMPS_BROCHET_OUVERT });
     await choisirEspece(env, 'Perche');
-    expect(contient(bandeau(env.page).textContent, 'Black-bass')).toBe(false);
+    expect(contient((await bandeau(env.page)).textContent, 'Black-bass')).toBe(false);
 
     TestBed.resetTestingModule();
     vi.useRealTimers();
     const automne = await afficher({ maintenant: HORS_FERMETURE });
-    expect(contient(bandeau(automne.page).textContent, 'Black-bass')).toBe(false);
+    expect(contient((await bandeau(automne.page)).textContent, 'Black-bass')).toBe(false);
   });
 
-  it('critère 6 : given l\'espèce visée « Brochet » avec une taille minimale de 60 cm dans le contenu, when je regarde les cartes, then chacune affiche « Taille minimale : 60 cm » et le bandeau garde sa ligne', async () => {
+  it('critère 6 : given l\'espèce visée « Brochet » avec une taille minimale de 60 cm dans le contenu, when je regarde la feuille Réglementation, then elle affiche « Taille minimale : 60 cm » et les coups ne l\'affichent plus', async () => {
     const env = await afficher({ especes: ESPECES_BROCHET_60 });
     await choisirEspece(env, 'Brochet');
 
-    const cartes = cartesConseil(env.page);
-    expect(cartes).toHaveLength(3);
-    for (const carte of cartes) expect(contient(carte.textContent, 'Taille minimale : 60 cm')).toBe(true);
-    expect(contient(bandeau(env.page).textContent, 'Taille minimale : 60 cm')).toBe(true);
+    const coups = await textesDesCoups(courant);
+    expect(coups).toHaveLength(3);
+    for (const coup of coups) expect(contient(coup, 'Taille minimale')).toBe(false);
+    expect(contient((await bandeau(env.page)).textContent, 'Taille minimale : 60 cm')).toBe(true);
   });
 
-  it('critère 6 : given « Toutes les espèces » (même si une fiche a une taille minimale), when je regarde les cartes, then aucune n\'affiche de taille minimale', async () => {
+  it('critère 6 : given « Toutes les espèces » (même si une fiche a une taille minimale), when je regarde la feuille Réglementation, then aucune taille minimale n\'est affichée', async () => {
     const { page } = await afficher({ especes: ESPECES_BROCHET_60 });
 
-    for (const carte of cartesConseil(page)) expect(contient(carte.textContent, 'Taille minimale')).toBe(false);
+    expect(contient((await bandeau(page)).textContent, 'Taille minimale')).toBe(false);
+    for (const coup of await textesDesCoups(courant)) expect(contient(coup, 'Taille minimale')).toBe(false);
   });
 
-  it('critère 6 : given l\'espèce visée « Sandre » sans taille minimale (tailleMinCm null), when je regarde les cartes, then aucune n\'affiche de taille minimale', async () => {
+  it('critère 6 : given l\'espèce visée « Sandre » sans taille minimale (tailleMinCm null), when je regarde les coups, then aucun n\'affiche de taille minimale', async () => {
     const env = await afficher({ especes: ESPECES_BROCHET_60 });
     await choisirEspece(env, 'Sandre');
 
-    const cartes = cartesConseil(env.page);
-    expect(cartes).toHaveLength(3);
-    for (const carte of cartes) expect(contient(carte.textContent, 'Taille minimale')).toBe(false);
+    const coups = await textesDesCoups(courant);
+    expect(coups).toHaveLength(3);
+    for (const coup of coups) expect(contient(coup, 'Taille minimale')).toBe(false);
   });
 });

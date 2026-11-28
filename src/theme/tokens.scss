@@ -11,6 +11,7 @@
    (son contraste sur le fond est inférieur à 3:1 en clair).
    Valeurs choisies pour la palette (hors maquette) : --lr-voile (noir, 35 % clair et 55 % sombre), --lr-carte-eau et
    --lr-carte-terre (bleu-vert et vert-gris clairs, ou foncés la nuit), --lr-carte-marqueur = action,
+   --lr-eau-surface, --lr-eau-mi, --lr-eau-fond et --lr-lit : les trois zones et le lit de la rivière en coupe (US 295, maquette),
    --lr-graphique-1 = trait, --lr-graphique-2 = action, --lr-graphique-grille = bordure. */
 :root {
   /* Polices embarquées (src/theme/polices.scss), avec une pile de secours système. */
@@ -44,6 +45,10 @@
   --lr-graphique-1: #0f1e22;
   --lr-graphique-2: #a85309;
   --lr-graphique-grille: #c9d5d2;
+  --lr-eau-surface: #d8e9e8;
+  --lr-eau-mi: #c6dfdf;
+  --lr-eau-fond: #b3d2d3;
+  --lr-lit: #93aba8;
 }
 
 :root,
@@ -77,6 +82,10 @@ html[data-theme='clair'] {
   --lr-graphique-1: #cfe3e0;
   --lr-graphique-2: #f0a24b;
   --lr-graphique-grille: #24403f;
+  --lr-eau-surface: #0d242b;
+  --lr-eau-mi: #0b1e24;
+  --lr-eau-fond: #08171c;
+  --lr-lit: #2a3a3c;
 }
 
 @media (prefers-color-scheme: dark) {

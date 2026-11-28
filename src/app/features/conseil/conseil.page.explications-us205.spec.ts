@@ -22,6 +22,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import especesReelles from '../../../assets/data/species.json';
 import { ConseilPage } from './conseil.page';
+import { ecranDe, liensDesCoups, ouvrirAutresCoups, ouvrirReglementation } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -142,7 +143,7 @@ async function afficher(reglages: Reglages = {}) {
     }
   };
   await stabiliser();
-  return { page: fixture.nativeElement as HTMLElement, stabiliser, demandesFederation };
+  return { page: fixture.nativeElement as HTMLElement, stabiliser, demandesFederation, fixture };
 }
 
 afterEach(() => vi.useRealTimers());
@@ -150,16 +151,19 @@ afterEach(() => vi.useRealTimers());
 const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 const contient = (texte: string | null | undefined, voulu: string): boolean => compact(texte).includes(compact(voulu));
 
-function bandeau(page: HTMLElement): HTMLElement {
-  const titre = [...page.querySelectorAll('h2, h3')].find((t) => t.textContent?.trim() === 'Réglementation');
-  const racine = titre?.closest('section, article, ion-card');
+type Env = Awaited<ReturnType<typeof afficher>>;
+/** Le bandeau « Réglementation » : la feuille de la ligne d'état. */
+async function bandeau(env: Env): Promise<HTMLElement> {
+  await ouvrirReglementation(ecranDe(env.fixture));
+  const racine = env.page.querySelector<HTMLElement>('app-bandeau-reglementation');
   if (!racine) throw new Error('aucun bandeau « Réglementation »');
-  return racine as HTMLElement;
+  return racine;
 }
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => contient(e.textContent, 'Animation :') && !e.querySelector('section, article, ion-card'),
-  );
+/** US 295 : l'explication est dans la feuille « 2 autres coups », sous les coups 02 et 03. Rend les liens des coups de cette feuille. */
+async function ouvrirAutres(env: Env): Promise<HTMLElement[]> {
+  const feuille = await ouvrirAutresCoups(ecranDe(env.fixture));
+  return liensDesCoups(env.page).filter((l) => feuille.contains(l));
+}
 const EXPLICATION = "Brochet fermé : certains leurres sont interdits jusqu'au 24/04";
 const SUFFIXE = '(si tu es en 2e catégorie)';
 const EXPLICATION_INCONNUE = `${EXPLICATION} ${SUFFIXE}`;
@@ -168,77 +172,79 @@ const occurrences = (texte: string | null | undefined, voulu: string): number =>
   compact(texte).split(compact(voulu)).length - 1;
 const notes = (page: HTMLElement): HTMLElement[] =>
   [...page.querySelectorAll<HTMLElement>('[role="note"]')].filter((n) => contient(n.textContent, 'Brochet fermé'));
-const titreTop3 = (page: HTMLElement): HTMLElement => {
-  const t = [...page.querySelectorAll<HTMLElement>('h2')].find((h) => h.textContent?.trim() === 'Ton top 3');
-  if (!t) throw new Error('titre « Ton top 3 » introuvable');
-  return t;
-};
 const avant = (a: Node, b: Node): boolean => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 describe('ConseilPage : explication des leurres écartés près du top 3 (US 205)', () => {
-  it('critère 1 : given brochet fermé et des leurres écartés (catégorie connue), when j\'ouvre l\'écran Conseil, then l\'explication « Brochet fermé : certains leurres sont interdits jusqu\'au JJ/MM » est affichée une seule fois, après « Ton top 3 » et avant la première carte, terminée par un point', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION] });
+  it('critère 1 : given brochet fermé et des leurres écartés (catégorie connue), when j\'ouvre « 2 autres coups », then l\'explication « Brochet fermé : certains leurres sont interdits jusqu\'au JJ/MM » est affichée une seule fois, après les coups 02 et 03, terminée par un point, et pas sur l\'écran', async () => {
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION] });
+    expect(notes(env.page), 'pas sur l\'écran, seulement dans la feuille').toHaveLength(0);
+    expect(contient(env.page.textContent, 'certains leurres sont interdits')).toBe(false);
 
-    const trouvees = notes(page);
+    const liens = await ouvrirAutres(env);
+
+    const trouvees = notes(env.page);
     expect(trouvees, 'une seule explication [role="note"]').toHaveLength(1);
     const note = trouvees[0];
     expect(compact(note.textContent)).toBe(compact(`${EXPLICATION}.`));
     expect(contient(note.textContent, SUFFIXE)).toBe(false);
-    expect(avant(titreTop3(page), note), 'après le titre « Ton top 3 »').toBe(true);
-    const cartes = cartesConseil(page);
-    expect(cartes).toHaveLength(3);
-    expect(avant(note, cartes[0]), 'avant la première carte').toBe(true);
-    expect(occurrences(page.textContent, EXPLICATION)).toBe(1);
+    expect(liens).toHaveLength(2);
+    expect(avant(liens[1], note), 'après le dernier coup de la feuille').toBe(true);
+    expect(occurrences(env.page.textContent, EXPLICATION)).toBe(1);
   });
 
-  it('critère 1 : given l\'explication affichée sous « Ton top 3 », when je regarde les 3 cartes, then aucune ne se termine par l\'explication ni ne parle de « Brochet fermé » (retirée du pourquoi)', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION] });
+  it('critère 1 : given l\'explication affichée dans la feuille, when je regarde les 3 coups, then aucun ne parle de « Brochet fermé » (retirée du pourquoi)', async () => {
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION] });
+    await ouvrirAutres(env);
 
-    expect(notes(page)).toHaveLength(1);
-    const cartes = cartesConseil(page);
-    expect(cartes).toHaveLength(3);
-    for (const carte of cartes) {
-      expect(contient(carte.textContent, 'Eau froide : une animation lente convient.')).toBe(true);
-      expect(contient(carte.textContent, 'Brochet fermé')).toBe(false);
-      expect(contient(carte.textContent, 'certains leurres sont interdits')).toBe(false);
+    expect(notes(env.page)).toHaveLength(1);
+    const coups = liensDesCoups(env.page);
+    expect(coups).toHaveLength(3);
+    for (const coup of coups) {
+      expect(contient(coup.textContent, 'Brochet fermé')).toBe(false);
+      expect(contient(coup.textContent, 'certains leurres sont interdits')).toBe(false);
     }
   });
 
   it('critère 2 : given brochet fermé, leurres écartés et catégorie inconnue, when j\'ouvre l\'écran Conseil, then l\'explication affichée comporte « (si tu es en 2e catégorie) »', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION_INCONNUE] });
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION_INCONNUE] });
+    await ouvrirAutres(env);
 
-    const trouvees = notes(page);
+    const trouvees = notes(env.page);
     expect(trouvees, 'une seule explication [role="note"]').toHaveLength(1);
     expect(compact(trouvees[0].textContent)).toBe(compact(`${EXPLICATION_INCONNUE}.`));
     expect(contient(trouvees[0].textContent, SUFFIXE)).toBe(true);
   });
 
   it('critère 3 : given brochet ouvert (aucune explication du moteur), when j\'ouvre l\'écran Conseil, then aucune explication de fermeture du brochet n\'est affichée', async () => {
-    const { page } = await afficher({ maintenant: PRINTEMPS_BROCHET_OUVERT, explications: [] });
+    const env = await afficher({ maintenant: PRINTEMPS_BROCHET_OUVERT, explications: [] });
+    await ouvrirAutres(env);
 
-    expect(cartesConseil(page)).toHaveLength(3);
-    expect(notes(page)).toHaveLength(0);
-    expect(contient(page.textContent, 'certains leurres sont interdits')).toBe(false);
+    expect(liensDesCoups(env.page)).toHaveLength(3);
+    expect(notes(env.page)).toHaveLength(0);
+    expect(contient(env.page.textContent, 'certains leurres sont interdits')).toBe(false);
   });
 
-  it('critère 3 : given brochet fermé mais aucun leurre écarté (explications vides), when j\'ouvre l\'écran Conseil, then aucune explication de fermeture du brochet n\'est affichée sous « Ton top 3 »', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [] });
+  it('critère 3 : given brochet fermé mais aucun leurre écarté (explications vides), when j\'ouvre l\'écran Conseil, then aucune explication de fermeture du brochet n\'est affichée dans « 2 autres coups »', async () => {
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [] });
+    await ouvrirAutres(env);
 
-    expect(cartesConseil(page)).toHaveLength(3);
-    expect(notes(page)).toHaveLength(0);
-    expect(contient(page.textContent, 'certains leurres sont interdits')).toBe(false);
+    expect(liensDesCoups(env.page)).toHaveLength(3);
+    expect(notes(env.page)).toHaveLength(0);
+    expect(contient(env.page.textContent, 'certains leurres sont interdits')).toBe(false);
   });
 
   it('critère 4 : given brochet fermé et le bandeau qui alerte « Brochet fermé en 2e catégorie », when j\'ouvre l\'écran Conseil, then le bandeau reste inchangé et l\'explication des leurres écartés apparaît en plus, hors du bandeau', async () => {
-    const { page } = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION_INCONNUE] });
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION_INCONNUE] });
+    await ouvrirAutres(env);
+    const racine = await bandeau(env);
 
-    const texteBandeau = bandeau(page).textContent;
+    const texteBandeau = racine.textContent;
     expect(contient(texteBandeau, 'Brochet fermé en 2e catégorie')).toBe(true);
     expect(contient(texteBandeau, QUOTA)).toBe(true);
     expect(contient(texteBandeau, MENTION)).toBe(true);
     expect(contient(texteBandeau, 'certains leurres sont interdits')).toBe(false);
-    const trouvees = notes(page);
+    const trouvees = notes(env.page);
     expect(trouvees, 'explication affichée').toHaveLength(1);
-    expect(bandeau(page).contains(trouvees[0])).toBe(false);
+    expect(racine.contains(trouvees[0])).toBe(false);
   });
 });

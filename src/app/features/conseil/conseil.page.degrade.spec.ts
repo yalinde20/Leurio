@@ -26,6 +26,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { Lieu } from '../../core/data/weather-provider';
 import { ConseilPage } from './conseil.page';
+import { compact, ecranDe, ouvrirConditions, stabiliser } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 type ReleveCarte = ReleveActuel & {
@@ -112,34 +113,30 @@ async function afficher({ releve: relevé = releve(), position = ANGERS, lune = 
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  await fixture.whenStable();
-  fixture.detectChanges();
-  await fixture.whenStable();
-  fixture.detectChanges();
-  return { fixture, page: fixture.nativeElement as HTMLElement, appelsReleve, lieuxSoleil };
+  await stabiliser(fixture);
+  const page = fixture.nativeElement as HTMLElement;
+  // US 295 : les conditions complètes sont dans la feuille « Conditions », ouverte par la ligne météo.
+  if (page.querySelector('.meteo')) await ouvrirConditions(ecranDe(fixture));
+  return { fixture, page, appelsReleve, lieuxSoleil };
 }
 
-/** Sans aucune espace (normale, insécable ou fine) : le test ne dépend pas de la mise en page. */
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
-/** La carte « Conditions » : l'élément `section`, `article` ou `ion-card` qui porte le titre « Conditions ». */
-function carte(page: HTMLElement): HTMLElement | null {
-  const titre = [...page.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  return (titre?.closest('section, article, ion-card') as HTMLElement | null) ?? null;
-}
+/** Ce que montrait la carte « Conditions » : la température de l'eau, sa source et la mention datée de l'écran, et la feuille « Conditions » ouverte. */
+const zonesConditions = (page: HTMLElement): HTMLElement[] => [...page.querySelectorAll<HTMLElement>('.eau, app-feuille-conseil [role="dialog"]')];
 
 function texteCarte(page: HTMLElement): string {
-  const c = carte(page);
-  expect(c, 'aucune carte titrée « Conditions » (section, article ou ion-card avec un titre)').not.toBeNull();
-  return compact(c?.textContent);
+  const zones = zonesConditions(page);
+  expect(zones.length, "ni l'eau, ni la feuille « Conditions »").toBeGreaterThan(0);
+  return compact(zones.map((z) => z.textContent).join(' '));
 }
 
+/** « Débit : Indisponible » se lit « Débit » puis « Indisponible » (libellé puis valeur). */
 function afficheLigne(page: HTMLElement, ligne: string): void {
-  expect(texteCarte(page)).toContain(compact(ligne));
+  expect(texteCarte(page)).toContain(compact(ligne.replace(' : ', ' ')));
 }
 
 const textesInteractifs = (page: HTMLElement): string[] =>
-  [...(carte(page)?.querySelectorAll('button, a, ion-button') ?? [])].map((e) => e.textContent ?? '');
+  zonesConditions(page).flatMap((z) => [...z.querySelectorAll('button, a, ion-button')].map((e) => e.textContent ?? ''));
 
 describe('ConseilPage : carte « Conditions » en mode dégradé (US 65)', () => {
   it("critère 1 : given des conditions reprises du cache du 27/10 à 18 h, when la carte « Conditions » s'affiche, then elle affiche la mention « Conditions du 27/10 à 18 h »", async () => {
@@ -170,7 +167,7 @@ describe('ConseilPage : carte « Conditions » en mode dégradé (US 65)', () =>
       }),
     });
 
-    const badge = [...(carte(page)?.querySelectorAll('*') ?? [])].find(
+    const badge = zonesConditions(page).flatMap((z) => [...z.querySelectorAll('*')]).find(
       (e) => e.children.length === 0 && compact(e.textContent) === compact('Moins précis'),
     );
     expect(badge, 'aucun élément ne porte seulement « Moins précis »').toBeDefined();
@@ -191,7 +188,7 @@ describe('ConseilPage : carte « Conditions » en mode dégradé (US 65)', () =>
 
     afficheLigne(page, "Température de l'eau inconnue");
     afficheLigne(page, 'Mesure-la au thermomètre');
-    expect(texteCarte(page)).not.toContain(compact("Température de l'eau : Inconnue"));
+    expect(texteCarte(page)).not.toContain(compact('Inconnue'));
   });
 
   it("critère 3 : given une température de l'eau inconnue, when la carte s'affiche, then l'invitation est un texte simple : aucun bouton ni lien", async () => {

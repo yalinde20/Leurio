@@ -139,8 +139,8 @@ describe('ConseilPage : moment du conseil, robustesse (US 82)', () => {
     await env.stabiliser();
 
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 8 h'));
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 8 °C"));
-    expect(compact(env.page.textContent)).not.toContain(compact("Température de l'eau : 7 °C"));
+    expect(compact(env.page.textContent)).toContain(compact('8 °C'));
+    expect(compact(env.page.textContent)).not.toContain(compact('7 °C'));
   });
 
   it('given la feuille ouverte, when elle s\'affiche, then le sélecteur annonce un dialogue et le focus entre dans la feuille', async () => {

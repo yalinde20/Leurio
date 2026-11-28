@@ -16,6 +16,7 @@ import { SpotEnregistre } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { ConseilChoixStore } from './conseil-choix.store';
 import { ConseilPage } from './conseil.page';
+import { Ecran, ecranDe, ouvrirConditions } from './conseil.page.aides';
 
 const DEMAIN_7H = new Date('2026-11-10T06:00:00Z'); // 7 h à Paris, le 10
 const SPOT = { id: 's2', nom: 'Pont de Cé', lat: 47.43, lng: -0.52, categorie: 2, milieu: 'riviere', departement: '49', prive: true } as unknown as SpotEnregistre;
@@ -65,8 +66,11 @@ async function afficher(maintenant: string, demande: SpotEnregistre | null = nul
     await fixture.whenStable();
     fixture.detectChanges();
   }
+  ecran = ecranDe(fixture);
   return fixture.nativeElement as HTMLElement;
 }
+/** L'écran du dernier `afficher` : la mention du moment est dans la feuille « Conditions ». */
+let ecran: Ecran;
 
 afterEach(() => vi.useRealTimers());
 
@@ -84,13 +88,13 @@ describe('ConseilPage : moment gardé quand l\'écran est recréé (US 7)', () =
     const page = await afficher('2026-11-09T23:10:00Z'); // 0 h 10 à Paris le 10
     expect(boutonMoment(page)).toContain(compact("Aujourd'hui 7 h"));
     expect(boutonMoment(page)).not.toContain(compact('Demain'));
-    expect(compact(page.textContent)).toContain(compact("Prévisions pour aujourd'hui 7 h"));
+    expect(compact((await ouvrirConditions(ecran)).textContent)).toContain(compact("Prévisions pour aujourd'hui 7 h"));
   });
 
   it('given un moment gardé qui est passé, when l\'écran est recréé, then le moment est « Maintenant »', async () => {
     const page = await afficher('2026-11-10T08:00:00Z');
     expect(boutonMoment(page)).toContain(compact('Maintenant'));
-    expect(compact(page.textContent)).not.toContain(compact('Prévisions pour'));
+    expect(compact((await ouvrirConditions(ecran)).textContent)).not.toContain(compact('Prévisions pour'));
   });
 
   it('given « Demain 7 h » choisi, when « Voir le conseil » d\'un spot demande son lieu, then le lieu est le spot et le moment est gardé', async () => {

@@ -5,9 +5,10 @@
  * SOURCE_TACKLE_BOX (aucun appel Firebase) : le vrai TackleBoxService lit ce double, donc `leurres()` suit ses instantanés.
  * Le matcher (US 104) n'est pas doublé : la page l'appelle avec la boîte et les types du CatalogService.
  *
- * Contrat du DOM (neutre sur les balises) : une carte est un `section`, `article` ou `ion-card` dont le texte contient « Animation : ».
- * La ligne du leurre se lit « Libellé : texte » dans la carte, après le « pourquoi » et avant « Voir le détail » ; le libellé est en gras
- * (`b` ou `strong`). Les espaces (y compris insécables) ne comptent pas. Le type porte `article` (« un » / « une », décision A1).
+ * US 295 : l'écran Conseil n'affiche plus que « Dans ta boîte » ou « Il te manque » dans la carte du coup 01 ; la ligne complète
+ * (« Dans ta boîte : Shad 10 cm gardon ») est celle du détail, lue ici dans `ConseilDetailStore.lignes()` qui l'alimente (le libellé en gras
+ * est vérifié par conseil-detail.page.boite.spec.ts). Une « carte » de ces tests est donc : le statut visible du coup 01, puis la ligne
+ * du coup. Les espaces (y compris insécables) ne comptent pas. Le type porte `article` (« un » / « une », décision A1).
  */
 import { TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
@@ -20,6 +21,7 @@ import { DocumentLeurre, SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.se
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ConseilDetailStore } from './conseil-detail.store';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -163,14 +165,18 @@ async function afficher(boite: Boite, res: ResultatConseil) {
 afterEach(() => vi.useRealTimers());
 
 const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
-const cartes = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) =>
-      compact(e.textContent).includes(compact('Animation :')) &&
-      !e.querySelector('section, article, ion-card'),
-  );
+/** Une carte de ces tests : le statut du coup 01 (écran), puis la ligne complète du coup (détail). */
+const cartes = (page: HTMLElement): { textContent: string }[] => {
+  const store = TestBed.inject(ConseilDetailStore);
+  const lignes = store.lignes();
+  return store.details().map((_, i) => ({
+    textContent: `${i === 0 ? (page.querySelector('#coup-1 .boite')?.textContent ?? '') : ''} ${lignes[i] ? `${lignes[i].libelle} ${lignes[i].texte}` : ''}`,
+  }));
+};
+/** Le statut affiché dans la carte du coup 01 : « Dans ta boîte », « À la place, dans ta boîte » ou « Il te manque ». */
+const statutCoupUn = (page: HTMLElement): string => compact(page.querySelector('#coup-1 .boite')?.textContent);
 const LIBELLES = ['Dans ta boîte :', 'À la place, dans ta boîte :', 'Il te manque :'].map(compact);
-const aUneLigne = (carte: HTMLElement): boolean =>
+const aUneLigne = (carte: { textContent: string }): boolean =>
   LIBELLES.some((l) => compact(carte.textContent).includes(l));
 
 const SHAD_GARDON = leurre('a1', 'shad', 10, 12, 'gardon');
@@ -185,20 +191,17 @@ describe('Conseil : le leurre de ma boîte sur les cartes (US 105)', () => {
     expect(compact(carte.textContent)).not.toContain(compact('Il te manque'));
   });
 
-  it('critère 1 : given une ligne affichée, when je la regarde, then elle est sous le pourquoi, au-dessus de « Voir le détail » et son libellé est en gras', async () => {
+  it("critère 1 : given une ligne de boîte, when je regarde le coup 01, then il affiche « Dans ta boîte » dans sa carte, sans le détail du leurre", async () => {
     const { page } = await afficher([SHAD_GARDON], resultat(conseil({})));
 
-    const texte = compact(cartes(page)[0].textContent);
-    const pourquoi = texte.indexOf(compact('Première phrase du moteur.'));
-    const ligne = texte.indexOf(compact('Dans ta boîte : Shad 10 cm gardon'));
-    const detail = texte.indexOf(compact('Voir le détail'));
-    expect(pourquoi).toBeGreaterThan(-1);
-    expect(ligne).toBeGreaterThan(pourquoi);
-    expect(detail).toBeGreaterThan(ligne);
-    const gras = [...cartes(page)[0].querySelectorAll<HTMLElement>('b, strong')].find(
-      (e) => compact(e.textContent) === compact('Dans ta boîte :'),
-    );
-    expect(gras, 'libellé en gras').toBeDefined();
+    expect(statutCoupUn(page)).toBe(compact('Dans ta boîte'));
+    expect(compact(page.querySelector('#coup-1')?.textContent)).not.toContain(compact('10 cm gardon Dans'));
+  });
+
+  it("critère 3 : given le matcher ne trouve rien, when je regarde le coup 01, then il affiche « Il te manque » dans sa carte", async () => {
+    const { page } = await afficher([], resultat(conseil({})));
+
+    expect(statutCoupUn(page)).toBe(compact('Il te manque'));
   });
 
   it("critère 1 : given un leurre de 7,5 cm dans la boîte, when l'écran s'affiche, then la taille est en format français « 7,5 cm » et la couleur est celle saisie", async () => {
@@ -237,10 +240,6 @@ describe('Conseil : le leurre de ma boîte sur les cartes (US 105)', () => {
       compact('À la place, dans ta boîte : Crankbait 6 cm perche'),
     );
     expect(compact(carteMinnow.textContent)).not.toContain(compact('Il te manque'));
-    const gras = [...carteMinnow.querySelectorAll<HTMLElement>('b, strong')].find(
-      (e) => compact(e.textContent) === compact('À la place, dans ta boîte :'),
-    );
-    expect(gras, 'libellé en gras').toBeDefined();
   });
 
   it("critère 3 : given le matcher ne trouve rien, when l'écran s'affiche, then la carte affiche « Il te manque : un shad 7–12 cm couleur gardon » (article du contenu, plage, couleur conseillée)", async () => {
@@ -295,15 +294,6 @@ describe('Conseil : le leurre de ma boîte sur les cartes (US 105)', () => {
     expect(compact(cartes(page)[0].textContent)).toContain(
       compact('Il te manque : un shad 7–12 cm couleur rose-fluo'),
     );
-  });
-
-  it('critère 3 : given une carte « Il te manque », when je la regarde, then le libellé est en gras', async () => {
-    const { page } = await afficher([], resultat(conseil({})));
-
-    const gras = [...cartes(page)[0].querySelectorAll<HTMLElement>('b, strong')].find(
-      (e) => compact(e.textContent) === compact('Il te manque :'),
-    );
-    expect(gras, 'libellé en gras').toBeDefined();
   });
 
   it('critère 5 : given le conseil affichait « Il te manque », when la boîte reçoit un shad (ajout puis retour sur Conseil), then la carte affiche « Dans ta boîte : Shad 10 cm gardon »', async () => {

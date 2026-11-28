@@ -11,9 +11,9 @@
  *   - AstroService     : `soleil(lieu, jour)` (lever/coucher) et `lune(instant, lieu)` (phase).
  *                        Les heures légales sont calculées par la page avec le vrai `heuresLegales` (core/regulation/legal-hours.ts).
  *
- * Structure attendue (neutre sur les balises) : la carte est un `section`, `article` ou `ion-card` qui contient un titre
- * (h1 à h6 ou `ion-card-title`) « Conditions ». Chaque donnée s'écrit « Libellé : valeur » ; les espaces (y compris insécables) ne comptent pas.
- * Les heures sont affichées en heure de Paris.
+ * US 295 : la « carte Conditions » est répartie entre l'écran (température de l'eau, sa source, la mention datée, l'état de chargement) et la feuille
+ * « Conditions » ouverte par la ligne météo (Débit, Pression, Ciel, Vent, Lune, Heures légales : libellé puis valeur). Ces tests lisent les deux.
+ * Les espaces (y compris insécables) ne comptent pas. Les heures sont affichées en heure de Paris.
  */
 import { TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
@@ -24,6 +24,7 @@ import { ConditionsService, ReleveActuel } from '../../core/data/conditions.serv
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { Lieu } from '../../core/data/weather-provider';
 import { ConseilPage } from './conseil.page';
+import { compact, ecranDe, ouvrirConditions, stabiliser } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 type ReleveCarte = ReleveActuel & {
@@ -110,30 +111,24 @@ async function afficher({ releve: relevé = releve(), position = ANGERS, lune = 
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  await fixture.whenStable();
-  fixture.detectChanges();
-  await fixture.whenStable();
-  fixture.detectChanges();
-  return { fixture, page: fixture.nativeElement as HTMLElement, appelsReleve, lieuxSoleil };
+  await stabiliser(fixture);
+  const page = fixture.nativeElement as HTMLElement;
+  // La feuille « Conditions » s'ouvre par la ligne météo, quand elle existe.
+  if (page.querySelector('.meteo')) await ouvrirConditions(ecranDe(fixture));
+  return { fixture, page, appelsReleve, lieuxSoleil };
 }
 
-/** Sans aucune espace (normale, insécable ou fine) : le test ne dépend pas de la mise en page. */
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
-
-/** La carte « Conditions » : l'élément `section`, `article` ou `ion-card` qui porte le titre « Conditions ». */
-function carte(page: HTMLElement): HTMLElement | null {
-  const titre = [...page.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  return (titre?.closest('section, article, ion-card') as HTMLElement | null) ?? null;
-}
-
+/** Le texte de ce que la carte « Conditions » montrait : l'écran (eau, source, mention, état) et la feuille « Conditions » ouverte. */
 function texteCarte(page: HTMLElement): string {
-  const c = carte(page);
-  expect(c, 'aucune carte titrée « Conditions » (section, article ou ion-card avec un titre)').not.toBeNull();
-  return compact(c?.textContent);
+  const morceaux = [...page.querySelectorAll<HTMLElement>('.etat, .eau, app-feuille-conseil [role="dialog"]')];
+  expect(morceaux.length, 'ni état, ni eau, ni feuille « Conditions »').toBeGreaterThan(0);
+  return compact(morceaux.map((m) => m.textContent).join(' '));
 }
 
+/** « Débit : Normal » se lit « Débit » puis « Normal » ; « Température de l'eau : 11,5 °C » se lit « 11,5 °C » (grand chiffre de l'écran). */
 function afficheLigne(page: HTMLElement, ligne: string): void {
-  expect(texteCarte(page)).toContain(compact(ligne));
+  const attendu = ligne.replace(/^Température de l'eau : /, '').replace(' : ', ' ');
+  expect(texteCarte(page)).toContain(compact(attendu));
 }
 
 describe('ConseilPage : carte « Conditions » (US 64)', () => {
@@ -222,7 +217,6 @@ describe('ConseilPage : carte « Conditions » (US 64)', () => {
   it("critère 6 : given des conditions en cours de récupération, when j'ouvre l'onglet Conseil, then la carte affiche « Chargement des conditions… »", async () => {
     const { page } = await afficher({ releve: new Promise<ReleveCarte>(() => undefined) });
 
-    expect(carte(page), 'aucune carte titrée « Conditions »').not.toBeNull();
     expect(texteCarte(page)).toContain(compact('Chargement des conditions…'));
     expect(texteCarte(page)).not.toContain(compact('Température de l'));
   });
@@ -260,7 +254,7 @@ describe('ConseilPage : carte « Conditions » (US 64)', () => {
   it('maquette 7 : given une position introuvable, when la carte s\'affiche, then elle dit « Position introuvable : autorise la localisation pour voir les conditions. » et ne demande aucune condition', async () => {
     const { page, appelsReleve } = await afficher({ position: { disponible: false, motif: 'position refusée' } });
 
-    afficheLigne(page, 'Position introuvable : autorise la localisation pour voir les conditions.');
+    expect(compact(page.textContent)).toContain(compact('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».'));
     expect(appelsReleve).toHaveLength(0);
   });
 });

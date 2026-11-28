@@ -4,37 +4,27 @@ import type { Categorie } from '../../core/regulation/calendar';
 import { UnitesService } from '../../shared/unites.service';
 import { composerReglementation } from './bandeau-reglementation-format';
 
-/** Bandeau « Réglementation » de l'écran Conseil (US 80, PLAN §6) : tout est calculé en local, sans réseau. */
+/** Contenu de la feuille « Réglementation » de l'écran Conseil (US 80, US 295, PLAN §6) : tout est calculé en local, sans réseau. */
 @Component({
   selector: 'app-bandeau-reglementation',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
       display: block;
-      margin-top: 12px;
-    }
-    .carte {
       background: var(--lr-surface);
-      border: 1px solid var(--lr-bordure);
-      border-radius: 16px;
-      padding: 16px;
       color: var(--lr-texte);
-    }
-    h3 {
-      margin: 0 0 12px;
-      font-size: 20px;
-      font-weight: 700;
     }
     dl {
       margin: 0;
     }
     .ligne {
+      min-height: 48px;
+      box-sizing: border-box;
       padding: 10px 0;
       border-top: 1px solid var(--lr-bordure);
     }
     .ligne:first-child {
       border-top: none;
-      padding-top: 0;
     }
     dt,
     dd {
@@ -67,37 +57,39 @@ import { composerReglementation } from './bandeau-reglementation-format';
       display: flex;
       align-items: center;
       min-height: 48px;
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 700;
       color: var(--lr-primaire);
       text-decoration: underline;
     }
   `,
   template: `
-    <section class="carte">
-      <h3>Réglementation</h3>
-      <dl>
-        @for (l of lignes(); track $index) {
-          <div class="ligne">
-            @if (l.alerte) {
-              <span class="alerte">{{ l.valeur }}</span>
-            } @else {
-              <dt>{{ l.libelle }} :</dt>
-              &ngsp;
-              <dd [class.ferme]="l.ferme" [class.ouvert]="l.valeur === 'Ouvert'">{{ l.valeur }}</dd>
-            }
-          </div>
-        }
+    <dl>
+      @for (l of lignes(); track $index) {
         <div class="ligne">
-          <span class="mention">À vérifier dans l'arrêté de ton département</span>
-          @if (federation(); as f) {
-            <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener"
-              >Voir la fédération de ton département</a
-            >
+          @if (l.alerte) {
+            <span class="alerte">{{ l.valeur }}</span>
+          } @else {
+            <dt>{{ l.libelle }} :</dt>
+            &ngsp;
+            <dd [class.ferme]="l.ferme" [class.ouvert]="l.valeur === 'Ouvert'">{{ l.valeur }}</dd>
           }
         </div>
-      </dl>
-    </section>
+      }
+      @if (heuresLegales(); as heures) {
+        <div class="ligne">
+          <dt>Heures légales :</dt>
+          &ngsp;
+          <dd>{{ heures }}</dd>
+        </div>
+      }
+      <div class="ligne">
+        <span class="mention">À vérifier dans l'arrêté de ton département</span>
+        @if (federation(); as f) {
+          <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{ f.nom }} ↗</a>
+        }
+      </div>
+    </dl>
   `,
 })
 export class BandeauReglementationComponent {
@@ -107,6 +99,8 @@ export class BandeauReglementationComponent {
   readonly especes = input<readonly Espece[]>([]);
   readonly date = input<Date>(new Date());
   readonly federation = input<Federation | undefined>(undefined);
+  /** « 7 h 02 – 18 h 31 », si la page le donne. */
+  readonly heuresLegales = input<string | null>(null);
 
   private readonly unites = inject(UnitesService);
 

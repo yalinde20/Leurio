@@ -11,6 +11,7 @@ import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService } from '../../core/data/position.service';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ouvrirReglementation, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const JOUR_MS = 24 * 3600 * 1000;
@@ -88,7 +89,8 @@ async function choisirDemain(env: Awaited<ReturnType<typeof afficher>>, heure: n
   await env.stabiliser();
 }
 
-const nbCartes = (page: HTMLElement) => page.querySelectorAll('article').length;
+/** Le nombre de coups : le « 01 » de la rivière et les « 02 » et « 03 » de la feuille « 2 autres coups ». */
+const nbCartes = async (env: Awaited<ReturnType<typeof afficher>>) => (await textesDesCoups(env)).length;
 
 afterEach(() => vi.useRealTimers());
 
@@ -96,29 +98,29 @@ describe('ConseilPage : bornes des heures légales dans l\'heure choisie (US 82)
   it('given demain 7 h et un début à 7 h 02, when je valide, then les 3 cartes et « Pêche légale à partir de 7 h 02 »', async () => {
     const env = await afficher();
     await choisirDemain(env, 7);
-    expect(nbCartes(env.page)).toBe(3);
-    expect(compact(env.page.textContent)).toContain(compact('Pêche légale à partir de 7 h 02'));
+    expect(await nbCartes(env)).toBe(3);
+    expect(compact((await ouvrirReglementation(env)).textContent)).toContain(compact('Pêche légale à partir de 7 h 02'));
   });
 
   it('given demain 6 h et un début à 7 h 02, when je valide, then l\'avertissement de nuit sans carte ni ligne', async () => {
     const env = await afficher();
     await choisirDemain(env, 6);
-    expect(nbCartes(env.page)).toBe(0);
+    expect(await nbCartes(env)).toBe(0);
     expect(compact(env.page.textContent)).toContain(compact('Hors des heures légales'));
-    expect(compact(env.page.textContent)).not.toContain(compact('Pêche légale'));
+    expect(compact((await ouvrirReglementation(env)).textContent)).not.toContain(compact('Pêche légale'));
   });
 
   it('given demain 18 h et une fin à 18 h 31, when je valide, then les 3 cartes et « Pêche légale jusqu\'à 18 h 31 »', async () => {
     const env = await afficher();
     await choisirDemain(env, 18);
-    expect(nbCartes(env.page)).toBe(3);
-    expect(compact(env.page.textContent)).toContain(compact("Pêche légale jusqu'à 18 h 31"));
+    expect(await nbCartes(env)).toBe(3);
+    expect(compact((await ouvrirReglementation(env)).textContent)).toContain(compact("Pêche légale jusqu'à 18 h 31"));
   });
 
   it('given demain 12 h, when je valide, then les 3 cartes sans ligne de limite', async () => {
     const env = await afficher();
     await choisirDemain(env, 12);
-    expect(nbCartes(env.page)).toBe(3);
-    expect(compact(env.page.textContent)).not.toContain(compact('Pêche légale'));
+    expect(await nbCartes(env)).toBe(3);
+    expect(compact((await ouvrirReglementation(env)).textContent)).not.toContain(compact('Pêche légale'));
   });
 });

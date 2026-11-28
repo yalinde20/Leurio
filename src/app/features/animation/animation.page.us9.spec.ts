@@ -155,13 +155,11 @@ function bouton(page: HTMLElement, texte: string): HTMLElement {
 const titres = (page: HTMLElement): string[] =>
   [...page.querySelectorAll<HTMLElement>('h1, h2, h3, h4, [role="heading"]')].map((h) => (h.textContent ?? '').trim());
 
+/** US 295 : le détail du coup 01 s'ouvre par son lien, posé dans la rivière en coupe. */
 async function ouvrirDetail(env: Env): Promise<void> {
-  const carte = [...env.page.querySelectorAll<HTMLElement>('section, article, ion-card')].find(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
-  if (!carte) throw new Error('Aucune carte de conseil');
-  const candidats = [...carte.querySelectorAll<HTMLElement>('*')].filter((e) => compact(e.textContent).includes(compact('Voir le détail')));
-  candidats.filter((e) => !candidats.some((autre) => autre !== e && e.contains(autre)))[0].click();
+  const lien = env.page.querySelector<HTMLElement>('app-riviere-en-coupe a.coup');
+  if (!lien) throw new Error('Aucun coup 01 dans la rivière');
+  lien.click();
   await env.stabiliser();
 }
 async function ouvrirFiche(env: Env): Promise<void> {

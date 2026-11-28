@@ -81,7 +81,7 @@ describe('ConseilPage : dock et avatar (US 294)', () => {
     const { page } = await ouvrir();
     const avatar = page.querySelector<HTMLElement>('button[aria-label="Compte"]');
     expect(avatar).not.toBeNull();
-    expect(avatar!.closest('ion-toolbar')).not.toBeNull();
+    expect(avatar!.closest('.haut'), 'dans la rangée du haut, avec le lieu').not.toBeNull();
     expect([...page.querySelectorAll('button')].some((b) => compact(b.textContent) === 'Préparer ma sortie')).toBe(false);
   });
 

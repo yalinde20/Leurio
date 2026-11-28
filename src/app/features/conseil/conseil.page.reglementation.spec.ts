@@ -1,5 +1,5 @@
 /*
- * US 80 : le bandeau « Réglementation » apparaît sur la page Conseil, sous la carte « Conditions ».
+ * US 80, US 295 : le bandeau « Réglementation » est dans la feuille que la ligne d'état réglementaire de la page Conseil ouvre.
  * Doubles : ceux de conseil.page.federation.spec.ts (PositionService, ConditionsService, AstroService, CatalogService).
  */
 import { TestBed } from '@angular/core/testing';
@@ -9,6 +9,7 @@ import { CatalogService } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
+import { ecranDe, ouvrirReglementation, stabiliser } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const RELEVE: ReleveActuel = {
@@ -73,18 +74,13 @@ describe('ConseilPage : bandeau « Réglementation » (US 80)', () => {
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(ConseilPage);
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    await stabiliser(fixture);
 
     const page = fixture.nativeElement as HTMLElement;
-    const titres = [...page.querySelectorAll('h2, h3')].map((t) => t.textContent?.trim());
-    const iConditions = titres.indexOf('Conditions');
-    const iReglementation = titres.indexOf('Réglementation');
-    expect(iReglementation).toBeGreaterThan(-1);
-    expect(iReglementation).toBeGreaterThan(iConditions);
-    const liens = [...page.querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    expect(page.querySelector('app-bandeau-reglementation'), 'fermée tant qu\'on ne touche pas la ligne d\'état').toBeNull();
+    const feuille = await ouvrirReglementation(ecranDe(fixture));
+    expect(feuille.querySelector('app-bandeau-reglementation')).not.toBeNull();
+    const liens = [...feuille.querySelectorAll('a')].map((a) => a.getAttribute('href'));
     expect(liens).toContain('https://fedepeche49.fr');
   });
 });

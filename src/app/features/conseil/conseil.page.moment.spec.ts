@@ -39,6 +39,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ouvrirConditions, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -212,7 +213,7 @@ afterEach(() => vi.useRealTimers());
 const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
 const boutons = (racine: ParentNode): HTMLElement[] => [...racine.querySelectorAll<HTMLElement>('button, ion-button')];
-const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('[role="dialog"]');
+const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('app-moment-feuille [role="dialog"]');
 
 /** Le sélecteur de moment : un bouton hors de la feuille dont le texte contient « Moment ». */
 function selecteur(page: HTMLElement): HTMLElement {
@@ -268,15 +269,8 @@ async function valider(env: Awaited<ReturnType<typeof afficher>>): Promise<void>
   await env.stabiliser();
 }
 
-/** Les cartes de conseil : les `section`, `article` ou `ion-card` les plus internes dont le texte contient « Animation : ». */
-function cartesConseil(page: HTMLElement): HTMLElement[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) =>
-      compact(e.textContent).includes(compact('Animation :')) &&
-      !e.querySelector('section, article, ion-card') &&
-      !e.closest('[role="dialog"]'),
-  );
-}
+/** Les coups : le « 01 » de la rivière, puis les « 02 » et « 03 » de la feuille « 2 autres coups » (texte compact). */
+const cartesConseil = (env: Awaited<ReturnType<typeof afficher>>): Promise<string[]> => textesDesCoups(env);
 
 describe('ConseilPage : moment du conseil (US 82)', () => {
   it("critère 1 : given j'ouvre l'écran Conseil, when je regarde le sélecteur de moment, then il affiche « Maintenant »", async () => {
@@ -306,11 +300,12 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await choisir(env, 'Demain', 7);
     await valider(env);
 
+    await ouvrirConditions(env); // la mention du moment et le vent sont dans la feuille « Conditions »
     const texte = compact(env.page.textContent);
     expect(texte).toContain(compact('Prévisions pour demain 7 h'));
-    expect(texte).toContain(compact("Température de l'eau : 9,2 °C"));
-    expect(texte).toContain(compact('Vent : 8 km/h'));
-    expect(texte).not.toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(texte).toContain(compact('9,2 °C'));
+    expect(texte).toContain(compact('Vent 8 km/h'));
+    expect(texte).not.toContain(compact('11,5 °C'));
     expect(env.appelsReleve.at(-1)?.getTime()).toBe(DEMAIN_7H.getTime());
   });
 
@@ -320,10 +315,10 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await choisir(env, 'Demain', 7);
     await valider(env);
 
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Shad'));
-    expect(cartes[0]).toContain(compact('Animation : Linéaire'));
+    expect(cartes[0]).toContain(compact('Linéaire'));
     expect(cartes[1]).toContain(compact('Leurre dur (minnow)'));
     expect(cartes[2]).toContain(compact('Cuillère tournante'));
     expect(compact(env.page.textContent)).not.toContain(compact('Jig à jupe'));
@@ -338,7 +333,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await valider(env);
 
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Après-demain 6 h'));
-    expect(compact(env.page.textContent)).toContain(compact('Prévisions pour après-demain 6 h'));
+    expect(compact((await ouvrirConditions(env)).textContent)).toContain(compact('Prévisions pour après-demain 6 h'));
     expect(env.appelsReleve.at(-1)?.getTime()).toBe(APRES_DEMAIN_6H.getTime());
   });
 
@@ -386,7 +381,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
       compact('Choisis un moment dans les 48 h à venir.'),
     );
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 7 h'));
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 9,2 °C"));
+    expect(compact(env.page.textContent)).toContain(compact('9,2 °C'));
     expect(env.appelsReleve).toHaveLength(appelsAvant);
   });
 
@@ -399,9 +394,10 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     const texte = compact(env.page.textContent);
     expect(texte).toContain(compact('Hors des heures légales : pas de pêche aux carnassiers la nuit.'));
     expect(texte).toContain(compact('Heures légales demain : 7 h 02 – 18 h 31'));
-    expect(cartesConseil(env.page)).toHaveLength(0);
+    expect(env.page.querySelector('a.coup')).toBeNull();
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 22 h'));
-    expect(env.appelsSoleil.at(-1)?.getTime()).toBe(DEMAIN_22H.getTime());
+    // US 295 : la ligne d'état « Pêche fermée jusqu'à » demande aussi le soleil du lendemain ; le soleil du moment choisi est bien calculé.
+    expect(env.appelsSoleil.some((d) => d.getTime() === DEMAIN_22H.getTime())).toBe(true);
   });
 
   it("critère 5 : given demain 7 h choisi, when je choisis « Maintenant », then le sélecteur, les conditions et les conseils reviennent à l'instant présent", async () => {
@@ -409,22 +405,23 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await ouvrir(env);
     await choisir(env, 'Demain', 7);
     await valider(env);
-    expect(cartesConseil(env.page)).toHaveLength(3);
+    expect(await cartesConseil(env)).toHaveLength(3);
 
     await ouvrir(env);
     cliquable(env.page, 'Maintenant').click();
     await env.stabiliser();
 
+    await ouvrirConditions(env);
     const texte = compact(env.page.textContent);
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Maintenant'));
     expect(compact(selecteur(env.page).textContent)).not.toContain(compact('Demain'));
     expect(feuille(env.page)).toBeNull();
     expect(texte).not.toContain(compact('Prévisions pour'));
-    expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    expect(texte).toContain(compact('11,5 °C'));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Shad'));
-    expect(cartes[0]).toContain(compact('Animation : Tirée-relâchée'));
+    expect(cartes[0]).toContain(compact('Tirée-relâchée'));
     expect(cartes[1]).toContain(compact('Jig à jupe'));
     expect(env.appelsReleve.at(-1)?.getTime()).toBe(MAINTENANT.getTime());
     expect(env.appelsMoteur.at(-1)?.getTime()).toBe(MAINTENANT.getTime());
@@ -436,14 +433,14 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await ouvrir(env);
     await choisir(env, 'Demain', 22);
     await valider(env);
-    expect(cartesConseil(env.page)).toHaveLength(0);
+    expect(env.page.querySelector('a.coup')).toBeNull();
 
     await ouvrir(env);
     cliquable(env.page, 'Maintenant').click();
     await env.stabiliser();
 
     expect(compact(env.page.textContent)).not.toContain(compact('Hors des heures légales'));
-    expect(cartesConseil(env.page)).toHaveLength(3);
+    expect(await cartesConseil(env)).toHaveLength(3);
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Maintenant'));
   });
 

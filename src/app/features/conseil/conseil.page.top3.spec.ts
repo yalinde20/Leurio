@@ -6,8 +6,8 @@
  *   conseiller(conditions: Conditions, moment: Date): Promise<ResultatConseil>
  * La page rend les 3 cartes dans l'ordre rendu par le moteur ; elle traduit les identifiants en noms avec le CatalogService.
  *
- * Structure attendue (neutre sur les balises) : une carte de conseil est un `section`, `article` ou `ion-card` dont le texte
- * contient « Animation : ». Chaque donnée s'écrit « Libellé : valeur » ; les espaces (y compris insécables) ne comptent pas.
+ * US 295 : le top 3 est le coup « 01 » de la rivière en coupe, puis les coups « 02 » et « 03 » de la feuille « 2 autres coups » ;
+ * les conditions complètes sont dans la feuille « Conditions ». Les espaces (y compris insécables) ne comptent pas.
  * Le moment est fixé avec de faux timers sur `Date` : les heures légales du double AstroService vont de 6 h 02 à 17 h 31 UTC.
  */
 import { TestBed } from '@angular/core/testing';
@@ -21,6 +21,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { compact, ecranDe, liensDesCoups, ouvrirConditions, stabiliser, textesDesCoups } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -131,32 +132,23 @@ async function afficher({ maintenant = DANS_LES_HEURES, releve = RELEVE, positio
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  for (let i = 0; i < 3; i++) {
-    await fixture.whenStable();
-    fixture.detectChanges();
-  }
-  return { page: fixture.nativeElement as HTMLElement, appelsMoteur };
+  await stabiliser(fixture);
+  return { fixture, page: fixture.nativeElement as HTMLElement, appelsMoteur };
 }
 
 afterEach(() => vi.useRealTimers());
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
-
-/** Les cartes de conseil : les `section`, `article` ou `ion-card` les plus internes dont le texte contient « Animation : ». */
-function cartesConseil(page: HTMLElement): HTMLElement[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
-}
+/** Les coups de la rivière : le « 01 » de la rivière, puis les « 02 » et « 03 » de la feuille « 2 autres coups ». */
+const coups = (page: HTMLElement): HTMLElement[] => liensDesCoups(page);
 
 describe('ConseilPage : top 3 du moment (US 81)', () => {
   it("critère 1 : given la position autorisée et un moment dans les heures légales, when l'écran Conseil s'affiche, then la carte « Conditions » et 3 cartes de conseil sont affichées sans aucun tap", async () => {
-    const { page, appelsMoteur } = await afficher();
+    const { fixture, page, appelsMoteur } = await afficher();
 
-    expect(compact(page.textContent)).toContain(compact('Conditions'));
-    expect(compact(page.textContent)).toContain(compact("Température de l'eau : 11,5 °C"));
-    expect(cartesConseil(page)).toHaveLength(3);
-    expect(compact(page.textContent)).toContain(compact('Ton top 3'));
+    expect(compact(page.textContent)).toContain(compact('11,5 °C'));
+    expect(page.querySelector('app-riviere-en-coupe [aria-label="Rivière en coupe"], section[aria-label="Rivière en coupe"]')).not.toBeNull();
+    expect(coups(page)).toHaveLength(1);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
     expect(appelsMoteur).toHaveLength(1);
   });
 
@@ -168,64 +160,66 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
   });
 
   it("critère 2 : given les conditions récupérées, when l'écran s'affiche, then la carte « Conditions » montre eau, débit, pression, ciel, vent, lune et heures légales à côté des cartes de conseil", async () => {
-    const { page } = await afficher();
+    const { fixture, page } = await afficher();
 
-    const texte = compact(page.textContent);
+    expect(compact(page.textContent)).toContain(compact('11,5 °C'));
+    const feuille = await ouvrirConditions(ecranDe(fixture));
+    const texte = compact(feuille.textContent);
     for (const ligne of [
-      "Température de l'eau : 11,5 °C",
-      'Débit : Normal',
-      'Pression : 1012 hPa',
-      'Ciel : 80 % de nuages',
-      'Vent : 12 km/h',
-      'Lune : Premier croissant',
-      'Heures légales : 7 h 02 – 18 h 31',
+      'Eau11,5 °C',
+      'DébitNormal',
+      'Pression1012 hPa',
+      'Ciel80 % de nuages',
+      'Vent12 km/h',
+      'LunePremier croissant',
+      'Heures légales7 h 02 – 18 h 31',
     ]) {
       expect(texte, ligne).toContain(compact(ligne));
     }
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
   });
 
-  it("critère 3 : given un top 3 du moteur, when l'écran s'affiche, then chaque carte montre le type, l'animation, la couleur, la taille ou le poids, et la première phrase du pourquoi", async () => {
-    const { page } = await afficher();
+  it("critère 3 : given un top 3 du moteur, when l'écran s'affiche, then chaque coup montre le type, l'animation, la couleur et la taille ou le poids", async () => {
+    const { fixture } = await afficher();
 
-    const cartes = cartesConseil(page).map((c) => compact(c.textContent));
-    expect(cartes).toHaveLength(3);
+    const textes = await textesDesCoups(ecranDe(fixture));
+    expect(textes).toHaveLength(3);
     const attendu = [
-      ['Shad', 'Animation : Tirée-relâchée', 'Couleur : Gardon', 'Taille : 8 cm', "À 11,5 °C, une animation lente lui convient."],
-      ['Jig à jupe', 'Animation : Gratté', 'Couleur : Chartreuse', 'Poids : 10 g', 'Le jig passe bien au fond.'],
-      ['Ver souple finesse', 'Animation : Drop shot', 'Couleur : Gardon', 'Taille : 6 cm', 'Le ver finesse séduit les perches.'],
+      ['Shad', 'Tirée-relâchée', '8 cm', 'Gardon'],
+      ['Jig à jupe', 'Gratté', '10 g', 'Chartreuse'],
+      ['Ver souple finesse', 'Drop shot', '6 cm', 'Gardon'],
     ];
     attendu.forEach((lignes, i) => {
-      for (const ligne of lignes) expect(cartes[i], `carte ${i + 1} : ${ligne}`).toContain(compact(ligne));
+      for (const ligne of lignes) expect(textes[i], `coup ${i + 1} : ${ligne}`).toContain(compact(ligne));
     });
   });
 
-  it("critère 3 : given un pourquoi de plusieurs phrases, when l'écran s'affiche, then seule la première phrase est affichée", async () => {
-    const { page } = await afficher();
+  it("critère 3 : given un pourquoi de plusieurs phrases, when l'écran s'affiche, then l'écran Conseil n'affiche aucune phrase du pourquoi (elles sont dans le détail)", async () => {
+    const { fixture, page } = await afficher();
 
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
     const texte = compact(page.textContent);
-    expect(texte).toContain(compact('Le jig passe bien au fond.'));
+    expect(texte).not.toContain(compact('Le jig passe bien au fond.'));
     expect(texte).not.toContain(compact('Deuxième phrase'));
     expect(texte).not.toContain(compact('Autre phrase'));
   });
 
-  it("critère 3 : given un top 3 du moteur, when l'écran s'affiche, then les cartes suivent l'ordre du moteur, numérotées 1, 2, 3", async () => {
-    const { page } = await afficher();
+  it("critère 3 : given un top 3 du moteur, when l'écran s'affiche, then les coups suivent l'ordre du moteur, numérotés 01, 02, 03", async () => {
+    const { fixture } = await afficher();
 
-    const cartes = cartesConseil(page).map((c) => compact(c.textContent));
-    expect(cartes[0]).toContain('Shad');
-    expect(cartes[1]).toContain(compact('Jig à jupe'));
-    expect(cartes[2]).toContain(compact('Ver souple finesse'));
-    cartes.forEach((c, i) => expect(c.startsWith(String(i + 1)), `rang de la carte ${i + 1}`).toBe(true));
+    const textes = await textesDesCoups(ecranDe(fixture));
+    expect(textes[0]).toContain('Shad');
+    expect(textes[1]).toContain(compact('Jig à jupe'));
+    expect(textes[2]).toContain(compact('Ver souple finesse'));
+    textes.forEach((c, i) => expect(c.startsWith(`0${i + 1}`), `rang du coup ${i + 1}`).toBe(true));
   });
 
   it("critère 3 : given un top 3 rendu dans l'ordre inverse, when l'écran s'affiche, then la page ne le réordonne pas", async () => {
-    const { page } = await afficher({ resultat: { conseils: [...TOP3.conseils].reverse(), explications: [] } });
+    const { fixture } = await afficher({ resultat: { conseils: [...TOP3.conseils].reverse(), explications: [] } });
 
-    const cartes = cartesConseil(page).map((c) => compact(c.textContent));
-    expect(cartes[0]).toContain(compact('Ver souple finesse'));
-    expect(cartes[2]).toContain('Shad');
+    const textes = await textesDesCoups(ecranDe(fixture));
+    expect(textes[0]).toContain(compact('Ver souple finesse'));
+    expect(textes[2]).toContain('Shad');
   });
 
   it("critère 4 : given un moment hors des heures légales, when l'écran s'affiche, then aucune carte de conseil n'est affichée et l'avertissement donne les heures légales du jour", async () => {
@@ -234,29 +228,29 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
     const texte = compact(page.textContent);
     expect(texte).toContain(compact('Hors des heures légales : pas de pêche aux carnassiers la nuit.'));
     expect(texte).toContain(compact("Heures légales aujourd'hui : 7 h 02 – 18 h 31"));
-    expect(cartesConseil(page)).toHaveLength(0);
-    expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(coups(page)).toHaveLength(0);
+    expect(texte).toContain(compact('11,5 °C'));
   });
 
   it("critère 4 (contraire) : given un moment dans les heures légales, when l'écran s'affiche, then l'avertissement « Hors des heures légales » n'apparaît pas", async () => {
-    const { page } = await afficher();
+    const { fixture, page } = await afficher();
 
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
     expect(compact(page.textContent)).not.toContain(compact('Hors des heures légales'));
   });
 
   it("critère 5 : given aucune source de conditions, when l'écran s'affiche, then les 3 cartes s'affichent avec une seule mention « Conseil moins précis »", async () => {
-    const { page } = await afficher({ releve: { ...RELEVE, moinsPrecis: true } });
+    const { fixture, page } = await afficher({ releve: { ...RELEVE, moinsPrecis: true } });
 
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
     const mentions = page.textContent?.split('Conseil moins précis').length ?? 1;
     expect(mentions - 1).toBe(1);
   });
 
   it("critère 5 (contraire) : given des conditions précises, when l'écran s'affiche, then la mention « Conseil moins précis » n'apparaît pas", async () => {
-    const { page } = await afficher();
+    const { fixture, page } = await afficher();
 
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
     expect(compact(page.textContent)).not.toContain(compact('Conseil moins précis'));
   });
 
@@ -269,19 +263,18 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
       const { page, appelsMoteur } = await afficher({ position: position as unknown as ResultatPosition });
 
       const texte = compact(page.textContent);
-      expect(texte).toContain(compact('Localisation indisponible : active la localisation ou choisis un spot enregistré.'));
-      expect(texte).toContain(compact('Position introuvable : autorise la localisation pour voir les conditions.'));
-      expect(cartesConseil(page)).toHaveLength(0);
+      expect(texte).toContain(compact('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».'));
+      expect(coups(page)).toHaveLength(0);
       expect(appelsMoteur).toHaveLength(0);
       vi.useRealTimers();
     }
   });
 
   it("critère 6 (contraire) : given la position disponible, when l'écran s'affiche, then le message « Localisation indisponible » n'apparaît pas", async () => {
-    const { page } = await afficher();
+    const { fixture, page } = await afficher();
 
-    expect(cartesConseil(page)).toHaveLength(3);
-    expect(compact(page.textContent)).not.toContain(compact('Localisation indisponible'));
+    expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
+    expect(compact(page.textContent)).not.toContain(compact('Position introuvable'));
   });
 
   // Mis à jour par l'US 14 (décision du propriétaire, option A) : le bouton, simple emplacement en US 81, est désormais actif

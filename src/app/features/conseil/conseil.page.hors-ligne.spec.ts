@@ -80,7 +80,7 @@ async function afficher(enLigne: boolean, meteoPrevue: () => Promise<unknown>, c
   await vi.waitFor(async () => {
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(carte(page), 'carte « Conditions » absente').not.toBeNull();
+    expect(page.querySelector('.eau'), 'température de l\'eau absente').not.toBeNull();
     expect(page.textContent).not.toContain('Chargement des conditions');
   });
   return page;
@@ -88,14 +88,10 @@ async function afficher(enLigne: boolean, meteoPrevue: () => Promise<unknown>, c
 
 const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
-function carte(page: HTMLElement): HTMLElement | null {
-  const titre = [...page.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  return (titre?.closest('section, article, ion-card') as HTMLElement | null) ?? null;
-}
-
+/** US 295 : la mention datée est écrite avec la température de l'eau, sur l'écran. */
 function texteCarte(page: HTMLElement): string {
-  const c = carte(page);
-  expect(c, 'aucune carte titrée « Conditions »').not.toBeNull();
+  const c = page.querySelector<HTMLElement>('.eau');
+  expect(c, "aucune température de l'eau affichée").not.toBeNull();
   return compact(c?.textContent);
 }
 

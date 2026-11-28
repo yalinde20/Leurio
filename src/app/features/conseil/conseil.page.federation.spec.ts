@@ -10,6 +10,7 @@ import { CatalogService } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
+import { ecranDe, ouvrirReglementation, stabiliser } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const RELEVE: ReleveActuel = {
@@ -73,42 +74,36 @@ async function afficher(federation: (departement: string) => Promise<unknown>) {
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  await fixture.whenStable();
-  fixture.detectChanges();
-  await fixture.whenStable();
-  fixture.detectChanges();
-  return { page: fixture.nativeElement as HTMLElement, demandes };
-}
-
-/** La carte « Conditions » : l'élément qui porte le titre « Conditions » (le bandeau Réglementation est à part). */
-function carte(page: HTMLElement): HTMLElement {
-  const titre = [...page.querySelectorAll('h2, h3')].find((t) => t.textContent?.trim() === 'Conditions');
-  return titre?.closest('section, article, ion-card') as HTMLElement;
+  await stabiliser(fixture);
+  // US 295 : la mention et le lien sont dans la feuille « Réglementation », sous les heures légales ; la ligne d'état l'ouvre.
+  const feuille = await ouvrirReglementation(ecranDe(fixture));
+  return { page: fixture.nativeElement as HTMLElement, demandes, feuille };
 }
 
 const MENTION = "À vérifier dans l'arrêté de ton département";
 
 describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN §6)', () => {
   it("given les conditions du département 49 et sa fédération, when la carte s'affiche, then la mention et le lien vers la fédération (nouvel onglet) sont sous les heures légales", async () => {
-    const { page, demandes } = await afficher(async () => ({
+    const { feuille, demandes } = await afficher(async () => ({
       departement: '49',
       nom: 'Fédération de pêche de Maine-et-Loire',
       url: 'https://www.federation-peche49.fr',
     }));
 
     expect(demandes).toEqual(['49']);
-    expect(carte(page).textContent).toContain(MENTION);
-    const lien = carte(page).querySelector('a');
-    expect(lien?.textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire');
+    expect(feuille.textContent).toContain(MENTION);
+    expect(feuille.textContent!.indexOf('Heures légales')).toBeLessThan(feuille.textContent!.indexOf(MENTION));
+    const lien = feuille.querySelector('a');
+    expect(lien?.textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire ↗');
     expect(lien?.getAttribute('href')).toBe('https://www.federation-peche49.fr');
     expect(lien?.getAttribute('target')).toBe('_blank');
     expect(lien?.getAttribute('rel')).toContain('noopener');
   });
 
   it("given aucune fédération pour le département, when la carte s'affiche, then seule la mention est écrite, sans lien", async () => {
-    const { page } = await afficher(async () => undefined);
+    const { feuille } = await afficher(async () => undefined);
 
-    expect(carte(page).textContent).toContain(MENTION);
-    expect(carte(page).querySelector('a')).toBeNull();
+    expect(feuille.textContent).toContain(MENTION);
+    expect(feuille.querySelector('a')).toBeNull();
   });
 });
