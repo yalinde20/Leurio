@@ -4,6 +4,7 @@
  * Heures légales du double AstroService : 7 h 02 – 18 h 31 à Paris (6 h 02 – 17 h 31 UTC).
  */
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 import { AstroService, LuneDuMoment, SoleilDuJour } from '../../core/data/astro.service';
 import { Animation, CatalogService, Couleur, TypeLeurre } from '../../core/data/catalog.service';
@@ -15,6 +16,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
 import { ConseilChoixStore } from './conseil-choix.store';
+import { ConseilDetailStore } from './conseil-detail.store';
 import { compact, stabiliser } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
@@ -38,6 +40,7 @@ async function afficher(maintenant: Date, choisi?: Date) {
     imports: [ConseilPage],
     providers: [
       provideIonicAngular(),
+      provideRouter([{ path: '**', children: [] }]),
       { provide: SOURCE_TACKLE_BOX, useValue: { uid: async () => null, ecouter: () => () => undefined } },
       { provide: PositionService, useValue: { positionGps: async () => ANGERS } },
       {
@@ -55,7 +58,10 @@ async function afficher(maintenant: Date, choisi?: Date) {
         useValue: {
           soleil: (_l: unknown, jour: Date): SoleilDuJour => {
             appelsSoleil.push(jour);
-            return SOLEIL;
+            // Les mêmes heures chaque jour civil de Paris, décalées du nombre de jours écoulés depuis le 9 novembre.
+            const civil = Date.parse(jour.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }));
+            const decalage = Math.round((civil - Date.parse('2026-11-09')) / 86_400_000) * 86_400_000;
+            return { lever: new Date(SOLEIL.lever!.getTime() + decalage), coucher: new Date(SOLEIL.coucher!.getTime() + decalage) };
           },
           lune: (): LuneDuMoment => ({ phase: 'Premier croissant', fractionEclairee: 0.3 }),
         },
@@ -182,5 +188,37 @@ describe('ConseilPage : « Maintenant » suit l\'horloge (US 295)', () => {
     document.dispatchEvent(new Event('visibilitychange'));
 
     expect(env.appelsSoleil.length).toBe(appels);
+  });
+});
+
+describe('ConseilPage : « Maintenant » hors des heures légales, passé minuit (US 295)', () => {
+  it('given « Heures légales demain » à 23 h 50 (Paris), when minuit passe, then l\'alerte dit « Heures légales aujourd\'hui » avec les heures du nouveau jour', async () => {
+    const env = await afficher(new Date('2026-11-09T22:50:00Z')); // 23 h 50 à Paris
+    expect(compact(env.page.querySelector('[role="alert"]')?.textContent)).toContain(compact('Heures légales demain'));
+
+    await env.avancer(20 * MINUTE); // 0 h 10 à Paris
+
+    const alerte = compact(env.page.querySelector('[role="alert"]')?.textContent);
+    expect(alerte).toContain(compact("Heures légales aujourd'hui"));
+    expect(alerte).not.toContain(compact('Heures légales demain'));
+  });
+
+  it('given un détail ouvert, when la minute passe, then le conseil et la boîte du détail ne sont pas modifiés ; au retour sur l\'écran, l\'état est recalculé', async () => {
+    const env = await afficher(heure('17:25'));
+    const store = TestBed.inject(ConseilDetailStore);
+    const avant = store.pourLaBoite();
+    expect(avant).not.toBeNull();
+    await TestBed.inject(Router).navigateByUrl('/conseil/detail/1');
+    await stabiliser(env.fixture);
+
+    vi.setSystemTime(heure('17:40')); // après la fin
+    vi.advanceTimersByTime(MINUTE);
+    await stabiliser(env.fixture);
+    expect(store.pourLaBoite()).toBe(avant);
+
+    await TestBed.inject(Router).navigateByUrl('/conseil');
+    await stabiliser(env.fixture);
+    expect(env.page.querySelector('a.coup')).toBeNull();
+    expect(compact(env.page.querySelector('[role="alert"]')?.textContent)).toContain(compact('Hors des heures légales'));
   });
 });

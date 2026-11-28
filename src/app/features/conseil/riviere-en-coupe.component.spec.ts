@@ -103,11 +103,10 @@ describe('RiviereEnCoupeComponent (US 295)', () => {
     expect(env.zone('Fond').querySelector('[role="note"]')?.textContent).toContain('Brochet fermé');
   });
 
-  it('given un coup en zone « fond », when la rivière s\'affiche, then seule cette zone prend la place et les autres se réduisent à leur nom', async () => {
+  it('given un coup en zone « fond », when la rivière s\'affiche, then seule cette zone porte le contenu et les autres sont réduites à leur nom', async () => {
     const env = await afficher({ type: 'coups', coups: [coup(1, 'fond')], explications: [] });
 
-    const lignes = (env.page.querySelector('section') as HTMLElement).style.gridTemplateRows;
-    expect(lignes).toBe('minmax(34px, 1fr) minmax(34px, 1fr) minmax(min-content, 1fr) 18px');
+    expect([...env.page.querySelectorAll('.zone')].map((z) => z.classList.contains('avec-contenu'))).toEqual([false, false, true]);
   });
 
   it('given une fédération connue, when la rivière est hors des heures légales, then l\'alerte porte son lien (nom ↗, nouvel onglet)', async () => {

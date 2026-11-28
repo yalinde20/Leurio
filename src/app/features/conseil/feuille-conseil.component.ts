@@ -76,7 +76,8 @@ export class FeuilleConseilComponent implements AfterViewInit {
   constructor() {
     const vue = window.visualViewport;
     if (!vue) return;
-    const mesurer = () => this.clavier.set(Math.max(0, Math.round(window.innerHeight - vue.height - vue.offsetTop)));
+    // Pincer pour zoomer change aussi `visualViewport` : ce n'est pas le clavier.
+    const mesurer = () => this.clavier.set(vue.scale !== 1 ? 0 : Math.max(0, Math.round(window.innerHeight - vue.height - vue.offsetTop)));
     vue.addEventListener('resize', mesurer);
     vue.addEventListener('scroll', mesurer);
     inject(DestroyRef).onDestroy(() => {

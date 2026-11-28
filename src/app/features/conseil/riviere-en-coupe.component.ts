@@ -51,19 +51,22 @@ export interface AvisDonne {
   imports: [PictogrammeFamilleComponent, AvisCoupComponent, FeuilleConseilComponent],
   styles: `
     :host {
-      flex: 1 0 auto;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
     }
     .riviere {
-      flex: 1 0 auto;
-      display: grid;
-      /* Les lignes sont posées par le composant : les zones vides se réduisent à leur nom, celle du coup prend la place. */
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      /* Les zones vides se réduisent à leur nom (34 px), celle du coup garde au moins son contenu ; le reste se partage. */
       border-top: 1.5px solid var(--lr-trait);
       color: var(--lr-texte);
     }
     .zone {
       position: relative;
+      flex: 1 1 34px;
+      min-height: 34px;
       display: flex;
       min-height: 0;
       flex-direction: column;
@@ -73,6 +76,8 @@ export interface AvisDonne {
       box-sizing: border-box;
     }
     .zone.avec-contenu {
+      flex: 1 1 auto;
+      min-height: min-content;
       padding: 6px 16px 4px;
     }
     .entete {
@@ -93,7 +98,17 @@ export interface AvisDonne {
       border-top: 1px dashed var(--lr-bordure);
       background: var(--lr-eau-fond);
     }
+    /* Écran court : les zones vides restent à leur nom, la zone du coup prend tout le reste. */
+    @media (max-height: 700px) {
+      .zone:not(.avec-contenu) {
+        flex-grow: 0;
+      }
+      .zone.avec-contenu {
+        flex-grow: 1;
+      }
+    }
     .lit {
+      flex: 0 0 18px;
       border-top: 1.5px solid var(--lr-trait);
       background: var(--lr-lit);
     }
@@ -268,7 +283,7 @@ export interface AvisDonne {
     }
   `,
   template: `
-    <section class="riviere" aria-label="Rivière en coupe" [style.grid-template-rows]="lignes()">
+    <section class="riviere" aria-label="Rivière en coupe">
       @for (z of zones; track z.id) {
         <div class="zone" [class]="z.id" [class.avec-contenu]="z.id === zoneContenu()" role="group" [attr.aria-label]="z.libelle">
           @if (z.id === zoneContenu()) {
@@ -394,10 +409,6 @@ export class RiviereEnCoupeComponent {
   });
   /** La zone qui porte le contenu (coup 01, message ou alerte) : elle prend la place, les autres se réduisent à leur nom. */
   protected readonly zoneContenu = computed<ZoneNage>(() => this.premier()?.zone ?? 'mi-eau');
-  protected readonly lignes = computed(() => {
-    const rangees = ZONES.map((z) => (z.id === this.zoneContenu() ? 'minmax(min-content, 1fr)' : 'minmax(34px, 1fr)'));
-    return `${rangees.join(' ')} 18px`;
-  });
   protected readonly explicationsMessage = computed(() => {
     const v = this.vue();
     return v.type === 'message' ? (v.explications ?? []) : [];

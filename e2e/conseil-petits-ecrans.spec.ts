@@ -16,15 +16,15 @@ const ECRANS = [
   { nom: 'petit écran 320 × 568', width: 320, height: 568 },
 ];
 
-async function simulerServices(page: Page, eau: number | null): Promise<void> {
-  await page.clock.setFixedTime(MAINTENANT);
+async function simulerServices(page: Page, eau: number | null, maintenant = MAINTENANT): Promise<void> {
+  await page.clock.setFixedTime(maintenant);
   await page.route(
     (url) => !estLocal(url.toString()),
     (route) => {
       const url = new URL(route.request().url());
       if (url.hostname === 'hubeau.eaufrance.fr' && url.pathname.endsWith('/temperature/chronique') && eau !== null) {
         return route.fulfill({
-          json: { data: [{ code_station: '04101000', libelle_station: 'La Maine à Angers', longitude: -0.5, latitude: 47.5, date_mesure_temp: MAINTENANT.toISOString().slice(0, 10), heure_mesure_temp: '01:00:00', resultat: eau }] },
+          json: { data: [{ code_station: '04101000', libelle_station: 'La Maine à Angers', longitude: -0.5, latitude: 47.5, date_mesure_temp: maintenant.toISOString().slice(0, 10), heure_mesure_temp: '01:00:00', resultat: eau }] },
         });
       }
       if (url.hostname === 'api.open-meteo.com') {
@@ -49,60 +49,87 @@ async function simulerServices(page: Page, eau: number | null): Promise<void> {
   );
 }
 
+// Le leurre n° 1 du moteur change de zone de nage avec la saison et l'espèce : un scénario par zone (contenu de lure-types.json).
+const SCENARIOS = [
+  { zone: 'Surface', espece: 'Black-bass', date: new Date('2026-05-12T04:10:00Z'), eau: 16 }, // popper
+  { zone: 'Mi-eau', espece: 'Sandre', date: MAINTENANT, eau: 11.5 }, // shad
+  { zone: 'Fond', espece: 'Black-bass', date: new Date('2026-11-09T06:45:00Z'), eau: 2 }, // ver souple finesse
+] as const;
+
+const defilement = (page: Page) =>
+  page.evaluate(async () => {
+    const contenu = document.querySelector('ion-content') as (HTMLElement & { getScrollElement(): Promise<HTMLElement> }) | null;
+    const el = await contenu!.getScrollElement();
+    return { scroll: el.scrollHeight, client: el.clientHeight };
+  });
+
 for (const ecran of ECRANS) {
-  for (const [cas, eau, sortie] of [['conditions normales', 11.5, false], ["Hub'Eau indisponible et « Sortie prête »", null, true]] as const) {
-    test(`US 295 B1 : given ${ecran.nom} et ${cas}, when l'écran Conseil s'affiche, then aucune zone ne déborde et le coup, « 2 autres coups » et 👍/👎 sont dans leur zone et se touchent`, async ({ page }) => {
-      await page.setViewportSize({ width: ecran.width, height: ecran.height });
-      await onboardingTermine(page);
-      await simulerServices(page, eau);
-      await page.goto('/');
-      await page.getByRole('button', { name: /^Espèce/ }).click();
-      await page.getByRole('radio', { name: 'Sandre' }).click();
-      await conseilAffiche(page);
-      if (sortie) {
-        await page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: 'Ma sortie' }).click();
-        await expect(page.getByRole('status').filter({ hasText: 'Sortie prête' })).toBeVisible();
-        await expect(riviere(page).getByText('Conseil moins précis')).toBeVisible();
-      }
+  const petitEcran = ecran.width < 375 || ecran.height < 600; // 320 × 568 : le contenu minimal peut ne pas tenir, ion-content défile
+  for (const sc of SCENARIOS) {
+    for (const [cas, hubeau, sortie] of [['conditions normales', true, false], ["Hub'Eau indisponible et « Sortie prête »", false, true]] as const) {
+      test(`US 295 B1 : given ${ecran.nom}, un coup en ${sc.zone} et ${cas}, when l'écran Conseil s'affiche, then ${petitEcran ? '' : 'rien ne défile, '}aucune zone ne déborde et le coup, « 2 autres coups » et 👍/👎 sont dans leur zone et se touchent`, async ({ page }) => {
+        await page.setViewportSize({ width: ecran.width, height: ecran.height });
+        await onboardingTermine(page);
+        await simulerServices(page, hubeau ? sc.eau : null, sc.date);
+        await page.goto('/');
+        await page.getByRole('button', { name: /^Espèce/ }).click();
+        await page.getByRole('radio', { name: sc.espece }).click();
+        await conseilAffiche(page);
+        if (sortie) {
+          await page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: 'Ma sortie' }).click();
+          await expect(page.getByRole('status').filter({ hasText: 'Sortie prête' })).toBeVisible();
+          await expect(riviere(page).getByText('Conseil moins précis')).toBeVisible();
+        }
 
-      // Aucune zone ne déborde.
-      const debordements = await riviere(page).getByRole('group').evaluateAll((zones) =>
-        zones.map((z) => ({ nom: z.getAttribute('aria-label'), scroll: z.scrollHeight, client: z.clientHeight })),
-      );
-      for (const z of debordements) expect(z.scroll, `zone ${z.nom}`).toBeLessThanOrEqual(z.client);
+        const zone = riviere(page).getByRole('group').filter({ has: page.getByRole('link', { name: /^01\b/ }) });
+        if (hubeau) await expect(zone).toHaveAttribute('aria-label', sc.zone);
 
-      // Le coup et ses boutons sont entièrement dans la zone du coup.
-      const zone = riviere(page).getByRole('group').filter({ has: page.getByRole('link', { name: /^01\b/ }) });
-      const boite = (await zone.boundingBox())!;
-      const dedans = async (nom: string, cible: ReturnType<Page['locator']>) => {
-        await cible.scrollIntoViewIfNeeded();
-        const z = (await zone.boundingBox())!;
-        const b = (await cible.boundingBox())!;
-        expect(b.x, `${nom} : bord gauche`).toBeGreaterThanOrEqual(z.x - 1);
-        expect(b.x + b.width, `${nom} : bord droit`).toBeLessThanOrEqual(z.x + z.width + 1);
-        expect(b.y, `${nom} : haut`).toBeGreaterThanOrEqual(z.y - 1);
-        expect(b.y + b.height, `${nom} : bas`).toBeLessThanOrEqual(z.y + z.height + 1);
-      };
-      expect(boite.height).toBeGreaterThan(0);
-      const autres = riviere(page).getByRole('button', { name: /autres? coups?/ });
-      const oui = riviere(page).getByRole('button', { name: "Oui, ce conseil m'a aidé" });
-      const non = riviere(page).getByRole('button', { name: "Non, ce conseil ne m'a pas aidé" });
-      await dedans('le coup 01', coupUn(page));
-      await dedans('« 2 autres coups »', autres);
-      await dedans('👍', oui);
-      await dedans('👎', non);
+        // Sans défilement : l'écran tient (sauf 320 × 568, où le contenu minimal peut ne pas tenir).
+        if (!petitEcran) {
+          const d = await defilement(page);
+          expect(d.scroll, 'défilement de ion-content').toBeLessThanOrEqual(d.client);
+        }
+        // Aucune zone ne déborde ; les zones vides se réduisent à leur nom sur les petits écrans.
+        const zones = await riviere(page).getByRole('group').evaluateAll((els) =>
+          els.map((z) => ({ nom: z.getAttribute('aria-label'), scroll: z.scrollHeight, client: z.clientHeight, haut: z.getBoundingClientRect().height })),
+        );
+        const nomDuCoup = await zone.getAttribute('aria-label');
+        for (const z of zones) {
+          expect(z.scroll, `zone ${z.nom}`).toBeLessThanOrEqual(z.client);
+          if (ecran.height < 700 && z.nom !== nomDuCoup) expect(z.haut, `zone vide ${z.nom}`).toBeLessThanOrEqual(40);
+        }
 
-      // Vrais clics, sans `force` : rien ne les recouvre.
-      await autres.click();
-      const feuille = page.getByRole('dialog', { name: /autres? coups?/ });
-      await expect(feuille).toBeVisible();
-      await feuille.getByRole('button', { name: 'Fermer' }).click();
-      await expect(feuille).toHaveCount(0);
-      await oui.click();
-      await expect(riviere(page).getByText('Merci pour ton retour !')).toBeVisible();
-      await coupUn(page).click();
-      await expect(page.getByText('Détail du conseil')).toBeVisible();
-    });
+        // Le coup et ses boutons sont entièrement dans la zone du coup, sans avoir fait défiler la page (sauf 320 × 568).
+        const dedans = async (nom: string, cible: ReturnType<Page['locator']>) => {
+          if (petitEcran) await cible.scrollIntoViewIfNeeded();
+          const z = (await zone.boundingBox())!;
+          const b = (await cible.boundingBox())!;
+          expect(b.x, `${nom} : bord gauche`).toBeGreaterThanOrEqual(z.x - 1);
+          expect(b.x + b.width, `${nom} : bord droit`).toBeLessThanOrEqual(z.x + z.width + 1);
+          expect(b.y, `${nom} : haut`).toBeGreaterThanOrEqual(z.y - 1);
+          expect(b.y + b.height, `${nom} : bas`).toBeLessThanOrEqual(z.y + z.height + 1);
+          if (!petitEcran) expect(b.y + b.height, `${nom} : au-dessus du dock`).toBeLessThanOrEqual((await page.getByRole('navigation', { name: 'Navigation' }).boundingBox())!.y + 1);
+        };
+        const autres = riviere(page).getByRole('button', { name: /autres? coups?/ });
+        const oui = riviere(page).getByRole('button', { name: "Oui, ce conseil m'a aidé" });
+        const non = riviere(page).getByRole('button', { name: "Non, ce conseil ne m'a pas aidé" });
+        await dedans('le coup 01', coupUn(page));
+        await dedans('« 2 autres coups »', autres);
+        await dedans('👍', oui);
+        await dedans('👎', non);
+
+        // Vrais clics, sans `force` : rien ne les recouvre.
+        await autres.click();
+        const feuille = page.getByRole('dialog', { name: /autres? coups?/ });
+        await expect(feuille).toBeVisible();
+        await feuille.getByRole('button', { name: 'Fermer' }).click();
+        await expect(feuille).toHaveCount(0);
+        await oui.click();
+        await expect(riviere(page).getByText('Merci pour ton retour !')).toBeVisible();
+        await coupUn(page).click();
+        await expect(page.getByText('Détail du conseil')).toBeVisible();
+      });
+    }
   }
 }
 

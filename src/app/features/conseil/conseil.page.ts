@@ -157,7 +157,8 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
     .ecran {
       display: flex;
       flex-direction: column;
-      min-height: 100%;
+      /* Hauteur définie : la rivière prend le reste ; ion-content ne défile que si le contenu minimal ne tient vraiment pas. */
+      height: 100%;
       color: var(--lr-texte);
     }
     .ic {
@@ -295,6 +296,11 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
       gap: 12px;
       min-height: 52px;
       padding: 0 16px 10px;
+    }
+    @media (max-height: 700px) {
+      .eau {
+        padding-bottom: 2px;
+      }
     }
     .temp {
       font-family: var(--lr-police-titre);
@@ -839,7 +845,10 @@ export class ConseilPage implements OnInit {
       afterNextRender(
         () =>
           setTimeout(() => {
-            this.hostEl.nativeElement.querySelector<HTMLElement>(rang === 1 ? '#coup-1' : '#autres-coups')?.focus({ preventScroll: true });
+            const cible = this.hostEl.nativeElement.querySelector<HTMLElement>(rang === 1 ? '#coup-1' : '#autres-coups');
+            cible?.focus();
+            // Le focus ne doit pas laisser la cible hors de l'écran (petit écran où ion-content défile).
+            cible?.scrollIntoView?.({ block: 'nearest' });
           }),
         { injector: this.injector },
       );
@@ -1395,7 +1404,8 @@ export class ConseilPage implements OnInit {
    */
   private rafraichirLegal(): void {
     const lieu = this.lieu;
-    if (this.detruit || !lieu || this.moment() !== null || this.etat().type !== 'pret') return;
+    // Pendant qu'un détail est ouvert, rien ne change sous lui : le retour sur l'écran relance ce calcul.
+    if (this.detruit || !lieu || this.enfantOuvert() || this.moment() !== null || this.etat().type !== 'pret') return;
     const maintenant = new Date();
     const coordonnees = { latitude: lieu.latitude, longitude: lieu.longitude };
     const heures = heuresLegales(this.astro.soleil(coordonnees, maintenant));
@@ -1413,7 +1423,14 @@ export class ConseilPage implements OnInit {
       this.relancable = null;
       this.detailStore.details.set([]);
       this.detailStore.pourLaBoite.set(null);
+    }
+    if (!legale) {
+      // Déjà hors des heures : passé minuit, « demain » devient « aujourd'hui » et les heures changent de jour.
       this.conseil.set(this.horsHeures(maintenant, null, heures, demain));
+      const etat = this.etat();
+      if (etat.type === 'pret') {
+        this.etat.set({ type: 'pret', carte: { ...etat.carte, heuresLegales: formaterHeuresLegales(heures.debut, heures.fin), date: maintenant } });
+      }
     }
   }
 
