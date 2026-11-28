@@ -68,7 +68,9 @@ async function ouvrir(spotsLus: LectureSpots, avant: Avant = {}) {
       },
       { provide: MomentJourneeService, useValue: { moment: () => 'jour' } },
       { provide: GeoService, useValue: { departement: () => '49' } },
-      { provide: AstroService, useValue: { soleil: () => ({ lever: new Date(0), coucher: new Date(0) }), lune: () => ({ phase: 'Premier croissant', fractionEclairee: 0.3 }) } },
+      // Le moment est toujours dans les heures légales (6 h avant, 6 h après l'instant de l'appel) : l'écran n'est jamais « hors des heures »,
+      // quelle que soit l'heure d'exécution ou le moment où le minuteur de l'écran recalcule l'état.
+      { provide: AstroService, useValue: { soleil: () => ({ lever: new Date(Date.now() - 6 * 3_600_000), coucher: new Date(Date.now() + 6 * 3_600_000) }), lune: () => ({ phase: 'Premier croissant', fractionEclairee: 0.3 }) } },
       { provide: MoteurService, useValue: { conseiller: async () => ({ conseils: [], explications: [] }) } },
     ],
   }).compileComponents();
@@ -211,7 +213,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
       page.querySelector<HTMLButtonElement>('nav button')!.click();
       await vi.waitFor(async () => {
         await stabiliser();
-        expect(page.querySelector('[role="alert"]')).not.toBeNull();
+        expect(page.querySelector('.message-sortie[role="alert"]')).not.toBeNull();
       });
 
       expect(store.sortiePrete(), resultat.statut).toBeNull();

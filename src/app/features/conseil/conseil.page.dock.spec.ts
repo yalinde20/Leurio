@@ -49,7 +49,9 @@ async function ouvrir(enLigne = true) {
       },
       { provide: MomentJourneeService, useValue: { moment: () => 'jour' } },
       { provide: GeoService, useValue: { departement: () => '49' } },
-      { provide: AstroService, useValue: { soleil: () => ({ lever: new Date(0), coucher: new Date(0) }), lune: () => ({ phase: 'Premier croissant', fractionEclairee: 0.3 }) } },
+      // Le moment est toujours dans les heures légales (6 h avant, 6 h après l'instant de l'appel) : l'écran n'est jamais « hors des heures »,
+      // quelle que soit l'heure d'exécution ou le moment où le minuteur de l'écran recalcule l'état.
+      { provide: AstroService, useValue: { soleil: () => ({ lever: new Date(Date.now() - 6 * 3_600_000), coucher: new Date(Date.now() + 6 * 3_600_000) }), lune: () => ({ phase: 'Premier croissant', fractionEclairee: 0.3 }) } },
       { provide: MoteurService, useValue: { conseiller: async () => ({ conseils: [], explications: [] }) } },
     ],
   }).compileComponents();
@@ -95,7 +97,8 @@ describe('ConseilPage : dock et avatar (US 294)', () => {
     bouton.click();
     await vi.waitFor(async () => {
       await stabiliser();
-      const alerte = page.querySelector('[role="alert"]');
+      const alerte = page.querySelector('.message-sortie[role="alert"]');
+      expect(page.querySelector('app-riviere-en-coupe [role="alert"]'), 'la rivière n\'est pas hors des heures légales').toBeNull();
       expect(compact(alerte?.textContent)).toBe('Pas de réseau : prépare ta sortie avant de partir');
       expect(alerte!.compareDocumentPosition(page.querySelector('nav[aria-label="Navigation"]')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
