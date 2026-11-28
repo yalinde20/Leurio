@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.62.0](https://github.com/yalinde20/Leurio/compare/v1.61.0...v1.62.0) (2026-11-28)
+
+
+### Features
+
+* **US 287:** suppression du compte sans Storage quand le flag photosLeurres est désactivé ([2f620c9](https://github.com/yalinde20/Leurio/commit/2f620c9f33643057470991082b69760b84b95447))
+* **US 288:** zone photo masquée quand le flag photosLeurres est désactivé ([b476eb6](https://github.com/yalinde20/Leurio/commit/b476eb67d25259fb80c719a6d6d7a47eed9cea36))
+* **US 292:** tokens clair et sombre « jeu sérieux », polices Barlow embarquées, lint des couleurs dans les styles TypeScript ([4d30c6f](https://github.com/yalinde20/Leurio/commit/4d30c6ffad5ad51ce6fe2997d56da9e95442d449))
+* **US 293:** pictogramme de famille dans la Boîte (composant, chargement, cache hors ligne) ([417d9d2](https://github.com/yalinde20/Leurio/commit/417d9d251f7e0fcca14c93dcde03097bb94247c6))
+* **US 293:** pictogrammes SVG des familles et validation du contenu (en cours) ([b499cfb](https://github.com/yalinde20/Leurio/commit/b499cfbcd0aa4c21f691178f40dae7cad48a56bc))
+* **US 294:** dock Boîte · Ma sortie · Spots, avatar Compte et retour Conseil ([e5ea5f7](https://github.com/yalinde20/Leurio/commit/e5ea5f7acb70d05de06634162bcaeeaa56544424))
+* **US 294:** le Conseil garde le spot choisi et le message de sortie au retour (décision A du propriétaire) ([e8e4e2b](https://github.com/yalinde20/Leurio/commit/e8e4e2b13273129c1645967aa26faa19d31e0bd6))
+* **US 295:** écran Conseil « rivière en coupe » (rivière, feuilles Conditions, Réglementation, 2 autres coups, saisie) et adaptation des tests de composants ([8a92fe5](https://github.com/yalinde20/Leurio/commit/8a92fe5e96cdfab4efbab8d25ab4d9c75a1ac893))
+* **US 295:** lien de la fédération dans l'alerte hors des heures légales ; test du critère 6 aligné sur la section 6 validée ([ba93a84](https://github.com/yalinde20/Leurio/commit/ba93a8410f061d00e60071c5289eacb138702404))
+* **US 295:** petits écrans, note sans conseil, mention et lien dans Conditions, ligne d'état des moments choisis, feuille au-dessus du clavier ([935600c](https://github.com/yalinde20/Leurio/commit/935600c474693661babf68f75a6700b6e7db2571))
+
+
+### Bug Fixes
+
+* **US 288:** flags forcés sur émulateurs pour les e2e photo ([b133b6a](https://github.com/yalinde20/Leurio/commit/b133b6a3cf54111adba6bc941b9c194d37e990bf))
+* **US 292:** accent décoratif, polices des chiffres et libellés, lint des couleurs via stylelint ([f26ef5f](https://github.com/yalinde20/Leurio/commit/f26ef5f6ae131ced48124d1a51d41f129a6dc45c))
+* **US 293:** corrections après revue (fixtures, exception de l'accent, validation du SVG, cache hors ligne) ([7c2a48d](https://github.com/yalinde20/Leurio/commit/7c2a48d7ed16650d0da7e9bd9fa0f0b79dc90eaf))
+* **US 294:** message de sortie lisible, clic modifié natif, marge iOS du bas, nettoyage ([9acda9d](https://github.com/yalinde20/Leurio/commit/9acda9dcd1735b6dd4a81d4596fda0e94c7975dd))
+* **US 294:** reprise du Conseil sans concurrence, succès de sortie seul gardé, marge iOS, nettoyage du compte ([63af046](https://github.com/yalinde20/Leurio/commit/63af04613be5ad29f12f37dd732e3505fe11d729))
+* **US 295:** état réglementaire de « Maintenant » suivi à l'horloge, heures de demain la nuit, contraste de l'avis, tests plus stricts ([a432889](https://github.com/yalinde20/Leurio/commit/a4328894d16e95c39dac474f2a120b4b1cd83837))
+* **US 295:** zones vides réduites à leur nom, plus de défilement sur iPhone ; minuit, détail ouvert, focus et pincement ([c194f0d](https://github.com/yalinde20/Leurio/commit/c194f0d084a993473d455a143cd29a9f6c5a5d94))
+
 ## [1.61.0](https://github.com/yalinde20/Leurio/compare/v1.60.0...v1.61.0) (2026-11-25)
 
 
