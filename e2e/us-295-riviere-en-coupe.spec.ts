@@ -272,7 +272,10 @@ test('US 295 critère 6 : given un moment hors des heures légales, when l\'écr
   await expect(alerte).toBeVisible();
   await expect(alerte).toContainText(/Hors des heures légales/);
   await expect(alerte).toContainText(/à vérifier dans l'arrêté de ton département/i);
-  await expect(riviere(page).getByRole('link')).toHaveCount(0);
+  // Aucun coup : aucun lien « 01 », « 02 »… Le seul lien de la rivière est celui de la fédération dans l'alerte (section 6 validée).
+  await expect(riviere(page).getByRole('link', { name: /^0\d/ })).toHaveCount(0);
+  await expect(riviere(page).getByRole('link')).toHaveCount(1);
+  await expect(alerte.getByRole('link', { name: new RegExp(echapper(FEDERATION_49.nom)) })).toHaveAttribute('href', FEDERATION_49.url);
   await expect(riviere(page).getByRole('button', { name: /2 autres coups/ })).toHaveCount(0);
   const ligne = ligneEtat(page, /^Pêche fermée jusqu.à \d{1,2} h \d{2}/);
   await expect(ligne).toBeVisible();

@@ -109,4 +109,27 @@ describe('RiviereEnCoupeComponent (US 295)', () => {
     const lignes = (env.page.querySelector('section') as HTMLElement).style.gridTemplateRows;
     expect(lignes).toBe('minmax(34px, 1fr) minmax(34px, 1fr) minmax(min-content, 1fr) 18px');
   });
+
+  it('given une fédération connue, when la rivière est hors des heures légales, then l\'alerte porte son lien (nom ↗, nouvel onglet)', async () => {
+    const env = await afficher({
+      type: 'hors heures',
+      titre: 'Hors des heures légales : pas de pêche aux carnassiers la nuit.',
+      heures: 'Heures légales demain : 7 h 54 – 17 h 44',
+      federation: { nom: 'Fédération de pêche de Maine-et-Loire', url: 'https://www.federation-peche49.fr' },
+    });
+
+    const liens = env.page.querySelectorAll('a');
+    expect(liens).toHaveLength(1);
+    expect(env.page.querySelector('[role="alert"]')?.contains(liens[0])).toBe(true);
+    expect(liens[0].textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire ↗');
+    expect(liens[0].getAttribute('href')).toBe('https://www.federation-peche49.fr');
+    expect(liens[0].getAttribute('target')).toBe('_blank');
+    expect(liens[0].getAttribute('rel')).toContain('noopener');
+  });
+
+  it('given aucune fédération connue, when la rivière est hors des heures légales, then l\'alerte n\'a aucun lien', async () => {
+    const env = await afficher({ type: 'hors heures', titre: 'Hors des heures légales.', heures: 'Heures légales demain : 7 h 54 – 17 h 44' });
+
+    expect(env.page.querySelector('a')).toBeNull();
+  });
 });

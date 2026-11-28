@@ -29,7 +29,7 @@ export interface CoupRiviere {
 export type VueRiviere =
   | { type: 'coups'; coups: CoupRiviere[]; explications: string[] }
   | { type: 'message'; texte: string; explications?: string[] }
-  | { type: 'hors heures'; titre: string; heures: string };
+  | { type: 'hors heures'; titre: string; heures: string; federation?: { nom: string; url: string } };
 
 /** La demande d'ouverture d'un détail : la page décide de la navigation (le lien garde son href). */
 export interface DemandeDetail {
@@ -230,6 +230,16 @@ export interface AvisDonne {
       display: block;
       font-size: 13px;
     }
+    .lien-federation {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      color: var(--lr-primaire);
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: underline;
+    }
     .note-riviere {
       margin: 0 0 4px;
     }
@@ -284,6 +294,9 @@ export interface AvisDonne {
                   <b>{{ horsHeures()?.titre }}</b>
                   {{ horsHeures()?.heures }}
                   <small>À vérifier dans l'arrêté de ton département.</small>
+                  @if (horsHeures()?.federation; as f) {
+                    <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{ f.nom }} ↗</a>
+                  }
                 </p>
               }
             }
@@ -395,7 +408,7 @@ export class RiviereEnCoupeComponent {
     return v.type === 'message' ? v.texte : '';
   }
 
-  protected horsHeures(): { titre: string; heures: string } | null {
+  protected horsHeures(): { titre: string; heures: string; federation?: { nom: string; url: string } } | null {
     const v = this.vue();
     return v.type === 'hors heures' ? v : null;
   }

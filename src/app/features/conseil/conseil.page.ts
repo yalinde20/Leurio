@@ -1059,6 +1059,7 @@ export class ConseilPage implements OnInit {
           type: 'hors heures',
           titre: 'Hors des heures légales : pas de pêche aux carnassiers la nuit.',
           heures: `Heures légales ${etat.jour} : ${etat.heures}`,
+          ...(this.carte()?.federation ? { federation: { nom: this.carte()!.federation!.nom, url: this.carte()!.federation!.url } } : {}),
         };
       case 'cartes': {
         if (etat.cartes.length === 0) {
