@@ -77,3 +77,19 @@ export function formaterVent(vent: number | null): string {
 export function formaterHeuresLegales(debut: Date, fin: Date): string {
   return `${formaterHeure(debut)} – ${formaterHeure(fin)}`;
 }
+
+/** Le ciel en un mot, d'après la couverture nuageuse (pourcentage). */
+function motCiel(nuages: number): string {
+  if (nuages < 25) return 'Dégagé';
+  if (nuages < 60) return 'Peu nuageux';
+  if (nuages < 85) return 'Nuageux';
+  return 'Couvert';
+}
+
+/** « Nuageux, vent 12 km/h » : la ligne météo sous la température de l'eau ; chaque partie manquante est omise. */
+export function formaterMeteo(nuages: number | null, vent: number | null): string {
+  const ciel = nuages === null ? null : motCiel(nuages);
+  const venteuse = vent === null ? 'vent indisponible' : `vent ${Math.round(vent)} km/h`;
+  if (ciel === null) return `${venteuse.charAt(0).toUpperCase()}${venteuse.slice(1)}`;
+  return `${ciel}, ${venteuse}`;
+}

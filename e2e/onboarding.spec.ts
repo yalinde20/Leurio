@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
+import { conditionsAffichees, conseilAffiche, ecranConseil } from './conseil-helpers';
 
 // US 89 : l'onboarding en 3 pages, dans un vrai navigateur sur un téléphone (iPhone, 390 px).
 // Maquette : docs/maquettes/us-89-onboarding-3-pages.html. Aucun service réel : Hub'Eau répond par un faux relevé, Open-Meteo est coupé.
@@ -154,9 +155,9 @@ test.describe('US 89 : onboarding', () => {
     await page.getByRole('button', { name: 'Autoriser la localisation', exact: true }).click();
 
     await expect(page).toHaveURL(/\/conseil$/);
-    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
-    await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+    await ecranConseil(page);
+    await conditionsAffichees(page);
+    await conseilAffiche(page);
     expect(await appelsGeolocalisation(page)).toBeGreaterThan(0);
   });
 
@@ -168,8 +169,8 @@ test.describe('US 89 : onboarding', () => {
     await page.getByRole('button', { name: 'Plus tard', exact: true }).click();
 
     await expect(page).toHaveURL(/\/conseil$/);
-    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
-    await expect(page.getByText('Localisation indisponible : active la localisation ou choisis un spot enregistré.')).toBeVisible();
+    await ecranConseil(page);
+    await expect(page.getByText('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».')).toBeVisible();
     expect(await appelsGeolocalisation(page)).toBe(0);
   });
 
@@ -181,7 +182,7 @@ test.describe('US 89 : onboarding', () => {
     await page.getByRole('button', { name: 'Autoriser la localisation', exact: true }).click();
 
     await expect(page).toHaveURL(/\/conseil$/);
-    await expect(page.getByText('Localisation indisponible : active la localisation ou choisis un spot enregistré.')).toBeVisible();
+    await expect(page.getByText('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».')).toBeVisible();
     expect(await appelsGeolocalisation(page)).toBeGreaterThan(0);
   });
 
@@ -195,7 +196,7 @@ test.describe('US 89 : onboarding', () => {
 
     await page.goto('/');
 
-    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
+    await ecranConseil(page);
     await expect(page).toHaveURL(/\/conseil$/);
     await expect(titre(page, 'Leurio, ton conseil de pêche au leurre')).toHaveCount(0);
     await expect(page.getByRole('navigation', { name: 'Navigation' })).toBeVisible();

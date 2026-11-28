@@ -32,6 +32,7 @@ import { DocumentSpot, SOURCE_SPOTS } from '../../core/data/spots.service';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
+import { textesDesCoups } from '../conseil/conseil.page.aides';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 const JUIN = new Date('2026-06-20T10:00:00Z');
@@ -266,10 +267,8 @@ const boutonConseil = (env: Env, libelle: string): HTMLButtonElement => {
   if (!b) throw new Error(`aucun bouton « ${libelle} »`);
   return b;
 };
-const cartesConseil = (env: Env): HTMLElement[] =>
-  [...pageConseil(env).querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
+/** Les coups (US 295) : le « 01 » de la rivière, puis les « 02 » et « 03 » de la feuille « 2 autres coups ». */
+const cartesConseil = (env: Env): Promise<string[]> => textesDesCoups({ page: pageConseil(env), stabiliser: env.stabiliser });
 
 describe('SpotsPage : ouvrir le conseil pour un spot (US 7)', () => {
   it('critère 1 : given un spot ouvert, when je regarde les actions, then les boutons « Voir le conseil » et « Préparer ma sortie » sont affichés dans sa ligne, hors du bouton de la ligne, sous le lien « Site de la fédération »', async () => {
@@ -341,7 +340,7 @@ describe('SpotsPage : ouvrir le conseil pour un spot (US 7)', () => {
     expect(dernier.lieu).toEqual({ latitude: 47.43, longitude: -0.52 });
     expect(dernier.spot).toEqual({ categorie: 2, departement: '49' });
     expect(env.appels.moteur.at(-1)).toMatchObject({ categorie: 2, departement: '49' });
-    const cartes = cartesConseil(env).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Lame vibrante'));
   });

@@ -13,6 +13,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { temperatureAffichee } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -108,14 +109,14 @@ describe('ConseilPage : conseil indisponible (US 81, écart validé)', () => {
   ];
 
   for (const [libelle, pannes] of cas) {
-    it(`given ${libelle}, when l'écran Conseil s'affiche, then « Conseil indisponible pour le moment. » remplace les cartes et la carte « Conditions » reste remplie`, async () => {
+    it(`given ${libelle}, when l'écran Conseil s'affiche, then « Conseil indisponible pour le moment. » remplace les coups et la température de l'eau reste affichée`, async () => {
       const page = await afficher(pannes);
 
       const texte = compact(page.textContent);
       expect(texte).toContain(compact('Conseil indisponible pour le moment.'));
       expect(texte).not.toContain(compact('Calcul du conseil…'));
-      expect(texte).not.toContain(compact('Animation :'));
-      expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
+      expect(page.querySelector('a.coup')).toBeNull();
+      expect(temperatureAffichee(page)).toBe(compact('11,5 °C'));
       expect(texte).toContain(compact('Ma sortie'));
     });
   }

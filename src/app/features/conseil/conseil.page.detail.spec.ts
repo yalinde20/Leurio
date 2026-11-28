@@ -29,6 +29,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { compact, liensDesCoups, ouvrirAutresCoups, ouvrirConditions, textesDesCoups } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
 const LEVER = new Date('2026-11-09T06:32:00Z');
@@ -174,30 +175,16 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
 
-function cartes(page: HTMLElement): HTMLElement[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card') && compact(e.textContent).includes('Voir'),
-  );
-}
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
+/** Le texte des trois coups de l'écran Conseil (01 dans la rivière, 02 et 03 dans la feuille « 2 autres coups »). */
+const top3 = (env: Env): Promise<string[]> => textesDesCoups(env);
 
-/** L'élément le plus interne dont le texte contient « Voir le détail » dans la carte. */
-function lienDetail(carte: HTMLElement): HTMLElement {
-  const candidats = [...carte.querySelectorAll<HTMLElement>('*')].filter((e) => compact(e.textContent).includes(compact('Voir le détail')));
-  const interne = candidats.filter((e) => !candidats.some((autre) => autre !== e && e.contains(autre)));
-  if (!interne[0]) throw new Error('Aucune ligne « Voir le détail » dans la carte');
-  return interne[0];
-}
-
+/** Touche le coup de ce rang : le « 01 » de la rivière, ou le « 02 » et le « 03 » de la feuille « 2 autres coups ». */
 async function ouvrirDetail(env: Env, rang: number): Promise<void> {
-  const carte = cartesConseil(env.page)[rang - 1];
-  if (!carte) throw new Error(`Pas de carte n° ${rang}`);
-  lienDetail(carte).click();
+  if (rang > 1) await ouvrirAutresCoups(env);
+  const lien = liensDesCoups(env.page).find((l) => compact(l.textContent).startsWith(`0${rang}`));
+  if (!lien) throw new Error(`Pas de coup n° ${rang}`);
+  lien.click();
   await env.stabiliser();
 }
 
@@ -232,14 +219,13 @@ async function choisirDemain10h(env: Env): Promise<void> {
 }
 
 describe('Détail d\'un conseil (US 86)', () => {
-  it("critère 1 : given l'écran Conseil montre 3 cartes, when je regarde chaque carte, then elle est touchable avec une ligne « Voir le détail »", async () => {
+  it("critère 1 : given l'écran Conseil montre 3 coups, when je regarde chaque coup, then c'est un lien vers son détail", async () => {
     const env = await ouvrirLApp();
+    await ouvrirAutresCoups(env);
 
-    expect(cartesConseil(env.page)).toHaveLength(3);
-    for (const carte of cartesConseil(env.page)) {
-      expect(compact(carte.textContent)).toContain(compact('Voir le détail'));
-    }
-    expect(cartes(env.page)).toHaveLength(3);
+    const liens = liensDesCoups(env.page);
+    expect(liens).toHaveLength(3);
+    liens.forEach((lien, i) => expect(lien.getAttribute('href')).toBe(`/conseil/detail/${i + 1}`));
   });
 
   it("critère 1 : given l'écran Conseil, when je touche la carte n° 1 (shad), then le détail s'ouvre avec le titre « Détail du conseil », la couleur, la taille, le poids de tête et le poste où lancer", async () => {
@@ -342,7 +328,7 @@ describe('Détail d\'un conseil (US 86)', () => {
   it("critère 3 : given le détail ouvert après avoir choisi demain 10 h, when je touche « ‹ Conseil », then l'écran Conseil montre le même moment, la même espèce et le même top 3 sans nouveau calcul", async () => {
     const env = await ouvrirLApp();
     await choisirDemain10h(env);
-    const avant = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const avant = await top3(env);
     const momentAvant = compact(selecteurMoment(env.page).textContent);
     expect(avant).toHaveLength(3);
     expect(momentAvant).toContain(compact('Demain 10 h'));
@@ -357,7 +343,7 @@ describe('Détail d\'un conseil (US 86)', () => {
     expect(detailOuvert(env.page)).toBe(false);
     expect(compact(selecteurMoment(env.page).textContent)).toBe(momentAvant);
     expect(compact(env.page.textContent)).toContain(compact('Toutes les espèces'));
-    expect(cartesConseil(env.page).map((c) => compact(c.textContent))).toEqual(avant);
+    expect(await top3(env)).toEqual(avant);
     expect(env.appelsMoteur).toHaveLength(moteurAvant);
     expect(env.appelsReleve).toHaveLength(releveAvant);
     expect(compact(env.page.textContent)).not.toContain('Chargement');
@@ -366,7 +352,7 @@ describe('Détail d\'un conseil (US 86)', () => {
 
   it("critère 3 : given le détail ouvert, when je reviens en arrière avec le retour du navigateur, then l'écran Conseil réaffiche le même top 3 sans nouveau calcul", async () => {
     const env = await ouvrirLApp();
-    const avant = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const avant = await top3(env);
     const moteurAvant = env.appelsMoteur.length;
     const releveAvant = env.appelsReleve.length;
 
@@ -377,7 +363,7 @@ describe('Détail d\'un conseil (US 86)', () => {
     await env.stabiliser();
 
     expect(detailOuvert(env.page)).toBe(false);
-    expect(cartesConseil(env.page).map((c) => compact(c.textContent))).toEqual(avant);
+    expect(await top3(env)).toEqual(avant);
     expect(env.appelsMoteur).toHaveLength(moteurAvant);
     expect(env.appelsReleve).toHaveLength(releveAvant);
   });
@@ -392,15 +378,14 @@ async function choisirEspece(env: Env, nom: string): Promise<void> {
   [...f.querySelectorAll<HTMLElement>('button')].find((e) => compact(e.textContent).includes(compact(nom)))!.click();
   await env.stabiliser();
 }
-const carteConditions = (page: HTMLElement): string =>
-  compact([...page.querySelectorAll<HTMLElement>('section')].find((e) => e.querySelector('h2')?.textContent?.trim() === 'Conditions')?.textContent);
+const carteConditions = async (env: Env): Promise<string> => compact((await ouvrirConditions(env)).textContent);
 
 describe('Détail d\'un conseil, revue (US 86)', () => {
   it("critère 3 : given une espèce choisie et un détail ouvert puis fermé, when je reviens, then la même espèce, le même top 3 et la même carte Conditions sont affichés sans nouveau calcul", async () => {
     const env = await ouvrirLApp();
     await choisirEspece(env, 'Sandre');
-    const avant = cartesConseil(env.page).map((c) => compact(c.textContent));
-    const conditionsAvant = carteConditions(env.page);
+    const avant = await top3(env);
+    const conditionsAvant = await carteConditions(env);
     expect(avant).toHaveLength(3);
     expect(conditionsAvant).toContain(compact('Conditions'));
     const moteurAvant = env.appelsMoteur.length;
@@ -412,30 +397,38 @@ describe('Détail d\'un conseil, revue (US 86)', () => {
 
     expect(detailOuvert(env.page)).toBe(false);
     expect(compact(boutons(env.page).find((e) => compact(e.textContent).startsWith(compact('Espèce')))!.textContent)).toContain('Sandre');
-    expect(cartesConseil(env.page).map((c) => compact(c.textContent))).toEqual(avant);
-    expect(carteConditions(env.page)).toBe(conditionsAvant);
+    expect(await top3(env)).toEqual(avant);
+    expect(await carteConditions(env)).toBe(conditionsAvant);
     expect(env.appelsMoteur).toHaveLength(moteurAvant);
     expect(env.appelsReleve).toHaveLength(releveAvant);
   });
 
-  it("given un détail ouvert puis fermé, when je reviens, then le focus est sur le bouton « Voir le détail » de la carte ouverte", async () => {
+  it("given le détail du coup 01 ouvert puis fermé, when je reviens, then le focus est sur le lien du coup 01", async () => {
+    const env = await ouvrirLApp();
+    await ouvrirDetail(env, 1);
+    bouton(env.page, 'Conseil').click();
+    await env.stabiliser();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(document.activeElement).toBe(env.page.querySelector('#coup-1'));
+  });
+
+  it("given le détail du coup 02 ouvert puis fermé, when je reviens, then le focus est sur « 2 autres coups »", async () => {
     const env = await ouvrirLApp();
     await ouvrirDetail(env, 2);
     bouton(env.page, 'Conseil').click();
     await env.stabiliser();
+    await new Promise((r) => setTimeout(r, 0));
 
-    const actif = document.activeElement as HTMLElement | null;
-    expect(actif).toBe(lienDetail(cartesConseil(env.page)[1]));
+    expect(document.activeElement).toBe(env.page.querySelector('#autres-coups'));
   });
 
-  it("given trois cartes, when je lis les boutons « Voir le détail », then chacun est décrit par le titre de sa carte", () => {
-    return ouvrirLApp().then((env) => {
-      const decrits = cartesConseil(env.page).map((c) => {
-        const b = lienDetail(c);
-        return compact(c.querySelector(`#${b.getAttribute('aria-describedby')}`)?.textContent);
-      });
-      expect(decrits).toEqual([compact('Shad'), compact('Lipless (vibrant sans bavette)'), compact('Minnow (jerkbait)')]);
-    });
+  it("given trois coups, when je lis leurs liens, then chacun est nommé par le type de leurre de son coup", async () => {
+    const env = await ouvrirLApp();
+    await ouvrirAutresCoups(env);
+
+    const noms = liensDesCoups(env.page).map((l) => compact(l.textContent));
+    [compact('Shad'), compact('Lipless (vibrant sans bavette)'), compact('Minnow (jerkbait)')].forEach((nom, i) => expect(noms[i]).toContain(nom));
   });
 
   it("given « Toutes les espèces », when j'ouvre un détail, then le sous-titre se termine par « (espèce choisie : toutes) »", async () => {

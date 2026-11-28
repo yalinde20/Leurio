@@ -2,7 +2,7 @@
  * US 89 : ce que l'écran « Conseil » reprend de l'onboarding.
  *   - le niveau choisi (OnboardingStore.lire().niveau) est passé à `ConditionsService.releve({ …, niveau })` ; « debutant » si rien n'est gardé ;
  *   - « Plus tard » (OnboardingStore.localisationDifferee === true) : pour ce lancement, la page ne demande pas le GPS, affiche l'état
- *     « position introuvable » et le message « Localisation indisponible : active la localisation ou choisis un spot enregistré. ».
+ *     « position introuvable » et, dans la rivière, le message « Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ». » (US 295).
  */
 import { TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
@@ -107,7 +107,7 @@ describe('ConseilPage et onboarding (US 89)', () => {
     expect(appelsGps()).toBe(0);
     expect(appelsReleve).toHaveLength(0);
     expect(page.textContent).toContain('Position introuvable');
-    expect(page.textContent?.replace(/\s+/g, ' ')).toContain('Localisation indisponible : active la localisation ou choisis un spot enregistré.');
+    expect(page.textContent?.replace(/\s+/g, ' ')).toContain('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».');
   });
 
   it("critère 5 : given la localisation non différée, when l'écran « Conseil » s'affiche, then il demande le GPS une fois et affiche le conseil de ma position", async () => {

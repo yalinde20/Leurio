@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { ecranConseil } from './conseil-helpers';
 
 // US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
 test.beforeEach(async ({ page }) => onboardingTermine(page));
@@ -11,7 +12,7 @@ test('critère 0 : given l\'app démarrée, when on ouvre la page, then l\'écra
 
   await page.goto('/');
 
-  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(page.locator('ion-content')).toBeVisible();
   expect(erreurs).toEqual([]);
 });

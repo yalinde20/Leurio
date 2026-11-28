@@ -26,6 +26,7 @@ import { SOURCE_FEEDBACK } from '../../core/data/feedback.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition } from '../../core/data/position.service';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { compact, ecranDe, ouvrirAutresCoups, stabiliser } from './conseil.page.aides';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
@@ -105,25 +106,17 @@ async function afficher(envoyer: Envoi = async () => undefined) {
   }).compileComponents();
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   const fixture = TestBed.createComponent(ConseilPage);
-  const attendre = async () => {
-    for (let i = 0; i < 3; i++) {
-      await fixture.whenStable();
-      fixture.detectChanges();
-    }
-  };
+  const attendre = () => stabiliser(fixture);
   await attendre();
+  // Les avis des coups 02 et 03 sont dans la feuille « 2 autres coups » : on l'ouvre pour avoir les trois.
+  await ouvrirAutresCoups(ecranDe(fixture));
   return { page: fixture.nativeElement as HTMLElement, envois, navigate, attendre };
 }
 
 afterEach(() => vi.useRealTimers());
 
-const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s   ]/g, '');
-
-function cartes(page: HTMLElement): HTMLElement[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
-}
+/** Les trois lignes d'avis : celle du coup 01 (rivière), puis celles des coups 02 et 03 (feuille « 2 autres coups »). */
+const cartes = (page: HTMLElement): HTMLElement[] => [...page.querySelectorAll<HTMLElement>('app-avis-coup')];
 const OUI = "Oui, ce conseil m'a aidé";
 const NON = "Non, ce conseil ne m'a pas aidé";
 const bouton = (carte: HTMLElement, label: string) =>
@@ -143,15 +136,12 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     }
   });
 
-  it('critère 1 : given une carte, when je la regarde, then la ligne d\'avis est au-dessus de « Voir le détail »', async () => {
+  it("critère 1 : given le coup 01, when je regarde la ligne d'avis, then elle est hors du lien du coup (un tap sur 👍 n'ouvre pas le détail) et sur la ligne de « 2 autres coups »", async () => {
     const { page } = await afficher();
 
-    const carte = cartes(page)[0];
-    const avis = bouton(carte, OUI);
-    const detail = [...carte.querySelectorAll<HTMLElement>('button')].find((b) => compact(b.textContent).includes(compact('Voir le détail')));
-    expect(avis, 'bouton 👍').toBeDefined();
-    expect(detail, 'bouton Voir le détail').toBeDefined();
-    expect(avis!.compareDocumentPosition(detail!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const avis = cartes(page)[0];
+    expect(avis.closest('a'), "l'avis n'est pas dans le lien du coup 01").toBeNull();
+    expect(avis.parentElement?.querySelector('#autres-coups'), 'même ligne que « 2 autres coups »').not.toBeNull();
   });
 
   it("critère 2 : given une carte de conseil, when je touche « 👍 », then un document feedback est créé avec conseilId, typeId, techniqueId, utile à vrai, les conditions arrondies et la date", async () => {
@@ -180,7 +170,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(new Set(envois.map((e) => e['conseilId'])).size).toBe(3);
   });
 
-  it("critère 2 : given une carte de conseil, when je touche « 👍 », then la carte affiche « Merci pour ton retour ! » (role status) à la place des boutons, sans ouvrir le détail, et les autres cartes sont inchangées", async () => {
+  it("critère 2 : given une carte de conseil, when je touche « 👍 », then la ligne d'avis affiche « Merci pour ton retour ! » (role status) à la place des boutons, sans ouvrir le détail, et les autres cartes sont inchangées", async () => {
     const { page, navigate, attendre } = await afficher();
     const [premiere, deuxieme, troisieme] = cartes(page);
 
@@ -252,7 +242,7 @@ describe('ConseilPage : avis 👍 / 👎 sur un conseil (US 88)', () => {
     expect(new Date(envois[0]['date'] as string).toISOString()).toBe('2026-11-09T12:00:00.000Z');
   });
 
-  it("critère 5 : given je n'ai pas de réseau (l'envoi ne se termine jamais), when je touche « 👍 », then la carte affiche « Merci pour ton retour ! » sans erreur ni attente", async () => {
+  it("critère 5 : given je n'ai pas de réseau (l'envoi ne se termine jamais), when je touche « 👍 », then la ligne d'avis affiche « Merci pour ton retour ! » sans erreur ni attente", async () => {
     const { page, envois, attendre } = await afficher(() => new Promise<void>(() => undefined));
 
     bouton(cartes(page)[0], OUI)?.click();

@@ -23,6 +23,7 @@ import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ouvrirReglementation, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const NANTES: ResultatPosition = {
@@ -207,18 +208,17 @@ function boutonLieu(page: HTMLElement): HTMLButtonElement {
   if (!bouton) throw new Error('aucun bouton « Lieu »');
   return bouton;
 }
-const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('[role="dialog"]');
+const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('app-lieu-feuille [role="dialog"]');
 const lignes = (page: HTMLElement): HTMLElement[] => [...(feuille(page)?.querySelectorAll<HTMLElement>('[role="radiogroup"] [role="radio"]') ?? [])];
 const noms = (page: HTMLElement): string[] => lignes(page).map((l) => (l.textContent ?? '').replace(/[✓\s\u00a0\u202f]+$/g, '').trim());
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
-function bandeau(page: HTMLElement): HTMLElement {
-  const h3 = [...page.querySelectorAll('h3')].find((t) => t.textContent?.trim() === 'Réglementation');
-  const carte = h3?.closest('section');
-  if (!carte) throw new Error('aucun bandeau « Réglementation »');
-  return carte;
+/** Les trois coups (01, puis 02 et 03 par la feuille « 2 autres coups »), en texte compact. */
+const cartesConseil = (env: Env): Promise<string[]> => textesDesCoups(env);
+/** Le bandeau « Réglementation » : la feuille de la ligne d'état. */
+async function bandeau(env: Env): Promise<HTMLElement> {
+  await ouvrirReglementation(env);
+  const racine = env.page.querySelector<HTMLElement>('app-bandeau-reglementation');
+  if (!racine) throw new Error('aucun bandeau « Réglementation »');
+  return racine;
 }
 
 async function ouvrir(env: Env) {
@@ -293,20 +293,20 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     const dernier = env.appels.releves.at(-1)!;
     expect(dernier.lieu).toEqual({ latitude: 47.5, longitude: -0.9 });
     expect(dernier.spot).toEqual({ categorie: 2, departement: '49' });
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 10,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('10,5 °C'));
 
     // Conseil : le top 3 du spot.
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Lame vibrante'));
     expect(env.appels.moteur.at(-1)?.departement).toBe('49');
 
     // Bandeau : fédération du département du spot, catégorie du spot (2e : « Pêche : Ouvert » et non « 2e catégorie »).
     expect(env.appels.federations.at(-1)).toBe('49');
-    const texteBandeau = compact(bandeau(env.page).textContent);
+    const texteBandeau = compact((await bandeau(env)).textContent);
     expect(texteBandeau).toContain(compact('Pêche : Ouvert'));
     expect(texteBandeau).not.toContain(compact('2e catégorie'));
-    const liens = [...bandeau(env.page).querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    const liens = [...(await bandeau(env)).querySelectorAll('a')].map((a) => a.getAttribute('href'));
     expect(liens).toEqual(['https://fedepeche49.fr']);
   });
 
@@ -334,7 +334,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     const dernier = env.appels.releves.at(-1)!;
     expect(dernier.spot).toBeUndefined();
     expect(dernier.lieu).toEqual({ latitude: NANTES.disponible ? NANTES.latitude : 0, longitude: NANTES.disponible ? NANTES.longitude : 0 });
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it('critère 2 : given un spot choisi, when une nouvelle page s\'ouvre (nouvelle ouverture de l\'app), then le lieu repart sur « Ma position »', async () => {
@@ -382,7 +382,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
   it('critère 4 : given la localisation est refusée et j\'ai un spot, when je choisis ce spot, then les 3 conseils s\'affichent pour ce spot', async () => {
     const env = await afficher({ position: REFUSEE });
     expect(compact(env.page.textContent)).toContain(compact('Position introuvable'));
-    expect(cartesConseil(env.page)).toHaveLength(0);
+    expect(env.page.querySelectorAll('a.coup')).toHaveLength(0);
 
     expect(boutonLieu(env.page).disabled, 'le sélecteur « Lieu » reste actif sans GPS').toBe(false);
     await ouvrir(env);
@@ -390,7 +390,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
 
     expect(compact(env.page.textContent)).not.toContain(compact('Position introuvable'));
     expect(compact(env.page.textContent)).not.toContain(compact('Localisation indisponible'));
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Lame vibrante'));
     expect(compact(boutonLieu(env.page).textContent)).toContain(compact('Étang du moulin'));
@@ -403,7 +403,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     await choisir(env, 'La Sèvre à Clisson');
 
     expect(env.appels.releves.at(-1)!.spot).toEqual({ categorie: 1, departement: '44' });
-    const texte = compact(bandeau(env.page).textContent);
+    const texte = compact((await bandeau(env)).textContent);
     const iAlerte = texte.indexOf(compact('Fermé : 1re catégorie hors saison'));
     const iLigne = texte.indexOf(compact("Pêche : Fermé jusqu'au 13/03"));
     expect(iAlerte, 'alerte absente du bandeau').toBeGreaterThan(-1);
@@ -412,12 +412,12 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     // 1re catégorie : pas de quota de 2e catégorie.
     expect(texte).not.toContain(compact('Quota'));
     // Le top 3 reste affiché.
-    expect(cartesConseil(env.page)).toHaveLength(3);
+    expect(await cartesConseil(env)).toHaveLength(3);
   });
 
   it('critère 5 : given la position GPS (catégorie inconnue), when l\'écran « Conseil » s\'affiche le 11/11/2026, then le bandeau n\'annonce pas « 1re catégorie hors saison »', async () => {
     const env = await afficher();
 
-    expect(compact(bandeau(env.page).textContent)).not.toContain(compact('1re catégorie hors saison'));
+    expect(compact((await bandeau(env)).textContent)).not.toContain(compact('1re catégorie hors saison'));
   });
 });

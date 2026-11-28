@@ -24,6 +24,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { DocumentLeurre, SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
+import { compact, liensDesCoups, ouvrirAutresCoups } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -183,27 +184,12 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) =>
-      compact(e.textContent).includes(compact('Animation :')) &&
-      !e.querySelector('section, article, ion-card'),
-  );
-function lienDetail(carte: HTMLElement): HTMLElement {
-  const candidats = [...carte.querySelectorAll<HTMLElement>('*')].filter((e) =>
-    compact(e.textContent).includes(compact('Voir le détail')),
-  );
-  const interne = candidats.filter(
-    (e) => !candidats.some((autre) => autre !== e && e.contains(autre)),
-  );
-  if (!interne[0]) throw new Error('Aucune ligne « Voir le détail » dans la carte');
-  return interne[0];
-}
+/** Touche le coup de ce rang : le « 01 » de la rivière, ou le « 02 » et le « 03 » de la feuille « 2 autres coups » (US 295). */
 async function ouvrirDetail(env: Env, rang: number): Promise<void> {
-  const carte = cartesConseil(env.page)[rang - 1];
-  if (!carte) throw new Error(`Pas de carte n° ${rang}`);
-  lienDetail(carte).click();
+  if (rang > 1) await ouvrirAutresCoups(env);
+  const lien = liensDesCoups(env.page).find((l) => compact(l.textContent).startsWith(`0${rang}`));
+  if (!lien) throw new Error(`Pas de coup n° ${rang}`);
+  lien.click();
   await env.stabiliser();
 }
 const detailOuvert = (page: HTMLElement): boolean =>
@@ -211,11 +197,9 @@ const detailOuvert = (page: HTMLElement): boolean =>
 const LIBELLES = ['Dans ta boîte :', 'À la place, dans ta boîte :', 'Il te manque :'].map(compact);
 
 describe("Détail d'un conseil : le leurre de ma boîte (US 105)", () => {
-  it("critère 4 : given une carte affiche « Dans ta boîte : Shad 10 cm gardon », when j'ouvre son détail, then le détail affiche la même ligne", async () => {
+  it("critère 4 : given le coup 01 affiche « Dans ta boîte », when j'ouvre son détail, then le détail affiche la ligne « Dans ta boîte : Shad 10 cm gardon »", async () => {
     const env = await ouvrirLApp();
-    expect(compact(cartesConseil(env.page)[0].textContent)).toContain(
-      compact('Dans ta boîte : Shad 10 cm gardon'),
-    );
+    expect(compact(env.page.querySelector('#coup-1')?.textContent)).toContain(compact('Dans ta boîte'));
     await ouvrirDetail(env, 1);
 
     expect(detailOuvert(env.page)).toBe(true);
@@ -239,28 +223,30 @@ describe("Détail d'un conseil : le leurre de ma boîte (US 105)", () => {
     expect(gras, 'libellé en gras').toBeDefined();
   });
 
-  it("critère 4 : given une carte affiche une substitution, when j'ouvre son détail, then le détail affiche « À la place, dans ta boîte : Crankbait 6 cm perche »", async () => {
+  it("critère 4 : given le coup 02 est une substitution, when j'ouvre son détail, then le détail affiche « À la place, dans ta boîte : Crankbait 6 cm perche »", async () => {
     const env = await ouvrirLApp();
-    expect(compact(cartesConseil(env.page)[1].textContent)).toContain(
-      compact('À la place, dans ta boîte : Crankbait 6 cm perche'),
-    );
     await ouvrirDetail(env, 2);
 
     expect(compact(env.page.textContent)).toContain(
       compact('À la place, dans ta boîte : Crankbait 6 cm perche'),
     );
+    const gras = [...env.page.querySelectorAll<HTMLElement>('b, strong')].find(
+      (e) => compact(e.textContent) === compact('À la place, dans ta boîte :'),
+    );
+    expect(gras, 'libellé en gras').toBeDefined();
   });
 
-  it("critère 4 : given une carte affiche « Il te manque », when j'ouvre son détail, then le détail affiche « Il te manque : une cuillère tournante 3–10 g couleur gardon »", async () => {
+  it("critère 4 : given le coup 03 manque dans la boîte, when j'ouvre son détail, then le détail affiche « Il te manque : une cuillère tournante 3–10 g couleur gardon »", async () => {
     const env = await ouvrirLApp();
-    expect(compact(cartesConseil(env.page)[2].textContent)).toContain(
-      compact('Il te manque : une cuillère tournante 3–10 g couleur gardon'),
-    );
     await ouvrirDetail(env, 3);
 
     expect(compact(env.page.textContent)).toContain(
       compact('Il te manque : une cuillère tournante 3–10 g couleur gardon'),
     );
+    const gras = [...env.page.querySelectorAll<HTMLElement>('b, strong')].find(
+      (e) => compact(e.textContent) === compact('Il te manque :'),
+    );
+    expect(gras, 'libellé en gras').toBeDefined();
   });
 
   it("critère 4 : given la boîte en erreur de lecture, when j'ouvre un détail, then il n'a aucune ligne de boîte, puis la ligne apparaît quand la lecture reprend", async () => {

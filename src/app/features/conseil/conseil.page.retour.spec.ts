@@ -100,7 +100,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
     expect(positionSpot).toHaveBeenCalledWith(PONT);
     expect(positionGps).not.toHaveBeenCalled();
     expect(store.spot()).toEqual(PONT);
-    expect(compact(page.querySelector('[role="status"]')?.textContent)).toBe(MESSAGE.texte);
+    expect(compact(page.querySelector('.message-sortie[role="status"]')?.textContent)).toBe(MESSAGE.texte);
   });
 
   it('given un spot choisi supprimé entre-temps dans Spots, when le Conseil revient, then il revient sur « Ma position » et le message du spot disparaît', async () => {
@@ -110,7 +110,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
     expect(positionSpot).toHaveBeenCalledTimes(1); // le spot gardé a été appliqué tout de suite, avant la vérification
     expect(positionGps).toHaveBeenCalledTimes(1);
     expect(store.spot()).toBeNull();
-    expect(page.querySelector('[role="status"]')).toBeNull();
+    expect(page.querySelector('.message-sortie[role="status"]')).toBeNull();
   });
 
   it('given un spot choisi et les spots illisibles, when le Conseil revient, then le spot gardé reste le lieu', async () => {
@@ -178,7 +178,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
   it('given une sortie dont les conditions sont arrivées à leur fin, when le Conseil revient, then son message est oublié', async () => {
     const { page, store } = await ouvrir([PONT], { sortie: { texte: 'Sortie prête : passée', jusquA: new Date(Date.now() - 1000) } });
 
-    expect(page.querySelector('[role="status"]')).toBeNull();
+    expect(page.querySelector('.message-sortie[role="status"]')).toBeNull();
     expect(store.sortiePrete()).toBeNull();
   });
 
@@ -188,7 +188,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
     expect(lieu(page)).toContain('Ma position');
     expect(positionGps).toHaveBeenCalledTimes(1);
     expect(positionSpot).not.toHaveBeenCalled();
-    expect(compact(page.querySelector('[role="status"]')?.textContent)).toBe(MESSAGE.texte);
+    expect(compact(page.querySelector('.message-sortie[role="status"]')?.textContent)).toBe(MESSAGE.texte);
     expect(store.sortiePrete()?.texte).toBe(MESSAGE.texte);
   });
 
@@ -198,7 +198,7 @@ describe('ConseilPage : retour sur le Conseil (US 294)', () => {
     page.querySelector<HTMLButtonElement>('nav button')!.click();
     await vi.waitFor(async () => {
       await stabiliser();
-      expect(page.querySelector('[role="status"]')).not.toBeNull();
+      expect(page.querySelector('.message-sortie[role="status"]')).not.toBeNull();
     });
 
     expect(store.sortiePrete()?.jusquA).toEqual(jusquA);

@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
 import { attendreFirebase, enregistrerRequetes, EMULATEURS, estLocal, PROJET, profil } from './firebase-helpers';
+import { coupUn } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -84,8 +85,8 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
   const uid = await page.evaluate(() => localStorage.getItem('leurio.compte') as string);
   await creerProfil(uid, video);
   await page.reload();
-  const carte = page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
-  await expect(carte.getByText('Voir le détail')).toBeVisible();
+  const carte = coupUn(page);
+  await expect(carte).toBeVisible();
   // creerProfil écrit par l'API REST de l'émulateur, sans passer par l'app : avant que la fiche lise le consentement, on attend que le
   // serveur rende ce profil au SDK de l'app (et que son cache local le tienne), sinon la fiche peut lire l'ancien profil, sans consentement.
   await expect
@@ -106,13 +107,13 @@ async function conseilsPuisModeAvion(page: Page, video: Reponse): Promise<void> 
   await page.goBack();
   await expect(page.getByRole('button', { name: "Voir l'animation" })).toBeVisible();
   await page.goBack();
-  await expect(carte.getByText('Voir le détail')).toBeVisible();
+  await expect(carte).toBeVisible();
   await page.context().setOffline(true);
   await expect.poll(() => page.evaluate(() => navigator.onLine)).toBe(false);
 }
 
 async function ouvrirLaFiche(page: Page): Promise<void> {
-  await page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first().getByText('Voir le détail').click();
+  await coupUn(page).click();
   await page.getByRole('button', { name: "Voir l'animation" }).click();
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
 }

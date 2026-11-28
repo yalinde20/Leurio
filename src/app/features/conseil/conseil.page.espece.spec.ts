@@ -23,6 +23,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import especesReelles from '../../../assets/data/species.json';
 import { ConseilPage } from './conseil.page';
+import { temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -180,13 +181,11 @@ function boutonEspece(page: HTMLElement): HTMLElement {
   if (!bouton) throw new Error('aucun bouton « Espèce »');
   return bouton;
 }
-const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('[role="dialog"]');
+const feuille = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>('app-espece-feuille [role="dialog"]');
 const lignes = (page: HTMLElement): HTMLElement[] => [...(feuille(page)?.querySelectorAll<HTMLElement>('[role="radiogroup"] [role="radio"]') ?? [])];
 const noms = (page: HTMLElement): string[] => lignes(page).map((l) => (l.textContent ?? '').replace(/[✓\s\u00a0\u202f]+$/g, '').trim());
-const cartesConseil = (page: HTMLElement): HTMLElement[] =>
-  [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
+/** Les coups : le « 01 » de la rivière, puis les « 02 » et « 03 » de la feuille « 2 autres coups » (texte compact). */
+const cartesConseil = (env: Awaited<ReturnType<typeof afficher>>): Promise<string[]> => textesDesCoups(env);
 
 async function ouvrir(env: Awaited<ReturnType<typeof afficher>>) {
   boutonEspece(env.page).click();
@@ -201,13 +200,14 @@ async function choisir(env: Awaited<ReturnType<typeof afficher>>, nom: string) {
 
 describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
   it('critère 1 : given j\'ouvre l\'écran « Conseil », when je regarde le choix de l\'espèce, then il affiche « Toutes les espèces »', async () => {
-    const { page, appelsMoteur } = await afficher();
+    const env = await afficher();
+    const { page, appelsMoteur } = env;
 
     const bouton = boutonEspece(page);
     expect(compact(bouton.textContent)).toContain(compact('Toutes les espèces'));
     expect(feuille(page), 'la feuille est fermée au départ').toBeNull();
     expect(appelsMoteur[0]?.especeCible).toBeUndefined();
-    expect(cartesConseil(page)).toHaveLength(3);
+    expect(await cartesConseil(env)).toHaveLength(3);
   });
 
   it('critère 2 : given le choix de l\'espèce est ouvert, when je regarde la liste, then elle propose « Toutes les espèces » puis chaque espèce du contenu (7 au lancement), dans l\'ordre de species.json', async () => {
@@ -234,12 +234,12 @@ describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
     expect(compact(boutonEspece(env.page).textContent)).not.toContain(compact('Toutes les espèces'));
     expect(feuille(env.page), 'la feuille se ferme au choix').toBeNull();
     expect(env.appelsMoteur.at(-1)?.especeCible).toBe('SAN');
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain('Shad');
     expect(cartes[1]).toContain(compact('Leurre souple (finesse)'));
     expect(cartes[2]).toContain(compact('Lame vibrante'));
-    expect(compact(env.page.textContent)).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it('critère 3 : given « Sandre » choisi, when je rouvre la liste, then « Sandre » est la ligne cochée', async () => {
@@ -262,7 +262,7 @@ describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
 
     expect(compact(boutonEspece(env.page).textContent)).toContain(compact('Toutes les espèces'));
     expect(env.appelsMoteur.at(-1)?.especeCible).toBeUndefined();
-    expect(compact(cartesConseil(env.page)[1].textContent)).toContain(compact('Jig à jupe'));
+    expect((await cartesConseil(env))[1]).toContain(compact('Jig à jupe'));
   });
 
   it('critère 3 : given le choix ouvert, when je touche « Annuler », then la feuille se ferme sans changer le choix ni les conseils', async () => {
@@ -297,7 +297,7 @@ describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
     await choisir(env, 'Sandre');
 
     expect(compact(env.page.textContent)).toContain(compact('Aucun conseil pour cette espèce en ce moment.'));
-    expect(cartesConseil(env.page)).toHaveLength(0);
+    expect(env.page.querySelector('a.coup')).toBeNull();
   });
 
   it('critère 4 : given une 8e espèce de test dans le contenu, when j\'ouvre le choix de l\'espèce, then elle apparaît dans la liste (8 espèces + « Toutes les espèces ») sans modification du code', async () => {
@@ -315,7 +315,7 @@ describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
 
     expect(compact(boutonEspece(env.page).textContent)).toContain(compact('Truite fario'));
     expect(env.appelsMoteur.at(-1)?.especeCible).toBe('TRF');
-    const cartes = cartesConseil(env.page).map((c) => compact(c.textContent));
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(1);
     expect(cartes[0]).toContain(compact('Cuiller ondulante'));
   });

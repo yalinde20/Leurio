@@ -2,11 +2,11 @@ import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, i
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
-import { IonContent, IonHeader, IonIcon, IonTitle, IonToolbar } from '@ionic/angular';
+import { IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline } from 'ionicons/icons';
 import { AstroService } from '../../core/data/astro.service';
-import { CatalogService, Espece, Federation } from '../../core/data/catalog.service';
+import { CatalogService, Espece, FamilleLeurre, Federation, TypeLeurre } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { FeedbackService } from '../../core/data/feedback.service';
 import { LieuDemandeService } from '../../core/data/lieu-demande.service';
@@ -20,7 +20,6 @@ import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { Conditions } from '../../core/engine/conditions';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
-import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { UnitesService } from '../../shared/unites.service';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import { EtatSpots, LieuFeuilleComponent } from './lieu-feuille.component';
@@ -30,6 +29,7 @@ import {
   formaterDebit,
   formaterHeure,
   formaterHeuresLegales,
+  formaterMeteo,
   formaterPression,
   formaterSourceTempEau,
   formaterTempEau,
@@ -37,8 +37,9 @@ import {
 } from './conditions-format';
 import { ConseilChoixStore, MomentChoisi, SortiePrete } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
-import { detailDuConseil, formaterTaille, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
-import { LigneBoiteComponent } from './ligne-boite.component';
+import { detailDuConseil, formaterTaille, LigneBoite, libelleTaille, lireTempSaisie } from './conseil-format';
+import { AvisDonne, CoupRiviere, DemandeDetail, RiviereEnCoupeComponent, VueRiviere, ZoneNage } from './riviere-en-coupe.component';
+import { FeuilleConseilComponent } from './feuille-conseil.component';
 import { ChoixEspece, EspeceFeuilleComponent } from './espece-feuille.component';
 import {
   JourMoment,
@@ -79,6 +80,8 @@ interface CarteConditions {
   vent: string;
   lune: string;
   heuresLegales: string;
+  /** « Nuageux, vent 12 km/h » : la ligne sous la température de l'eau. */
+  meteo: string;
   federation?: Federation;
   date: Date;
   /** Catégorie du spot du relevé affiché ; `null` pour la position GPS. */
@@ -94,9 +97,18 @@ interface CarteConseil {
   animation: string;
   couleur: string;
   taille: { libelle: string; valeur: string } | null;
-  tailleMinimale: string | null;
-  pourquoi: string;
+  /** Zone de nage du type de leurre (contenu `lure-types.json`) : où la rivière pose le coup. */
+  zone: ZoneNage;
+  famille: FamilleLeurre | null;
 }
+
+/** La ligne d'état réglementaire sous le moment et l'espèce. */
+interface EtatLegal {
+  type: 'ouvert' | 'fermeture' | 'ferme';
+  texte: string;
+}
+
+const MINUTES_AVANT_FERMETURE = 30;
 
 type EtatConseil =
   | { type: 'calcul' }
@@ -109,20 +121,25 @@ type Etat =
   | { type: 'position introuvable' }
   | { type: 'pret'; carte: CarteConditions };
 
+/** Un clic principal sans touche : tout autre clic garde le comportement natif du lien (nouvel onglet, nouvelle fenêtre). */
+const estClicSimple = (e: MouseEvent): boolean => e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey;
+
+/** « Dans ta boîte », « À la place, dans ta boîte » ou « Il te manque » : la ligne de la boîte sans le détail du leurre. */
+const libelleBoite = (ligne: LigneBoite): string => ligne.libelle.replace(/\s*:$/, '');
+
 /** Une explication du moteur finit par un point, comme les phrases du pourquoi. */
 const finirParUnPoint = (phrase: string): string => (/[.!?]$/.test(phrase) ? phrase : `${phrase}.`);
 
 addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline, personOutline });
 
+
 @Component({
   selector: 'app-conseil',
   imports: [
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonContent,
     BandeauReglementationComponent,
-    LigneBoiteComponent,
+    FeuilleConseilComponent,
+    RiviereEnCoupeComponent,
     MomentFeuilleComponent,
     EspeceFeuilleComponent,
     LieuFeuilleComponent,
@@ -131,68 +148,217 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
   ],
   host: { class: 'ion-page' },
   styles: `
-    /*
-     * .selecteur et .selecteur-lieu ([class|=selecteur]). Classe à part pour « Lieu » : des specs plus anciennes (US 82)
-     * cherchent le sélecteur « Moment » par button.selecteur, le premier.
-     */
-    [class|=selecteur] {
+    ion-content {
+      --padding-top: 0;
+      --padding-bottom: 0;
+      --padding-start: 0;
+      --padding-end: 0;
+    }
+    .ecran {
+      display: flex;
+      flex-direction: column;
+      /* Hauteur définie : la rivière prend le reste ; ion-content ne défile que si le contenu minimal ne tient vraiment pas. */
+      height: 100%;
+      color: var(--lr-texte);
+    }
+    .ic {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .ic.petit {
+      width: 16px;
+      height: 16px;
+    }
+    .haut {
+      flex: none;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      width: 100%;
+      gap: 10px;
+      padding: calc(4px + var(--ion-safe-area-top, 0px)) 16px 0;
+    }
+    .titre-lieu {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      font-family: var(--lr-police-titre);
+    }
+    .lieu {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 100%;
       min-height: 48px;
-      margin: 0 0 12px;
-      padding: 8px 16px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--lr-texte);
+      font: 700 26px/1 var(--lr-police-titre);
+      text-align: left;
+    }
+    .lieu span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Lu par les lecteurs d'écran seulement : le lieu est le titre de l'écran. */
+    .lieu .masque {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .avatar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 48px;
+      height: 48px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 24px;
+      background: transparent;
+      color: var(--lr-texte);
+      font-size: 24px;
+    }
+    .choix {
+      flex: none;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 8px;
+      padding: 2px 16px 0;
+    }
+    .pastille {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 48px;
+      padding: 0 14px;
       border: 1px solid var(--lr-bordure);
-      border-radius: 12px;
+      border-radius: 24px;
       background: var(--lr-surface);
       color: var(--lr-texte);
       font-family: inherit;
-      font-size: 16px;
+      font-size: 15px;
+      font-weight: 600;
       text-align: left;
     }
-    .lib {
-      display: block;
-      font-family: var(--lr-police-titre);
-      font-size: 12px;
+    .pastille small {
+      color: var(--lr-texte-secondaire);
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .pastille span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .etat {
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 16px;
+      border: 0;
+      background: none;
+      color: var(--lr-texte-secondaire);
+      font-family: inherit;
+      font-size: 15px;
       font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      text-align: left;
+    }
+    .etat.ok {
+      color: var(--lr-ok);
+    }
+    .etat.attention {
+      color: var(--lr-attention);
+    }
+    .etat.ferme {
+      color: var(--lr-danger);
+    }
+    .etat .suite {
       color: var(--lr-texte-secondaire);
     }
-    .val {
-      font-size: 17px;
+    p.etat {
+      margin: 0;
+    }
+    .eau {
+      flex: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-height: 52px;
+      padding: 0 16px 10px;
+    }
+    @media (max-height: 700px) {
+      .eau {
+        padding-bottom: 2px;
+      }
+    }
+    .temp {
+      font-family: var(--lr-police-titre);
+      font-size: 44px;
       font-weight: 700;
+      line-height: 44px;
     }
-    .chevron {
-      font-size: 22px;
-      color: var(--lr-primaire);
+    .temp.inconnue {
+      max-width: 150px;
+      font-size: 20px;
+      line-height: 22px;
     }
-    .carte {
+    .infos {
+      flex: 1;
+      min-width: 0;
+    }
+    .src {
+      font-size: 13px;
+      line-height: 17px;
+      color: var(--lr-texte-secondaire);
+    }
+    .meteo {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-height: 48px;
+      margin-top: -6px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--lr-texte);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+    }
+    .thermo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 48px;
+      height: 48px;
+      margin-left: auto;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 24px;
       background: var(--lr-surface);
-      border: 1px solid var(--lr-bordure);
-      border-radius: 16px;
-      padding: 16px;
       color: var(--lr-texte);
     }
-    .carte h2 {
-      margin: 0 0 12px;
-      font-size: 20px;
-      font-weight: 700;
-    }
-    .mention,
-    .message,
-    .source {
-      color: var(--lr-texte-secondaire);
-      font-size: 14px;
-    }
-    .mention {
-      margin: -6px 0 12px;
+    .squelette {
+      width: 96px;
+      height: 44px;
+      border-radius: 8px;
+      background: var(--lr-sable);
     }
     .badge {
       display: inline-block;
-      margin: -4px 0 12px;
+      margin: 0 0 8px;
       padding: 4px 10px;
       border-radius: 999px;
       background: var(--lr-sable);
@@ -200,209 +366,50 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
       font-size: 14px;
       font-weight: 600;
     }
-    .invitation {
-      display: block;
-      margin-top: 2px;
-      font-size: 15px;
+    .mention {
+      margin: 0 0 6px;
       color: var(--lr-texte-secondaire);
-    }
-    .message {
-      margin: 0;
-      padding: 8px 0;
-      font-size: 16px;
+      font-size: 14px;
     }
     dl {
       margin: 0;
     }
     .ligne {
-      padding: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
       border-top: 1px solid var(--lr-bordure);
-    }
-    .ligne:first-child {
-      border-top: none;
-      padding-top: 0;
-    }
-    dt,
-    dd {
-      display: inline;
-      margin: 0;
-      font-size: 16px;
+      font-size: 15px;
     }
     dt {
       font-weight: 600;
     }
-    .eau dd {
-      font-family: var(--lr-police-titre);
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .source {
-      display: block;
-      margin-top: 2px;
-    }
-    .titre-section {
-      margin: 20px 0 8px;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--lr-texte);
-    }
-    .conseil {
-      margin-bottom: 12px;
-    }
-    .ecartes {
-      display: flex;
-      gap: 10px;
-      margin: 0 0 12px;
-      padding: 12px 14px;
-      border: 1px solid var(--lr-bordure);
-      border-left: 4px solid var(--lr-danger);
-      border-radius: 12px;
-      background: var(--lr-surface);
-      color: var(--lr-texte);
-      font-size: 15px;
-      line-height: 1.4;
-    }
-    .ecartes svg {
-      flex: none;
-      width: 20px;
-      height: 20px;
-      color: var(--lr-danger);
-    }
-    .entete {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .rang {
-      flex: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--lr-primaire);
-      color: var(--lr-sur-primaire);
-      font-family: var(--lr-police-titre);
-      font-weight: 700;
-      font-size: 16px;
-    }
-    .conseil h3 {
+    dd {
       margin: 0;
-      font-size: 20px;
-      font-weight: 700;
+      text-align: right;
     }
-    .conseil .ligne {
-      padding: 6px 0;
-    }
-    .pourquoi {
-      margin: 8px 0 0;
-      font-size: 15px;
-      color: var(--lr-texte-secondaire);
-    }
-    .avertissement {
-      border-color: var(--lr-danger);
-    }
-    .alerte {
-      margin: 0 0 8px;
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--lr-danger);
-    }
-    .avatar {
+    .lien-federation {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      margin-right: 8px;
-      border: 1.5px solid var(--lr-bordure);
-      border-radius: 24px;
-      background: transparent;
-      color: var(--lr-texte);
-      font-size: 24px;
-    }
-    .zone-dock {
-      flex: none;
-      border-top: 1px solid var(--lr-bordure);
-      background: var(--lr-surface);
-    }
-    .message-sortie {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 8px 16px 0;
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: var(--lr-sable);
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .message-sortie.prete {
-      color: var(--lr-texte);
-    }
-    .message-sortie ion-icon {
-      flex: none;
-      font-size: 20px;
-      color: var(--lr-ok);
-    }
-    .message-sortie.echec {
-      color: var(--lr-danger);
-    }
-    .dock {
-      display: grid;
-      grid-template-columns: 1fr 1.4fr 1fr;
-      gap: 8px;
-      padding: 10px 16px;
-      padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
-    }
-    .dock a,
-    .dock button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 56px;
-      border: 1.5px solid var(--lr-bordure);
-      border-radius: 14px;
-      background: transparent;
-      color: var(--lr-texte);
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 600;
-      text-decoration: none;
-    }
-    .dock .action {
-      border-color: var(--lr-primaire);
-      background: var(--lr-primaire);
-      color: var(--lr-sur-primaire);
-      font-weight: 700;
-    }
-    .dock .action[disabled] {
-      opacity: 0.5;
-    }
-    .bouton-mesure {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
       min-height: 48px;
-      margin-top: 10px;
-      border: 1px solid var(--lr-primaire);
-      border-radius: 12px;
-      background: transparent;
       color: var(--lr-primaire);
-      font-family: inherit;
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 700;
+      text-decoration: underline;
     }
-    .saisie {
-      margin-top: 10px;
+    .limite.verifier {
+      margin: 6px 0 0;
+    }
+    .limite {
+      margin: 0 0 6px;
+      color: var(--lr-texte-secondaire);
+      font-size: 14px;
     }
     .saisie label {
       display: block;
-      margin-bottom: 6px;
+      margin: 6px 0;
       font-size: 15px;
       font-weight: 600;
     }
@@ -450,350 +457,171 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
       background: transparent;
       color: var(--lr-texte);
     }
-    .conseil.touchable {
-      position: relative;
-    }
-    .voir-detail {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: calc(100% + 32px);
-      min-height: 48px;
-      margin: 8px -16px -16px;
-      padding: 0 16px;
-      border: none;
-      border-top: 1px solid var(--lr-bordure);
-      border-radius: 0 0 16px 16px;
-      background: transparent;
-      color: var(--lr-primaire);
-      font-family: inherit;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: left;
-    }
-    /* Toute la carte est touchable : le bouton s'étend sur la carte. */
-    .voir-detail::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-    }
-    /* Au-dessus de l'extension de « Voir le détail » : un tap sur 👍 / 👎 ne doit pas ouvrir le détail. */
-    .avis,
-    .merci {
-      position: relative;
-      z-index: 1;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--lr-bordure);
-    }
-    .avis {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .avis .question {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    .avis .boutons {
-      display: flex;
+    .zone-dock {
       flex: none;
-      gap: 8px;
+      border-top: 1px solid var(--lr-bordure);
+      background: var(--lr-surface);
     }
-    .avis button {
-      width: 56px;
-      height: 48px;
-      border: 1px solid var(--lr-bordure);
-      border-radius: 12px;
-      background: var(--lr-fond);
-      font-family: inherit;
-      font-size: 22px;
-      line-height: 1;
-    }
-    .merci {
+    .message-sortie {
       display: flex;
       align-items: center;
-      min-height: 48px;
-      margin-bottom: 0;
+      gap: 6px;
+      min-height: 40px;
+      margin: 0;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .message-sortie.prete {
+      color: var(--lr-texte);
+    }
+    .message-sortie ion-icon {
+      flex: none;
+      font-size: 20px;
+      color: var(--lr-ok);
+    }
+    .message-sortie.echec {
+      color: var(--lr-danger);
+    }
+    .dock {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: 8px;
+      padding: 10px 16px;
+      padding-bottom: calc(10px + var(--ion-safe-area-bottom, 0px));
+    }
+    .dock a,
+    .dock button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 56px;
+      border: 1.5px solid var(--lr-bordure);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--lr-texte);
+      font-family: inherit;
       font-size: 16px;
       font-weight: 600;
-      color: var(--lr-primaire);
+      text-decoration: none;
     }
-    .lien-federation {
-      display: flex;
-      align-items: center;
-      min-height: 48px;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--lr-primaire);
-      text-decoration: underline;
+    .dock .action {
+      border-color: var(--lr-primaire);
+      background: var(--lr-primaire);
+      color: var(--lr-sur-primaire);
+      font-weight: 700;
+    }
+    .dock .action[disabled] {
+      opacity: 0.5;
     }
   `,
   template: `
     @if (!enfantOuvert()) {
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Conseil</ion-title>
-        <button slot="end" type="button" class="avatar" aria-label="Compte" (click)="ouvrir($event, '/compte')">
-          <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
-        </button>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content class="ion-padding">
-      <button
-        #boutonLieu
-        type="button"
-        class="selecteur-lieu"
-        aria-haspopup="dialog"
-        (click)="ouvrirChoixLieu()"
-      >
-        <span>
-          <span class="lib">Lieu</span>
-          <span class="val">{{ nomLieu() }}</span>
-        </span>
-        <span class="chevron" aria-hidden="true">›</span>
-      </button>
-      <button
-        #selecteur
-        type="button"
-        class="selecteur"
-        aria-haspopup="dialog"
-        [disabled]="!lieuPret()"
-        (click)="ouvrirFeuille()"
-      >
-        <span>
-          <span class="lib">Moment</span>
-          <span class="val">{{ libelleSelecteur() }}</span>
-        </span>
-        <span class="chevron" aria-hidden="true">›</span>
-      </button>
-      <button
-        #boutonEspece
-        type="button"
-        class="selecteur"
-        aria-haspopup="dialog"
-        (click)="ouvrirChoixEspece()"
-      >
-        <span>
-          <span class="lib">Espèce</span>
-          <span class="val">{{ nomEspece() }}</span>
-        </span>
-        <span class="chevron" aria-hidden="true">›</span>
-      </button>
-      <section class="carte">
-        <h2>Conditions</h2>
+    <ion-content>
+      <div class="ecran">
+        <div class="haut">
+          <h1 class="titre-lieu">
+            <button
+              #boutonLieu
+              type="button"
+              class="lieu"
+              aria-haspopup="dialog"
+              (click)="ouvrirChoixLieu()"
+            >
+              <span class="masque">Lieu : </span><span>{{ nomLieu() }}</span>
+              <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+          </h1>
+          <button type="button" class="avatar" aria-label="Compte" (click)="ouvrir($event, '/compte')">
+            <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+        <div class="choix">
+          <button #selecteur type="button" class="pastille selecteur" aria-haspopup="dialog" [disabled]="!lieuPret()" (click)="ouvrirFeuille()">
+            <small>Moment</small> <span>{{ libelleSelecteur() }}</span>
+          </button>
+          <button #boutonEspece type="button" class="pastille selecteur" aria-haspopup="dialog" (click)="ouvrirChoixEspece()">
+            <small>Espèce</small> <span>{{ nomEspece() }}</span>
+          </button>
+        </div>
         @switch (etat().type) {
           @case ('chargement') {
-            <p class="message">Chargement des conditions…</p>
+            <p class="etat" role="status">Chargement des conditions…</p>
+            <div class="eau" aria-hidden="true"><div class="squelette"></div></div>
           }
           @case ('position introuvable') {
-            <p class="message">
-              Position introuvable : autorise la localisation pour voir les conditions.
-            </p>
+            <div class="etat"></div>
           }
           @default {
+            @if (legal(); as l) {
+              <button
+                type="button"
+                class="etat"
+                [class.ok]="l.type === 'ouvert'"
+                [class.attention]="l.type === 'fermeture'"
+                [class.ferme]="l.type === 'ferme'"
+                aria-haspopup="dialog"
+                (click)="reglementationOuvert.set(true)"
+              >
+                @switch (l.type) {
+                  @case ('ouvert') {
+                    <svg class="ic" data-icone="livre" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" /><path d="M5 17a3 3 0 0 1 3-3h11" /></svg>
+                    {{ l.texte }}
+                  }
+                  @case ('fermeture') {
+                    <svg class="ic" data-icone="alerte" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l9.5 17h-19z" /><path d="M12 10v5M12 18v.2" /></svg>
+                    {{ l.texte }}
+                  }
+                  @case ('ferme') {
+                    <svg class="ic" data-icone="lune" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4 6.5 6.5 0 0 0 20 14.5z" /></svg>
+                    {{ l.texte }}
+                  }
+                }
+                <svg class="ic petit suite" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            } @else {
+              <button type="button" class="etat" aria-haspopup="dialog" (click)="reglementationOuvert.set(true)">
+                Réglementation
+                <svg class="ic petit suite" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            }
             @if (carte(); as c) {
-              @if (c.moinsPrecis) {
-                <p><span class="badge">Moins précis</span></p>
-              }
-              @if (c.prevision) {
-                <p class="mention">{{ c.prevision }}</p>
-              }
-              @if (c.mention) {
-                <p class="mention">{{ c.mention }}</p>
-              }
-              <dl>
-                <div class="ligne eau">
+              <div class="eau">
+                <div>
                   @if (c.eauInconnue) {
-                    <dd>Température de l'eau inconnue</dd>
-                    <span class="invitation">Mesure-la au thermomètre</span>
+                    <div class="temp inconnue">Température de l'eau inconnue</div>
                   } @else {
-                    <dt>Température de l'eau :</dt>
-                    <dd>{{ c.eau }}</dd>
-                  }
-                  @if (c.sourceEau) {
-                    <span class="source">{{ c.sourceEau }}</span>
-                  }
-                  @if (saisieOuverte()) {
-                    <div class="saisie">
-                      <label for="temp-mesuree">Température de l'eau (°C)</label>
-                      <input
-                        #champTemp
-                        id="temp-mesuree"
-                        class="champ"
-                        [class.invalide]="saisieInvalide()"
-                        [attr.aria-invalid]="saisieInvalide() ? 'true' : null"
-                        [attr.aria-describedby]="saisieInvalide() ? 'erreur-temp-mesuree' : null"
-                        type="text"
-                        inputmode="decimal"
-                        placeholder="Ex. : 12,5"
-                        autocomplete="off"
-                        [value]="brouillonTemp()"
-                        (input)="brouillonTemp.set(champTemp.value)"
-                      />
-                      @if (saisieInvalide()) {
-                        <p id="erreur-temp-mesuree" class="erreur" role="alert">Entre une température entre 0 et 35 °C.</p>
-                      }
-                      <div class="actions">
-                        <button type="button" class="annuler" (click)="fermerSaisie()">Annuler</button>
-                        <button type="button" class="valider" (click)="validerSaisie()">Valider</button>
-                      </div>
-                    </div>
-                  } @else {
-                    <button #boutonMesure type="button" class="bouton-mesure" (click)="ouvrirSaisie()">
-                      J'ai mesuré l'eau
-                    </button>
+                    <div class="temp">{{ c.eau }}</div>
                   }
                 </div>
-                <div class="ligne">
-                  <dt>Débit :</dt>
-                  <dd>{{ c.debit }}</dd>
-                </div>
-                <div class="ligne">
-                  <dt>Pression :</dt>
-                  <dd>{{ c.pression }}</dd>
-                </div>
-                <div class="ligne">
-                  <dt>Ciel :</dt>
-                  <dd>{{ c.ciel }}</dd>
-                </div>
-                <div class="ligne">
-                  <dt>Vent :</dt>
-                  <dd>{{ c.vent }}</dd>
-                </div>
-                <div class="ligne">
-                  <dt>Lune :</dt>
-                  <dd>{{ c.lune }}</dd>
-                </div>
-                <div class="ligne">
-                  <dt>Heures légales :</dt>
-                  <dd>{{ c.heuresLegales }}</dd>
-                  <span class="source">À vérifier dans l'arrêté de ton département</span>
-                  @if (c.federation; as f) {
-                    <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{
-                      f.nom
-                    }}</a>
-                  }
-                </div>
-              </dl>
-            }
-          }
-        }
-      </section>
-      <h2 class="titre-section">Ton top 3</h2>
-      @if (etat().type === 'position introuvable') {
-        <section class="carte">
-          <p class="message">
-            Localisation indisponible : active la localisation ou choisis un spot enregistré.
-          </p>
-        </section>
-      } @else {
-        @switch (conseil().type) {
-          @case ('calcul') {
-            <section class="carte"><p class="message">Calcul du conseil…</p></section>
-          }
-          @case ('indisponible') {
-            <section class="carte">
-              <p class="message">Conseil indisponible pour le moment.</p>
-            </section>
-          }
-          @case ('hors heures') {
-            <section class="carte avertissement">
-              <p class="alerte">Hors des heures légales : pas de pêche aux carnassiers la nuit.</p>
-              <p class="message">Heures légales {{ jourHeuresLegales() }} : {{ heuresDuJour() }}</p>
-            </section>
-          }
-          @default {
-            @if (moinsPrecis()) {
-              <p><span class="badge">Conseil moins précis</span></p>
-            }
-            @if (limiteLegale(); as limite) {
-              <p class="message">{{ limite }}</p>
-            }
-            @if (aucunConseil()) {
-              <section class="carte">
-                <p class="message">Aucun conseil pour cette espèce en ce moment.</p>
-              </section>
-            }
-            @if (explicationsEcartees().length > 0) {
-              <p class="ecartes" role="note">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
-                  <path d="M12 7.5v5.5M12 16.2v.3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
-                </svg>
-                <span>{{ explicationsEcartees().join(' ') }}</span>
-              </p>
-            }
-            @for (c of cartesConseil(); track c.rang) {
-              <article class="carte conseil touchable">
-                <div class="entete">
-                  <span class="rang">{{ c.rang }}</span>
-                  <h3 [id]="'titre-conseil-' + c.rang">{{ c.type }}</h3>
-                </div>
-                <dl>
-                  <div class="ligne">
-                    <dt>Animation :</dt>
-                    <dd>{{ c.animation }}</dd>
+                <div class="infos">
+                  <div class="src">
+                    {{ c.eauInconnue ? 'Mesure-la au thermomètre' : c.sourceEau }}
+                    @if (c.mention) {
+                      · {{ c.mention }}
+                    }
                   </div>
-                  <div class="ligne">
-                    <dt>Couleur :</dt>
-                    <dd>{{ c.couleur }}</dd>
-                  </div>
-                  @if (c.taille; as t) {
-                    <div class="ligne">
-                      <dt>{{ t.libelle }} :</dt>
-                      <dd>{{ t.valeur }}</dd>
-                    </div>
-                  }
-                  @if (c.tailleMinimale; as m) {
-                    <div class="ligne">
-                      <dt>Taille minimale :</dt>
-                      <dd>{{ m }}</dd>
-                    </div>
-                  }
-                </dl>
-                <p class="pourquoi">{{ c.pourquoi }}</p>
-                @if (lignes()[$index]; as ligne) {
-                  <app-ligne-boite [ligne]="ligne" />
-                }
-                @if (avisDonnes().has(c.rang)) {
-                  <p class="merci" role="status" tabindex="-1" [id]="'merci-' + c.rang">Merci pour ton retour !</p>
-                } @else {
-                  <div class="avis">
-                    <p class="question">Ce conseil t'a aidé ?</p>
-                    <div class="boutons">
-                      <button type="button" aria-label="Oui, ce conseil m'a aidé" (click)="donnerAvis(c, true)">👍</button>
-                      <button type="button" aria-label="Non, ce conseil ne m'a pas aidé" (click)="donnerAvis(c, false)">👎</button>
-                    </div>
-                  </div>
-                }
-                <button
-                  type="button"
-                  class="voir-detail"
-                  [id]="'voir-detail-' + c.rang"
-                  [attr.aria-labelledby]="'voir-detail-' + c.rang + ' titre-conseil-' + c.rang"
-                  [attr.aria-describedby]="'titre-conseil-' + c.rang"
-                  (click)="ouvrirDetail(c.rang)"
-                >
-                  Voir le détail
-                  <span aria-hidden="true">›</span>
+                  <button #boutonConditions type="button" class="meteo" aria-haspopup="dialog" (click)="conditionsOuvert.set(true)">
+                    {{ c.meteo }}
+                    <svg class="ic petit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
+                </div>
+                <button #boutonThermo type="button" class="thermo" aria-label="Saisir la température de l'eau" aria-haspopup="dialog" (click)="ouvrirSaisie()">
+                  <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a2 2 0 0 1 4 0v10.2a4 4 0 1 1-4 0z" /><path d="M12 9v7" /></svg>
                 </button>
-              </article>
+              </div>
             }
           }
         }
-      }
-      @if (carte(); as c) {
-        <app-bandeau-reglementation
-          [categorie]="c.categorie"
-          [espece]="espece()"
-          [especes]="especes()"
-          [date]="c.date"
-          [federation]="c.federation"
+        <app-riviere-en-coupe
+          [vue]="vueRiviere()"
+          [moinsPrecis]="moinsPrecis()"
+          [avisDonnes]="avisDonnes()"
+          (detail)="ouvrirDetail($event)"
+          (avis)="donnerAvis($event)"
         />
-      }
+      </div>
     </ion-content>
     <div class="zone-dock">
       @if (messageSortie(); as m) {
@@ -812,6 +640,100 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
         <a href="/spots" (click)="ouvrir($event, '/spots')"><ion-icon name="location-outline" aria-hidden="true"></ion-icon>Spots</a>
       </nav>
     </div>
+    @if (conditionsOuvert() && carte(); as c) {
+      <app-feuille-conseil titre="Conditions" (ferme)="fermerConditions()">
+        <p class="mention">{{ c.prevision ?? 'Maintenant' }} · {{ nomLieu() }}</p>
+        @if (c.moinsPrecis) {
+          <p><span class="badge">Moins précis</span></p>
+        }
+        <dl>
+          <div class="ligne">
+            <dt>Eau</dt>
+            &ngsp;
+            <dd>{{ c.eauInconnue ? 'Température de l\\'eau inconnue' : c.eau }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Débit</dt>
+            &ngsp;
+            <dd>{{ c.debit }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Pression</dt>
+            &ngsp;
+            <dd>{{ c.pression }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Ciel</dt>
+            &ngsp;
+            <dd>{{ c.ciel }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Vent</dt>
+            &ngsp;
+            <dd>{{ c.vent }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Lune</dt>
+            &ngsp;
+            <dd>{{ c.lune }}</dd>
+          </div>
+          <div class="ligne">
+            <dt>Heures légales</dt>
+            &ngsp;
+            <dd>{{ c.heuresLegales }}</dd>
+          </div>
+        </dl>
+        <p class="limite verifier">À vérifier dans l'arrêté de ton département.</p>
+        @if (c.federation; as f) {
+          <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{ f.nom }} ↗</a>
+        }
+      </app-feuille-conseil>
+    }
+    @if (reglementationOuvert()) {
+      <app-feuille-conseil titre="Réglementation" (ferme)="fermerReglementation()">
+        @if (limiteLegale(); as limite) {
+          <p class="limite">{{ limite }}</p>
+        }
+        @if (carte(); as c) {
+          <app-bandeau-reglementation
+            [categorie]="c.categorie"
+            [espece]="espece()"
+            [especes]="especes()"
+            [date]="c.date"
+            [federation]="c.federation"
+            [heuresLegales]="c.heuresLegales"
+          />
+        }
+      </app-feuille-conseil>
+    }
+    @if (saisieOuverte()) {
+      <app-feuille-conseil titre="Température de l'eau" (ferme)="fermerSaisie()">
+        <div class="saisie">
+          <label for="temp-mesuree">Température de l'eau (°C)</label>
+          <input
+            #champTemp
+            id="temp-mesuree"
+            class="champ"
+            [class.invalide]="saisieInvalide()"
+            [attr.aria-invalid]="saisieInvalide() ? 'true' : null"
+            [attr.aria-describedby]="saisieInvalide() ? 'erreur-temp-mesuree' : null"
+            type="text"
+            inputmode="decimal"
+            placeholder="Ex. : 12,5"
+            autocomplete="off"
+            [value]="brouillonTemp()"
+            (input)="brouillonTemp.set(champTemp.value)"
+          />
+          @if (saisieInvalide()) {
+            <p id="erreur-temp-mesuree" class="erreur" role="alert">Entre une température entre 0 et 35 °C.</p>
+          }
+          <div class="actions">
+            <button type="button" class="annuler" (click)="fermerSaisie()">Annuler</button>
+            <button type="button" class="valider" (click)="validerSaisie()">Valider</button>
+          </div>
+        </div>
+      </app-feuille-conseil>
+    }
     @if (feuilleOuverte()) {
       <app-moment-feuille
         [jourInitial]="jourBrouillon()"
@@ -871,24 +793,39 @@ export class ConseilPage implements OnInit {
     { requireSync: true },
   );
 
+  protected readonly conditionsOuvert = signal(false);
+  protected readonly reglementationOuvert = signal(false);
+  protected readonly legal = signal<EtatLegal | null>(null);
   protected readonly saisieOuverte = signal(false);
   protected readonly saisieInvalide = signal(false);
   protected readonly brouillonTemp = signal('');
   private readonly champTemp = viewChild<ElementRef<HTMLInputElement>>('champTemp');
 
-  private readonly boutonMesure = viewChild<ElementRef<HTMLButtonElement>>('boutonMesure');
+  private readonly boutonThermo = viewChild<ElementRef<HTMLButtonElement>>('boutonThermo');
+  private readonly boutonConditions = viewChild<ElementRef<HTMLButtonElement>>('boutonConditions');
   /** La dernière mesure validée, gardée en mémoire : elle compte même si le stockage du téléphone la refuse. */
   private saisieMemoire: SaisieTempEau | null = null;
-  private focusSurBouton = false;
-  /** La carte dont le détail a été ouvert : son bouton « Voir le détail » reprend le focus au retour. */
+  /** Le coup dont le détail a été ouvert : son lien (ou « 2 autres coups ») reprend le focus au retour. */
   private rangOuvert: number | null = null;
-  /** Le défilement de l'écran au moment d'ouvrir le détail, rendu au retour (l'écran est recréé). */
-  private defilement = 0;
-  private readonly contenu = viewChild(IonContent);
   private readonly injector = inject(Injector);
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => (this.detruit = true));
+    const destruction = inject(DestroyRef);
+    destruction.onDestroy(() => (this.detruit = true));
+    // L'état réglementaire de « Maintenant » suit l'horloge : chaque minute, et à la reprise de l'app (iOS).
+    const minuteur = setInterval(() => this.rafraichirLegal(), 60_000);
+    const reprise = () => {
+      if (document.visibilityState === 'visible') this.rafraichirLegal();
+    };
+    document.addEventListener('visibilitychange', reprise);
+    destruction.onDestroy(() => {
+      clearInterval(minuteur);
+      document.removeEventListener('visibilitychange', reprise);
+    });
+    // Au retour du détail, l'heure a pu passer.
+    effect(() => {
+      if (!this.enfantOuvert()) untracked(() => this.rafraichirLegal());
+    });
     // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
     const gardé = this.choix.moment();
     if (gardé) {
@@ -899,17 +836,19 @@ export class ConseilPage implements OnInit {
           : { date: gardé.date, libelle: libelleMoment(gardé.date, maintenant), mention: mentionMoment(gardé.date, maintenant) },
       );
     }
-    // Au retour du détail, le focus revient sur le bouton de la carte ouverte.
+    // Au retour du détail, le focus revient sur le lien du coup ouvert (« 2 autres coups » pour les coups 02 et 03).
     effect(() => {
       if (this.enfantOuvert() || this.rangOuvert === null) return;
       const rang = this.rangOuvert;
       this.rangOuvert = null;
-      // L'écran est recréé : on attend son rendu avant de rendre le défilement et le focus.
+      // L'écran est recréé : on attend son rendu avant le focus.
       afterNextRender(
         () =>
           setTimeout(() => {
-            this.hostEl.nativeElement.querySelector<HTMLElement>(`#voir-detail-${rang}`)?.focus({ preventScroll: true });
-            void this.contenu()?.scrollToPoint(0, this.defilement, 0)?.catch(() => undefined);
+            const cible = this.hostEl.nativeElement.querySelector<HTMLElement>(rang === 1 ? '#coup-1' : '#autres-coups');
+            cible?.focus();
+            // Le focus ne doit pas laisser la cible hors de l'écran (petit écran où ion-content défile).
+            cible?.scrollIntoView?.({ block: 'nearest' });
           }),
         { injector: this.injector },
       );
@@ -922,14 +861,6 @@ export class ConseilPage implements OnInit {
     });
     // Le focus entre dans le champ dès qu'il s'ouvre.
     effect(() => this.champTemp()?.nativeElement.focus());
-    // Et revient au bouton « J'ai mesuré l'eau » quand la saisie se ferme par Annuler ou Valider.
-    effect(() => {
-      const bouton = this.boutonMesure();
-      if (bouton && this.focusSurBouton) {
-        this.focusSurBouton = false;
-        bouton.nativeElement.focus();
-      }
-    });
   }
 
   protected readonly etat = signal<Etat>({ type: 'chargement' });
@@ -986,10 +917,6 @@ export class ConseilPage implements OnInit {
     return this.espece()?.nom ?? TOUTES;
   }
 
-  protected aucunConseil(): boolean {
-    return this.espece() !== null && this.cartesConseil().length === 0;
-  }
-
   protected async ouvrirChoixEspece(): Promise<void> {
     let especes: Espece[] = [];
     try {
@@ -1021,6 +948,25 @@ export class ConseilPage implements OnInit {
     } catch {
       return [];
     }
+  }
+
+  /** Les familles du contenu (pictogrammes) ; sans elles, les coups n'ont pas de pictogramme mais restent affichés. */
+  private async famillesDuContenu(): Promise<FamilleLeurre[]> {
+    try {
+      return await this.catalogue.famillesDeLeurres();
+    } catch {
+      return [];
+    }
+  }
+
+  /** La zone de nage du type de leurre, lue dans le contenu ; à défaut « mi-eau », la zone du milieu. */
+  private zoneDe(typeId: string, types: TypeLeurre[]): ZoneNage {
+    return types.find((t) => t.id === typeId)?.zoneNage ?? 'mi-eau';
+  }
+
+  private familleDe(typeId: string, types: TypeLeurre[], familles: FamilleLeurre[]): FamilleLeurre | null {
+    const famille = types.find((t) => t.id === typeId)?.famille;
+    return familles.find((f) => f.id === famille) ?? null;
   }
 
   protected async ouvrirChoixLieu(): Promise<void> {
@@ -1074,9 +1020,10 @@ export class ConseilPage implements OnInit {
   /** Les conditions et le moment du top 3 affiché : ce que l'avis note. */
   private contexteAvis: { conditions: Conditions; moment: Date } | null = null;
 
-  protected donnerAvis(carte: CarteConseil, utile: boolean): void {
+  protected donnerAvis({ rang, utile }: AvisDonne): void {
+    const carte = this.cartesConseil().find((c) => c.rang === rang);
     const contexte = this.contexteAvis;
-    if (!contexte || this.avisDonnes().has(carte.rang)) return;
+    if (!carte || !contexte || this.avisDonnes().has(carte.rang)) return;
     this.avisDonnes.update((rangs) => new Set(rangs).add(carte.rang));
     this.feedback.donnerAvis(carte, utile, contexte.conditions, contexte.moment);
     // Le bouton touché disparaît : le focus passe au remerciement, que les lecteurs d'écran annoncent alors.
@@ -1085,25 +1032,12 @@ export class ConseilPage implements OnInit {
     });
   }
 
-  protected async ouvrirDetail(rang: number): Promise<void> {
+  /** Ouvre le détail d'un coup (le lien garde son href pour le clic droit et les lecteurs d'écran). */
+  protected ouvrirDetail({ evenement, rang }: DemandeDetail): void {
+    if (!estClicSimple(evenement)) return;
+    evenement.preventDefault();
     this.rangOuvert = rang;
-    this.defilement = 0;
-    try {
-      this.defilement = (await this.contenu()?.getScrollElement())?.scrollTop ?? 0;
-    } catch {
-      // Sans position de défilement, l'écran se rouvre en haut.
-    }
-    await this.router.navigate(['/conseil', 'detail', rang]);
-  }
-
-  protected heuresDuJour(): string {
-    const etat = this.conseil();
-    return etat.type === 'hors heures' ? etat.heures : '';
-  }
-
-  protected jourHeuresLegales(): string {
-    const etat = this.conseil();
-    return etat.type === 'hors heures' ? etat.jour : '';
+    void this.router.navigate(['/conseil', 'detail', rang]);
   }
 
   protected moinsPrecis(): boolean {
@@ -1118,10 +1052,46 @@ export class ConseilPage implements OnInit {
 
   protected readonly lignes = this.detailStore.lignes;
 
-  protected explicationsEcartees(): string[] {
+  /** La rivière en coupe : les coups posés dans leur zone, ou le message qui les remplace. */
+  protected readonly vueRiviere = computed<VueRiviere>(() => {
+    if (this.etat().type === 'position introuvable') {
+      return { type: 'message', texte: 'Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».' };
+    }
     const etat = this.conseil();
-    return etat.type === 'cartes' ? etat.explications : [];
-  }
+    switch (etat.type) {
+      case 'calcul':
+        return { type: 'message', texte: 'Calcul du conseil…' };
+      case 'indisponible':
+        return { type: 'message', texte: 'Conseil indisponible pour le moment.' };
+      case 'hors heures':
+        return {
+          type: 'hors heures',
+          titre: 'Hors des heures légales : pas de pêche aux carnassiers la nuit.',
+          heures: `Heures légales ${etat.jour} : ${etat.heures}`,
+          ...(this.carte()?.federation ? { federation: { nom: this.carte()!.federation!.nom, url: this.carte()!.federation!.url } } : {}),
+        };
+      case 'cartes': {
+        if (etat.cartes.length === 0) {
+          return { type: 'message', texte: 'Aucun conseil pour cette espèce en ce moment.', explications: etat.explications };
+        }
+        const lignes = this.lignes();
+        const coups = etat.cartes.map((c, i): CoupRiviere => {
+          const ligne = lignes[i];
+          return {
+            rang: c.rang,
+            type: c.type,
+            animation: c.animation,
+            couleur: c.couleur,
+            taille: c.taille?.valeur ?? null,
+            zone: c.zone,
+            famille: c.famille,
+            boite: ligne ? { manque: ligne.manque, texte: libelleBoite(ligne) } : null,
+          };
+        });
+        return { type: 'coups', coups, explications: etat.explications };
+      }
+    }
+  });
 
   protected cartesConseil(): CarteConseil[] {
     const etat = this.conseil();
@@ -1196,7 +1166,7 @@ export class ConseilPage implements OnInit {
   /** Ouvre un écran du dock ou de l'avatar sans recharger la page (le lien garde son href pour le clic droit et les lecteurs d'écran). */
   protected ouvrir(evenement: MouseEvent, chemin: string): void {
     // Ctrl, Cmd, Maj ou Alt-clic et clic non principal : le lien garde son comportement natif (nouvel onglet ou fenêtre).
-    if (evenement.button !== 0 || evenement.ctrlKey || evenement.metaKey || evenement.shiftKey || evenement.altKey) return;
+    if (!estClicSimple(evenement)) return;
     evenement.preventDefault();
     void this.router.navigateByUrl(chemin);
   }
@@ -1226,8 +1196,18 @@ export class ConseilPage implements OnInit {
   }
 
   protected fermerSaisie(): void {
-    this.focusSurBouton = true;
     this.fermerSaisieSansFocus();
+    this.boutonThermo()?.nativeElement.focus();
+  }
+
+  protected fermerConditions(): void {
+    this.conditionsOuvert.set(false);
+    this.boutonConditions()?.nativeElement.focus();
+  }
+
+  protected fermerReglementation(): void {
+    this.reglementationOuvert.set(false);
+    this.hostEl.nativeElement.querySelector<HTMLElement>('button.etat')?.focus();
   }
 
   private fermerSaisieSansFocus(): void {
@@ -1294,6 +1274,9 @@ export class ConseilPage implements OnInit {
     this.detailStore.details.set([]);
     this.detailStore.pourLaBoite.set(null);
     this.fermerSaisieSansFocus();
+    this.conditionsOuvert.set(false);
+    this.reglementationOuvert.set(false);
+    this.legal.set(null);
     this.messageSortie.set(null);
     this.choix.sortiePrete.set(null);
     this.etat.set({ type: 'chargement' });
@@ -1337,6 +1320,7 @@ export class ConseilPage implements OnInit {
     this.fermerSaisieSansFocus();
     void this.chargerEspeces();
     this.moment.set(choisi);
+    this.legal.set(null);
     this.etat.set({ type: 'chargement' });
     this.conseil.set({ type: 'calcul' });
     const releve = await this.conditions.releve({
@@ -1361,17 +1345,93 @@ export class ConseilPage implements OnInit {
         categorie: spot?.categorie ?? null,
       },
     });
-    if (heures && !this.pecheLegale(moment, heures, choisi !== null)) {
-      this.conseil.set({
-        type: 'hors heures',
-        heures: texteHeures,
-        jour: choisi ? motDuJour(moment, new Date()) : "aujourd'hui",
-      });
+    const legale = !heures || this.pecheLegale(moment, heures, choisi !== null);
+    const demain = heures && !legale ? this.heuresDuLendemain(moment, coordonnees) : null;
+    this.legal.set(heures ? this.etatLegal(moment, heures, legale, demain, choisi !== null) : null);
+    if (heures && !legale) {
+      this.conseil.set(this.horsHeures(moment, choisi, heures, demain));
       return;
     }
     const limite = choisi && heures ? this.limiteDansLHeure(moment, heures) : null;
     this.relancable = { releve, moment, limite };
     await this.chargerConseil(releve, moment, limite);
+  }
+
+  /** Les heures légales du jour suivant le moment (pour dire quand la pêche rouvre). */
+  private heuresDuLendemain(moment: Date, coordonnees: { latitude: number; longitude: number }): HeuresLegales | null {
+    return heuresLegales(this.astro.soleil(coordonnees, new Date(moment.getTime() + 24 * UNE_HEURE_MS)));
+  }
+
+  /** La ligne d'état réglementaire : ouverte, fermeture dans moins de 30 min, ou fermée jusqu'à la prochaine ouverture. */
+  private etatLegal(moment: Date, heures: HeuresLegales, legale: boolean, demain: HeuresLegales | null, choisi: boolean): EtatLegal {
+    if (legale) {
+      const fin = formaterHeure(heures.fin);
+      if (choisi) {
+        // Un moment choisi n'a pas de compte à rebours ; il vaut pour son heure entière, la pêche peut donc ouvrir après lui.
+        if (moment.getTime() < heures.debut.getTime()) {
+          return { type: 'fermeture', texte: `Ouverture à ${formaterHeure(heures.debut)}, fermeture à ${fin}` };
+        }
+        const restant = (heures.fin.getTime() - moment.getTime()) / 60_000;
+        return restant <= MINUTES_AVANT_FERMETURE
+          ? { type: 'fermeture', texte: `Fermeture à ${fin}` }
+          : { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
+      }
+      const minutes = Math.max(0, Math.round((heures.fin.getTime() - moment.getTime()) / 60_000));
+      if (minutes > MINUTES_AVANT_FERMETURE) return { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
+      return { type: 'fermeture', texte: `Fermeture à ${fin}, ${minutes < 1 ? "dans moins d'1 min" : `dans ${minutes} min`}` };
+    }
+    // Avant l'ouverture du jour, c'est elle ; sinon, celle du lendemain.
+    const ouverture = moment.getTime() < heures.debut.getTime() ? heures.debut : (demain?.debut ?? heures.debut);
+    return { type: 'ferme', texte: `Pêche fermée jusqu'à ${formaterHeure(ouverture)}` };
+  }
+
+  /**
+   * L'état « hors des heures légales ». Pour « Maintenant » après la fin du jour, l'écran donne les heures de demain
+   * (« Heures légales demain »), avant l'ouverture celles d'aujourd'hui ; un moment choisi garde les heures de son jour.
+   */
+  private horsHeures(moment: Date, choisi: MomentChoisi | null, heures: HeuresLegales, demain: HeuresLegales | null): EtatConseil {
+    const duJour = formaterHeuresLegales(heures.debut, heures.fin);
+    if (choisi) return { type: 'hors heures', heures: duJour, jour: motDuJour(moment, new Date()) };
+    if (moment.getTime() >= heures.fin.getTime() && demain) {
+      return { type: 'hors heures', heures: formaterHeuresLegales(demain.debut, demain.fin), jour: 'demain' };
+    }
+    return { type: 'hors heures', heures: duJour, jour: "aujourd'hui" };
+  }
+
+  /**
+   * « Maintenant » avance avec l'horloge : l'état réglementaire est recalculé chaque minute, à la reprise de l'app et au retour du détail.
+   * Franchir la fin des heures légales remplace les coups par l'avertissement ; franchir l'ouverture recalcule le conseil.
+   */
+  private rafraichirLegal(): void {
+    const lieu = this.lieu;
+    // Pendant qu'un détail est ouvert, rien ne change sous lui : le retour sur l'écran relance ce calcul.
+    if (this.detruit || !lieu || this.enfantOuvert() || this.moment() !== null || this.etat().type !== 'pret') return;
+    const maintenant = new Date();
+    const coordonnees = { latitude: lieu.latitude, longitude: lieu.longitude };
+    const heures = heuresLegales(this.astro.soleil(coordonnees, maintenant));
+    if (!heures) return;
+    const legale = dansHeuresLegales(maintenant, heures);
+    const avait = this.relancable !== null;
+    if (legale && !avait) {
+      if (this.conseil().type === 'hors heures') void this.chargerMoment(maintenant, null);
+      return;
+    }
+    const demain = legale ? null : this.heuresDuLendemain(maintenant, coordonnees);
+    this.legal.set(this.etatLegal(maintenant, heures, legale, demain, false));
+    if (!legale && avait) {
+      this.calcul++;
+      this.relancable = null;
+      this.detailStore.details.set([]);
+      this.detailStore.pourLaBoite.set(null);
+    }
+    if (!legale) {
+      // Déjà hors des heures : passé minuit, « demain » devient « aujourd'hui » et les heures changent de jour.
+      this.conseil.set(this.horsHeures(maintenant, null, heures, demain));
+      const etat = this.etat();
+      if (etat.type === 'pret') {
+        this.etat.set({ type: 'pret', carte: { ...etat.carte, heuresLegales: formaterHeuresLegales(heures.debut, heures.fin), date: maintenant } });
+      }
+    }
   }
 
   /**
@@ -1417,12 +1477,13 @@ export class ConseilPage implements OnInit {
     this.contexteAvis = null;
     this.conseil.set({ type: 'calcul' });
     try {
-      const [resultat, types, animations, couleurs, especes] = await Promise.all([
+      const [resultat, types, animations, couleurs, especes, familles] = await Promise.all([
         this.moteur.conseiller(conditions, moment),
         this.catalogue.typesDeLeurres(),
         this.catalogue.animations(),
         this.catalogue.couleurs(),
         this.especesDuContenu(),
+        this.famillesDuContenu(),
       ]);
       if (perime()) return;
       this.detailStore.details.set(
@@ -1440,11 +1501,11 @@ export class ConseilPage implements OnInit {
         taille: c.taille
           ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille, unites) }
           : null,
-        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
-        pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
+        zone: this.zoneDe(c.typeId, types),
+        famille: this.familleDe(c.typeId, types, familles),
       }));
       this.contexteAvis = { conditions: releve.conditions, moment };
-      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis,
+      this.conseil.set({ type: 'cartes', cartes, moinsPrecis: releve.moinsPrecis || releve.conditions.sourceTempEau === 'estimation',
         limite,
         explications: (resultat.explications ?? []).map(finirParUnPoint),
       });
@@ -1462,7 +1523,8 @@ export class ConseilPage implements OnInit {
     const { conditions } = releve;
     return {
       mention: releve.mention,
-      moinsPrecis: releve.moinsPrecis,
+      // Une eau seulement estimée depuis l'air rend aussi le conseil « moins précis » (comme la rivière).
+      moinsPrecis: releve.moinsPrecis || conditions.sourceTempEau === 'estimation',
       eauInconnue: conditions.tempEau === null,
       eau: formaterTempEau(conditions.tempEau, this.unites.choix()),
       sourceEau: formaterSourceTempEau(releve),
@@ -1470,6 +1532,7 @@ export class ConseilPage implements OnInit {
       pression: formaterPression(releve.pressionHpa, conditions.pressionTendance48h),
       ciel: formaterCiel(conditions.nuages),
       vent: formaterVent(conditions.vent),
+      meteo: formaterMeteo(conditions.nuages, conditions.vent),
       lune,
       heuresLegales: heures,
     };

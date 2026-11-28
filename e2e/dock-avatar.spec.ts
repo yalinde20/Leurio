@@ -3,6 +3,7 @@ import { onboardingTermine } from './onboarding-helpers';
 import { estLocal } from './firebase-helpers';
 import { lireThemes } from './tokens';
 import { attendreCompte } from './hors-ligne-donnees-helpers';
+import { conditionsAffichees, ecranConseil } from './conseil-helpers';
 
 // US 294 : le dock (Boîte · Ma sortie · Spots) et l'avatar Compte remplacent la barre de 4 onglets (PLAN §3).
 // Maquette validée : docs/maquettes/us-294-dock-et-avatar.html.
@@ -66,7 +67,7 @@ const rgb = (hex: string) => {
 test("US 294 critère 0 : given l'app fermée, when on l'ouvre, then l'écran Conseil s'affiche sans aucun tap et aucune barre d'onglets n'est visible", async ({ page }) => {
   await ouvrirLApp(page);
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(page).toHaveURL(/\/conseil$/);
   await expect(dock(page)).toBeVisible(); // le Conseil porte le dock, pas une barre d'onglets
   await expect(page.getByRole('tab')).toHaveCount(0);
@@ -102,7 +103,7 @@ test("US 294 critère 2 : given l'écran Conseil, when on touche « Boîte » pu
   await expect(retour(page)).toBeVisible();
 
   await retour(page).click();
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(dock(page)).toBeVisible();
 });
 
@@ -113,7 +114,7 @@ test("US 294 critère 3 : given l'écran Conseil, when on touche « Spots », th
   await expect(titreVisible(page)).toHaveText('Spots');
   await expect(retour(page)).toBeVisible();
   await retour(page).click();
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
 });
 
 test("US 294 critère 4 : given l'écran Conseil, when on touche l'avatar nommé « Compte », then l'écran Compte s'affiche", async ({ page }) => {
@@ -126,7 +127,7 @@ test("US 294 critère 4 : given l'écran Conseil, when on touche l'avatar nommé
 
 test("US 294 critère 5 : given l'écran Conseil, when on touche « Ma sortie », then le parcours « Préparer ma sortie » démarre comme avant et le bouton du bas du contenu a disparu", async ({ page }) => {
   await ouvrirLApp(page);
-  await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
+  await conditionsAffichees(page);
   await expect(page.getByRole('button', { name: /^Préparer ma sortie$/ })).toHaveCount(0);
   await expect(boutonSortie(page)).toBeEnabled();
 
@@ -150,7 +151,7 @@ test("US 294 critère 5 : given la sortie prête, when le message s'affiche au-d
 
 test("US 294 critère 5 : given la préparation en cours, when on a touché « Ma sortie », then le bouton du dock affiche « Préparation… »", async ({ page }) => {
   await ouvrirLApp(page, '/', 3000);
-  await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
+  await conditionsAffichees(page);
 
   await boutonSortie(page).click();
 
@@ -199,7 +200,7 @@ for (const [chemin, nom] of [['/boite', 'Boîte'], ['/spots', 'Spots'], ['/compt
 test("US 294 extra : given une URL inconnue, when on l'ouvre, then l'écran Conseil s'affiche", async ({ page }) => {
   await ouvrirLApp(page, '/nimporte-quoi/du-tout');
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(page).toHaveURL(/\/conseil$/);
   await expect(dock(page)).toBeVisible();
 });
@@ -207,7 +208,7 @@ test("US 294 extra : given une URL inconnue, when on l'ouvre, then l'écran Cons
 test("US 294 extra : given l'URL /conseil ouverte directement, when l'app s'affiche, then l'écran Conseil et son dock s'affichent", async ({ page }) => {
   await ouvrirLApp(page, '/conseil');
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(dock(page)).toBeVisible();
 });
 
@@ -257,7 +258,7 @@ test("US 294 maquette : given un spot choisi dans la feuille Lieu, when on ouvre
   await expect(titreVisible(page)).toHaveText('Boîte');
   await retour(page).click();
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(page.getByRole('button', { name: /^Lieu/ })).toContainText('Pont de Cé');
 });
 
@@ -273,7 +274,7 @@ test("US 294 maquette : given le message « Sortie prête » affiché, when on o
   await expect(titreVisible(page)).toHaveText('Spots');
   await retour(page).click();
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await expect(message).toBeVisible();
   await expect(page.getByRole('button', { name: /^Lieu/ })).toContainText('Pont de Cé');
 });

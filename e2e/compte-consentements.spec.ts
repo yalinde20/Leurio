@@ -8,6 +8,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
 import { ouvrirEcran } from './dock-helpers';
 import { attendreFirebase, enregistrerRequetes, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
+import { coupUn, ecranAffiche } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -120,7 +121,7 @@ test('critère 2 : given « Mesure d’audience (Analytics) » est désactivé, 
 
   for (const onglet of ['Conseil', 'Boîte', 'Spots', 'Compte'] as const) {
     await ouvrirEcran(page, onglet);
-    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText(onglet);
+    await ecranAffiche(page, onglet);
   }
 
   expect(versDomaines(urls, DOMAINES_ANALYTICS)).toEqual([]);
@@ -145,8 +146,8 @@ test('critère 4 : given « Lecteurs vidéo tiers » est désactivé, when j\'ou
   await expect(interrupteur(page, VIDEO)).not.toBeChecked();
 
   await ouvrirEcran(page, 'Conseil');
-  const carte = page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
-  await carte.getByText('Voir le détail').click();
+  const carte = coupUn(page);
+  await carte.click();
   await page.getByRole('button', { name: "Voir l'animation" }).click();
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
 

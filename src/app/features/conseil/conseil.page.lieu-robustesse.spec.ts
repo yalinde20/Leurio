@@ -10,6 +10,7 @@ import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ouvrirReglementation } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const NANTES: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.22, longitude: -1.55, precisionM: 10, departement: '44' };
@@ -111,6 +112,7 @@ describe('ConseilPage : choix du lieu, robustesse (US 87)', () => {
     const env = await afficher([NANTES, 'attente']);
     await ouvrir(env);
     await choisir(env, 'La Sèvre');
+    await ouvrirReglementation(env);
     expect(compact(env.page.textContent)).toContain(compact('1re catégorie hors saison'));
     await ouvrir(env);
     await choisir(env, 'Ma position');

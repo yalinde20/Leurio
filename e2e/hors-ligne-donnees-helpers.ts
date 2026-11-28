@@ -4,6 +4,7 @@ import { expect, type Browser, type BrowserContext, type Page } from '@playwrigh
 import { EMULATEURS, PROJET, attendreFirebase, estLocal } from './firebase-helpers';
 import { ouvrirEcran } from './dock-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { ecranConseil } from './conseil-helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -111,7 +112,7 @@ export function identifiantsUniques(): Identifiants {
  */
 export async function ouvrirUneFoisEnLigne(page: Page, base = ''): Promise<void> {
   await page.goto(`${base}/`);
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await page.evaluate(async () => {
     const prete = await navigator.serviceWorker.ready;
     const fin = Date.now() + 25_000;

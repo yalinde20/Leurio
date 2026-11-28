@@ -30,6 +30,7 @@ import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import couleursReelles from '../../../assets/data/couleurs.json';
 import especesReelles from '../../../assets/data/species.json';
 import federationsReelles from '../../../assets/data/federations.json';
+import famillesReelles from '../../../assets/data/lure-families.json';
 import typesReels from '../../../assets/data/lure-types.json';
 import techniquesReelles from '../../../assets/data/techniques.json';
 
@@ -164,13 +165,11 @@ const titres = (page: HTMLElement): string[] =>
   [...page.querySelectorAll<HTMLElement>('h1, h2, h3, h4, [role="heading"]')].map((h) => (h.textContent ?? '').trim());
 const detailOuvert = (page: HTMLElement): boolean => compact(page.textContent).includes(compact('Détail du conseil'));
 
+/** US 295 : le détail du coup 01 s'ouvre par son lien, posé dans la rivière en coupe. */
 async function ouvrirDetail(env: Env): Promise<void> {
-  const carte = [...env.page.querySelectorAll<HTMLElement>('section, article, ion-card')].find(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card'),
-  );
-  if (!carte) throw new Error('Aucune carte de conseil');
-  const candidats = [...carte.querySelectorAll<HTMLElement>('*')].filter((e) => compact(e.textContent).includes(compact('Voir le détail')));
-  candidats.filter((e) => !candidats.some((autre) => autre !== e && e.contains(autre)))[0].click();
+  const lien = env.page.querySelector<HTMLElement>('app-riviere-en-coupe a.coup');
+  if (!lien) throw new Error('Aucun coup 01 dans la rivière');
+  lien.click();
   await env.stabiliser();
 }
 async function ouvrirFiche(env: Env): Promise<void> {
@@ -271,6 +270,9 @@ describe('Fiche animation hors ligne (US 8)', () => {
       'assets/data/lure-types.json': typesReels,
       'assets/data/couleurs.json': couleursReelles,
       'assets/data/federations.json': federationsReelles,
+      // US 295 : la rivière en coupe lit les familles de leurres et leurs pictogrammes (aussi des fichiers embarqués).
+      'assets/data/lure-families.json': famillesReelles,
+      ...Object.fromEntries(famillesReelles.map((f) => [`assets/${f.pictogramme}`, '<svg viewBox="0 0 64 64"><path d="M0 0"/></svg>'])),
     };
     const requetes: string[] = [];
     const top3: ResultatConseil = { conseils: [conseil('tiree-relachee')], explications: [] };

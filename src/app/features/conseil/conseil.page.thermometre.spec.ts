@@ -1,12 +1,12 @@
 /*
  * US 85 : saisir la température de l'eau mesurée au thermomètre. Maquette de référence : docs/maquettes/us-85-saisie-thermometre.html.
  *
- * Contrat du DOM que ces tests supposent (tout est rendu dans la carte « Conditions », ligne de l'eau) :
- *  - Un `button` « J'ai mesuré l'eau », présent quand la saisie est fermée (y compris eau inconnue et mesure déjà saisie).
- *  - Au toucher : le bouton laisse place à un `input` libellé « Température de l'eau (°C) » (`label[for]`, `aria-label` ou `label` englobant)
- *    et à deux `button` « Annuler » et « Valider ». Une virgule est acceptée (« 12,5 »).
- *  - Refus : le champ reste ouvert, un `[role="alert"]` porte « Entre une température entre 0 et 35 °C. », rien n'est enregistré
- *    ni recalculé. Succès : le champ se ferme, le bouton « J'ai mesuré l'eau » revient, les conditions et le top 3 sont recalculés.
+ * Contrat du DOM que ces tests supposent (US 295 : la saisie passe par le bouton thermomètre de la ligne de l'eau) :
+ *  - Un `button` « Saisir la température de l'eau », toujours présent (y compris eau inconnue et mesure déjà saisie).
+ *  - Au toucher : une feuille s'ouvre avec un `input` libellé « Température de l'eau (°C) » (`label[for]`, `aria-label` ou `label` englobant)
+ *    et deux `button` « Annuler » et « Valider ». Une virgule est acceptée (« 12,5 »).
+ *  - Refus : le champ reste ouvert, un `[role="alert"]` de la feuille porte « Entre une température entre 0 et 35 °C. », rien n'est enregistré
+ *    ni recalculé. Succès : la feuille se ferme, les conditions et le top 3 sont recalculés. La température de l'eau est celle de l'écran.
  *  - La page lit la mesure dans `SaisieTempEauStore` (core/data/saisie-temp-eau.store.ts) et la passe en `saisieTempEau`
  *    dans chaque appel à `ConditionsService.releve()` (maintenant et moments choisis).
  *
@@ -26,6 +26,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { SaisieTempEau, saisieRecente } from '../../core/engine/temperature-eau';
 import { ConseilPage } from './conseil.page';
+import { compact, ouvrirConditions, stabiliser as stabiliserPage, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -178,12 +179,7 @@ async function configurer({ deja, vraiStore = false, sansMesure = 'capteur', mai
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  const stabiliser = async () => {
-    for (let i = 0; i < 3; i++) {
-      await fixture.whenStable();
-      fixture.detectChanges();
-    }
-  };
+  const stabiliser = () => stabiliserPage(fixture);
   await stabiliser();
   return { fixture, page: fixture.nativeElement as HTMLElement, stabiliser, appelsReleve, appelsMoteur, ecritures };
 }
@@ -192,27 +188,28 @@ type Env = Awaited<ReturnType<typeof configurer>>;
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.useRealTimers());
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 const boutons = (racine: ParentNode): HTMLElement[] => [...racine.querySelectorAll<HTMLElement>('button, ion-button')];
 
-function carte(page: HTMLElement): HTMLElement {
-  const titre = [...page.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  const c = titre?.closest('section, article, ion-card') as HTMLElement | null;
-  if (!c) throw new Error('aucune carte titrée « Conditions »');
-  return c;
-}
-const texteCarte = (page: HTMLElement): string => compact(carte(page).textContent);
+/** Le texte de la température de l'eau (grand chiffre, source, mention), de l'état et des feuilles ouvertes. */
+const texteCarte = (page: HTMLElement): string =>
+  compact([...page.querySelectorAll<HTMLElement>('.etat, .eau, app-feuille-conseil [role="dialog"]')].map((e) => e.textContent).join(' '));
+/** La feuille de saisie de la température (la seule feuille de la page qui a un champ). */
+const feuilleSaisie = (page: HTMLElement): HTMLElement | null =>
+  [...page.querySelectorAll<HTMLElement>('app-feuille-conseil [role="dialog"]')].find((d) => d.querySelector('input')) ?? null;
 
-function boutonDans(racine: HTMLElement, texte: string): HTMLElement | undefined {
+function boutonDans(racine: ParentNode, texte: string): HTMLElement | undefined {
   return boutons(racine).find((b) => compact(b.textContent) === compact(texte));
 }
 function bouton(page: HTMLElement, texte: string): HTMLElement {
-  const b = boutonDans(carte(page), texte);
-  if (!b) throw new Error(`Aucun bouton « ${texte} » dans la carte « Conditions »`);
+  const b = boutonDans(page, texte);
+  if (!b) throw new Error(`Aucun bouton « ${texte} »`);
   return b;
 }
+const BOUTON_THERMO = "Saisir la température de l'eau";
+const boutonThermo = (page: HTMLElement): HTMLElement | null => page.querySelector<HTMLElement>(`button[aria-label="${BOUTON_THERMO}"]`);
 function champ(page: HTMLElement): HTMLInputElement | undefined {
-  const c = carte(page);
+  const c = feuilleSaisie(page);
+  if (!c) return undefined;
   return [...c.querySelectorAll<HTMLInputElement>('input')].find((i) => {
     const parLabel = i.id ? c.querySelector(`label[for="${i.id}"]`) : null;
     const libelle = i.getAttribute('aria-label') ?? parLabel?.textContent ?? i.closest('label')?.textContent ?? '';
@@ -221,12 +218,12 @@ function champ(page: HTMLElement): HTMLInputElement | undefined {
 }
 function champOuvert(page: HTMLElement): HTMLInputElement {
   const i = champ(page);
-  if (!i) throw new Error("Aucun champ libellé « Température de l'eau (°C) » dans la carte « Conditions »");
+  if (!i) throw new Error("Aucun champ libellé « Température de l'eau (°C) » dans la feuille de saisie");
   return i;
 }
 
 async function ouvrirSaisie(env: Env): Promise<void> {
-  bouton(env.page, "J'ai mesuré l'eau").click();
+  boutonThermo(env.page)?.click();
   await env.stabiliser();
 }
 async function saisir(env: Env, texte: string): Promise<void> {
@@ -246,16 +243,12 @@ async function mesurer(env: Env, texte: string): Promise<void> {
   await valider(env);
 }
 
-/** Les cartes de conseil : les `section`, `article` ou `ion-card` les plus internes dont le texte contient « Animation : ». */
-function cartesConseil(page: HTMLElement): string[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')]
-    .filter((e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card') && !e.closest('[role="dialog"]'))
-    .map((e) => compact(e.textContent));
-}
+/** Les trois coups (01, puis 02 et 03 par la feuille « 2 autres coups »), en texte compact. */
+const cartesConseil = (env: Env): Promise<string[]> => textesDesCoups(env);
 
 // Choix d'un moment (contrat de la US 82).
 async function choisirDemain7h(env: Env): Promise<void> {
-  const dialogue = () => env.page.querySelector<HTMLElement>('[role="dialog"]');
+  const dialogue = () => env.page.querySelector<HTMLElement>('app-moment-feuille [role="dialog"]');
   const selecteur = boutons(env.page).find((b) => !b.closest('[role="dialog"]') && compact(b.textContent).includes('Moment'));
   selecteur?.click();
   await env.stabiliser();
@@ -276,14 +269,14 @@ async function choisirMaintenant(env: Env): Promise<void> {
   const selecteur = boutons(env.page).find((b) => !b.closest('[role="dialog"]') && compact(b.textContent).includes('Moment'));
   selecteur?.click();
   await env.stabiliser();
-  boutonDans(env.page.querySelector<HTMLElement>('[role="dialog"]')!, 'Maintenant')?.click();
+  boutonDans(env.page.querySelector<HTMLElement>('app-moment-feuille [role="dialog"]')!, 'Maintenant')?.click();
   await env.stabiliser();
 }
 
 const MESSAGE = 'Entre une température entre 0 et 35 °C.';
 
 describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
-  it("critère 1 : given l'écran Conseil est affiché, when je touche « J'ai mesuré l'eau », then un champ « Température de l'eau (°C) » et un bouton « Valider » s'affichent", async () => {
+  it("critère 1 : given l'écran Conseil est affiché, when je touche le bouton thermomètre, then une feuille avec un champ « Température de l'eau (°C) » et un bouton « Valider » s'affichent", async () => {
     const env = await configurer();
     expect(champ(env.page), 'le champ est fermé tant qu\'on n\'a rien touché').toBeUndefined();
 
@@ -291,12 +284,11 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     const i = champOuvert(env.page);
     expect(i.getAttribute('inputmode')).toBe('decimal');
-    expect(boutonDans(carte(env.page), 'Valider')).toBeDefined();
-    expect(boutonDans(carte(env.page), 'Annuler')).toBeDefined();
-    expect(boutonDans(carte(env.page), "J'ai mesuré l'eau"), 'le bouton laisse place au champ').toBeUndefined();
+    expect(boutonDans(feuilleSaisie(env.page)!, 'Valider')).toBeDefined();
+    expect(boutonDans(feuilleSaisie(env.page)!, 'Annuler')).toBeDefined();
   });
 
-  it("critère 1 : given l'eau est inconnue (« Mesure-la au thermomètre »), when je regarde la carte, then le bouton « J'ai mesuré l'eau » est là et ouvre le champ", async () => {
+  it("critère 1 : given l'eau est inconnue (« Mesure-la au thermomètre »), when je regarde l'écran, then le bouton thermomètre est là et ouvre le champ", async () => {
     const env = await configurer({ sansMesure: 'inconnue' });
 
     expect(texteCarte(env.page)).toContain(compact("Température de l'eau inconnue"));
@@ -307,16 +299,16 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
   it("critère 2 : given le champ est affiché, when j'entre 9 et je touche « Valider », then la carte « Conditions » affiche 9 °C avec la source « Mesurée au thermomètre à 9 h 12 »", async () => {
     const env = await configurer();
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
 
     await mesurer(env, '9');
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact("Température de l'eau : 9 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(texte).not.toContain(compact("Station Hub'Eau"));
     expect(champ(env.page), 'la saisie se ferme').toBeUndefined();
-    expect(boutonDans(carte(env.page), "J'ai mesuré l'eau"), 'le bouton revient pour corriger').toBeDefined();
+    expect(boutonThermo(env.page), 'le bouton thermomètre reste là pour corriger').not.toBeNull();
   });
 
   it("critère 2 : given le champ est affiché, when j'entre 9 et je touche « Valider », then la mesure est gardée avec l'instant présent", async () => {
@@ -332,7 +324,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
   it("critère 2 : given le champ est affiché, when j'entre 9 et je touche « Valider », then les conditions sont redemandées avec la mesure et les 3 conseils sont recalculés", async () => {
     const env = await configurer();
     const avant = env.appelsMoteur.length;
-    expect(cartesConseil(env.page)[0]).toContain(compact('Shad'));
+    expect((await cartesConseil(env))[0]).toContain(compact('Shad'));
 
     await mesurer(env, '9');
 
@@ -341,7 +333,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const dernier = env.appelsMoteur.at(-1);
     expect(dernier?.conditions.tempEau).toBe(9);
     expect(dernier?.conditions.sourceTempEau).toBe('saisie');
-    const cartes = cartesConseil(env.page);
+    const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Leurre dur (minnow)'));
     expect(cartes[1]).toContain(compact('Ver souple finesse'));
@@ -354,7 +346,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     await mesurer(env, '12,5');
 
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 12,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('12,5 °C'));
     expect(env.ecritures[0]?.valeurC).toBe(12.5);
   });
 
@@ -365,7 +357,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     expect(env.ecritures).toHaveLength(1);
     expect(env.ecritures[0].valeurC).toBe(Number(borne));
-    expect(texteCarte(env.page)).toContain(compact(`Température de l'eau : ${borne} °C`));
+    expect(texteCarte(env.page)).toContain(compact(`${borne} °C`));
     expect(env.page.querySelector('[role="alert"]')).toBeNull();
   });
 
@@ -374,7 +366,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     await mesurer(env, '12,5');
 
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 12,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('12,5 °C'));
     expect(texteCarte(env.page)).toContain(compact('Mesurée au thermomètre à 9 h 12'));
   });
 
@@ -398,12 +390,12 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const alerte = env.page.querySelector('[role="alert"]');
     expect(alerte, 'aucun [role="alert"]').not.toBeNull();
     expect(compact(alerte?.textContent)).toBe(compact(MESSAGE));
-    expect(carte(env.page).contains(alerte), "l'erreur est dans la carte « Conditions »").toBe(true);
+    expect(feuilleSaisie(env.page)?.contains(alerte), "l'erreur est dans la feuille de saisie").toBe(true);
     expect(champ(env.page), 'le champ reste ouvert').toBeDefined();
     expect(env.ecritures, 'rien n\'est enregistré').toHaveLength(0);
     expect(env.appelsReleve).toHaveLength(releves);
     expect(env.appelsMoteur).toHaveLength(moteur);
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it("critère 3 : given une saisie refusée, when je corrige avec 9 et je valide, then le message disparaît et la mesure est acceptée", async () => {
@@ -418,7 +410,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     expect(env.page.querySelector('[role="alert"]')).toBeNull();
     expect(env.ecritures).toHaveLength(1);
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 9 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
   });
 
   it("critère 2 : given le stockage du téléphone est inaccessible, when j'entre 9 et je touche « Valider », then la carte affiche 9 °C mesurée au thermomètre", async () => {
@@ -427,7 +419,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     await mesurer(env, '9');
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact("Température de l'eau : 9 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(env.appelsReleve.at(-1)?.saisieTempEau?.valeurC).toBe(9);
   });
@@ -441,9 +433,9 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     await env.stabiliser();
 
     expect(champ(env.page)).toBeUndefined();
-    expect(boutonDans(carte(env.page), "J'ai mesuré l'eau")).toBeDefined();
+    expect(boutonThermo(env.page)).not.toBeNull();
     expect(env.ecritures).toHaveLength(0);
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it("critère 4 : given j'ai saisi 9 °C il y a moins de 6 h, when je rouvre l'app, then la carte « Conditions » affiche toujours 9 °C avec la source « Mesurée au thermomètre à 9 h 12 »", async () => {
@@ -455,17 +447,17 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const rouverte = await configurer({ vraiStore: true, maintenant: new Date(MAINTENANT.getTime() + 3 * HEURE_MS) });
 
     const texte = texteCarte(rouverte.page);
-    expect(texte).toContain(compact("Température de l'eau : 9 °C"));
+    expect(temperatureAffichee(rouverte.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(rouverte.appelsReleve[0]?.saisieTempEau?.valeurC).toBe(9);
     expect(rouverte.appelsMoteur.at(-1)?.conditions.sourceTempEau).toBe('saisie');
-    expect(cartesConseil(rouverte.page)[0]).toContain(compact('Leurre dur (minnow)'));
+    expect((await cartesConseil(rouverte))[0]).toContain(compact('Leurre dur (minnow)'));
   });
 
   it("critère 4 : given une mesure de 9 °C gardée il y a 5 h, when l'écran Conseil s'affiche, then la carte affiche 9 °C mesurée au thermomètre à 4 h 12", async () => {
     const env = await configurer({ deja: mesure(5) });
 
-    expect(texteCarte(env.page)).toContain(compact("Température de l'eau : 9 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texteCarte(env.page)).toContain(compact('Mesurée au thermomètre à 4 h 12'));
     expect(env.appelsReleve[0]?.saisieTempEau?.mesureeA.getTime()).toBe(mesure(5).mesureeA.getTime());
   });
@@ -474,7 +466,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const env = await configurer({ deja: mesure(7) });
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
     expect(texte).toContain(compact("Station Hub'Eau La Maine à Angers, à 4 km"));
     expect(texte).not.toContain(compact('Mesurée au thermomètre'));
     expect(env.appelsMoteur.at(-1)?.conditions.sourceTempEau).toBe('capteur');
@@ -500,6 +492,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const dernier = env.appelsReleve.at(-1);
     expect(dernier?.moment?.getTime()).toBe(DEMAIN_7H.getTime());
     expect(dernier?.saisieTempEau?.valeurC, 'la page passe la mesure ; le service l\'écarte').toBe(9);
+    await ouvrirConditions(env); // la mention du moment choisi est dans la feuille « Conditions »
     const texte = texteCarte(env.page);
     expect(texte).toContain(compact('Prévisions pour demain 7 h'));
     expect(texte).toContain(compact("Station Hub'Eau La Maine à Angers, à 4 km"));
@@ -524,6 +517,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     await mesurer(env, '9');
 
     expect(env.ecritures).toHaveLength(1);
+    await ouvrirConditions(env); // la mention du moment choisi est dans la feuille « Conditions »
     const texte = texteCarte(env.page);
     expect(texte).toContain(compact('Prévisions pour demain 7 h'));
     expect(texte).not.toContain(compact('Mesurée au thermomètre'));

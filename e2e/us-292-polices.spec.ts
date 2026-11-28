@@ -3,6 +3,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
 import { estLocal } from './firebase-helpers';
+import { conseilAffiche } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -50,7 +51,8 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
   await page.goto('/');
   await expect(page.getByRole('navigation', { name: 'Navigation' })).toBeVisible();
-  await expect(page.locator('ion-title:visible')).toHaveText('Conseil');
+  // US 295 : le titre de l'écran Conseil est le lieu (plus de barre de titre).
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Ma position');
 
   // Les tokens de police nomment les deux familles.
   const tokens = await lireTokens(page, ['--lr-police-texte', '--lr-police-titre']);
@@ -58,9 +60,10 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
   expect(tokens['--lr-police-texte']).toMatch(/barlow/);
   expect(tokens['--lr-police-texte']).not.toContain('condensed');
 
-  // Titres : barre de titre et titres de l'écran. Texte : le corps de l'écran.
+  // Titres : titre de l'écran (le lieu) et autres titres de l'écran. Texte : le corps de l'écran.
   const famille = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).fontFamily.toLowerCase());
-  expect(await famille('ion-title:visible')).toContain('barlow condensed');
+  expect(await famille('ion-content:visible h1')).toContain('barlow condensed');
+  expect(await famille('ion-content:visible h1 button')).toContain('barlow condensed');
   const titres = page.locator('ion-content:visible h1, ion-content:visible h2, ion-content:visible h3');
   await expect(titres.first()).toBeVisible();
   for (const f of await titres.evaluateAll((els) => els.map((el) => getComputedStyle(el).fontFamily.toLowerCase()))) expect(f).toContain('barlow condensed');
@@ -88,18 +91,19 @@ test('US 292 critère 3 : given l\'app ouverte sans réseau, when on affiche l\'
   expect(externes.filter((u) => /fonts\.(googleapis|gstatic)\.com/.test(u))).toEqual([]);
 });
 
-test('US 292 critère 3 : given l\'écran Conseil, when on lit la police des chiffres, then la température de l\'eau et les pastilles de rang sont en Barlow Condensed', async ({ page }) => {
-  // Midi : dans les heures légales, sinon l'écran avertit au lieu de conseiller et n'a pas de pastille de rang.
+test('US 292 critère 3 : given l\'écran Conseil, when on lit la police des chiffres, then la température de l\'eau et le numéro « 01 » du coup sont en Barlow Condensed', async ({ page }) => {
+  // Midi : dans les heures légales, sinon l'écran avertit au lieu de conseiller et n'a pas de numéro de coup.
   await page.clock.setFixedTime(new Date('2026-11-09T12:00:00Z'));
   await onboardingTermine(page);
   await page.route((url) => !estLocal(url.toString()), (route) => route.abort());
   await page.goto('/');
-  await expect(page.locator('ion-title:visible')).toHaveText('Conseil');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Ma position');
+  await conseilAffiche(page);
   const famille = (loc: ReturnType<Page['locator']>) => loc.evaluateAll((els) => els.map((el) => getComputedStyle(el).fontFamily.toLowerCase()));
-  const rangs = page.locator('ion-content:visible .rang');
+  const rangs = page.getByRole('region', { name: 'Rivière en coupe' }).getByRole('link', { name: /^01\b/ }).locator('.num');
   await expect(rangs.first()).toBeVisible();
   for (const f of await famille(rangs)) expect(f).toContain('barlow condensed');
-  const eau = page.locator('ion-content:visible .eau dd');
+  const eau = page.locator('ion-content:visible .eau .temp');
   await expect(eau.first()).toBeVisible();
   for (const f of await famille(eau)) expect(f).toContain('barlow condensed');
 });

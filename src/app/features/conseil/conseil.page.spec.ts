@@ -7,7 +7,7 @@ import { PositionService } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
 
 describe('ConseilPage', () => {
-  it('affiche son titre « Conseil »', async () => {
+  it('affiche le lieu comme titre « Ma position »', async () => {
     await TestBed.configureTestingModule({
       imports: [ConseilPage],
       providers: [
@@ -22,6 +22,7 @@ describe('ConseilPage', () => {
     await fixture.whenStable();
 
     const page = fixture.nativeElement as HTMLElement;
-    expect(page.querySelector('ion-toolbar ion-title')?.textContent?.trim()).toBe('Conseil');
+    // US 295 : plus de barre de titre, le titre de l'écran est le lieu.
+    expect(page.querySelector('h1')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Lieu : Ma position');
   });
 });

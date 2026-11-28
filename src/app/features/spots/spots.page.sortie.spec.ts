@@ -34,6 +34,7 @@ import { MomentJourneeService } from '../../core/data/moment-journee.service';
 import { MoteurService } from '../../core/data/moteur.service';
 import { PositionService, ResultatPosition, Spot } from '../../core/data/position.service';
 import { DocumentSpot, SOURCE_SPOTS } from '../../core/data/spots.service';
+import { ouvrirConditions, textesDesCoups } from '../conseil/conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { TemperatureEauService } from '../../core/data/temperature-eau.service';
 import { WeatherProvider } from '../../core/data/weather-provider';
@@ -254,14 +255,14 @@ function boutonPreparer(li: HTMLElement): HTMLButtonElement {
 }
 const message = (li: HTMLElement, role: 'status' | 'alert', texte: string): HTMLElement | undefined =>
   [...li.querySelectorAll<HTMLElement>(`[role="${role}"]`)].find((e) => compact(e.textContent) === compact(texte));
-const cartesConseil = (env: Env): HTMLElement[] =>
-  [...pageConseil(env).querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card') && !e.closest('[role="dialog"]'),
-  );
-const carteConditions = (env: Env): string => {
-  const titre = [...pageConseil(env).querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  return compact((titre?.closest('section, article, ion-card') as HTMLElement | null)?.textContent);
+/** Les coups (US 295) : le « 01 » de la rivière, puis les « 02 » et « 03 » de la feuille « 2 autres coups ». */
+const cartesConseil = (env: Env): Promise<string[]> => textesDesCoups({ page: pageConseil(env), stabiliser: env.stabiliser });
+/** Ce que montrait la carte « Conditions » : l'eau et la mention datée de l'écran, et la feuille « Conditions » (Pression, Vent… : libellé puis valeur). */
+const carteConditions = async (env: Env): Promise<string> => {
+  await ouvrirConditions({ page: pageConseil(env), stabiliser: env.stabiliser });
+  return compact([...pageConseil(env).querySelectorAll<HTMLElement>('.eau, app-feuille-conseil [role="dialog"]')].map((e) => e.textContent).join(' '));
 };
+const attendu = (ligne: string): string => compact(ligne.replace(' : ', ' '));
 
 /** Touche « Préparer ma sortie » sur « Pont de Cé » et attend que `attendu` soit vrai. */
 async function preparerPontDeCe(env: Env, attendu: () => void): Promise<void> {
@@ -385,14 +386,14 @@ describe('SpotsPage : préparer ma sortie depuis un spot (US 15)', () => {
     bouton(li, 'Voir le conseil').click();
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(cartesConseil(env)).toHaveLength(3);
+      expect(await cartesConseil(env)).toHaveLength(3);
     });
 
     expect(env.router.url).toBe('/conseil');
     expect(compact(pageConseil(env).textContent)).toContain(compact('Pont de Cé'));
-    expect(carteConditions(env)).toContain(compact(MENTION_PREPARATION));
-    expect(carteConditions(env)).toContain(compact('Pression : 1027 hPa'));
-    expect(carteConditions(env)).toContain(compact('Vent : 32 km/h'));
+    expect(await carteConditions(env)).toContain(compact(MENTION_PREPARATION));
+    expect(await carteConditions(env)).toContain(attendu('Pression : 1027 hPa'));
+    expect(await carteConditions(env)).toContain(attendu('Vent : 32 km/h'));
     expect(compact(pageConseil(env).textContent)).not.toContain(compact('Moins précis'));
     const conditions = env.appelsMoteur.at(-1)?.conditions;
     expect(conditions?.nuages).toBe(27);
@@ -411,11 +412,11 @@ describe('SpotsPage : préparer ma sortie depuis un spot (US 15)', () => {
     bouton(li, 'Voir le conseil').click();
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(cartesConseil(env)).toHaveLength(3);
+      expect(await cartesConseil(env)).toHaveLength(3);
     });
 
     expect(compact(pageConseil(env).textContent)).toContain(compact('Gué de la Sarthe'));
-    expect(carteConditions(env)).not.toContain(compact(MENTION_PREPARATION));
+    expect(await carteConditions(env)).not.toContain(compact(MENTION_PREPARATION));
   });
 
   it("critère 3 : given le détail d'un spot sans réseau, when l'utilisateur touche « Préparer ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche sous les boutons", async () => {

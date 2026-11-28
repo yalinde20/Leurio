@@ -46,10 +46,10 @@ async function afficher(entrees: Partial<Entrees> = {}) {
 }
 
 describe('BandeauReglementationComponent (US 80)', () => {
-  it("given un spot de 1re catégorie le 01/03/2026, when j'ouvre l'onglet Conseil, then un bandeau titré « Réglementation » affiche « Fermé jusqu'au 14/03 »", async () => {
-    const { racine, texte } = await afficher({ categorie: 1, date: new Date(2026, 2, 1) });
+  it("given un spot de 1re catégorie le 01/03/2026, when j'ouvre la feuille « Réglementation » de l'écran Conseil, then le bandeau affiche « Fermé jusqu'au 14/03 »", async () => {
+    const { texte } = await afficher({ categorie: 1, date: new Date(2026, 2, 1) });
 
-    expect(racine.querySelector('h3, h2')?.textContent?.trim()).toBe('Réglementation');
+    // US 295 : le titre « Réglementation » est celui de la feuille qui contient le bandeau, plus celui du bandeau.
     expect(texte).toContain("Fermé jusqu'au 14/03");
   });
 
@@ -111,14 +111,14 @@ describe('BandeauReglementationComponent (US 80)', () => {
     expect(texte).toContain('Quota : 3 carnassiers par jour et par pêcheur, dont 2 brochets au maximum');
   });
 
-  it("given un lieu en Maine-et-Loire, when le bandeau s'affiche, then il affiche « À vérifier dans l'arrêté de ton département » et un lien « Voir la fédération de ton département » vers l'adresse du 49 lue dans federations.json", async () => {
+  it("given un lieu en Maine-et-Loire, when le bandeau s'affiche, then il affiche « À vérifier dans l'arrêté de ton département » et un lien « <nom de la fédération> ↗ » vers l'adresse du 49 lue dans federations.json", async () => {
     const { racine, texte } = await afficher({ federation: FEDERATION_49 });
 
     expect(FEDERATION_49?.url).toBeTruthy();
     expect(texte).toContain("À vérifier dans l'arrêté de ton département");
     const lien = racine.querySelector('a');
-    // US 84 (maquette validée) : nouveau texte du lien.
-    expect(lien?.textContent?.trim()).toBe('Voir la fédération de ton département');
+    // US 295 (maquette validée) : le lien porte le nom de la fédération.
+    expect(lien?.textContent?.trim()).toBe(`${FEDERATION_49.nom} ↗`);
     expect(lien?.getAttribute('href')).toBe(FEDERATION_49.url);
     expect(lien?.getAttribute('target')).toBe('_blank');
     expect(lien?.getAttribute('rel')).toContain('noopener');

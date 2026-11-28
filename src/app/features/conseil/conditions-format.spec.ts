@@ -5,6 +5,7 @@ import {
   formaterDebit,
   formaterHeure,
   formaterHeuresLegales,
+  formaterMeteo,
   formaterPression,
   formaterSourceTempEau,
   formaterTempEau,
@@ -95,5 +96,25 @@ describe('conditions-format', () => {
     expect(formaterVent(12)).toBe('12 km/h');
     expect(formaterCiel(null)).toBe('Indisponible');
     expect(formaterVent(null)).toBe('Indisponible');
+  });
+});
+
+describe('formaterMeteo (US 295)', () => {
+  it.each([
+    [10, 12, 'Dégagé, vent 12 km/h'],
+    [40, 12, 'Peu nuageux, vent 12 km/h'],
+    [70, 6.4, 'Nuageux, vent 6 km/h'],
+    [95, 30, 'Couvert, vent 30 km/h'],
+  ])('given %s %% de nuages et un vent de %s km/h, then « %s »', (nuages, vent, attendu) => {
+    expect(formaterMeteo(nuages, vent)).toBe(attendu);
+  });
+
+  it('given un ciel inconnu, then la ligne ne garde que le vent', () => {
+    expect(formaterMeteo(null, 12)).toBe('Vent 12 km/h');
+  });
+
+  it('given un vent inconnu, then la ligne le dit', () => {
+    expect(formaterMeteo(70, null)).toBe('Nuageux, vent indisponible');
+    expect(formaterMeteo(null, null)).toBe('Vent indisponible');
   });
 });

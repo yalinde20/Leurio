@@ -29,6 +29,7 @@ import { libelleTailleMinimale } from '../core/regulation/sizes';
 import { BoitePage } from '../features/boite/boite.page';
 import { detailDuConseil, formaterPoidsTete, formaterTaille, ligneDeLaBoite } from '../features/conseil/conseil-format';
 import { ConseilPage } from '../features/conseil/conseil.page';
+import { ecranDe, ouvrirAutresCoups, ouvrirConditions, stabiliser, temperatureAffichee } from '../features/conseil/conseil.page.aides';
 import poidsReels from '../../assets/data/engine-weights.json';
 
 const compact = (t: string | null | undefined): string => (t ?? '').replace(/[\s\u00a0\u202f]/g, '');
@@ -110,28 +111,28 @@ async function afficherConseil(unites?: 'metriques' | 'imperiales') {
     ],
   }).compileComponents();
   const fixture = TestBed.createComponent(ConseilPage);
-  for (let i = 0; i < 3; i++) {
-    await fixture.whenStable();
-    fixture.detectChanges();
-  }
-  return { texte: compact((fixture.nativeElement as HTMLElement).textContent), appelsMoteur };
+  await stabiliser(fixture);
+  // US 295 : les conditions complètes et les coups 02 et 03 sont dans des feuilles, ouvertes ici pour lire tout l'écran.
+  await ouvrirAutresCoups(ecranDe(fixture));
+  await ouvrirConditions(ecranDe(fixture));
+  return { texte: compact((fixture.nativeElement as HTMLElement).textContent), temperature: temperatureAffichee(fixture.nativeElement as HTMLElement), appelsMoteur };
 }
 
 describe('Unités dans l\'écran Conseil (US 93)', () => {
   it('critère 4 : given le système impérial, when la carte « Conditions » s\'affiche, then la température de l\'eau est en °F (52,7 °F pour 11,5 °C) et le vent et la pression ne changent pas', async () => {
-    const { texte } = await afficherConseil('imperiales');
+    const { texte, temperature } = await afficherConseil('imperiales');
 
-    expect(texte).toContain(compact("Température de l'eau : 52,7 °F"));
+    expect(temperature).toBe(compact('52,7 °F'));
     expect(texte).not.toContain(compact('11,5 °C'));
-    expect(texte).toContain(compact('Vent : 12 km/h'));
-    expect(texte).toContain(compact('Pression : 1012 hPa'));
+    expect(texte).toContain(compact('Vent 12 km/h'));
+    expect(texte).toContain(compact('Pression 1012 hPa'));
   });
 
   it('critère 4 : given le système impérial, when les cartes du top 3 s\'affichent, then la taille est en po (8 cm : 3,1 po) et le poids en oz (10 g : 0,35 oz)', async () => {
     const { texte } = await afficherConseil('imperiales');
 
-    expect(texte).toContain(compact('Taille : 3,1 po'));
-    expect(texte).toContain(compact('Poids : 0,35 oz'));
+    expect(texte).toContain(compact('3,1 po'));
+    expect(texte).toContain(compact('0,35 oz'));
     expect(texte).not.toContain(compact('8 cm'));
     expect(texte).not.toContain(compact('10 g'));
   });
@@ -145,11 +146,11 @@ describe('Unités dans l\'écran Conseil (US 93)', () => {
   });
 
   it('critère 4 : given aucun choix d\'unités, when l\'écran Conseil s\'affiche, then tout reste en métrique comme avant et le moteur n\'est pas en impérial', async () => {
-    const { texte, appelsMoteur } = await afficherConseil();
+    const { texte, temperature, appelsMoteur } = await afficherConseil();
 
-    expect(texte).toContain(compact("Température de l'eau : 11,5 °C"));
-    expect(texte).toContain(compact('Taille : 8 cm'));
-    expect(texte).toContain(compact('Poids : 10 g'));
+    expect(temperature).toBe(compact('11,5 °C'));
+    expect(texte).toContain(compact('8 cm'));
+    expect(texte).toContain(compact('10 g'));
     expect(texte).not.toContain('°F');
     expect(appelsMoteur[0].unites ?? 'metriques').toBe('metriques');
   });

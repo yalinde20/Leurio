@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { conseilAffiche, ligneEtat, riviere, tousLesCoups } from './conseil-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 // US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
@@ -40,23 +41,26 @@ async function ouvrirLApp(page: Page): Promise<void> {
   await page.goto('/');
 }
 
-// Une carte de conseil : un conteneur le plus interne dont le texte contient « Animation : ».
-const cartesConseil = (page: Page) =>
-  page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') });
 
-test('US 81 critère 1 : given l\'onboarding terminé, la localisation autorisée et un moment dans les heures légales, when j\'ouvre l\'app, then l\'écran « Conseil » montre la carte « Conditions » et 3 cartes de conseil sans aucun tap', async ({ page }) => {
+// US 295 : l'écran Conseil « rivière en coupe » : le lieu en titre, les conditions (eau, météo, état réglementaire) et le coup 01 sans aucun tap,
+// puis les coups 02 et 03 dans la feuille « 2 autres coups ».
+test('US 81 critère 1 : given l\'onboarding terminé, la localisation autorisée et un moment dans les heures légales, when j\'ouvre l\'app, then l\'écran « Conseil » montre les conditions et le top 3 (le coup 01, puis 02 et 03) sans aucun tap', async ({ page }) => {
   await ouvrirLApp(page);
 
-  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
-  await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
-  await expect(cartesConseil(page)).toHaveCount(3);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Ma position');
+  await expect(riviere(page)).toBeVisible();
+  await expect(page.getByText(/11,5\s°C/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /vent/i })).toBeVisible();
+  await expect(ligneEtat(page, /^Pêche ouverte jusqu.à/)).toBeVisible();
+  await conseilAffiche(page);
+  const coups = await tousLesCoups(page);
+  for (const coup of coups) await expect(coup).toBeVisible();
   await expect(page.getByText('Hors des heures légales')).toHaveCount(0);
 });
 
 test('US 81 critère 8 : given l\'écran Conseil affiché sur un téléphone, when on mesure ses boutons, then chaque bouton mesure au moins 48 × 48 px', async ({ page }) => {
   await ouvrirLApp(page);
-  await expect(cartesConseil(page)).toHaveCount(3);
+  await conseilAffiche(page);
   const bouton = page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: 'Ma sortie' });
   await expect(bouton).toBeVisible();
 
@@ -71,4 +75,11 @@ test('US 81 critère 8 : given l\'écran Conseil affiché sur un téléphone, wh
     expect(boite!.height, `hauteur de « ${nom} »`).toBeGreaterThanOrEqual(48);
     expect(boite!.width, `largeur de « ${nom} »`).toBeGreaterThanOrEqual(48);
   }
+});
+
+test('US 295 : given l\'écran Conseil, when le coup 01 s\'affiche, then il porte le pictogramme de la famille de son leurre (composant partagé de l\'US 293)', async ({ page }) => {
+  await ouvrirLApp(page);
+  await conseilAffiche(page);
+
+  await expect(page.getByRole('region', { name: 'Rivière en coupe' }).getByRole('link', { name: /^01\b/ }).locator('app-pictogramme-famille svg').locator('path, line, circle, rect, polyline, polygon, ellipse').first()).toBeAttached();
 });

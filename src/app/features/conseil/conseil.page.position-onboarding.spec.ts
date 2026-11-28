@@ -90,6 +90,6 @@ describe('ConseilPage et position obtenue à l\'onboarding (US 89)', () => {
 
     expect(appelsGps()).toBe(0);
     expect(appelsReleve).toHaveLength(0);
-    expect(page.textContent?.replace(/\s+/g, ' ')).toContain('Localisation indisponible : active la localisation ou choisis un spot enregistré.');
+    expect(page.textContent?.replace(/\s+/g, ' ')).toContain('Position introuvable : autorise la localisation, ou choisis un spot dans « Lieu ».');
   });
 });

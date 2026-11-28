@@ -33,6 +33,7 @@ import { WeatherProvider } from '../../core/data/weather-provider';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { compact, ouvrirConditions, textesDesCoups } from './conseil.page.aides';
 import { TuilesService } from '../../core/data/tuiles.service';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
@@ -227,14 +228,17 @@ async function preparerAvant(fabrique: IDBFactory): Promise<void> {
   vi.restoreAllMocks();
 }
 
-const compact = (texte: string | null | undefined): string => (texte ?? '').replace(/[\s\u00a0\u202f]/g, '');
 const boutons = (racine: ParentNode): HTMLElement[] => [...racine.querySelectorAll<HTMLElement>('button, ion-button')];
 
-function carte(page: HTMLElement): HTMLElement | null {
-  const titre = [...page.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-  return (titre?.closest('section, article, ion-card') as HTMLElement | null) ?? null;
+/** Le texte de la température de l'eau (avec sa source et la mention datée), de l'état et des feuilles ouvertes. */
+const texteCarte = (page: HTMLElement): string =>
+  compact([...page.querySelectorAll<HTMLElement>('.etat, .eau, app-feuille-conseil [role="dialog"]')].map((e) => e.textContent).join(' '));
+/** Les conditions complètes : celles de la feuille « Conditions », ouverte par la ligne météo. « Pression : 1027 hPa » s'y lit « Pression » puis « 1027 hPa ». */
+async function texteConditions(env: { page: HTMLElement; stabiliser(): Promise<void> }): Promise<string> {
+  await ouvrirConditions(env);
+  return texteCarte(env.page);
 }
-const texteCarte = (page: HTMLElement): string => compact(carte(page)?.textContent);
+const attendu = (ligne: string): string => compact(ligne.replace(' : ', ' '));
 
 function boutonPreparer(page: HTMLElement): HTMLElement {
   const dock = page.querySelector('nav[aria-label="Navigation"]');
@@ -243,12 +247,6 @@ function boutonPreparer(page: HTMLElement): HTMLElement {
   return trouve;
 }
 const estDesactive = (b: HTMLElement): boolean => b.hasAttribute('disabled') || (b as HTMLButtonElement).disabled === true;
-
-function cartesConseil(page: HTMLElement): HTMLElement[] {
-  return [...page.querySelectorAll<HTMLElement>('section, article, ion-card')].filter(
-    (e) => compact(e.textContent).includes(compact('Animation :')) && !e.querySelector('section, article, ion-card') && !e.closest('[role="dialog"]'),
-  );
-}
 
 const message = (page: HTMLElement, role: 'status' | 'alert', texte: string): HTMLElement | undefined =>
   [...page.querySelectorAll<HTMLElement>(`[role="${role}"]`)].find((e) => compact(e.textContent) === compact(texte));
@@ -342,14 +340,14 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     const env = await ouvrir();
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(cartesConseil(env.page)).toHaveLength(3);
+      expect(await textesDesCoups(env)).toHaveLength(3);
     });
 
     expect(texteCarte(env.page)).toContain(compact(MENTION_PREPARATION));
     expect(compact(env.page.textContent)).not.toContain(compact('Moins précis'));
-    expect(texteCarte(env.page)).toContain(compact('Pression : 1027 hPa'));
-    expect(texteCarte(env.page)).toContain(compact('Ciel : 27 % de nuages'));
-    expect(texteCarte(env.page)).toContain(compact('Vent : 32 km/h'));
+    expect(await texteConditions(env)).toContain(attendu('Pression : 1027 hPa'));
+    expect(await texteConditions(env)).toContain(attendu('Ciel : 27 % de nuages'));
+    expect(await texteConditions(env)).toContain(attendu('Vent : 32 km/h'));
     const conditions = appelsMoteur.at(-1)?.conditions;
     expect(conditions?.pressionTendance48h).toBe(7);
     expect(conditions?.nuages).toBe(27);
@@ -367,8 +365,8 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     await choisirMoment(env, 'Demain', 12); // 25/11 à 11:00Z
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(cartesConseil(env.page)).toHaveLength(3);
-      expect(texteCarte(env.page)).toContain(compact('Pression : 1027 hPa'));
+      expect(await textesDesCoups(env)).toHaveLength(3);
+      expect(await texteConditions(env)).toContain(attendu('Pression : 1027 hPa'));
     });
 
     expect(texteCarte(env.page)).toContain(compact(MENTION_PREPARATION));
@@ -390,8 +388,8 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
       expect(compact(env.page.textContent)).toContain(compact('Conseil moins précis'));
     });
 
-    expect(texteCarte(env.page)).toContain(compact('Moins précis'));
-    expect(cartesConseil(env.page)).toHaveLength(3);
+    expect(await texteConditions(env)).toContain(compact('Moins précis'));
+    expect(await textesDesCoups(env)).toHaveLength(3);
     expect(texteCarte(env.page)).not.toContain(compact(MENTION_PREPARATION));
     const conditions = appelsMoteur.at(-1)?.conditions;
     expect(conditions?.nuages).toBeNull();
@@ -414,7 +412,7 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     });
 
     expect(texteCarte(env.page)).not.toContain(compact('Conditions du 29/10'));
-    expect(texteCarte(env.page)).not.toContain(compact('Vent : 12 km/h'));
+    expect(await texteConditions(env)).not.toContain(attendu('Vent : 12 km/h'));
   });
 
   it("critère 4 : given l'appareil sans réseau, when l'utilisateur touche « Ma sortie », then rien n'est téléchargé et « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async () => {
@@ -454,10 +452,10 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     const hors = await ouvrir();
     await vi.waitFor(async () => {
       await hors.stabiliser();
-      expect(cartesConseil(hors.page)).toHaveLength(3);
+      expect(await textesDesCoups(hors)).toHaveLength(3);
     });
     expect(texteCarte(hors.page)).toContain(compact(MENTION_PREPARATION));
-    expect(texteCarte(hors.page)).toContain(compact('Pression : 1027 hPa'));
+    expect(await texteConditions(hors)).toContain(attendu('Pression : 1027 hPa'));
   });
 
   it("critère 6 : given une sortie préparée puis l'app fermée, when l'utilisateur rouvre l'app en mode avion, then les conditions préparées sont toujours utilisées pour le conseil", async () => {
@@ -467,7 +465,7 @@ describe('ConseilPage : préparer ma sortie (US 14)', () => {
     const env = await ouvrir();
     await vi.waitFor(async () => {
       await env.stabiliser();
-      expect(cartesConseil(env.page)).toHaveLength(3);
+      expect(await textesDesCoups(env)).toHaveLength(3);
     });
 
     expect(texteCarte(env.page)).toContain(compact(MENTION_PREPARATION));

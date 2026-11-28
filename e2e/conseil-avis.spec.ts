@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { conseilAffiche, ouvrirAutresCoups, riviere } from './conseil-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 test.beforeEach(async ({ page }) => onboardingTermine(page));
@@ -37,20 +38,34 @@ async function ouvrirLApp(page: Page): Promise<void> {
   await page.goto('/');
 }
 
-const cartesConseil = (page: Page) =>
-  page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') });
+const OUI = { name: "Oui, ce conseil m'a aidé" };
 
-test('US 88 critère 2 : given le top 3 affiché, when je touche « 👍 » de la carte 1 (vrai clic), then « Merci pour ton retour ! » s\'affiche sur cette carte et le détail ne s\'ouvre pas', async ({ page }) => {
+test('US 88 critère 2 : given le top 3 affiché, when je touche « 👍 » du coup 01 (vrai clic), then « Merci pour ton retour ! » s\'affiche à sa place, le détail ne s\'ouvre pas et les avis des coups 02 et 03 restent', async ({ page }) => {
   await ouvrirLApp(page);
-  await expect(cartesConseil(page)).toHaveCount(3);
+  await conseilAffiche(page);
   const urlAvant = page.url();
 
-  await cartesConseil(page).first().getByRole('button', { name: "Oui, ce conseil m'a aidé" }).click();
+  await riviere(page).getByRole('button', OUI).click();
 
-  await expect(cartesConseil(page).first().getByText('Merci pour ton retour !')).toBeVisible();
-  await expect(cartesConseil(page).nth(1).getByText('Merci pour ton retour !')).toHaveCount(0);
-  await expect(cartesConseil(page).first().getByRole('button', { name: /Oui, ce conseil/ })).toHaveCount(0);
+  await expect(riviere(page).getByRole('status').filter({ hasText: 'Merci pour ton retour !' })).toBeVisible();
+  await expect(riviere(page).getByRole('button', { name: /Oui, ce conseil/ })).toHaveCount(0);
   expect(page.url()).toBe(urlAvant);
   await expect(page).not.toHaveURL(/detail/);
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+  const feuille = await ouvrirAutresCoups(page);
+  await expect(feuille.getByRole('button', OUI)).toHaveCount(2);
+  await expect(feuille.getByText('Merci pour ton retour !')).toHaveCount(0);
+});
+
+test('US 88 critère 2 : given la feuille « 2 autres coups », when je touche « 👎 » du coup 02, then « Merci pour ton retour ! » remplace ses boutons et le détail ne s\'ouvre pas', async ({ page }) => {
+  await ouvrirLApp(page);
+  await conseilAffiche(page);
+  const feuille = await ouvrirAutresCoups(page);
+  const urlAvant = page.url();
+
+  await feuille.getByRole('button', { name: "Non, ce conseil ne m'a pas aidé" }).first().click();
+
+  await expect(feuille.getByRole('status').filter({ hasText: 'Merci pour ton retour !' })).toHaveCount(1);
+  await expect(feuille.getByRole('button', { name: /ce conseil ne m'a pas aidé/ })).toHaveCount(1);
+  expect(page.url()).toBe(urlAvant);
+  await expect(page).not.toHaveURL(/detail/);
 });

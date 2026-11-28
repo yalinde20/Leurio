@@ -7,6 +7,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
 import { ouvrirEcran } from './dock-helpers';
 import { attendreFirebase, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
+import { conseilAffiche } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -117,7 +118,7 @@ test('critère 2 : given « Préférences » est ouvert en « Débutant », when
 
   // Le conseil suivant est calculé pour ce niveau : l'écran Conseil s'affiche sans erreur avec le nouveau niveau gardé.
   await ouvrirEcran(page, 'Conseil');
-  await expect(page.getByText('Ton top 3')).toBeVisible();
+  await conseilAffiche(page);
 });
 
 test('critère 3 : given « Préférences » est ouvert, when je coche « Perche » puis décoche « Sandre », then especesFavorites de users/{uid} est mis à jour à chaque fois', async ({ page }) => {
@@ -146,10 +147,10 @@ test('critère 4 : given « Préférences » est ouvert, when je choisis « Imp�
       },
     });
   });
-  const eauMetrique = /Température de l.eau\s*:\s*11,5\s*°C/;
-  const eauImperiale = /Température de l.eau\s*:\s*52,7\s*°F/;
-  const tailleMetrique = /(Taille|Poids)\s*:\s*[\d,]+\s*(cm|g)\b/;
-  const tailleImperiale = /(Taille|Poids)\s*:\s*[\d,]+\s*(po|oz)\b/;
+  const eauMetrique = /11,5\s*°C/;
+  const eauImperiale = /52,7\s*°F/;
+  const tailleMetrique = /[\d,]+\s*(cm|g)\b/; // la taille ou le poids du coup 01
+  const tailleImperiale = /[\d,]+\s*(po|oz)\b/;
   const conseil = page.locator('ion-content:visible');
 
   await avecProfil(page);
