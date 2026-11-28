@@ -11,6 +11,8 @@ import { extname, join } from 'node:path';
 import { attendreFirebase, EMULATEURS, PROJET, profil } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 import { bloquerLeReseauExterne, ouvrirUneFoisEnLigne, titreVisible } from './hors-ligne-donnees-helpers';
+import { ecranConseil } from './conseil-helpers';
+import { coupUn } from './conseil-helpers';
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -39,7 +41,7 @@ test('US 12 critère 1 : given l\'app ouverte une fois avec du réseau, when l\'
   await context.setOffline(true);
   await page.goto('/');
 
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   const dock = page.getByRole('navigation', { name: 'Navigation' });
   await expect(dock.getByRole('link', { name: 'Boîte', exact: true })).toBeVisible();
   await expect(dock.getByRole('button', { name: 'Ma sortie', exact: true })).toBeVisible();
@@ -98,8 +100,8 @@ test('US 12 critère 2 : given l\'app ouverte une fois avec du réseau, sans avo
     });
     expect(profilRest.status).toBe(200);
     await ouvrirUneFoisEnLigne(page, base);
-    const carte = () => page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
-    await expect(carte().getByText('Voir le détail')).toBeVisible();
+    const carte = () => coupUn(page);
+    await expect(carte()).toBeVisible();
     // Le service worker a précaché le clip, et rien d'un autre hôte (aucune vidéo tierce en cache, §9 bis).
     const cacheVideos = () =>
       page.evaluate(async () => {
@@ -114,8 +116,8 @@ test('US 12 critère 2 : given l\'app ouverte une fois avec du réseau, sans avo
     await context.setOffline(true);
     externes.length = 0;
     await page.goto(`${base}/`);
-    await expect(carte().getByText('Voir le détail')).toBeVisible();
-    await carte().getByText('Voir le détail').click();
+    await expect(carte()).toBeVisible();
+    await carte().click();
     await page.getByRole('button', { name: "Voir l'animation" }).click();
 
     await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
@@ -184,7 +186,7 @@ test('US 12 critère 3 : given l\'app ouverte une fois avec du réseau sans avoi
 
 test('US 12 critère 4 : given l\'app de production, when on lance l\'audit d\'installabilité de Lighthouse (via Chrome), then il indique une app installable avec un service worker actif', async ({ page }) => {
   await page.goto('/');
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   const actif = await page.evaluate(async () => {
     const prete = await Promise.race([navigator.serviceWorker.ready, new Promise<null>((r) => setTimeout(() => r(null), 25_000))]);
     if (!prete) return null;
@@ -293,7 +295,7 @@ test('US 12 critère 5 : given une nouvelle version de l\'app déployée, when l
     // L'utilisateur rouvre l'app avec du réseau : le service worker voit la nouvelle version et la télécharge.
     const rouverte = await context.newPage();
     await rouverte.goto(`${base}/`);
-    await expect(titreVisible(rouverte)).toHaveText('Conseil');
+    await ecranConseil(rouverte);
     await expect.poll(() => journal.includes('/index.html'), { timeout: 30_000 }).toBe(true);
     // La nouvelle version est prête quand le cache du service worker tient l'index.html v2.
     await expect
@@ -316,7 +318,7 @@ test('US 12 critère 5 : given une nouvelle version de l\'app déployée, when l
     // Ouverture suivante : la nouvelle version est servie.
     const suivante = await context.newPage();
     await suivante.goto(`${base}/`);
-    await expect(titreVisible(suivante)).toHaveText('Conseil');
+    await ecranConseil(suivante);
     expect(await version(suivante)).toBe('v2');
   } finally {
     await new Promise((ok) => serveur.close(ok));

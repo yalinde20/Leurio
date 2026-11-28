@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { attendreFirebase, estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 import { ouvrirEcran } from './dock-helpers';
+import { conseilAffiche, top3Affiche } from './conseil-helpers';
 
 // US 15 : « Préparer ma sortie » depuis un spot (PLAN §3, §4). Maquette : docs/maquettes/us-15-preparer-ma-sortie-spot.html.
 // Spot créé par l'interface (émulateurs, comme spots-ajout.spec.ts). Aucun service réel : Open-Meteo répond par une prévision
@@ -55,7 +56,7 @@ async function ouvrirLeSpot(page: Page, requetesMeteo: string[] = []): Promise<v
   await page.goto('/');
   await attendreFirebase(page);
   // L'app s'ouvre sur « Conseil » : on attend son top 3 en ligne (contenu du moteur chargé), puis on va sur « Spots ».
-  await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
+  await top3Affiche(page);
   await ouvrirEcran(page, 'Spots');
   await page.getByRole('button', { name: 'Ajouter un spot', exact: true }).click();
   await formulaire(page).getByLabel('Nom').fill('Pont de Cé');
@@ -94,9 +95,9 @@ test("critère 2 : given une sortie préparée pour « Pont de Cé » puis le mo
   await reseau(page, true);
   await page.getByRole('button', { name: 'Voir le conseil', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+  await conseilAffiche(page);
   await expect(page.getByText('Conditions du 24/11 à 9 h')).toBeVisible();
-  await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
+  await top3Affiche(page);
 });
 
 test("critère 3 : given le détail d'un spot sans réseau, when l'utilisateur touche « Préparer ma sortie », then « Pas de réseau : prépare ta sortie avant de partir » s'affiche", async ({ page }) => {

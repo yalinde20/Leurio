@@ -5,6 +5,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
+import { conditionsAffichees, conseilAffiche } from './conseil-helpers';
 import {
   ajouterLeurre, ajouterSpot, attendreCompte, bloquerLeReseauExterne, identifiantsUniques, leurresSurEmulateur, lierAUnEmail,
   ligneLeurre, ligneSpot, modeAvion, onglet, ouvrirOnglet, ouvrirSecondAppareil, spotsSurEmulateur,
@@ -123,7 +124,7 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await ajouterSpot(page, 'Pont de Cé');
   await expect.poll(async () => (await leurresSurEmulateur(uid)).length + (await spotsSurEmulateur(uid)).length, { timeout: 20_000 }).toBe(2);
   await onglet(page, 'Conseil');
-  await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
+  await conditionsAffichees(page);
   await page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: /^Ma sortie$/ }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Sortie prête' })).toBeVisible();
 
@@ -133,7 +134,7 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await feuille.getByText('Demain', { exact: true }).click();
   await feuille.getByLabel('Heure').selectOption({ label: '12 h' });
   await feuille.getByRole('button', { name: 'Valider' }).click();
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+  await conseilAffiche(page);
   await expect(page.getByText('Conseil moins précis')).toHaveCount(0);
 
   await ouvrirOnglet(page, 'Boîte');
@@ -141,7 +142,7 @@ test('critère 4 : given une sortie préparée, puis le mode avion, when l\'util
   await ouvrirOnglet(page, 'Spots');
   await expect(ligneSpot(page, 'Pont de Cé')).toHaveCount(1);
   await onglet(page, 'Conseil');
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
+  await conseilAffiche(page);
 
   // §11 dans un seul scénario : un spot ajouté sans réseau est enregistré au retour du réseau.
   await ouvrirOnglet(page, 'Spots');

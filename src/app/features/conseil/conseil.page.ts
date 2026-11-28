@@ -20,7 +20,6 @@ import { SaisieTempEauStore } from '../../core/data/saisie-temp-eau.store';
 import { Conditions } from '../../core/engine/conditions';
 import { SaisieTempEau } from '../../core/engine/temperature-eau';
 import { dansHeuresLegales, HeuresLegales, heuresLegales } from '../../core/regulation/legal-hours';
-import { libelleTailleMinimale, tailleMinimale } from '../../core/regulation/sizes';
 import { UnitesService } from '../../shared/unites.service';
 import { BandeauReglementationComponent } from './bandeau-reglementation.component';
 import { EtatSpots, LieuFeuilleComponent } from './lieu-feuille.component';
@@ -38,7 +37,7 @@ import {
 } from './conditions-format';
 import { ConseilChoixStore, MomentChoisi, SortiePrete } from './conseil-choix.store';
 import { ConseilDetailStore } from './conseil-detail.store';
-import { detailDuConseil, formaterTaille, LigneBoite, libelleTaille, lireTempSaisie, premierePhrase } from './conseil-format';
+import { detailDuConseil, formaterTaille, LigneBoite, libelleTaille, lireTempSaisie } from './conseil-format';
 import { AvisDonne, CoupRiviere, DemandeDetail, RiviereEnCoupeComponent, VueRiviere, ZoneNage } from './riviere-en-coupe.component';
 import { FeuilleConseilComponent } from './feuille-conseil.component';
 import { ChoixEspece, EspeceFeuilleComponent } from './espece-feuille.component';
@@ -98,8 +97,6 @@ interface CarteConseil {
   animation: string;
   couleur: string;
   taille: { libelle: string; valeur: string } | null;
-  tailleMinimale: string | null;
-  pourquoi: string;
   /** Zone de nage du type de leurre (contenu `lure-types.json`) : où la rivière pose le coup. */
   zone: ZoneNage;
   famille: FamilleLeurre | null;
@@ -1004,16 +1001,6 @@ export class ConseilPage implements OnInit {
     void this.router.navigate(['/conseil', 'detail', rang]);
   }
 
-  protected heuresDuJour(): string {
-    const etat = this.conseil();
-    return etat.type === 'hors heures' ? etat.heures : '';
-  }
-
-  protected jourHeuresLegales(): string {
-    const etat = this.conseil();
-    return etat.type === 'hors heures' ? etat.jour : '';
-  }
-
   protected moinsPrecis(): boolean {
     const etat = this.conseil();
     return etat.type === 'cartes' && etat.moinsPrecis;
@@ -1413,8 +1400,6 @@ export class ConseilPage implements OnInit {
         taille: c.taille
           ? { libelle: libelleTaille(c.taille), valeur: formaterTaille(c.taille, unites) }
           : null,
-        tailleMinimale: cible && tailleMinimale(cible) !== null ? libelleTailleMinimale(cible, unites) : null,
-        pourquoi: premierePhrase(c.pourquoi[0] ?? ''),
         zone: this.zoneDe(c.typeId, types),
         famille: this.familleDe(c.typeId, types, familles),
       }));

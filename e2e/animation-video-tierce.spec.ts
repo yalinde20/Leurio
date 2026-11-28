@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 import { CLE_ONBOARDING } from './onboarding-helpers';
 import { attendreFirebase, enregistrerRequetes, EMULATEURS, estLocal, lireSurEmulateur, PROJET, profil } from './firebase-helpers';
+import { coupUn } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -84,7 +85,7 @@ async function avecProfil(page: Page, video: Reponse): Promise<string> {
 }
 
 async function ouvrirLaFiche(page: Page): Promise<void> {
-  await page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first().getByText('Voir le détail').click();
+  await coupUn(page).click();
   await page.getByRole('button', { name: "Voir l'animation" }).click();
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
 }

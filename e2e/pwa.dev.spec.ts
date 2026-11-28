@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { ecranConseil } from './conseil-helpers';
 
 test('critère 4 : given le serveur de développement, when on ouvre l\'app, then aucun service worker n\'est enregistré', async ({ page }) => {
   await onboardingTermine(page);
@@ -20,7 +21,7 @@ test('critère 4 : given le serveur de développement, when on ouvre l\'app, the
   });
 
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText('Conseil');
+  await ecranConseil(page);
 
   const { appels, enregistrements } = await page.evaluate(async () => {
     const appels = (window as unknown as { __registerAppels: number }).__registerAppels;

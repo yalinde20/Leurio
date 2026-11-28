@@ -6,6 +6,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
 import { ouvrirEcran } from './dock-helpers';
 import { estLocal } from './firebase-helpers';
+import { ecranAffiche, hautDeLEcran } from './conseil-helpers';
 
 test.use({
   viewport: { width: 390, height: 844 },
@@ -25,7 +26,7 @@ async function visiterLesOnglets(page: Page): Promise<void> {
   await page.goto('/');
   for (const nom of ONGLETS) {
     await ouvrirEcran(page, nom);
-    await expect(page.locator('ion-toolbar ion-title:visible')).toHaveText(nom);
+    await ecranAffiche(page, nom);
   }
 }
 
@@ -42,11 +43,11 @@ test("critère 1 : given l'app ouverte avec du réseau, when le réseau est coup
   await reseau(page, true);
   for (const nom of ONGLETS) {
     await ouvrirEcran(page, nom);
-    await expect(page.locator('ion-toolbar ion-title:visible'), nom).toHaveText(nom);
+    await ecranAffiche(page, nom);
     await expect(bandeau(page), `bandeau sur ${nom}`).toBeVisible();
     // En haut de l'écran : au-dessus de la barre de titre de la page, sans la recouvrir (l'écran est poussé vers le bas).
-    const [b, barre] = await Promise.all([bandeau(page).boundingBox(), page.locator('ion-toolbar:visible').first().boundingBox()]);
-    expect(b!.y + b!.height, `bandeau au-dessus de la barre de titre sur ${nom}, sans la recouvrir`).toBeLessThanOrEqual(barre!.y + 0.5);
+    const [b, barre] = await Promise.all([bandeau(page).boundingBox(), hautDeLEcran(page, nom).boundingBox()]);
+    expect(b!.y + b!.height, `bandeau au-dessus de la barre de titre (ou du lieu) sur ${nom}, sans la recouvrir`).toBeLessThanOrEqual(barre!.y + 0.5);
   }
 });
 
@@ -60,7 +61,7 @@ test("critère 2 : given l'indicateur « Hors ligne » affiché, when le réseau
   await expect(bandeau(page)).toHaveCount(0);
   for (const nom of ONGLETS) {
     await ouvrirEcran(page, nom);
-    await expect(page.locator('ion-toolbar ion-title:visible'), nom).toHaveText(nom);
+    await ecranAffiche(page, nom);
     await expect(bandeau(page), `pas de bandeau sur ${nom}`).toHaveCount(0);
   }
 });

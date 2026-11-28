@@ -3,6 +3,7 @@
 // la rouvrir = ouvrir une nouvelle page du même contexte (le cache IndexedDB de Firestore est conservé).
 import { test, expect } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { ecranConseil } from './conseil-helpers';
 import {
   ajouterLeurre, ajouterSpot, attendreCompte, bloquerLeReseauExterne, leurresSurEmulateur, ligneLeurre, ligneSpot, modeAvion, ouvrirUneFoisEnLigne,
   onglet, ouvrirOnglet, spotsSurEmulateur, titreVisible,
@@ -31,7 +32,7 @@ test('critère 1 : given la boîte et les spots chargés une fois avec du résea
   await context.setOffline(true);
   const rouverte = await context.newPage();
   await rouverte.goto('/');
-  await expect(titreVisible(rouverte)).toHaveText('Conseil');
+  await ecranConseil(rouverte);
 
   await ouvrirOnglet(rouverte, 'Boîte');
   await expect(ligneLeurre(rouverte, 'gardon')).toHaveCount(1);

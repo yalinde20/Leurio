@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
 import { estLocal } from './firebase-helpers';
+import { conditionsAffichees, conseilAffiche, top3Affiche } from './conseil-helpers';
 
 // US 14 : « Préparer ma sortie » depuis le Conseil (PLAN §3, §4). Maquette : docs/maquettes/us-14-preparer-ma-sortie.html.
 // Aucun service réel : la position est simulée, Open-Meteo répond par une prévision heure par heure fabriquée ici,
@@ -47,7 +48,7 @@ async function ouvrirLApp(page: Page, requetesMeteo: string[] = []): Promise<voi
     return route.abort();
   });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Conditions', exact: true })).toBeVisible();
+  await conditionsAffichees(page);
 }
 
 const boutonPreparer = (page: Page) => page.getByRole('navigation', { name: 'Navigation' }).getByRole('button', { name: /^Ma sortie$/ });
@@ -78,8 +79,8 @@ test("critère 2 : given une sortie préparée puis le mode avion, when l'utilis
   await feuille.getByRole('button', { name: 'Valider' }).click();
 
   await expect(page.getByText('Conditions du 24/11 à 9 h')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Ton top 3' })).toBeVisible();
-  await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
+  await conseilAffiche(page);
+  await top3Affiche(page);
   await expect(page.getByText('Conseil moins précis')).toHaveCount(0);
 });
 

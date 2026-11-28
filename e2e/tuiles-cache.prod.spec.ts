@@ -9,6 +9,7 @@ import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 import { ajouterSpot, attendreCompte, modeAvion, ouvrirOnglet, ouvrirUneFoisEnLigne, onglet, titreVisible } from './hors-ligne-donnees-helpers';
+import { top3Affiche } from './conseil-helpers';
 
 test.use({ viewport: { width: 390, height: 844 }, geolocation: { latitude: 47.47, longitude: -0.55 }, permissions: ['geolocation'] });
 
@@ -140,7 +141,7 @@ test('US 17 critère 2 : given une sortie préparée pour un spot, when l\'utili
   await ouvrirUneFoisEnLigne(page);
   await attendreCompte(page);
   // Le conseil d'accueil charge le contenu du moteur en ligne (comme pour un vrai utilisateur) avant d'aller sur « Spots ».
-  await expect(page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') })).toHaveCount(3);
+  await top3Affiche(page);
   await ecrireUnSpot(page, 'Pont de Cé');
   await ouvrirOnglet(page, 'Spots');
   await expect(rangee(page, 'Pont de Cé')).toBeVisible();

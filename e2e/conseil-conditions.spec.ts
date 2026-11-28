@@ -1,10 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
+import { ouvrirConditions } from './conseil-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 // US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
 test.beforeEach(async ({ page }) => onboardingTermine(page));
 
-// US 64, critère 7 : contraste des textes de la carte « Conditions » dans les deux thèmes (mesuré sur les styles calculés).
+// US 64, critère 7 : contraste des textes des conditions dans les deux thèmes (mesuré sur les styles calculés).
+// US 295 : les conditions sont la ligne de l'eau de l'écran et la feuille « Conditions » ouverte par la ligne météo.
 // Aucun service réel : la position est simulée, Hub'Eau répond par un faux relevé, Open-Meteo est coupé.
 
 test.use({
@@ -39,9 +41,9 @@ async function simulerServices(page: Page): Promise<void> {
 /** Contraste WCAG de chaque texte de la carte avec le fond réellement peint derrière lui. */
 function mesurerContrastes(page: Page) {
   return page.evaluate(() => {
-    const titre = [...document.querySelectorAll('h1, h2, h3, h4, h5, h6, ion-card-title')].find((t) => t.textContent?.trim() === 'Conditions');
-    const carte = titre?.closest('section, article, ion-card');
-    if (!carte) return null;
+    const feuille = document.querySelector('[role="dialog"][aria-label="Conditions"]');
+    const eau = document.querySelector('.eau');
+    if (!feuille || !eau) return null;
 
     const lire = (css: string): [number, number, number, number] => {
       const m = css.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 0];
@@ -63,7 +65,7 @@ function mesurerContrastes(page: Page) {
     };
 
     const mesures: { texte: string; contraste: number }[] = [];
-    for (const el of [carte, ...carte.querySelectorAll('*')]) {
+    for (const el of [feuille, ...feuille.querySelectorAll('*'), eau, ...eau.querySelectorAll('*')]) {
       const texte = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent?.trim() ?? '').join(' ').trim();
       if (!texte) continue;
       const [l1, l2] = [luminance(lire(getComputedStyle(el).color)), luminance(fondDe(el))].sort((a, b) => b - a);
@@ -79,9 +81,10 @@ for (const theme of ['light', 'dark'] as const) {
     await simulerServices(page);
     await page.goto('/');
     await expect(page.getByText('Station Hub\'Eau La Maine à Angers')).toBeVisible();
+    await ouvrirConditions(page);
 
     const mesures = await mesurerContrastes(page);
-    expect(mesures, 'aucune carte titrée « Conditions »').not.toBeNull();
+    expect(mesures, 'ni feuille « Conditions », ni ligne de l\'eau').not.toBeNull();
     expect(mesures!.length).toBeGreaterThan(5);
     for (const { texte, contraste } of mesures!) {
       expect(contraste, `« ${texte} » : contraste ${contraste.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
@@ -96,10 +99,11 @@ for (const theme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await simulerServices(page);
     await page.goto('/');
+    await ouvrirConditions(page);
     await expect(page.getByText('Moins précis', { exact: true })).toBeVisible();
 
     const mesures = await mesurerContrastes(page);
-    expect(mesures, 'aucune carte titrée « Conditions »').not.toBeNull();
+    expect(mesures, 'ni feuille « Conditions », ni ligne de l\'eau').not.toBeNull();
     const badge = mesures!.find((m) => m.texte === 'Moins précis');
     expect(badge, 'le texte « Moins précis » est absent de la carte').toBeDefined();
     expect(badge!.contraste, `« Moins précis » : contraste ${badge!.contraste.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);

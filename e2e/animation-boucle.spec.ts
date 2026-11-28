@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { onboardingTermine } from './onboarding-helpers';
+import { coupUn } from './conseil-helpers';
 
 // US 9 : la boucle courte (provider « self ») est lue dans la fiche animation, même hors ligne.
 // Les vrais fichiers src/assets/videos/*.mp4 n'existent pas encore (décision du propriétaire) : un petit clip de test,
@@ -39,7 +40,7 @@ async function ouvrirLaFiche(page: Page, options: { clip: boolean }): Promise<st
     return options.clip ? route.fulfill({ status: 200, contentType: 'video/webm', body: CLIP }) : route.fulfill({ status: 404, body: '' });
   });
   await page.goto('/');
-  await page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first().getByText('Voir le détail').click();
+  await coupUn(page).click();
   await page.getByRole('button', { name: "Voir l'animation" }).click();
   await expect(page.getByText('Le geste', { exact: true })).toBeVisible();
   return demandes;
@@ -73,8 +74,8 @@ test('US 9 critère 2 : given l\'appareil en mode avion, when j\'ouvre la fiche 
   await page.route(/open-meteo\.com/, (route) => route.abort());
   await page.route('**/assets/videos/*.mp4', (route) => route.fulfill({ status: 200, contentType: 'video/webm', body: CLIP }));
   await page.goto('/');
-  const carte = page.locator('section, article, ion-card').filter({ hasText: /Animation\s*:/ }).filter({ hasNot: page.locator('section, article, ion-card') }).first();
-  await carte.getByText('Voir le détail').click();
+  const carte = coupUn(page);
+  await carte.click();
   await expect(page.getByText('Détail du conseil')).toBeVisible();
   // Une première ouverture en ligne charge le code de la page (chargement différé du serveur de dev) ; on revient au détail.
   await page.getByRole('button', { name: "Voir l'animation" }).click();
