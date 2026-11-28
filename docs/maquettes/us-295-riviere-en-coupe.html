@@ -75,6 +75,15 @@
   .ligne b { font-weight: 600; }
   .fermer { align-self: flex-end; min-height: 48px; min-width: 48px; border: 0; background: none; font-weight: 600; color: var(--lr-primaire); }
   .sq { background: var(--lr-sable); border-radius: 8px; }
+  .actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; }
+  .actions .autres { min-height: 48px; align-self: center; }
+  .avis { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--lr-texte-secondaire); }
+  .avis button { width: 48px; height: 48px; border-radius: 24px; border: 1px solid var(--lr-bordure); background: var(--lr-surface); font-size: 20px; }
+  .merci { margin: 0; font-size: 14px; font-weight: 600; color: var(--lr-ok); display: flex; align-items: center; gap: 4px; min-height: 48px; }
+  .ligne-coup { display: flex; align-items: center; gap: 6px; }
+  .ligne-coup .coup { flex: 1; min-width: 0; }
+  .sortie { margin: 0; flex: none; min-height: 40px; display: flex; align-items: center; gap: 6px; padding: 0 16px; background: var(--lr-surface); border-top: 1px solid var(--lr-bordure); font-size: 14px; font-weight: 600; color: var(--lr-texte); }
+  .sortie .ic { color: var(--lr-ok); }
 </style>
 </head>
 <body>
@@ -325,6 +334,75 @@
 <div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
 </div>
 <p class="cap" style="margin-top:8px">Si le moteur échoue, la même place affiche « Conseil indisponible pour le moment. ». S'il n'y a aucun conseil, elle affiche « Aucun conseil pour cette espèce en ce moment. ».</p>
+</div>
+</div>
+
+<h2>5. Ajouts à valider : avis et « Sortie prête »</h2>
+<p class="note">Deux éléments existants que la maquette validée n'avait pas placés.
+<br>• L'avis « Ce conseil t'a aidé ? » 👍 / 👎 (PLAN §3) : sur la ligne de « 2 autres coups », à droite, hors de la carte du coup 01. Dans la feuille « 2 autres coups », chaque coup a ses 👍 / 👎 à côté. Après un tap, « Merci pour ton retour ! » prend leur place.
+<br>• Le message « Sortie prête » de « Ma sortie » : une ligne entre la rivière et le dock, qui réduit la rivière sans faire défiler l'écran.</p>
+<div class="phones">
+
+<div>
+<p class="cap">Avis sur le coup 01</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Maintenant</button><button class="pastille"><small>Espèce</small> Sandre</button></div>
+<button class="etat ok"><svg class="ic"><use href="#i-livre"/></svg>Pêche ouverte jusqu'à 17 h 45<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">11,5<small> °C</small></div></div><div><div class="src">Eau · Hub'Eau La Maine, 4 km</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau"><span class="lbl">Mi-eau</span></div>
+<div class="zone fond"><span class="lbl">Fond</span>
+<a class="coup" href="#"><span class="num">01</span><span class="reticule"><svg class="pic" width="40" height="40"><use href="#p-souples"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block">Shad · tirée-relâchée</span><span class="det" style="display:block">8 cm · gardon</span><span class="boite"><svg class="ic" style="width:14px;height:14px"><use href="#i-check"/></svg>Dans ta boîte</span></span><svg class="ic"><use href="#i-chev"/></svg></a>
+<div class="actions"><button class="autres">2 autres coups<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button><div class="avis"><span>Ce conseil t'a aidé ?</span><button aria-label="Oui, ce conseil m'a aidé">👍</button><button aria-label="Non, ce conseil ne m'a pas aidé">👎</button></div></div>
+</div>
+<div class="lit"></div>
+</div>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">Après un avis, et « Sortie prête » affichée</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Maintenant</button><button class="pastille"><small>Espèce</small> Sandre</button></div>
+<button class="etat ok"><svg class="ic"><use href="#i-livre"/></svg>Pêche ouverte jusqu'à 17 h 45<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">11,5<small> °C</small></div></div><div><div class="src">Eau · Hub'Eau La Maine, 4 km</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau"><span class="lbl">Mi-eau</span></div>
+<div class="zone fond"><span class="lbl">Fond</span>
+<a class="coup" href="#"><span class="num">01</span><span class="reticule"><svg class="pic" width="40" height="40"><use href="#p-souples"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block">Shad · tirée-relâchée</span><span class="det" style="display:block">8 cm · gardon</span><span class="boite"><svg class="ic" style="width:14px;height:14px"><use href="#i-check"/></svg>Dans ta boîte</span></span><svg class="ic"><use href="#i-chev"/></svg></a>
+<div class="actions"><button class="autres">2 autres coups<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button><p class="merci" role="status"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg>Merci pour ton retour !</p></div>
+</div>
+<div class="lit"></div>
+</div>
+<p class="sortie" role="status"><svg class="ic"><use href="#i-check"/></svg>Sortie prête : conditions jusqu'au 29/11 à 9 h</p>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">Avis dans « 2 autres coups »</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="voile"></div>
+<div class="feuille" role="dialog" aria-label="2 autres coups">
+<div class="poignee"></div>
+<h3>2 autres coups</h3>
+<div class="ligne-coup"><a class="coup" href="#" style="margin-top:6px"><span class="num">02</span><span class="reticule" style="width:44px;height:44px"><svg class="pic" width="34" height="34"><use href="#p-a-jupe"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block;font-size:20px">Jig à jupe · gratté</span><span class="det" style="display:block">10 g · gardon</span></span></a></div>
+<div class="actions" style="justify-content:flex-end"><div class="avis"><span>Ce conseil t'a aidé ?</span><button aria-label="Oui, ce conseil m'a aidé">👍</button><button aria-label="Non, ce conseil ne m'a pas aidé">👎</button></div></div>
+<div class="ligne-coup"><a class="coup" href="#" style="margin-top:0"><span class="num">03</span><span class="reticule" style="width:44px;height:44px"><svg class="pic" width="34" height="34"><use href="#p-souples"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block;font-size:20px">Ver souple finesse · drop shot</span><span class="det" style="display:block">6 cm · gardon</span></span></a></div>
+<div class="actions" style="justify-content:flex-end"><p class="merci" role="status"><svg class="ic" style="width:16px;height:16px"><use href="#i-check"/></svg>Merci pour ton retour !</p></div>
+<p class="src" style="margin:4px 0 0">Brochet fermé : les leurres à brochet sont écartés du conseil.</p>
+<button class="fermer">Fermer</button>
+</div>
+</div>
 </div>
 </div>
 </div>
