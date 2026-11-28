@@ -75,6 +75,21 @@
   .ligne b { font-weight: 600; }
   .fermer { align-self: flex-end; min-height: 48px; min-width: 48px; border: 0; background: none; font-weight: 600; color: var(--lr-primaire); }
   .sq { background: var(--lr-sable); border-radius: 8px; }
+  .phone.se { width: 375px; height: 667px; border-radius: 28px; }
+  .phone.se .status { height: 22px; align-items: center; padding-bottom: 0; font-size: 13px; }
+  .phone.se .dock { padding-bottom: 10px; }
+  .phone.se .actions { flex-wrap: wrap; row-gap: 0; }
+  .actions .autres, .avis span { white-space: nowrap; }
+  .riviere.compacte { grid-template-rows: 34px minmax(min-content, 1fr) 34px 18px; }
+  .riviere.compacte .zone:not(.avec-coup) { padding: 0 16px; }
+  .riviere.compacte .zone.avec-coup .lbl { position: static; }
+  .riviere.compacte .zone.avec-coup .coup { margin-top: 0; }
+  .lien-fede { min-height: 48px; display: flex; align-items: center; gap: 6px; color: var(--lr-primaire); font-weight: 700; text-decoration: none; }
+  .champ { min-height: 48px; border: 1.5px solid var(--lr-bordure); border-radius: 12px; padding: 0 14px; font: 600 20px var(--lr-police-titre); background: var(--lr-fond); color: var(--lr-texte); display: flex; align-items: center; }
+  .boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .boutons span { min-height: 48px; border-radius: 14px; border: 1.5px solid var(--lr-bordure); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .boutons .ok { background: var(--lr-primaire); border-color: var(--lr-primaire); color: var(--lr-sur-primaire); }
+  .clavier { position: absolute; left: 0; right: 0; bottom: 0; height: 250px; background: var(--lr-bordure); display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--lr-texte-secondaire); }
   .actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; }
   .actions .autres { min-height: 48px; align-self: center; }
   .avis { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--lr-texte-secondaire); }
@@ -404,6 +419,143 @@
 </div>
 </div>
 </div>
+</div>
+
+<h2>6. Ajouts à valider après la revue</h2>
+<p class="note">La revue du code a relevé cinq cas que la maquette ne montrait pas.
+<br>• Petit écran (iPhone SE, ou iPhone dans Safari avec ses barres) : les zones vides se réduisent à leur nom, la zone du coup prend la place. Si la largeur manque, l'avis passe sous « 2 autres coups ». Le coup et ses boutons ne sont jamais recouverts.
+<br>• Aucun conseil (fermeture du brochet) : l'explication des leurres écartés s'affiche dans la rivière, sous le message.
+<br>• Feuille Conditions : les heures légales portent la mention et le lien de la fédération (règle du PLAN §6). L'alerte hors heures légales a aussi le lien.
+<br>• Moment choisi : la ligne d'état dit « Ouverture à » si la pêche ouvre après le moment, et pas de compte à rebours (« dans N min ») hors de « Maintenant ».
+<br>• Le bouton thermomètre ouvre la feuille « Température de l'eau ». Sur iPhone, elle monte au-dessus du clavier.</p>
+<div class="phones">
+
+<div>
+<p class="cap">iPhone SE 375 × 667, Hub'Eau indisponible, « Sortie prête »</p>
+<div class="phone se">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Maintenant</button><button class="pastille"><small>Espèce</small> Sandre</button></div>
+<button class="etat ok"><svg class="ic"><use href="#i-livre"/></svg>Pêche ouverte jusqu'à 17 h 45<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">≈ 11<small> °C</small></div></div><div><div class="src">Eau estimée depuis l'air</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere compacte">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau avec-coup"><span class="lbl">Mi-eau · <span class="badge">Conseil moins précis</span></span>
+<a class="coup" href="#"><span class="num">01</span><span class="reticule"><svg class="pic" width="40" height="40"><use href="#p-souples"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block">Shad · tirée-relâchée</span><span class="det" style="display:block">8 cm · gardon</span><span class="boite"><svg class="ic" style="width:14px;height:14px"><use href="#i-check"/></svg>Dans ta boîte</span></span><svg class="ic"><use href="#i-chev"/></svg></a>
+<div class="actions"><button class="autres">2 autres coups<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button><div class="avis"><span>Ce conseil t'a aidé ?</span><button aria-label="Oui, ce conseil m'a aidé">👍</button><button aria-label="Non, ce conseil ne m'a pas aidé">👎</button></div></div>
+</div>
+<div class="zone fond"><span class="lbl">Fond</span></div>
+<div class="lit"></div>
+</div>
+<p class="sortie" role="status"><svg class="ic"><use href="#i-check"/></svg>Sortie prête : conditions jusqu'au 29/11 à 9 h</p>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">Aucun conseil : brochet en mars</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Maintenant</button><button class="pastille"><small>Espèce</small> Brochet</button></div>
+<button class="etat ok"><svg class="ic"><use href="#i-livre"/></svg>Pêche ouverte jusqu'à 18 h 52<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">11,5<small> °C</small></div></div><div><div class="src">Eau · Hub'Eau La Maine, 4 km</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau" style="align-items:center"><span class="lbl">Mi-eau</span>
+<p class="vide">Aucun conseil pour cette espèce en ce moment.<br><span style="font-size:13px">Brochet fermé : les leurres à brochet sont écartés du conseil.</span></p>
+</div>
+<div class="zone fond"><span class="lbl">Fond</span></div>
+<div class="lit"></div>
+</div>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">Conditions : mention et lien sous les heures légales</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="voile"></div>
+<div class="feuille" role="dialog" aria-label="Conditions">
+<div class="poignee"></div>
+<h3>Conditions</h3>
+<p class="src" style="margin:0 0 4px">Maintenant · Pont de Cé</p>
+<div class="ligne"><b>Eau</b><span>11,5 °C · Hub'Eau La Maine, 4 km</span></div>
+<div class="ligne"><b>Débit</b><span>Normal</span></div>
+<div class="ligne"><b>Pression</b><span>1016 hPa, stable</span></div>
+<div class="ligne"><b>Ciel</b><span>Nuageux</span></div>
+<div class="ligne"><b>Vent</b><span>12 km/h</span></div>
+<div class="ligne"><b>Lune</b><span>Premier croissant</span></div>
+<div class="ligne"><b>Heures légales</b><span>7 h 53 – 17 h 45</span></div>
+<p class="src" style="margin:4px 0 0">À vérifier dans l'arrêté de ton département.</p>
+<a class="lien-fede" href="#">Fédération de pêche de Maine-et-Loire ↗</a>
+<button class="fermer">Fermer</button>
+</div>
+</div>
+</div>
+
+<div>
+<p class="cap">Hors des heures légales : l'alerte a le lien</p>
+<div class="phone">
+<div class="status"><span>21:30</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Maintenant</button><button class="pastille"><small>Espèce</small> Sandre</button></div>
+<button class="etat ferme"><svg class="ic"><use href="#i-lune"/></svg>Pêche fermée jusqu'à 7 h 54<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">11,5<small> °C</small></div></div><div><div class="src">Eau · Hub'Eau La Maine, 4 km</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau" style="align-items:center"><span class="lbl">Mi-eau</span>
+<div class="vide" role="alert"><b style="color:var(--lr-danger)">Hors des heures légales : pas de pêche aux carnassiers la nuit.</b><br>Heures légales demain : 7 h 54 – 17 h 44.<br><span style="font-size:13px">À vérifier dans l'arrêté de ton département.</span><a class="lien-fede" style="justify-content:center;font-size:14px" href="#">Fédération de pêche de Maine-et-Loire ↗</a></div>
+</div>
+<div class="zone fond"><span class="lbl">Fond</span></div>
+<div class="lit"></div>
+</div>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+</div>
+
+<div>
+<p class="cap">Moment choisi « Demain 7 h », ouverture à 7 h 02</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="choix"><button class="pastille"><small>Moment</small> Demain 7 h</button><button class="pastille"><small>Espèce</small> Sandre</button></div>
+<button class="etat att"><svg class="ic"><use href="#i-alerte"/></svg>Ouverture à 7 h 02, fermeture à 17 h 44<svg class="ic" style="width:16px;height:16px;color:var(--lr-texte-secondaire)"><use href="#i-chev"/></svg></button>
+<div class="eau"><div><div class="temp">11,5<small> °C</small></div></div><div><div class="src">Eau · Hub'Eau La Maine, 4 km</div><button class="meteo">Nuageux, vent 12 km/h<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button></div><button class="thermo" aria-label="Saisir la température de l'eau"><svg class="ic"><use href="#i-thermo"/></svg></button></div>
+<div class="riviere">
+<div class="zone surface"><span class="lbl">Surface</span></div>
+<div class="zone mieau"><span class="lbl">Mi-eau</span>
+<a class="coup" href="#"><span class="num">01</span><span class="reticule"><svg class="pic" width="40" height="40"><use href="#p-souples"/></svg></span><span style="flex:1;min-width:0"><span class="nom" style="display:block">Shad · tirée-relâchée</span><span class="det" style="display:block">8 cm · gardon</span><span class="boite"><svg class="ic" style="width:14px;height:14px"><use href="#i-check"/></svg>Dans ta boîte</span></span><svg class="ic"><use href="#i-chev"/></svg></a>
+<div class="actions"><button class="autres">2 autres coups<svg class="ic" style="width:16px;height:16px"><use href="#i-chev"/></svg></button><div class="avis"><span>Ce conseil t'a aidé ?</span><button aria-label="Oui, ce conseil m'a aidé">👍</button><button aria-label="Non, ce conseil ne m'a pas aidé">👎</button></div></div>
+</div>
+<div class="zone fond"><span class="lbl">Fond</span></div>
+<div class="lit"></div>
+</div>
+<div class="dock"><span><svg class="ic"><use href="#i-boite"/></svg>Boîte</span><span class="action"><svg class="ic"><use href="#i-sac"/></svg>Ma sortie</span><span><svg class="ic"><use href="#i-pin"/></svg>Spots</span></div>
+</div>
+<p class="cap" style="margin-top:8px">Moment choisi « Demain 17 h 30 » : « Fermeture à 17 h 44 », sans « dans N min ».</p>
+</div>
+
+<div>
+<p class="cap">Température de l'eau, par le bouton thermomètre</p>
+<div class="phone">
+<div class="status"><span>12:00</span><span>100 %</span></div>
+<div class="haut"><button class="lieu"><b>Pont de Cé</b><svg class="ic"><use href="#i-bas"/></svg></button><button class="avatar" aria-label="Compte"><svg class="ic"><use href="#i-personne"/></svg></button></div>
+<div class="voile"></div>
+<div class="feuille" role="dialog" aria-label="Température de l'eau" style="bottom:250px;padding-bottom:16px;border-radius:24px 24px 0 0">
+<div class="poignee"></div>
+<h3>Température de l'eau</h3>
+<label class="src" style="font-size:14px;font-weight:600;color:var(--lr-texte)">Température de l'eau (°C)</label>
+<div class="champ">12,5</div>
+<div class="boutons"><span>Annuler</span><span class="ok">Valider</span></div>
+</div>
+<div class="clavier">Clavier numérique d'iOS</div>
+</div>
+<p class="cap" style="margin-top:8px">Valeur hors de 0 à 35 °C : « Entre une température entre 0 et 35 °C. » sous le champ.</p>
+</div>
+
 </div>
 </div>
 </body>
