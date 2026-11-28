@@ -14,6 +14,7 @@ import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
+import { ConseilChoixStore } from './conseil-choix.store';
 import { compact, stabiliser } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = { disponible: true, source: 'gps', latitude: 47.47, longitude: -0.55, precisionM: 10, departement: '49' };
@@ -28,7 +29,7 @@ const conseil: Conseil = { typeId: 'shad', techniqueId: 'tiree', especeCode: 'SA
 const MINUTE = 60_000;
 const heure = (hhmm: string) => new Date(`2026-11-09T${hhmm}${hhmm.length === 5 ? ':00' : ''}Z`);
 
-async function afficher(maintenant: Date) {
+async function afficher(maintenant: Date, choisi?: Date) {
   vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
   vi.setSystemTime(maintenant);
   const appelsSoleil: Date[] = [];
@@ -70,6 +71,7 @@ async function afficher(maintenant: Date) {
       },
     ],
   }).compileComponents();
+  if (choisi) TestBed.inject(ConseilChoixStore).moment.set({ date: choisi, libelle: 'Aujourd\'hui', mention: 'aujourd\'hui' });
   const fixture = TestBed.createComponent(ConseilPage);
   await stabiliser(fixture);
   const page = fixture.nativeElement as HTMLElement;
@@ -142,13 +144,33 @@ describe('ConseilPage : « Maintenant » suit l\'horloge (US 295)', () => {
   });
 
   it('given un moment choisi, when les minutes passent, then rien n\'est recalculé', async () => {
-    const env = await afficher(heure('16:50'));
-    TestBed.inject((await import('./conseil-choix.store')).ConseilChoixStore).moment.set({ date: heure('17:10'), libelle: 'Aujourd\'hui 18 h', mention: 'aujourd\'hui 18 h' });
+    const env = await afficher(heure('16:50'), heure('17:10'));
     const appels = env.appelsSoleil.length;
 
     await env.avancer(45 * MINUTE);
 
     expect(env.appelsSoleil.length).toBe(appels);
+  });
+
+  it('given un moment choisi avant l\'ouverture mais dans son heure (5 h 30 UTC), when l\'écran s\'affiche, then la ligne dit « Ouverture à 7 h 02, fermeture à 18 h 31 » avec l\'icône d\'attention et les coups', async () => {
+    const env = await afficher(heure('04:00'), heure('05:30'));
+
+    expect(env.etat()).toBe(compact('Ouverture à 7 h 02, fermeture à 18 h 31'));
+    expect(env.page.querySelector('button.etat [data-icone="alerte"]')).not.toBeNull();
+    expect(env.page.querySelector('a.coup')).not.toBeNull();
+  });
+
+  it('given un moment choisi à moins de 30 min de la fin (17 h 10 UTC), when l\'écran s\'affiche, then la ligne dit « Fermeture à 18 h 31 » sans « dans N min », avec l\'icône d\'attention', async () => {
+    const env = await afficher(heure('12:00'), heure('17:10'));
+
+    expect(env.etat()).toBe(compact('Fermeture à 18 h 31'));
+    expect(env.page.querySelector('button.etat [data-icone="alerte"]')).not.toBeNull();
+  });
+
+  it('given un moment choisi à plus de 30 min de la fin, when l\'écran s\'affiche, then la ligne dit « Pêche ouverte jusqu\'à 18 h 31 »', async () => {
+    const env = await afficher(heure('12:00'), heure('13:00'));
+
+    expect(env.etat()).toBe(compact("Pêche ouverte jusqu'à 18 h 31"));
   });
 
   it('given l\'écran détruit, when les minutes passent, then le minuteur est arrêté', async () => {

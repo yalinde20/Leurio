@@ -87,4 +87,26 @@ describe('RiviereEnCoupeComponent (US 295)', () => {
 
     expect(env.page.querySelector('a.coup')?.textContent).toContain('Dans ta boîte');
   });
+
+  it('given aucun conseil et des leurres écartés, when la rivière s\'affiche, then la note est dans la rivière sous le message', async () => {
+    const env = await afficher({ type: 'message', texte: 'Aucun conseil pour cette espèce en ce moment.', explications: ['Brochet fermé : leurres écartés.'] });
+
+    const zone = env.zone('Mi-eau');
+    expect(zone.querySelector('.message')?.textContent).toContain('Aucun conseil');
+    expect(zone.querySelector('[role="note"]')?.textContent).toContain('Brochet fermé');
+  });
+
+  it('given un seul coup et des leurres écartés (pas de feuille), when la rivière s\'affiche, then la note est sous le coup 01', async () => {
+    const env = await afficher({ type: 'coups', coups: [coup(1, 'fond')], explications: ['Brochet fermé : leurres écartés.'] });
+
+    expect(env.page.querySelector('#autres-coups')).toBeNull();
+    expect(env.zone('Fond').querySelector('[role="note"]')?.textContent).toContain('Brochet fermé');
+  });
+
+  it('given un coup en zone « fond », when la rivière s\'affiche, then seule cette zone prend la place et les autres se réduisent à leur nom', async () => {
+    const env = await afficher({ type: 'coups', coups: [coup(1, 'fond')], explications: [] });
+
+    const lignes = (env.page.querySelector('section') as HTMLElement).style.gridTemplateRows;
+    expect(lignes).toBe('minmax(34px, 1fr) minmax(34px, 1fr) minmax(min-content, 1fr) 18px');
+  });
 });

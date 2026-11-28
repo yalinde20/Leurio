@@ -157,8 +157,7 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
     .ecran {
       display: flex;
       flex-direction: column;
-      height: 100%;
-      overflow: hidden;
+      min-height: 100%;
       color: var(--lr-texte);
     }
     .ic {
@@ -385,6 +384,18 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
       margin: 0;
       text-align: right;
     }
+    .lien-federation {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      color: var(--lr-primaire);
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    .limite.verifier {
+      margin: 6px 0 0;
+    }
     .limite {
       margin: 0 0 6px;
       color: var(--lr-texte-secondaire);
@@ -501,7 +512,7 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
   `,
   template: `
     @if (!enfantOuvert()) {
-    <ion-content [scrollY]="false">
+    <ion-content>
       <div class="ecran">
         <div class="haut">
           <h1 class="titre-lieu">
@@ -666,6 +677,10 @@ addIcons({ bagHandleOutline, briefcaseOutline, checkmarkOutline, locationOutline
             <dd>{{ c.heuresLegales }}</dd>
           </div>
         </dl>
+        <p class="limite verifier">À vérifier dans l'arrêté de ton département.</p>
+        @if (c.federation; as f) {
+          <a class="lien-federation" [href]="f.url" target="_blank" rel="noopener">{{ f.nom }} ↗</a>
+        }
       </app-feuille-conseil>
     }
     @if (reglementationOuvert()) {
@@ -1046,7 +1061,9 @@ export class ConseilPage implements OnInit {
           heures: `Heures légales ${etat.jour} : ${etat.heures}`,
         };
       case 'cartes': {
-        if (etat.cartes.length === 0) return { type: 'message', texte: 'Aucun conseil pour cette espèce en ce moment.' };
+        if (etat.cartes.length === 0) {
+          return { type: 'message', texte: 'Aucun conseil pour cette espèce en ce moment.', explications: etat.explications };
+        }
         const lignes = this.lignes();
         const coups = etat.cartes.map((c, i): CoupRiviere => {
           const ligne = lignes[i];
@@ -1320,7 +1337,7 @@ export class ConseilPage implements OnInit {
     });
     const legale = !heures || this.pecheLegale(moment, heures, choisi !== null);
     const demain = heures && !legale ? this.heuresDuLendemain(moment, coordonnees) : null;
-    this.legal.set(heures ? this.etatLegal(moment, heures, legale, demain) : null);
+    this.legal.set(heures ? this.etatLegal(moment, heures, legale, demain, choisi !== null) : null);
     if (heures && !legale) {
       this.conseil.set(this.horsHeures(moment, choisi, heures, demain));
       return;
@@ -1336,9 +1353,19 @@ export class ConseilPage implements OnInit {
   }
 
   /** La ligne d'état réglementaire : ouverte, fermeture dans moins de 30 min, ou fermée jusqu'à la prochaine ouverture. */
-  private etatLegal(moment: Date, heures: HeuresLegales, legale: boolean, demain: HeuresLegales | null): EtatLegal {
+  private etatLegal(moment: Date, heures: HeuresLegales, legale: boolean, demain: HeuresLegales | null, choisi: boolean): EtatLegal {
     if (legale) {
       const fin = formaterHeure(heures.fin);
+      if (choisi) {
+        // Un moment choisi n'a pas de compte à rebours ; il vaut pour son heure entière, la pêche peut donc ouvrir après lui.
+        if (moment.getTime() < heures.debut.getTime()) {
+          return { type: 'fermeture', texte: `Ouverture à ${formaterHeure(heures.debut)}, fermeture à ${fin}` };
+        }
+        const restant = (heures.fin.getTime() - moment.getTime()) / 60_000;
+        return restant <= MINUTES_AVANT_FERMETURE
+          ? { type: 'fermeture', texte: `Fermeture à ${fin}` }
+          : { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
+      }
       const minutes = Math.max(0, Math.round((heures.fin.getTime() - moment.getTime()) / 60_000));
       if (minutes > MINUTES_AVANT_FERMETURE) return { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
       return { type: 'fermeture', texte: `Fermeture à ${fin}, ${minutes < 1 ? "dans moins d'1 min" : `dans ${minutes} min`}` };
@@ -1379,7 +1406,7 @@ export class ConseilPage implements OnInit {
       return;
     }
     const demain = legale ? null : this.heuresDuLendemain(maintenant, coordonnees);
-    this.legal.set(this.etatLegal(maintenant, heures, legale, demain));
+    this.legal.set(this.etatLegal(maintenant, heures, legale, demain, false));
     if (!legale && avait) {
       this.calcul++;
       this.relancable = null;

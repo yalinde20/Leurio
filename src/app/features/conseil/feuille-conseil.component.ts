@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 
 /**
  * Feuille du bas de l'écran Conseil (US 295) : un dialogue dans la page (pas d'ion-modal), fermé par « Fermer »,
@@ -6,7 +6,7 @@ import { AfterViewInit, Component, ElementRef, input, output, viewChild } from '
  */
 @Component({
   selector: 'app-feuille-conseil',
-  host: { '(keydown.escape)': 'ferme.emit()', '(click)': 'surVoile($event)' },
+  host: { '(keydown.escape)': 'ferme.emit()', '(click)': 'surVoile($event)', '[style.padding-bottom.px]': 'clavier()' },
   styles: `
     :host {
       position: fixed;
@@ -66,6 +66,25 @@ import { AfterViewInit, Component, ElementRef, input, output, viewChild } from '
 export class FeuilleConseilComponent implements AfterViewInit {
   readonly titre = input.required<string>();
   readonly ferme = output<void>();
+
+  /**
+   * Hauteur du clavier : sur iOS (Safari, PWA, Capacitor sans plugin Clavier) le clavier recouvre la page sans la redimensionner,
+   * mais `visualViewport` rétrécit. La feuille remonte de cette hauteur pour que « Valider » ne soit pas recouvert.
+   */
+  protected readonly clavier = signal(0);
+
+  constructor() {
+    const vue = window.visualViewport;
+    if (!vue) return;
+    const mesurer = () => this.clavier.set(Math.max(0, Math.round(window.innerHeight - vue.height - vue.offsetTop)));
+    vue.addEventListener('resize', mesurer);
+    vue.addEventListener('scroll', mesurer);
+    inject(DestroyRef).onDestroy(() => {
+      vue.removeEventListener('resize', mesurer);
+      vue.removeEventListener('scroll', mesurer);
+    });
+    mesurer();
+  }
 
   private readonly dialogue = viewChild.required<ElementRef<HTMLElement>>('dialogue');
 

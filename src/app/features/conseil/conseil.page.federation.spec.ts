@@ -10,7 +10,7 @@ import { CatalogService } from '../../core/data/catalog.service';
 import { ConditionsService, ReleveActuel } from '../../core/data/conditions.service';
 import { PositionService } from '../../core/data/position.service';
 import { ConseilPage } from './conseil.page';
-import { ecranDe, ouvrirReglementation, stabiliser } from './conseil.page.aides';
+import { ecranDe, ouvrirConditions, ouvrirReglementation, stabiliser } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const RELEVE: ReleveActuel = {
@@ -77,7 +77,7 @@ async function afficher(federation: (departement: string) => Promise<unknown>) {
   await stabiliser(fixture);
   // US 295 : la mention et le lien sont dans la feuille « Réglementation », sous les heures légales ; la ligne d'état l'ouvre.
   const feuille = await ouvrirReglementation(ecranDe(fixture));
-  return { page: fixture.nativeElement as HTMLElement, demandes, feuille };
+  return { page: fixture.nativeElement as HTMLElement, demandes, feuille, fixture };
 }
 
 const MENTION = "À vérifier dans l'arrêté de ton département";
@@ -102,6 +102,34 @@ describe('ConseilPage : mention réglementaire des heures légales (US 64, PLAN 
 
   it("given aucune fédération pour le département, when la carte s'affiche, then seule la mention est écrite, sans lien", async () => {
     const { feuille } = await afficher(async () => undefined);
+
+    expect(feuille.textContent).toContain(MENTION);
+    expect(feuille.querySelector('a')).toBeNull();
+  });
+
+  it("US 295 : given les conditions du département 49, when j'ouvre la feuille « Conditions », then la mention et le lien de la fédération (nouvel onglet, 48 px) sont sous les heures légales", async () => {
+    const env = await afficher(async () => ({ departement: '49', nom: 'Fédération de pêche de Maine-et-Loire', url: 'https://www.federation-peche49.fr' }));
+    env.page.querySelector<HTMLElement>('app-feuille-conseil .fermer')?.click();
+    await stabiliser(env.fixture);
+
+    const feuille = await ouvrirConditions(ecranDe(env.fixture));
+
+    const texte = feuille.textContent ?? '';
+    expect(texte).toContain(MENTION);
+    expect(texte.indexOf('Heures légales')).toBeLessThan(texte.indexOf(MENTION));
+    const lien = feuille.querySelector('a');
+    expect(lien?.textContent?.trim()).toBe('Fédération de pêche de Maine-et-Loire ↗');
+    expect(lien?.getAttribute('href')).toBe('https://www.federation-peche49.fr');
+    expect(lien?.getAttribute('target')).toBe('_blank');
+    expect(lien?.getAttribute('rel')).toContain('noopener');
+  });
+
+  it("US 295 : given aucune fédération pour le département, when j'ouvre la feuille « Conditions », then seule la mention est écrite, sans lien", async () => {
+    const env = await afficher(async () => undefined);
+    env.page.querySelector<HTMLElement>('app-feuille-conseil .fermer')?.click();
+    await stabiliser(env.fixture);
+
+    const feuille = await ouvrirConditions(ecranDe(env.fixture));
 
     expect(feuille.textContent).toContain(MENTION);
     expect(feuille.querySelector('a')).toBeNull();

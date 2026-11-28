@@ -83,16 +83,17 @@ interface Reglages {
   especes?: Espece[];
   federation?: Federation | undefined;
   explications?: string[];
+  conseils?: Conseil[];
 }
 
 async function afficher(reglages: Reglages = {}) {
-  const { maintenant = HORS_FERMETURE, especes = ESPECES, explications = [] } = reglages;
+  const { maintenant = HORS_FERMETURE, especes = ESPECES, explications = [], conseils = TROIS_CONSEILS } = reglages;
   // `federation: undefined` doit vraiment donner « aucune fédération connue » : pas de valeur par défaut dans ce cas.
   const federation = 'federation' in reglages ? reglages.federation : FEDERATION_49;
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(maintenant);
   const demandesFederation: string[] = [];
-  const resultat: ResultatConseil = { conseils: TROIS_CONSEILS, explications };
+  const resultat: ResultatConseil = { conseils, explications };
   await TestBed.configureTestingModule({
     imports: [ConseilPage],
     providers: [
@@ -246,5 +247,26 @@ describe('ConseilPage : explication des leurres écartés près du top 3 (US 205
     const trouvees = notes(env.page);
     expect(trouvees, 'explication affichée').toHaveLength(1);
     expect(racine.contains(trouvees[0])).toBe(false);
+  });
+
+  it("US 295 : given brochet fermé et aucun conseil, when j'ouvre l'écran Conseil, then la note des leurres écartés est dans la rivière, sous « Aucun conseil pour cette espèce en ce moment. »", async () => {
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION], conseils: [] });
+
+    const trouvees = notes(env.page);
+    expect(trouvees).toHaveLength(1);
+    expect(env.page.querySelector('app-riviere-en-coupe')?.contains(trouvees[0])).toBe(true);
+    const message = [...env.page.querySelectorAll('.message')].find((m) => contient(m.textContent, 'Aucun conseil pour cette espèce en ce moment.'));
+    expect(message).toBeDefined();
+    expect(avant(message!, trouvees[0]), 'sous le message').toBe(true);
+    expect(compact(trouvees[0].textContent)).toBe(compact(`${EXPLICATION}.`));
+  });
+
+  it("US 295 : given brochet fermé et un seul conseil, when j'ouvre l'écran Conseil, then la note est sous le coup 01, sans feuille", async () => {
+    const env = await afficher({ maintenant: FERMETURE_BROCHET, explications: [EXPLICATION], conseils: [TROIS_CONSEILS[0]] });
+
+    expect(env.page.querySelector('#autres-coups')).toBeNull();
+    const trouvees = notes(env.page);
+    expect(trouvees).toHaveLength(1);
+    expect(avant(env.page.querySelector('#coup-1')!, trouvees[0]), 'sous le coup 01').toBe(true);
   });
 });

@@ -28,7 +28,7 @@ export interface CoupRiviere {
 /** Ce que la rivière montre : des coups, ou un message à la place (calcul, erreur, aucun conseil, hors des heures légales). */
 export type VueRiviere =
   | { type: 'coups'; coups: CoupRiviere[]; explications: string[] }
-  | { type: 'message'; texte: string }
+  | { type: 'message'; texte: string; explications?: string[] }
   | { type: 'hors heures'; titre: string; heures: string };
 
 /** La demande d'ouverture d'un détail : la page décide de la navigation (le lien garde son href). */
@@ -51,14 +51,14 @@ export interface AvisDonne {
   imports: [PictogrammeFamilleComponent, AvisCoupComponent, FeuilleConseilComponent],
   styles: `
     :host {
-      flex: 1;
-      display: block;
-      min-height: 0;
+      flex: 1 0 auto;
+      display: flex;
+      flex-direction: column;
     }
     .riviere {
-      height: 100%;
+      flex: 1 0 auto;
       display: grid;
-      grid-template-rows: 1fr 1fr 1fr 26px;
+      /* Les lignes sont posées par le composant : les zones vides se réduisent à leur nom, celle du coup prend la place. */
       border-top: 1.5px solid var(--lr-trait);
       color: var(--lr-texte);
     }
@@ -69,8 +69,18 @@ export interface AvisDonne {
       flex-direction: column;
       justify-content: center;
       gap: 0;
-      padding: 22px 16px 4px;
+      padding: 0 16px;
       box-sizing: border-box;
+    }
+    .zone.avec-contenu {
+      padding: 6px 16px 4px;
+    }
+    .entete {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      min-height: 24px;
     }
     .zone.surface {
       background: var(--lr-eau-surface);
@@ -88,9 +98,6 @@ export interface AvisDonne {
       background: var(--lr-lit);
     }
     .lbl {
-      position: absolute;
-      top: 6px;
-      left: 16px;
       font-family: var(--lr-police-titre);
       font-size: 12px;
       font-weight: 600;
@@ -99,9 +106,6 @@ export interface AvisDonne {
       color: var(--lr-texte-secondaire);
     }
     .badge {
-      position: absolute;
-      top: 4px;
-      right: 16px;
       display: inline-flex;
       align-items: center;
       height: 24px;
@@ -189,7 +193,8 @@ export interface AvisDonne {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 0 8px;
       min-height: 48px;
     }
     .autres {
@@ -225,6 +230,9 @@ export interface AvisDonne {
       display: block;
       font-size: 13px;
     }
+    .note-riviere {
+      margin: 0 0 4px;
+    }
     .note {
       margin: 8px 0 0;
       font-size: 13px;
@@ -250,17 +258,26 @@ export interface AvisDonne {
     }
   `,
   template: `
-    <section class="riviere" aria-label="Rivière en coupe">
+    <section class="riviere" aria-label="Rivière en coupe" [style.grid-template-rows]="lignes()">
       @for (z of zones; track z.id) {
-        <div class="zone" [class]="z.id" role="group" [attr.aria-label]="z.libelle">
-          <span class="lbl" aria-hidden="true">{{ z.libelle }}</span>
-          @if (z.id === zoneBadge() && moinsPrecis()) {
-            <span class="badge">Conseil moins précis</span>
+        <div class="zone" [class]="z.id" [class.avec-contenu]="z.id === zoneContenu()" role="group" [attr.aria-label]="z.libelle">
+          @if (z.id === zoneContenu()) {
+            <div class="entete">
+              <span class="lbl" aria-hidden="true">{{ z.libelle }}</span>
+              @if (moinsPrecis()) {
+                <span class="badge">Conseil moins précis</span>
+              }
+            </div>
+          } @else {
+            <span class="lbl" aria-hidden="true">{{ z.libelle }}</span>
           }
           @if (z.id === 'mi-eau') {
             @switch (vue().type) {
               @case ('message') {
                 <p class="message">{{ texteMessage() }}</p>
+                @if (explicationsMessage().length > 0) {
+                  <p class="note note-riviere" role="note">{{ explicationsMessage().join(' ') }}</p>
+                }
               }
               @case ('hors heures') {
                 <p class="message" role="alert">
@@ -298,6 +315,9 @@ export interface AvisDonne {
                 }
                 <app-avis-coup [rang]="c.rang" [donne]="avisDonnes().has(c.rang)" (avis)="avis.emit({ rang: c.rang, utile: $event })" />
               </div>
+              @if (autres().length === 0 && explications().length > 0) {
+                <p class="note note-riviere" role="note">{{ explications().join(' ') }}</p>
+              }
             }
           }
         </div>
@@ -359,8 +379,16 @@ export class RiviereEnCoupeComponent {
     const n = this.autres().length;
     return n === 1 ? '1 autre coup' : `${n} autres coups`;
   });
-  /** Le badge « Conseil moins précis » se pose dans la zone du coup 01, ou au milieu quand il n'y a pas de coup. */
-  protected readonly zoneBadge = computed<ZoneNage>(() => this.premier()?.zone ?? 'mi-eau');
+  /** La zone qui porte le contenu (coup 01, message ou alerte) : elle prend la place, les autres se réduisent à leur nom. */
+  protected readonly zoneContenu = computed<ZoneNage>(() => this.premier()?.zone ?? 'mi-eau');
+  protected readonly lignes = computed(() => {
+    const rangees = ZONES.map((z) => (z.id === this.zoneContenu() ? 'minmax(min-content, 1fr)' : 'minmax(34px, 1fr)'));
+    return `${rangees.join(' ')} 18px`;
+  });
+  protected readonly explicationsMessage = computed(() => {
+    const v = this.vue();
+    return v.type === 'message' ? (v.explications ?? []) : [];
+  });
 
   protected texteMessage(): string {
     const v = this.vue();

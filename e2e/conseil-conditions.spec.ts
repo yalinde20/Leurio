@@ -166,3 +166,19 @@ for (const theme of ['light', 'dark'] as const) {
     }
   });
 }
+
+// US 295 (maquette, section 6) : sous les heures légales, la feuille « Conditions » porte la mention et le lien de la fédération (PLAN §6).
+test('US 295 B4 : given la feuille « Conditions », when elle s\'ouvre, then « à vérifier dans l\'arrêté de ton département » et le lien de la fédération (48 px) sont sous les heures légales', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-09T12:00:00Z'));
+  await simulerServices(page);
+  await page.goto('/');
+  await conseilAffiche(page);
+
+  const feuille = await ouvrirConditions(page);
+
+  await expect(feuille).toContainText(/Heures légales[\s\S]*à vérifier dans l'arrêté de ton département/i);
+  const lien = feuille.getByRole('link', { name: /Fédération.*↗/ });
+  await expect(lien).toBeVisible();
+  await expect(lien).toHaveAttribute('href', /^https:\/\//);
+  expect((await lien.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+});
