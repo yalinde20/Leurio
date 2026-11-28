@@ -66,7 +66,6 @@ export interface AvisDonne {
     .zone {
       position: relative;
       flex: 1 1 34px;
-      min-height: 34px;
       display: flex;
       min-height: 0;
       flex-direction: column;
