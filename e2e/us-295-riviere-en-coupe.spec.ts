@@ -139,14 +139,17 @@ const zone = (page: Page, nom: string) => riviere(page).getByRole('group', { nam
 const coup = (page: Page, numero: string) => riviere(page).getByRole('link', { name: new RegExp(`^${numero}\\b`) });
 const ligneEtat = (page: Page, nom: RegExp) => page.getByRole('button', { name: nom });
 
-// Sandre en novembre, en plein jour : le moteur place un shad en n°1 (conditions fixées, voir les doubles).
+// Sandre en novembre, en plein jour : conditions fixées (voir les doubles), pour les critères qui ne dépendent pas de la zone du n°1.
 const JOUR_NOVEMBRE = new Date('2026-11-09T12:00:00Z');
+// Black-bass à l'aube, le 9 novembre, eau à 2 °C : le moteur place un ver souple finesse (zone « fond ») en n°1.
+// L'aube (06 h 25 à 06 h 58 UTC) est dans les heures légales à partir de 06 h 27 UTC.
+const AUBE_NOVEMBRE = new Date('2026-11-09T06:45:00Z');
 // Black-bass à l'aube un matin de mai (16 °C) : le moteur place un popper, leurre de surface, en n°1.
 // L'aube est dans les heures légales (qui commencent 30 min avant le lever du soleil).
 const AUBE_MAI = new Date('2026-05-12T04:10:00Z');
 
-test('US 295 critère 0 : given un conseil dont le n°1 est un shad, when l\'écran Conseil s\'affiche, then le coup « 01 » (leurre, animation, taille, couleur) est posé dans la zone de nage du shad de la rivière en coupe et ouvre son détail au tap', async ({ page }) => {
-  await ouvrirConseil(page, JOUR_NOVEMBRE, { eau: 11.5 }, 'Sandre');
+test('US 295 critère 0 : given un conseil dont le n°1 est un leurre de zone « fond », when l\'écran Conseil s\'affiche, then le coup « 01 » (leurre, animation, taille, couleur) est posé dans la zone « Fond » de la rivière en coupe et ouvre son détail au tap', async ({ page }) => {
+  await ouvrirConseil(page, AUBE_NOVEMBRE, { eau: 2 }, 'Black-bass');
 
   await expect(riviere(page)).toBeVisible();
   // Les trois zones, de haut en bas.
@@ -158,26 +161,24 @@ test('US 295 critère 0 : given un conseil dont le n°1 est un shad, when l\'éc
   }
   expect(hauts, 'Surface, Mi-eau, Fond de haut en bas').toEqual([...hauts].sort((a, b) => a - b));
 
-  // Le coup 01 : un shad, dans la zone lue dans le contenu (zoneNage du type), avec animation, taille et couleur.
-  const zoneDuShad = LIBELLE_ZONE[typeParId('shad').zoneNage];
-  const un = zone(page, zoneDuShad).getByRole('link', { name: /^01\b/ });
+  // Le coup 01 : un ver souple finesse, dont la zone de nage lue dans le contenu est « fond », avec animation, taille et couleur.
+  const ver = typeParId('ver-finesse');
+  expect(ver.zoneNage, 'le contenu place le ver souple finesse au fond').toBe('fond');
+  const zoneDuCoup = LIBELLE_ZONE[ver.zoneNage];
+  expect(zoneDuCoup).toBe('Fond');
+  const un = zone(page, zoneDuCoup).getByRole('link', { name: /^01\b/ });
   await expect(un).toBeVisible();
-  await expect(un).toHaveAccessibleName(/shad/i);
+  await expect(un).toHaveAccessibleName(new RegExp(ver.nom, 'i'));
   await expect(un).toHaveAccessibleName(new RegExp(TECHNIQUES.find((t) => t.id === 'tiree-relachee')!.nom, 'i'));
   await expect(un).toHaveAccessibleName(/\d+(,\d)?\s*cm/);
   await expect(un).toHaveAccessibleName(/gardon/i);
   await expect(un, 'dans la carte du coup 01 : « Dans ta boîte » ou « Il te manque »').toHaveAccessibleName(/Dans ta boîte|Il te manque/);
   // Un seul coup 01, et aucun dans les autres zones.
-  for (const nom of noms.filter((n) => n !== zoneDuShad)) await expect(zone(page, nom).getByRole('link')).toHaveCount(0);
+  for (const nom of noms.filter((n) => n !== zoneDuCoup)) await expect(zone(page, nom).getByRole('link')).toHaveCount(0);
 
   await un.click();
   await expect(page).toHaveURL(/\/conseil\/detail\//);
   await expect(page.getByText('Détail du conseil')).toBeVisible();
-});
-
-test('US 295 critère 0 (contenu) : given le contenu des types de leurres, when on lit la zone du shad, then c\'est « fond », comme dans la maquette validée', () => {
-  // La maquette et le critère placent le shad dans « Fond » ; la zone vient du contenu (lure-types.json), jamais du code.
-  expect(typeParId('shad').zoneNage).toBe('fond');
 });
 
 test('US 295 critère 1 : given un conseil dont le n°1 est un leurre de surface, when l\'écran Conseil s\'affiche, then le coup « 01 » est posé dans la zone « Surface »', async ({ page }) => {
