@@ -230,6 +230,10 @@ describe("Détail d'un conseil : le leurre de ma boîte (US 105)", () => {
     expect(compact(env.page.textContent)).toContain(
       compact('À la place, dans ta boîte : Crankbait 6 cm perche'),
     );
+    const gras = [...env.page.querySelectorAll<HTMLElement>('b, strong')].find(
+      (e) => compact(e.textContent) === compact('À la place, dans ta boîte :'),
+    );
+    expect(gras, 'libellé en gras').toBeDefined();
   });
 
   it("critère 4 : given le coup 03 manque dans la boîte, when j'ouvre son détail, then le détail affiche « Il te manque : une cuillère tournante 3–10 g couleur gardon »", async () => {
@@ -239,6 +243,10 @@ describe("Détail d'un conseil : le leurre de ma boîte (US 105)", () => {
     expect(compact(env.page.textContent)).toContain(
       compact('Il te manque : une cuillère tournante 3–10 g couleur gardon'),
     );
+    const gras = [...env.page.querySelectorAll<HTMLElement>('b, strong')].find(
+      (e) => compact(e.textContent) === compact('Il te manque :'),
+    );
+    expect(gras, 'libellé en gras').toBeDefined();
   });
 
   it("critère 4 : given la boîte en erreur de lecture, when j'ouvre un détail, then il n'a aucune ligne de boîte, puis la ligne apparaît quand la lecture reprend", async () => {

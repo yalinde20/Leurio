@@ -13,6 +13,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { temperatureAffichee } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -115,7 +116,7 @@ describe('ConseilPage : conseil indisponible (US 81, écart validé)', () => {
       expect(texte).toContain(compact('Conseil indisponible pour le moment.'));
       expect(texte).not.toContain(compact('Calcul du conseil…'));
       expect(page.querySelector('a.coup')).toBeNull();
-      expect(texte).toContain(compact('11,5 °C'));
+      expect(temperatureAffichee(page)).toBe(compact('11,5 °C'));
       expect(texte).toContain(compact('Ma sortie'));
     });
   }

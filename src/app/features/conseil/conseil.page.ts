@@ -789,7 +789,22 @@ export class ConseilPage implements OnInit {
   private readonly injector = inject(Injector);
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => (this.detruit = true));
+    const destruction = inject(DestroyRef);
+    destruction.onDestroy(() => (this.detruit = true));
+    // L'état réglementaire de « Maintenant » suit l'horloge : chaque minute, et à la reprise de l'app (iOS).
+    const minuteur = setInterval(() => this.rafraichirLegal(), 60_000);
+    const reprise = () => {
+      if (document.visibilityState === 'visible') this.rafraichirLegal();
+    };
+    document.addEventListener('visibilitychange', reprise);
+    destruction.onDestroy(() => {
+      clearInterval(minuteur);
+      document.removeEventListener('visibilitychange', reprise);
+    });
+    // Au retour du détail, l'heure a pu passer.
+    effect(() => {
+      if (!this.enfantOuvert()) untracked(() => this.rafraichirLegal());
+    });
     // Un moment gardé qui est passé n'a plus de sens : retour sur « Maintenant ». Sinon son libellé suit le jour d'aujourd'hui.
     const gardé = this.choix.moment();
     if (gardé) {
@@ -1304,13 +1319,10 @@ export class ConseilPage implements OnInit {
       },
     });
     const legale = !heures || this.pecheLegale(moment, heures, choisi !== null);
-    this.legal.set(heures ? this.etatLegal(moment, heures, legale, coordonnees) : null);
+    const demain = heures && !legale ? this.heuresDuLendemain(moment, coordonnees) : null;
+    this.legal.set(heures ? this.etatLegal(moment, heures, legale, demain) : null);
     if (heures && !legale) {
-      this.conseil.set({
-        type: 'hors heures',
-        heures: texteHeures,
-        jour: choisi ? motDuJour(moment, new Date()) : "aujourd'hui",
-      });
+      this.conseil.set(this.horsHeures(moment, choisi, heures, demain));
       return;
     }
     const limite = choisi && heures ? this.limiteDansLHeure(moment, heures) : null;
@@ -1318,19 +1330,63 @@ export class ConseilPage implements OnInit {
     await this.chargerConseil(releve, moment, limite);
   }
 
+  /** Les heures légales du jour suivant le moment (pour dire quand la pêche rouvre). */
+  private heuresDuLendemain(moment: Date, coordonnees: { latitude: number; longitude: number }): HeuresLegales | null {
+    return heuresLegales(this.astro.soleil(coordonnees, new Date(moment.getTime() + 24 * UNE_HEURE_MS)));
+  }
+
   /** La ligne d'état réglementaire : ouverte, fermeture dans moins de 30 min, ou fermée jusqu'à la prochaine ouverture. */
-  private etatLegal(moment: Date, heures: HeuresLegales, legale: boolean, coordonnees: { latitude: number; longitude: number }): EtatLegal {
+  private etatLegal(moment: Date, heures: HeuresLegales, legale: boolean, demain: HeuresLegales | null): EtatLegal {
     if (legale) {
       const fin = formaterHeure(heures.fin);
       const minutes = Math.max(0, Math.round((heures.fin.getTime() - moment.getTime()) / 60_000));
-      return minutes <= MINUTES_AVANT_FERMETURE
-        ? { type: 'fermeture', texte: `Fermeture à ${fin}, dans ${minutes} min` }
-        : { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
+      if (minutes > MINUTES_AVANT_FERMETURE) return { type: 'ouvert', texte: `Pêche ouverte jusqu'à ${fin}` };
+      return { type: 'fermeture', texte: `Fermeture à ${fin}, ${minutes < 1 ? "dans moins d'1 min" : `dans ${minutes} min`}` };
     }
     // Avant l'ouverture du jour, c'est elle ; sinon, celle du lendemain.
-    const demain = heuresLegales(this.astro.soleil(coordonnees, new Date(moment.getTime() + 24 * UNE_HEURE_MS)));
     const ouverture = moment.getTime() < heures.debut.getTime() ? heures.debut : (demain?.debut ?? heures.debut);
     return { type: 'ferme', texte: `Pêche fermée jusqu'à ${formaterHeure(ouverture)}` };
+  }
+
+  /**
+   * L'état « hors des heures légales ». Pour « Maintenant » après la fin du jour, l'écran donne les heures de demain
+   * (« Heures légales demain »), avant l'ouverture celles d'aujourd'hui ; un moment choisi garde les heures de son jour.
+   */
+  private horsHeures(moment: Date, choisi: MomentChoisi | null, heures: HeuresLegales, demain: HeuresLegales | null): EtatConseil {
+    const duJour = formaterHeuresLegales(heures.debut, heures.fin);
+    if (choisi) return { type: 'hors heures', heures: duJour, jour: motDuJour(moment, new Date()) };
+    if (moment.getTime() >= heures.fin.getTime() && demain) {
+      return { type: 'hors heures', heures: formaterHeuresLegales(demain.debut, demain.fin), jour: 'demain' };
+    }
+    return { type: 'hors heures', heures: duJour, jour: "aujourd'hui" };
+  }
+
+  /**
+   * « Maintenant » avance avec l'horloge : l'état réglementaire est recalculé chaque minute, à la reprise de l'app et au retour du détail.
+   * Franchir la fin des heures légales remplace les coups par l'avertissement ; franchir l'ouverture recalcule le conseil.
+   */
+  private rafraichirLegal(): void {
+    const lieu = this.lieu;
+    if (this.detruit || !lieu || this.moment() !== null || this.etat().type !== 'pret') return;
+    const maintenant = new Date();
+    const coordonnees = { latitude: lieu.latitude, longitude: lieu.longitude };
+    const heures = heuresLegales(this.astro.soleil(coordonnees, maintenant));
+    if (!heures) return;
+    const legale = dansHeuresLegales(maintenant, heures);
+    const avait = this.relancable !== null;
+    if (legale && !avait) {
+      if (this.conseil().type === 'hors heures') void this.chargerMoment(maintenant, null);
+      return;
+    }
+    const demain = legale ? null : this.heuresDuLendemain(maintenant, coordonnees);
+    this.legal.set(this.etatLegal(maintenant, heures, legale, demain));
+    if (!legale && avait) {
+      this.calcul++;
+      this.relancable = null;
+      this.detailStore.details.set([]);
+      this.detailStore.pourLaBoite.set(null);
+      this.conseil.set(this.horsHeures(maintenant, null, heures, demain));
+    }
   }
 
   /**
@@ -1422,7 +1478,8 @@ export class ConseilPage implements OnInit {
     const { conditions } = releve;
     return {
       mention: releve.mention,
-      moinsPrecis: releve.moinsPrecis,
+      // Une eau seulement estimée depuis l'air rend aussi le conseil « moins précis » (comme la rivière).
+      moinsPrecis: releve.moinsPrecis || conditions.sourceTempEau === 'estimation',
       eauInconnue: conditions.tempEau === null,
       eau: formaterTempEau(conditions.tempEau, this.unites.choix()),
       sourceEau: formaterSourceTempEau(releve),

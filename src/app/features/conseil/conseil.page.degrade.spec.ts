@@ -175,6 +175,14 @@ describe('ConseilPage : carte « Conditions » en mode dégradé (US 65)', () =>
     expect(textesInteractifs(page).join(' ')).not.toContain('Moins précis');
   });
 
+  it("US 295 : given une eau seulement estimée depuis l'air (Hub'Eau en panne), when la feuille « Conditions » s'affiche, then le badge « Moins précis » y est", async () => {
+    const { page } = await afficher({
+      releve: releve({ conditions: conditions({ tempEau: 9, sourceTempEau: 'estimation' }), stationEau: undefined, moinsPrecis: false }),
+    });
+
+    expect(texteCarte(page)).toContain(compact('Moins précis'));
+  });
+
   it("critère 2 (contraire) : given des conditions précises (moinsPrecis: false), when la carte s'affiche, then aucun libellé « Moins précis » n'apparaît", async () => {
     const { page } = await afficher({ releve: releve({ moinsPrecis: false }) });
 

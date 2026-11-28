@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, ElementRef, input, output, signal, viewChild } from '@angular/core';
 import type { FamilleLeurre } from '../../core/data/catalog.types';
 import { PictogrammeFamilleComponent } from '../../shared/pictogramme-famille/pictogramme-famille.component';
 import { AvisCoupComponent } from './avis-coup.component';
@@ -291,7 +291,7 @@ export interface AvisDonne {
               </a>
               <div class="actions">
                 @if (autres().length > 0) {
-                  <button id="autres-coups" type="button" class="autres" aria-haspopup="dialog" (click)="autresOuvert.set(true)">
+                  <button #autresCoups id="autres-coups" type="button" class="autres" aria-haspopup="dialog" (click)="autresOuvert.set(true)">
                     {{ libelleAutres() }}
                     <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
                   </button>
@@ -343,6 +343,7 @@ export class RiviereEnCoupeComponent {
 
   protected readonly zones = ZONES;
   protected readonly autresOuvert = signal(false);
+  private readonly boutonAutres = viewChild<ElementRef<HTMLButtonElement>>('autresCoups');
 
   private readonly coups = computed(() => {
     const v = this.vue();
@@ -377,6 +378,6 @@ export class RiviereEnCoupeComponent {
 
   protected fermerAutres(): void {
     this.autresOuvert.set(false);
-    queueMicrotask(() => document.getElementById('autres-coups')?.focus());
+    queueMicrotask(() => this.boutonAutres()?.nativeElement.focus());
   }
 }

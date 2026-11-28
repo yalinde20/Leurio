@@ -39,7 +39,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
-import { ouvrirConditions, textesDesCoups } from './conseil.page.aides';
+import { ouvrirConditions, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -303,9 +303,9 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     await ouvrirConditions(env); // la mention du moment et le vent sont dans la feuille « Conditions »
     const texte = compact(env.page.textContent);
     expect(texte).toContain(compact('Prévisions pour demain 7 h'));
-    expect(texte).toContain(compact('9,2 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9,2 °C'));
     expect(texte).toContain(compact('Vent 8 km/h'));
-    expect(texte).not.toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).not.toBe(compact('11,5 °C'));
     expect(env.appelsReleve.at(-1)?.getTime()).toBe(DEMAIN_7H.getTime());
   });
 
@@ -381,7 +381,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
       compact('Choisis un moment dans les 48 h à venir.'),
     );
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 7 h'));
-    expect(compact(env.page.textContent)).toContain(compact('9,2 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9,2 °C'));
     expect(env.appelsReleve).toHaveLength(appelsAvant);
   });
 
@@ -396,8 +396,9 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     expect(texte).toContain(compact('Heures légales demain : 7 h 02 – 18 h 31'));
     expect(env.page.querySelector('a.coup')).toBeNull();
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 22 h'));
-    // US 295 : la ligne d'état « Pêche fermée jusqu'à » demande aussi le soleil du lendemain ; le soleil du moment choisi est bien calculé.
-    expect(env.appelsSoleil.some((d) => d.getTime() === DEMAIN_22H.getTime())).toBe(true);
+    // US 295 : le soleil du moment choisi est calculé, puis celui du lendemain pour dire quand la pêche rouvre.
+    expect(env.appelsSoleil.at(-2)?.getTime()).toBe(DEMAIN_22H.getTime());
+    expect(env.appelsSoleil.at(-1)?.getTime()).toBe(DEMAIN_22H.getTime() + 24 * 3600 * 1000);
   });
 
   it("critère 5 : given demain 7 h choisi, when je choisis « Maintenant », then le sélecteur, les conditions et les conseils reviennent à l'instant présent", async () => {
@@ -417,7 +418,7 @@ describe('ConseilPage : moment du conseil (US 82)', () => {
     expect(compact(selecteur(env.page).textContent)).not.toContain(compact('Demain'));
     expect(feuille(env.page)).toBeNull();
     expect(texte).not.toContain(compact('Prévisions pour'));
-    expect(texte).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
     const cartes = await cartesConseil(env);
     expect(cartes).toHaveLength(3);
     expect(cartes[0]).toContain(compact('Shad'));

@@ -23,7 +23,7 @@ import { SpotEnregistre, SpotsService } from '../../core/data/spots.service';
 import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
-import { ouvrirReglementation, textesDesCoups } from './conseil.page.aides';
+import { ouvrirReglementation, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const NANTES: ResultatPosition = {
@@ -293,7 +293,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     const dernier = env.appels.releves.at(-1)!;
     expect(dernier.lieu).toEqual({ latitude: 47.5, longitude: -0.9 });
     expect(dernier.spot).toEqual({ categorie: 2, departement: '49' });
-    expect(compact(env.page.textContent)).toContain(compact('10,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('10,5 °C'));
 
     // Conseil : le top 3 du spot.
     const cartes = await cartesConseil(env);
@@ -334,7 +334,7 @@ describe('ConseilPage : spot enregistré comme lieu du conseil (US 87)', () => {
     const dernier = env.appels.releves.at(-1)!;
     expect(dernier.spot).toBeUndefined();
     expect(dernier.lieu).toEqual({ latitude: NANTES.disponible ? NANTES.latitude : 0, longitude: NANTES.disponible ? NANTES.longitude : 0 });
-    expect(compact(env.page.textContent)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it('critère 2 : given un spot choisi, when une nouvelle page s\'ouvre (nouvelle ouverture de l\'app), then le lieu repart sur « Ma position »', async () => {

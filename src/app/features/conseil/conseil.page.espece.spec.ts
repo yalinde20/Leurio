@@ -23,7 +23,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import especesReelles from '../../../assets/data/species.json';
 import { ConseilPage } from './conseil.page';
-import { textesDesCoups } from './conseil.page.aides';
+import { temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -239,7 +239,7 @@ describe('ConseilPage : choix de l\'espèce visée (US 83)', () => {
     expect(cartes[0]).toContain('Shad');
     expect(cartes[1]).toContain(compact('Leurre souple (finesse)'));
     expect(cartes[2]).toContain(compact('Lame vibrante'));
-    expect(compact(env.page.textContent)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it('critère 3 : given « Sandre » choisi, when je rouvre la liste, then « Sandre » est la ligne cochée', async () => {

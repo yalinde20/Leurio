@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { ouvrirConditions } from './conseil-helpers';
+import { conseilAffiche, ouvrirConditions, riviere } from './conseil-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 
 // US 89 : l'onboarding est terminé, l'app s'ouvre sur le Conseil (fixture, aucune assertion changée).
@@ -107,5 +107,62 @@ for (const theme of ['light', 'dark'] as const) {
     const badge = mesures!.find((m) => m.texte === 'Moins précis');
     expect(badge, 'le texte « Moins précis » est absent de la carte').toBeDefined();
     expect(badge!.contraste, `« Moins précis » : contraste ${badge!.contraste.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+  });
+}
+
+// US 295 : l'avis « Ce conseil t'a aidé ? » et « Merci pour ton retour ! » sont posés sur le fond d'une zone de la rivière (Surface, Mi-eau
+// ou Fond selon le leurre) : leur texte doit avoir au moins 4,5:1 sur chacun des trois fonds, dans les deux thèmes.
+for (const theme of ['light', 'dark'] as const) {
+  test(`US 295 : given le thème ${theme === 'light' ? 'clair' : 'sombre'}, when l'avis puis « Merci pour ton retour ! » s'affichent, then leur texte a un contraste d'au moins 4,5:1 sur chaque zone de la rivière`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.clock.setFixedTime(new Date('2026-11-09T12:00:00Z'));
+    await simulerServices(page);
+    await page.goto('/');
+    await conseilAffiche(page);
+
+    const mesurer = () =>
+      page.evaluate(() => {
+        const lire = (css: string): number[] => (css.match(/[\d.]+/g) ?? []).map(Number);
+        const luminance = ([r, g, b]: number[]) => {
+          const [R, G, B] = [r, g, b].map((c) => {
+            const v = c / 255;
+            return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+        };
+        const ratio = (a: number[], b: number[]) => {
+          const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+          return (l1 + 0.05) / (l2 + 0.05);
+        };
+        // Les trois fonds : on lit la valeur de chaque token dans un élément témoin.
+        const fond = (token: string) => {
+          const t = document.createElement('div');
+          t.style.backgroundColor = `var(${token})`;
+          document.body.appendChild(t);
+          const c = lire(getComputedStyle(t).backgroundColor);
+          t.remove();
+          return c;
+        };
+        const fonds = ['--lr-eau-surface', '--lr-eau-mi', '--lr-eau-fond'].map((t) => [t, fond(t)] as const);
+        const avis = document.querySelector('app-riviere-en-coupe app-avis-coup');
+        const resultats: { texte: string; fond: string; contraste: number }[] = [];
+        for (const el of avis ? [avis, ...avis.querySelectorAll('*')] : []) {
+          const texte = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent?.trim() ?? '').join(' ').trim();
+          if (!texte) continue;
+          for (const [token, couleur] of fonds) resultats.push({ texte, fond: token, contraste: ratio(lire(getComputedStyle(el).color), couleur) });
+        }
+        return resultats;
+      });
+
+    const avant = await mesurer();
+    expect(avant.some((m) => m.texte.startsWith('Ce conseil')), 'la question de l\'avis est lue').toBe(true);
+    await riviere(page).getByRole('button', { name: "Oui, ce conseil m'a aidé" }).click();
+    await expect(riviere(page).getByText('Merci pour ton retour !')).toBeVisible();
+    const apres = await mesurer();
+    expect(apres.some((m) => m.texte === 'Merci pour ton retour !'), '« Merci » est lu').toBe(true);
+
+    for (const { texte, fond, contraste } of [...avant, ...apres]) {
+      expect(contraste, `« ${texte} » sur ${fond} : ${contraste.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5);
+    }
   });
 }

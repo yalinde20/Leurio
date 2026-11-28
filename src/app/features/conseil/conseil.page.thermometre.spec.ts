@@ -26,7 +26,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { SaisieTempEau, saisieRecente } from '../../core/engine/temperature-eau';
 import { ConseilPage } from './conseil.page';
-import { compact, ouvrirConditions, stabiliser as stabiliserPage, textesDesCoups } from './conseil.page.aides';
+import { compact, ouvrirConditions, stabiliser as stabiliserPage, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
 
 const ANGERS: ResultatPosition = {
@@ -299,12 +299,12 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
   it("critère 2 : given le champ est affiché, when j'entre 9 et je touche « Valider », then la carte « Conditions » affiche 9 °C avec la source « Mesurée au thermomètre à 9 h 12 »", async () => {
     const env = await configurer();
-    expect(texteCarte(env.page)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
 
     await mesurer(env, '9');
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact('9 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(texte).not.toContain(compact("Station Hub'Eau"));
     expect(champ(env.page), 'la saisie se ferme').toBeUndefined();
@@ -346,7 +346,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     await mesurer(env, '12,5');
 
-    expect(texteCarte(env.page)).toContain(compact('12,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('12,5 °C'));
     expect(env.ecritures[0]?.valeurC).toBe(12.5);
   });
 
@@ -366,7 +366,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     await mesurer(env, '12,5');
 
-    expect(texteCarte(env.page)).toContain(compact('12,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('12,5 °C'));
     expect(texteCarte(env.page)).toContain(compact('Mesurée au thermomètre à 9 h 12'));
   });
 
@@ -395,7 +395,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     expect(env.ecritures, 'rien n\'est enregistré').toHaveLength(0);
     expect(env.appelsReleve).toHaveLength(releves);
     expect(env.appelsMoteur).toHaveLength(moteur);
-    expect(texteCarte(env.page)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it("critère 3 : given une saisie refusée, when je corrige avec 9 et je valide, then le message disparaît et la mesure est acceptée", async () => {
@@ -410,7 +410,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
 
     expect(env.page.querySelector('[role="alert"]')).toBeNull();
     expect(env.ecritures).toHaveLength(1);
-    expect(texteCarte(env.page)).toContain(compact('9 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
   });
 
   it("critère 2 : given le stockage du téléphone est inaccessible, when j'entre 9 et je touche « Valider », then la carte affiche 9 °C mesurée au thermomètre", async () => {
@@ -419,7 +419,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     await mesurer(env, '9');
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact('9 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(env.appelsReleve.at(-1)?.saisieTempEau?.valeurC).toBe(9);
   });
@@ -435,7 +435,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     expect(champ(env.page)).toBeUndefined();
     expect(boutonThermo(env.page)).not.toBeNull();
     expect(env.ecritures).toHaveLength(0);
-    expect(texteCarte(env.page)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
   });
 
   it("critère 4 : given j'ai saisi 9 °C il y a moins de 6 h, when je rouvre l'app, then la carte « Conditions » affiche toujours 9 °C avec la source « Mesurée au thermomètre à 9 h 12 »", async () => {
@@ -447,7 +447,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const rouverte = await configurer({ vraiStore: true, maintenant: new Date(MAINTENANT.getTime() + 3 * HEURE_MS) });
 
     const texte = texteCarte(rouverte.page);
-    expect(texte).toContain(compact('9 °C'));
+    expect(temperatureAffichee(rouverte.page)).toBe(compact('9 °C'));
     expect(texte).toContain(compact('Mesurée au thermomètre à 9 h 12'));
     expect(rouverte.appelsReleve[0]?.saisieTempEau?.valeurC).toBe(9);
     expect(rouverte.appelsMoteur.at(-1)?.conditions.sourceTempEau).toBe('saisie');
@@ -457,7 +457,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
   it("critère 4 : given une mesure de 9 °C gardée il y a 5 h, when l'écran Conseil s'affiche, then la carte affiche 9 °C mesurée au thermomètre à 4 h 12", async () => {
     const env = await configurer({ deja: mesure(5) });
 
-    expect(texteCarte(env.page)).toContain(compact('9 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('9 °C'));
     expect(texteCarte(env.page)).toContain(compact('Mesurée au thermomètre à 4 h 12'));
     expect(env.appelsReleve[0]?.saisieTempEau?.mesureeA.getTime()).toBe(mesure(5).mesureeA.getTime());
   });
@@ -466,7 +466,7 @@ describe('ConseilPage : température mesurée au thermomètre (US 85)', () => {
     const env = await configurer({ deja: mesure(7) });
 
     const texte = texteCarte(env.page);
-    expect(texte).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('11,5 °C'));
     expect(texte).toContain(compact("Station Hub'Eau La Maine à Angers, à 4 km"));
     expect(texte).not.toContain(compact('Mesurée au thermomètre'));
     expect(env.appelsMoteur.at(-1)?.conditions.sourceTempEau).toBe('capteur');

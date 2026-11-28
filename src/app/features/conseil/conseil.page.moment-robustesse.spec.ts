@@ -12,6 +12,7 @@ import { PositionService, ResultatPosition } from '../../core/data/position.serv
 import { Conditions } from '../../core/engine/conditions';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
+import { temperatureAffichee } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -139,8 +140,8 @@ describe('ConseilPage : moment du conseil, robustesse (US 82)', () => {
     await env.stabiliser();
 
     expect(compact(selecteur(env.page).textContent)).toContain(compact('Demain 8 h'));
-    expect(compact(env.page.textContent)).toContain(compact('8 °C'));
-    expect(compact(env.page.textContent)).not.toContain(compact('7 °C'));
+    expect(temperatureAffichee(env.page)).toBe(compact('8 °C'));
+    expect(temperatureAffichee(env.page)).not.toBe(compact('7 °C'));
   });
 
   it('given la feuille ouverte, when elle s\'affiche, then le sélecteur annonce un dialogue et le focus entre dans la feuille', async () => {

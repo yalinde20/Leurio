@@ -21,7 +21,7 @@ import { Conditions } from '../../core/engine/conditions';
 import { Conseil, ResultatConseil } from '../../core/engine/scorer';
 import { ConseilPage } from './conseil.page';
 import { SOURCE_TACKLE_BOX } from '../../core/data/tackle-box.service';
-import { compact, ecranDe, liensDesCoups, ouvrirConditions, stabiliser, textesDesCoups } from './conseil.page.aides';
+import { compact, ecranDe, liensDesCoups, ouvrirConditions, stabiliser, temperatureAffichee, textesDesCoups } from './conseil.page.aides';
 
 const ANGERS: ResultatPosition = {
   disponible: true,
@@ -36,6 +36,7 @@ const ANGERS: ResultatPosition = {
 const SOLEIL: SoleilDuJour = { lever: new Date('2026-11-09T06:32:00Z'), coucher: new Date('2026-11-09T17:01:00Z') };
 const DANS_LES_HEURES = new Date('2026-11-09T12:00:00Z'); // 13 h à Paris
 const HORS_DES_HEURES = new Date('2026-11-09T20:00:00Z'); // 21 h à Paris
+const AVANT_L_OUVERTURE = new Date('2026-11-09T04:00:00Z'); // 5 h à Paris, avant 7 h 02
 
 const CONDITIONS: Conditions = {
   tempEau: 11.5,
@@ -145,7 +146,7 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
   it("critère 1 : given la position autorisée et un moment dans les heures légales, when l'écran Conseil s'affiche, then la carte « Conditions » et 3 cartes de conseil sont affichées sans aucun tap", async () => {
     const { fixture, page, appelsMoteur } = await afficher();
 
-    expect(compact(page.textContent)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(page)).toBe(compact('11,5 °C'));
     expect(page.querySelector('app-riviere-en-coupe [aria-label="Rivière en coupe"], section[aria-label="Rivière en coupe"]')).not.toBeNull();
     expect(coups(page)).toHaveLength(1);
     expect(await textesDesCoups(ecranDe(fixture))).toHaveLength(3);
@@ -162,7 +163,7 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
   it("critère 2 : given les conditions récupérées, when l'écran s'affiche, then la carte « Conditions » montre eau, débit, pression, ciel, vent, lune et heures légales à côté des cartes de conseil", async () => {
     const { fixture, page } = await afficher();
 
-    expect(compact(page.textContent)).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(page)).toBe(compact('11,5 °C'));
     const feuille = await ouvrirConditions(ecranDe(fixture));
     const texte = compact(feuille.textContent);
     for (const ligne of [
@@ -227,9 +228,17 @@ describe('ConseilPage : top 3 du moment (US 81)', () => {
 
     const texte = compact(page.textContent);
     expect(texte).toContain(compact('Hors des heures légales : pas de pêche aux carnassiers la nuit.'));
-    expect(texte).toContain(compact("Heures légales aujourd'hui : 7 h 02 – 18 h 31"));
+    // Après la fin des heures légales, « Maintenant » annonce celles de demain (maquette US 295).
+    expect(texte).toContain(compact('Heures légales demain : 7 h 02 – 18 h 31'));
+    expect(texte).not.toContain(compact("Heures légales aujourd'hui"));
     expect(coups(page)).toHaveLength(0);
-    expect(texte).toContain(compact('11,5 °C'));
+    expect(temperatureAffichee(page)).toBe(compact('11,5 °C'));
+  });
+
+  it("critère 4 : given « Maintenant » avant l'ouverture des heures légales, when l'écran s'affiche, then l'avertissement donne les heures d'aujourd'hui", async () => {
+    const { page } = await afficher({ maintenant: AVANT_L_OUVERTURE });
+
+    expect(compact(page.textContent)).toContain(compact("Heures légales aujourd'hui : 7 h 02 – 18 h 31"));
   });
 
   it("critère 4 (contraire) : given un moment dans les heures légales, when l'écran s'affiche, then l'avertissement « Hors des heures légales » n'apparaît pas", async () => {

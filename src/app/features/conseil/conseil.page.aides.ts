@@ -76,3 +76,6 @@ export async function textesDesCoups(ecran: Ecran): Promise<string[]> {
   await ouvrirAutresCoups(ecran);
   return liensDesCoups(page).map((l) => compact(l.textContent));
 }
+
+/** La température de l'eau affichée en gros (texte exact de l'élément), sans les autres chiffres de l'écran. */
+export const temperatureAffichee = (page: HTMLElement): string => compact(page.querySelector('.temp')?.textContent);

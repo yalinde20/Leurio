@@ -19,8 +19,8 @@ import { Component, input, output } from '@angular/core';
       line-height: 1.1;
     }
     .question {
-      max-width: 110px;
       margin-right: 2px;
+      white-space: nowrap;
     }
     button {
       flex: none;
@@ -39,11 +39,12 @@ import { Component, input, output } from '@angular/core';
       gap: 4px;
       min-height: 48px;
       margin: 0;
-      color: var(--lr-ok);
+      color: var(--lr-texte);
       font-size: 14px;
       font-weight: 600;
     }
     .merci svg {
+      color: var(--lr-ok);
       width: 16px;
       height: 16px;
       fill: none;
@@ -60,7 +61,7 @@ import { Component, input, output } from '@angular/core';
       </p>
     } @else {
       <div class="avis">
-        <span class="question">Ce conseil t'a aidé ?</span>
+        <span class="question">Ce conseil t'a aidé&nbsp;?</span>
         <button type="button" aria-label="Oui, ce conseil m'a aidé" (click)="avis.emit(true)">👍</button>
         <button type="button" aria-label="Non, ce conseil ne m'a pas aidé" (click)="avis.emit(false)">👎</button>
       </div>
