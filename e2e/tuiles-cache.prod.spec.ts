@@ -9,7 +9,7 @@ import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { estLocal } from './firebase-helpers';
 import { onboardingTermine } from './onboarding-helpers';
 import { ajouterSpot, attendreCompte, modeAvion, ouvrirOnglet, ouvrirUneFoisEnLigne, onglet, titreVisible } from './hors-ligne-donnees-helpers';
-import { top3Affiche } from './conseil-helpers';
+import { ecranConseil, top3Affiche } from './conseil-helpers';
 
 test.use({ viewport: { width: 390, height: 844 }, geolocation: { latitude: 47.47, longitude: -0.55 }, permissions: ['geolocation'] });
 
@@ -91,7 +91,7 @@ async function tuilesSontDesImages(page: Page): Promise<boolean> {
 /** Rouvre l'app en mode avion (page rechargée) sur l'onglet « Spots », la carte centrée sur le spot au zoom 16. */
 async function ouvrirLaCarteHorsLigne(page: Page, nomSpot: string): Promise<void> {
   await page.reload();
-  await expect(titreVisible(page)).toHaveText('Conseil');
+  await ecranConseil(page);
   await ouvrirOnglet(page, 'Spots');
   await expect(carte(page)).toBeVisible();
   await expect(rangee(page, nomSpot)).toBeVisible();
